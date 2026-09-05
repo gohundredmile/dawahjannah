@@ -1,0 +1,6 @@
+{
+  "name": "Dawah to Jannah - দা'ওয়াহ টু জান্নাহ",
+  "description": "Comprehensive offline Islamic companion with prayer times, 24h Sunnah routine, Masnun Dua vault, daily spiritual habit checklist, digital tasbih, Asmaul Husna, and personal dua journal.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

@@ -342,6 +342,7 @@ fun BanglaFontSettingsDialog(
                                     Column {
                                         Text(
                                             text = font.displayNameEn,
+                                            fontFamily = getBanglaFontFamily(font),
                                             style = MaterialTheme.typography.titleSmall,
                                             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
                                             color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface

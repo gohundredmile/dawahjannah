@@ -33,24 +33,33 @@ fun getBanglaFontFamily(font: BanglaFont): FontFamily {
     }
 }
 
+private val dualFontCache = mutableMapOf<Pair<EnglishFont, BanglaFont>, FontFamily>()
+
 fun getDualActiveFontFamily(
     englishFont: EnglishFont = EnglishFont.ROBOTO,
     banglaFont: BanglaFont = BanglaFont.NOTO_SANS_BENGALI
 ): FontFamily {
-    val fonts = mutableListOf<Font>()
-    // 1) English font first: renders Latin characters, English digits, and punctuation with chosen English style
-    if (englishFont != EnglishFont.SYSTEM_SANS && englishFont.fontResId != null) {
-        fonts.add(Font(resId = englishFont.fontResId))
-    }
-    // 2) Bangla font next: supplies the Bengali script glyphs and ligature conjuncts
-    if (banglaFont.fontResId != null) {
-        fonts.add(Font(resId = banglaFont.fontResId))
-    }
+    return dualFontCache.getOrPut(englishFont to banglaFont) {
+        // When a custom Bangla font is chosen (e.g. Noto Sans, Hind Siliguri, Anek Bangla, Tiro Bangla),
+        // it must be the PRIMARY font in the font family so that the text engine renders Bengali characters
+        // with that specific Bangla font's glyphs, matras, and ligatures.
+        val fonts = mutableListOf<Font>()
 
-    return if (fonts.isEmpty()) {
-        FontFamily.SansSerif
-    } else {
-        FontFamily(fonts)
+        // 1) Bangla font first: Ensures selected Bangla font typography applies to all Bengali text
+        if (banglaFont.fontResId != null) {
+            fonts.add(Font(resId = banglaFont.fontResId))
+        }
+
+        // 2) English font: Renders Latin characters, numbers, and symbols
+        if (englishFont != EnglishFont.SYSTEM_SANS && englishFont.fontResId != null) {
+            fonts.add(Font(resId = englishFont.fontResId))
+        }
+
+        if (fonts.isEmpty()) {
+            FontFamily.SansSerif
+        } else {
+            FontFamily(fonts)
+        }
     }
 }
 
@@ -59,6 +68,14 @@ fun getActiveAppFontFamily(
     banglaFont: BanglaFont = BanglaFont.NOTO_SANS_BENGALI,
     primaryPreference: PrimaryFontPreference = PrimaryFontPreference.BANGLA_PRIMARY
 ): FontFamily {
+    if (primaryPreference == PrimaryFontPreference.ENGLISH_PRIMARY && englishFont.fontResId != null) {
+        val fonts = mutableListOf<Font>()
+        fonts.add(Font(resId = englishFont.fontResId))
+        if (banglaFont.fontResId != null) {
+            fonts.add(Font(resId = banglaFont.fontResId))
+        }
+        return FontFamily(fonts)
+    }
     return getDualActiveFontFamily(englishFont, banglaFont)
 }
 

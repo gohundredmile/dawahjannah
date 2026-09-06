@@ -134,7 +134,7 @@ fun MasnunDuaScreen(
                 fontWeight = FontWeight.Medium
             )
             Text(
-                text = "১০০% সহীহ সনদ",
+                text = "হিসনুল মুসলিম (GTAF Dua)",
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.primary,
                 fontWeight = FontWeight.Bold

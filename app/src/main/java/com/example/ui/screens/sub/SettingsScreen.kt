@@ -287,14 +287,15 @@ fun SettingsScreen(viewModel: MainViewModel) {
                             Column {
                                 Text(
                                     text = font.displayNameEn,
+                                    fontFamily = getBanglaFontFamily(font),
                                     style = MaterialTheme.typography.bodyMedium,
                                     fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
                                     color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
                                 )
                                 Text(
                                     text = "${font.displayNameBn} — বিসমিল্লাহির রাহমানির রাহিম",
-                                    style = MaterialTheme.typography.bodySmall,
                                     fontFamily = getBanglaFontFamily(font),
+                                    style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }

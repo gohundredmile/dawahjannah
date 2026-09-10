@@ -22,6 +22,7 @@ import com.example.data.datasource.TasbihPresetsData
 import com.example.data.datasource.WisdomApiService
 import com.example.data.remote.GitHubReleaseInfo
 import com.example.data.remote.GitHubUpdateManager
+import com.example.data.remote.RemoteContentBundle
 import com.example.data.local.entity.ChecklistRecord
 import com.example.data.local.entity.ScratchpadNote
 import com.example.data.model.AllahNameItem
@@ -58,6 +59,13 @@ import kotlinx.coroutines.launch
 import java.util.Calendar
 import java.util.Date
 import java.util.Locale
+
+data class AnnouncementData(
+    val id: String = "",
+    val title: String = "",
+    val message: String = "",
+    val active: Boolean = true
+)
 
 enum class AppTab(val index: Int, val titleBn: String) {
     HOME(0, "হোম"),
@@ -353,16 +361,26 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    private val _downloadedDuas = MutableStateFlow<List<DuaItem>>(emptyList())
+    val downloadedDuas = _downloadedDuas.asStateFlow()
+
+    private val _dynamicCategories = MutableStateFlow<List<DuaVaultData.Category>>(DuaVaultData.categories)
+    val allDuaCategories = _dynamicCategories.asStateFlow()
+
     val filteredDuas = combine(
         _duaSearchQuery,
         _selectedDuaCategory,
-        bookmarkedDuaIds
-    ) { query, cat, bookmarks ->
+        bookmarkedDuaIds,
+        _downloadedDuas
+    ) { query, cat, bookmarks, remoteDuas ->
         val bookmarkSet = bookmarks.toSet()
-        DuaVaultData.duas.map { dua ->
+        val allDuasCombined = remoteDuas + DuaVaultData.duas
+        allDuasCombined.map { dua ->
             dua.copy(isBookmarked = bookmarkSet.contains(dua.id))
         }.filter { dua ->
-            val matchesCategory = if (cat == "all") true else if (cat == "bookmarked") dua.isBookmarked else dua.categoryId == cat
+            val matchesCategory = if (cat == "all") true 
+                else if (cat == "bookmarked") dua.isBookmarked 
+                else dua.categoryId == cat || dua.categoryNameBn == cat
             val matchesQuery = query.isBlank() ||
                     dua.titleBn.contains(query, ignoreCase = true) ||
                     dua.meaningBn.contains(query, ignoreCase = true) ||
@@ -665,6 +683,15 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val _latestReleaseInfo = MutableStateFlow<GitHubReleaseInfo?>(null)
     val latestReleaseInfo = _latestReleaseInfo.asStateFlow()
 
+    private val _isDownloadingUpdate = MutableStateFlow(false)
+    val isDownloadingUpdate = _isDownloadingUpdate.asStateFlow()
+
+    private val _activeAnnouncement = MutableStateFlow<AnnouncementData?>(null)
+    val activeAnnouncement = _activeAnnouncement.asStateFlow()
+
+    val appliedContentVersion: String
+        get() = gitHubUpdateManager.appliedContentVersion
+
     fun checkForAppUpdates() {
         viewModelScope.launch {
             _updateAlertMessage.value = "গিটহাব (GitHub) রিলিজ ও app-updates.json যাচাই করা হচ্ছে..."
@@ -675,7 +702,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 if (release != null && release.hasNewerVersion) {
                     val ann = if (!release.announcement.isNullOrBlank()) "\n\nঘোষণা: ${release.announcement}" else ""
                     val source = if (release.isFromAppUpdatesJson) " (app-updates.json থেকে)" else " (GitHub Releases থেকে)"
-                    _updateAlertMessage.value = "গিটহাবে নতুন আপডেট পাওয়া গেছে (${release.tagName})$source!\n${release.versionName}\n\nনতুন পরিবর্তন:\n${release.releaseNotes.take(200)}$ann"
+                    _updateAlertMessage.value = "গিটহাবে নতুন আপডেট পাওয়া গেছে (${release.tagName})$source!\n${release.versionName}\n\nনতুন পরিবর্তন:\n${release.releaseNotes.take(200)}$ann\n\n'নতুন ভার্শন ডাউনলোড করুন' বাটনে চাপলে সরাসরি অ্যাপের ভেতর সমস্ত কনটেন্ট সক্রিয় হবে।"
                 } else if (release != null) {
                     val ann = if (!release.announcement.isNullOrBlank()) "\n\nঘোষণা/বার্তা:\n${release.announcement}" else ""
                     val source = if (release.isFromAppUpdatesJson) "app-updates.json" else "GitHub Releases"
@@ -692,12 +719,86 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    /**
+     * Downloads and applies updates directly in-app to the respective places (Dua Vault, Islamic Life, Announcements)
+     * without redirecting to external browser or GitHub release page.
+     */
+    fun downloadAndApplyInAppUpdate() {
+        viewModelScope.launch {
+            _isDownloadingUpdate.value = true
+            _updateAlertMessage.value = "ইন-অ্যাপ কনটেন্ট ডাউনলোড ও প্রয়োগ করা হচ্ছে... অনুগ্রহ করে অপেক্ষা করুন।"
+            val result = gitHubUpdateManager.downloadAndApplyContentUpdates()
+            _isDownloadingUpdate.value = false
+            if (result.isSuccess) {
+                val bundle = result.getOrThrow()
+                applyContentBundleToApp(bundle, notifyUser = true)
+                _latestReleaseInfo.value = _latestReleaseInfo.value?.copy(hasNewerVersion = false)
+            } else {
+                val errorMsg = result.exceptionOrNull()?.message ?: "অজ্ঞাত ত্রুটি"
+                _updateAlertMessage.value = "ইন-অ্যাপ কনটেন্ট ডাউনলোড ব্যর্থ হয়েছে: $errorMsg\n\nঅনুগ্রহ করে ইন্টারনেট সংযোগ পরীক্ষা করে পুনরায় চেষ্টা করুন।"
+            }
+        }
+    }
+
+    private fun applyContentBundleToApp(bundle: RemoteContentBundle, notifyUser: Boolean) {
+        val convertedDuas = bundle.extraDuas.map { remote ->
+            val catName = if (remote.category.isNotBlank()) remote.category else "অন্যান্য দোয়া"
+            val safeCatId = "cat_remote_" + kotlin.math.abs(remote.category.hashCode())
+            DuaItem(
+                id = remote.id,
+                categoryId = safeCatId,
+                categoryNameBn = catName,
+                titleBn = remote.titleBn,
+                arabicText = remote.arabic,
+                pronunciationBn = remote.pronunciationBn,
+                meaningBn = remote.meaningBn,
+                virtuesBn = "ইন-অ্যাপ ওটিএ কনটেন্ট আপডেট থেকে যুক্ত।",
+                reference = remote.reference,
+                isBookmarked = false
+            )
+        }
+        _downloadedDuas.value = convertedDuas
+
+        // Extract any new categories and append to DuaVaultData.categories
+        val existingCatNames = DuaVaultData.categories.map { it.nameBn }.toSet()
+        val newCategories = convertedDuas
+            .map { it.categoryNameBn }
+            .distinct()
+            .filterNot { existingCatNames.contains(it) }
+            .map { name ->
+                val safeCatId = "cat_remote_" + kotlin.math.abs(name.hashCode())
+                DuaVaultData.Category(id = safeCatId, nameBn = name)
+            }
+        _dynamicCategories.value = DuaVaultData.categories + newCategories
+
+        // Handle announcement
+        if (!bundle.announcement.isNullOrBlank()) {
+            val parts = bundle.announcement.split("\n", limit = 2)
+            val title = parts.getOrNull(0)?.trim() ?: "বিশেষ আপডেট"
+            val message = parts.getOrNull(1)?.trim() ?: parts.getOrNull(0)?.trim() ?: ""
+            _activeAnnouncement.value = AnnouncementData(
+                id = "announcement_${bundle.version}",
+                title = title,
+                message = message,
+                active = true
+            )
+        }
+
+        if (notifyUser) {
+            _updateAlertMessage.value = "আলহামদুলিল্লাহ! নতুন ভার্সন (${bundle.tagName}) এর কনটেন্ট সফলভাবে অ্যাপের যথাস্থানে ডাউনলোড ও প্রয়োগ করা হয়েছে!\n\n• দো'আ ভল্টে ${convertedDuas.size}টি নতুন দো'আ সক্রিয় হয়েছে।\n• দো'আ কবুল হওয়ার স্থান ও সময়ের সর্বশেষ তথ্য আপডেট হয়েছে।\n\n(কোনো বাহ্যিক ব্রাউজার ছাড়াই সরাসরি অ্যাপের ভেতরেই ডাউনলোড সম্পন্ন হয়েছে।)"
+        }
+    }
+
+    fun dismissAnnouncement() {
+        _activeAnnouncement.value = null
+    }
+
     fun testLocalAppUpdatesSync() {
         val bundled = gitHubUpdateManager.getLocalBundledUpdates()
         if (bundled != null) {
             _latestReleaseInfo.value = bundled
             val ann = if (!bundled.announcement.isNullOrBlank()) "\n\nঘোষণা/বার্তা:\n${bundled.announcement}" else ""
-            _updateAlertMessage.value = "প্রজেক্টের 'app-updates.json' ফাইল ভ্যালিডেশন সফল!\n\nসংস্করণ: ${bundled.tagName} (${bundled.versionName})\nডাউনলোড লিংক: ${bundled.downloadUrl}\n\nপরিবর্তনসমূহ:\n${bundled.releaseNotes}$ann\n\n(এই কনটেন্টটি গিটহাবে পুশ করার সাথে সাথে অ্যাপ স্বয়ংক্রিয়ভাবে সিঙ্ক করবে।)"
+            _updateAlertMessage.value = "প্রজেক্টের 'app-updates.json' ফাইল ভ্যালিডেশন সফল!\n\nসংস্করণ: ${bundled.tagName} (${bundled.versionName})\n\nপরিবর্তনসমূহ:\n${bundled.releaseNotes}$ann\n\n'নতুন ভার্শন ডাউনলোড করুন' বাটনে ট্যাপ করে সরাসরি অ্যাপেই এই কনটেন্ট প্রয়োগ করা যাবে।"
         } else {
             _updateAlertMessage.value = "লোকাল app-updates.json ফাইলে ত্রুটি রয়েছে।"
         }
@@ -715,6 +816,12 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private var lastRecordedDayOfYear: Int = Calendar.getInstance().get(Calendar.DAY_OF_YEAR)
 
     init {
+        // Load persisted or bundled in-app content updates into the app state
+        val initialUpdates = gitHubUpdateManager.getPersistedDownloadedUpdates()
+        if (initialUpdates != null) {
+            applyContentBundleToApp(initialUpdates, notifyUser = false)
+        }
+
         viewModelScope.launch {
             while (true) {
                 delay(1000)

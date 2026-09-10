@@ -27,13 +27,20 @@ data class GitHubReleaseInfo(
 @JsonClass(generateAdapter = true)
 data class RemoteContentBundle(
     val version: Int,
+    val versionName: String = "1.0.3",
+    val tagName: String = "v1.0.3",
+    val releaseTitle: String = "",
+    val releaseNotes: String = "",
     val announcement: String?,
-    val extraDuas: List<RemoteDuaItem> = emptyList()
+    val extraDuas: List<RemoteDuaItem> = emptyList(),
+    val isApplied: Boolean = true,
+    val appliedAt: Long = System.currentTimeMillis()
 )
 
 @JsonClass(generateAdapter = true)
 data class RemoteDuaItem(
     val id: String,
+    val category: String = "",
     val titleBn: String,
     val arabic: String,
     val pronunciationBn: String,
@@ -77,7 +84,12 @@ class GitHubUpdateManager(private val context: Context) {
             .apply()
     }
 
-    private val currentAppVersion = "1.0.0"
+    var appliedContentVersion: String
+        get() = prefs.getString("applied_content_version", "1.0.0") ?: "1.0.0"
+        set(value) = prefs.edit().putString("applied_content_version", value.trim()).apply()
+
+    val currentAppVersion: String
+        get() = appliedContentVersion
 
     /**
      * Checks GitHub Releases API first, and if unavailable, seamlessly falls back to app-updates.json
@@ -298,6 +310,7 @@ class GitHubUpdateManager(private val context: Context) {
                             extraDuas.add(
                                 RemoteDuaItem(
                                     id = d.optString("id", "dua_$i"),
+                                    category = d.optString("category", ""),
                                     titleBn = d.optString("titleBn", ""),
                                     arabic = d.optString("arabic", ""),
                                     pronunciationBn = d.optString("pronunciationBn", ""),
@@ -308,11 +321,21 @@ class GitHubUpdateManager(private val context: Context) {
                         }
                     }
 
+                    val versionName = json.optString("versionName", "1.0.3")
+                    val tagName = json.optString("tagName", "v$versionName")
+                    val releaseTitle = json.optString("releaseTitle", "দা'ওয়াহ টু জান্নাহ - সংস্করণ $versionName")
+                    val releaseNotes = json.optString("releaseNotes", "নিয়মিত আপডেট ও পারফরম্যান্স উন্নতি।")
+
                     return@withContext Result.success(
                         RemoteContentBundle(
                             version = version,
+                            versionName = versionName,
+                            tagName = tagName,
+                            releaseTitle = releaseTitle,
+                            releaseNotes = releaseNotes,
                             announcement = announcementText,
-                            extraDuas = extraDuas
+                            extraDuas = extraDuas,
+                            isApplied = true
                         )
                     )
                 }
@@ -321,6 +344,193 @@ class GitHubUpdateManager(private val context: Context) {
         }
 
         Result.failure(Exception("গিটহাবে app-updates.json পাওয়া যায়নি।"))
+    }
+
+    /**
+     * Downloads over-the-air content and saves it persistently inside the app's local storage.
+     * Tapping the update button triggers this directly without redirecting outside the app.
+     */
+    suspend fun downloadAndApplyContentUpdates(
+        owner: String = repoOwner,
+        repo: String = repoName
+    ): Result<RemoteContentBundle> = withContext(Dispatchers.IO) {
+        try {
+            var rawJsonString: String? = null
+
+            // 1. Try remote GitHub raw content first
+            val branchUrls = listOf(
+                "https://raw.githubusercontent.com/$owner/$repo/main/app-updates.json",
+                "https://raw.githubusercontent.com/$owner/$repo/master/app-updates.json"
+            )
+
+            for (url in branchUrls) {
+                try {
+                    val request = Request.Builder()
+                        .url(url)
+                        .header("User-Agent", "DawahToJannah-Android-App")
+                        .build()
+                    val response = client.newCall(request).execute()
+                    if (response.isSuccessful) {
+                        val body = response.body?.string()
+                        if (!body.isNullOrBlank()) {
+                            rawJsonString = body
+                            break
+                        }
+                    }
+                } catch (_: Exception) {
+                }
+            }
+
+            // 2. If network request failed, fall back to bundled asset
+            if (rawJsonString == null) {
+                try {
+                    val stream = context.assets.open("app-updates.json")
+                    rawJsonString = stream.bufferedReader().use { it.readText() }
+                } catch (e: Exception) {
+                    return@withContext Result.failure(Exception("আপডেট কনটেন্ট পাওয়া যায়নি: ${e.message}"))
+                }
+            }
+
+            val json = JSONObject(rawJsonString)
+            val version = json.optInt("versionCode", json.optInt("version", 103))
+            val versionName = json.optString("versionName", "1.0.3")
+            val tagName = json.optString("tagName", "v$versionName")
+            val releaseTitle = json.optString("releaseTitle", "দা'ওয়াহ টু জান্নাহ - সংস্করণ $versionName")
+            val releaseNotes = json.optString("releaseNotes", "নিয়মিত আপডেট ও নতুন কনটেন্ট সংযোজন।")
+
+            val announcementText = when {
+                json.has("announcement") -> {
+                    val ann = json.opt("announcement")
+                    if (ann is JSONObject) {
+                        val title = ann.optString("title", "").trim()
+                        val msg = ann.optString("message", "").trim()
+                        if (title.isNotEmpty() && msg.isNotEmpty()) "$title\n$msg" else msg.ifEmpty { title }
+                    } else {
+                        ann?.toString()
+                    }
+                }
+                else -> null
+            }
+
+            val extraDuas = mutableListOf<RemoteDuaItem>()
+            val contentUpdates = json.optJSONObject("contentUpdates")
+            val duasArray = contentUpdates?.optJSONArray("newDuas") ?: json.optJSONArray("extraDuas")
+            if (duasArray != null) {
+                for (i in 0 until duasArray.length()) {
+                    val d = duasArray.getJSONObject(i)
+                    extraDuas.add(
+                        RemoteDuaItem(
+                            id = d.optString("id", "dua_remote_$i"),
+                            category = d.optString("category", "অন্যান্য দোয়া"),
+                            titleBn = d.optString("titleBn", ""),
+                            arabic = d.optString("arabic", ""),
+                            pronunciationBn = d.optString("pronunciationBn", ""),
+                            meaningBn = d.optString("meaningBn", ""),
+                            reference = d.optString("reference", "")
+                        )
+                    )
+                }
+            }
+
+            // Persist to internal app storage
+            try {
+                val file = java.io.File(context.filesDir, "downloaded_content_updates.json")
+                file.writeText(rawJsonString)
+            } catch (_: Exception) {
+            }
+
+            // Record applied version in SharedPreferences
+            appliedContentVersion = versionName
+            prefs.edit()
+                .putString("applied_tag_name", tagName)
+                .putLong("last_download_time", System.currentTimeMillis())
+                .apply()
+
+            val bundle = RemoteContentBundle(
+                version = version,
+                versionName = versionName,
+                tagName = tagName,
+                releaseTitle = releaseTitle,
+                releaseNotes = releaseNotes,
+                announcement = announcementText,
+                extraDuas = extraDuas,
+                isApplied = true
+            )
+
+            Result.success(bundle)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    /**
+     * Reads locally persisted updates from filesDir or bundled asset fallback
+     */
+    fun getPersistedDownloadedUpdates(): RemoteContentBundle? {
+        try {
+            val file = java.io.File(context.filesDir, "downloaded_content_updates.json")
+            val content = if (file.exists()) {
+                file.readText()
+            } else {
+                val stream = context.assets.open("app-updates.json")
+                stream.bufferedReader().use { it.readText() }
+            }
+
+            if (content.isBlank()) return null
+            val json = JSONObject(content)
+            val version = json.optInt("versionCode", json.optInt("version", 103))
+            val versionName = json.optString("versionName", "1.0.3")
+            val tagName = json.optString("tagName", "v$versionName")
+            val releaseTitle = json.optString("releaseTitle", "দা'ওয়াহ টু জান্নাহ - সংস্করণ $versionName")
+            val releaseNotes = json.optString("releaseNotes", "")
+
+            val announcementText = when {
+                json.has("announcement") -> {
+                    val ann = json.opt("announcement")
+                    if (ann is JSONObject) {
+                        val title = ann.optString("title", "").trim()
+                        val msg = ann.optString("message", "").trim()
+                        if (title.isNotEmpty() && msg.isNotEmpty()) "$title\n$msg" else msg.ifEmpty { title }
+                    } else {
+                        ann?.toString()
+                    }
+                }
+                else -> null
+            }
+
+            val extraDuas = mutableListOf<RemoteDuaItem>()
+            val contentUpdates = json.optJSONObject("contentUpdates")
+            val duasArray = contentUpdates?.optJSONArray("newDuas") ?: json.optJSONArray("extraDuas")
+            if (duasArray != null) {
+                for (i in 0 until duasArray.length()) {
+                    val d = duasArray.getJSONObject(i)
+                    extraDuas.add(
+                        RemoteDuaItem(
+                            id = d.optString("id", "dua_remote_$i"),
+                            category = d.optString("category", "অন্যান্য দোয়া"),
+                            titleBn = d.optString("titleBn", ""),
+                            arabic = d.optString("arabic", ""),
+                            pronunciationBn = d.optString("pronunciationBn", ""),
+                            meaningBn = d.optString("meaningBn", ""),
+                            reference = d.optString("reference", "")
+                        )
+                    )
+                }
+            }
+
+            return RemoteContentBundle(
+                version = version,
+                versionName = versionName,
+                tagName = tagName,
+                releaseTitle = releaseTitle,
+                releaseNotes = releaseNotes,
+                announcement = announcementText,
+                extraDuas = extraDuas,
+                isApplied = true
+            )
+        } catch (_: Exception) {
+            return null
+        }
     }
 
     /**

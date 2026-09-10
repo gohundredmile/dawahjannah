@@ -48,6 +48,7 @@ fun MasnunDuaScreen(
     val searchQuery by viewModel.duaSearchQuery.collectAsState()
     val selectedCategory by viewModel.selectedDuaCategory.collectAsState()
     val duas by viewModel.filteredDuas.collectAsState()
+    val categories by viewModel.allDuaCategories.collectAsState()
 
     Column(
         modifier = Modifier
@@ -106,7 +107,7 @@ fun MasnunDuaScreen(
                 )
             )
 
-            DuaVaultData.categories.forEach { category ->
+            categories.forEach { category ->
                 FilterChip(
                     selected = selectedCategory == category.id,
                     onClick = { viewModel.setDuaCategory(category.id) },

@@ -20,8 +20,10 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.CloudDownload
 import androidx.compose.material.icons.filled.ColorLens
 import androidx.compose.material.icons.filled.DarkMode
+import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.FontDownload
 import androidx.compose.material.icons.filled.FormatSize
@@ -35,6 +37,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.HorizontalDivider
@@ -87,6 +90,7 @@ fun SettingsScreen(viewModel: MainViewModel) {
     val isHanafiAsr by viewModel.isHanafiAsr.collectAsState()
     val updateMessage by viewModel.updateAlertMessage.collectAsState()
     val latestReleaseInfo by viewModel.latestReleaseInfo.collectAsState()
+    val isDownloadingUpdate by viewModel.isDownloadingUpdate.collectAsState()
 
     var showRepoConfigDialog by remember { mutableStateOf(false) }
     var showSyncHelpDialog by remember { mutableStateOf(false) }
@@ -572,14 +576,39 @@ fun SettingsScreen(viewModel: MainViewModel) {
                         Text("app-updates.json প্রিভিউ / টেস্ট", fontSize = 12.sp)
                     }
 
-                    if (latestReleaseInfo?.hasNewerVersion == true && latestReleaseInfo?.downloadUrl != null) {
-                        Spacer(modifier = Modifier.height(8.dp))
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    if (isDownloadingUpdate) {
                         Button(
-                            onClick = { viewModel.gitHubUpdateManager.openDownloadPage(latestReleaseInfo!!.downloadUrl!!) },
+                            onClick = { },
+                            enabled = false,
                             shape = RoundedCornerShape(10.dp),
                             modifier = Modifier.fillMaxWidth()
                         ) {
-                            Text("নতুন ভার্সন (${latestReleaseInfo!!.tagName}) ডাউনলোড করুন")
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(16.dp),
+                                color = MaterialTheme.colorScheme.onPrimary,
+                                strokeWidth = 2.dp
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text("ইন-অ্যাপ কনটেন্ট ডাউনলোড ও প্রয়োগ হচ্ছে...")
+                        }
+                    } else {
+                        Button(
+                            onClick = { viewModel.downloadAndApplyInAppUpdate() },
+                            shape = RoundedCornerShape(10.dp),
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = if (latestReleaseInfo?.hasNewerVersion == true) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.primary.copy(alpha = 0.9f)
+                            )
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Download,
+                                contentDescription = null,
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text("নতুন ভার্শন ডাউনলোড করুন")
                         }
                     }
                 }
@@ -723,12 +752,11 @@ fun SettingsScreen(viewModel: MainViewModel) {
             title = { Text("আপডেট স্ট্যাটাস", fontWeight = FontWeight.Bold) },
             text = { Text(updateMessage ?: "") },
             confirmButton = {
-                if (latestReleaseInfo?.hasNewerVersion == true && latestReleaseInfo?.downloadUrl != null) {
+                if (latestReleaseInfo?.hasNewerVersion == true) {
                     Button(onClick = {
-                        viewModel.gitHubUpdateManager.openDownloadPage(latestReleaseInfo!!.downloadUrl!!)
-                        viewModel.dismissUpdateAlert()
+                        viewModel.downloadAndApplyInAppUpdate()
                     }) {
-                        Text("ডাউনলোড করুন")
+                        Text("নতুন ভার্শন ডাউনলোড করুন")
                     }
                 } else {
                     Button(onClick = { viewModel.dismissUpdateAlert() }) {

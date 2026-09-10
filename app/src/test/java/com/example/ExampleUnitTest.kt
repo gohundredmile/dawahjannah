@@ -15,7 +15,7 @@ class ExampleUnitTest {
   @Test
   fun banglaFonts_haveStandardWebFonts() {
     val fonts = BanglaFont.entries
-    assertEquals(5, fonts.size)
+    assertEquals(10, fonts.size)
     assertTrue(fonts.any { it.googleFontName == "Anek Bangla" })
     assertTrue(fonts.any { it.googleFontName == "Noto Sans Bengali" })
     assertTrue(fonts.any { it.googleFontName == "Tiro Bangla" })

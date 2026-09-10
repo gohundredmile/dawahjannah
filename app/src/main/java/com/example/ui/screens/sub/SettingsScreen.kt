@@ -209,6 +209,22 @@ fun SettingsScreen(viewModel: MainViewModel) {
                 border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.15f))
             ) {
                 Column(modifier = Modifier.padding(14.dp)) {
+                    // Dual active fonts badge banner
+                    Surface(
+                        shape = RoundedCornerShape(10.dp),
+                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.08f),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(
+                            text = "💡 যুগপৎ সক্রিয় ফন্ট: ইংরেজি ফন্ট নির্বাচন শুধুমাত্র ইংরেজি লেখা ও সংখ্যার ওপর প্রভাব ফেলবে এবং বাংলা ফন্ট নির্বাচন শুধুমাত্র বাংলা হরফের ওপর প্রভাব ফেলবে। উভয় ফন্ট একই সাথে সক্রিয় থাকে।",
+                            style = MaterialTheme.typography.bodySmall,
+                            fontSize = 11.5.sp,
+                            color = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.padding(10.dp)
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(12.dp))
+
                     // English Font Header
                     Text(
                         text = "ইংরেজি ফন্ট (Clean, Stunning & Thin English Fonts):",
@@ -238,6 +254,7 @@ fun SettingsScreen(viewModel: MainViewModel) {
                                 )
                                 Text(
                                     text = "${font.subtitle} • 04:52 AM, September 2026",
+                                    fontFamily = getEnglishFontFamily(font),
                                     style = MaterialTheme.typography.bodySmall,
                                     fontSize = 11.sp,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -286,14 +303,14 @@ fun SettingsScreen(viewModel: MainViewModel) {
                         ) {
                             Column {
                                 Text(
-                                    text = font.displayNameEn,
+                                    text = font.displayNameBn,
                                     fontFamily = getBanglaFontFamily(font),
                                     style = MaterialTheme.typography.bodyMedium,
                                     fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
                                     color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
                                 )
                                 Text(
-                                    text = "${font.displayNameBn} — বিসমিল্লাহির রাহমানির রাহিম",
+                                    text = "বিসমিল্লাহির রাহমানির রাহিম • ${font.displayNameEn}",
                                     fontFamily = getBanglaFontFamily(font),
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant

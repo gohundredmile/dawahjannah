@@ -61,6 +61,7 @@ import com.example.data.model.BanglaFont
 import com.example.data.model.BanglaFontWeight
 import com.example.data.model.EnglishFont
 import com.example.ui.theme.getBanglaFontFamily
+import com.example.ui.theme.getDualActiveFontFamily
 import com.example.ui.theme.getEnglishFontFamily
 import com.example.ui.viewmodel.AppTab
 import com.example.ui.viewmodel.MainViewModel
@@ -222,6 +223,12 @@ fun BanglaFontSettingsDialog(
                         letterSpacing = 1.1.sp,
                         color = MaterialTheme.colorScheme.primary
                     )
+                    Text(
+                        text = "এই ফন্টটি শুধুমাত্র ইংরেজি বর্ণ ও সংখ্যার উপর কার্যকর হবে",
+                        style = MaterialTheme.typography.labelSmall,
+                        fontSize = 11.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
                     Spacer(modifier = Modifier.height(8.dp))
 
                     EnglishFont.entries.forEach { font ->
@@ -270,7 +277,8 @@ fun BanglaFontSettingsDialog(
                                             color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
                                         )
                                         Text(
-                                            text = font.subtitle,
+                                            text = "${font.subtitle} • 04:52 AM, September 2026",
+                                            fontFamily = getEnglishFontFamily(font),
                                             style = MaterialTheme.typography.bodySmall,
                                             fontSize = 11.sp,
                                             color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -291,14 +299,20 @@ fun BanglaFontSettingsDialog(
                     }
                 }
 
-                // TAB 1: BENGALI FONTS (Noto Sans Bengali, Hind Siliguri, Anek Bangla, Tiro Bangla)
+                // TAB 1: BENGALI FONTS (Solaiman Lipi, Kalpurush, Siyam Rupali, Nikosh, Adorsho Lipi, Noto Sans, Hind Siliguri, etc.)
                 if (activeTab == 1) {
                     Text(
-                        text = "BEAUTIFUL BENGALI FONTS",
+                        text = "POPULAR BENGALI FONTS (১০টি ফন্ট)",
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.Bold,
                         letterSpacing = 1.1.sp,
                         color = MaterialTheme.colorScheme.primary
+                    )
+                    Text(
+                        text = "এই ফন্টটি শুধুমাত্র বাংলা লিপির অক্ষর ও সংখ্যার উপর কার্যকর হবে",
+                        style = MaterialTheme.typography.labelSmall,
+                        fontSize = 11.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Spacer(modifier = Modifier.height(8.dp))
 
@@ -341,14 +355,14 @@ fun BanglaFontSettingsDialog(
                                     Spacer(modifier = Modifier.width(10.dp))
                                     Column {
                                         Text(
-                                            text = font.displayNameEn,
+                                            text = font.displayNameBn,
                                             fontFamily = getBanglaFontFamily(font),
                                             style = MaterialTheme.typography.titleSmall,
                                             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
                                             color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
                                         )
                                         Text(
-                                            text = font.displayNameBn,
+                                            text = "বিসমিল্লাহির রাহমানির রাহিম • ${font.displayNameEn}",
                                             fontFamily = getBanglaFontFamily(font),
                                             style = MaterialTheme.typography.bodySmall,
                                             fontSize = 11.5.sp,
@@ -485,6 +499,24 @@ fun BanglaFontSettingsDialog(
                             color = MaterialTheme.colorScheme.onSurface,
                             textAlign = TextAlign.Center
                         )
+                        Spacer(modifier = Modifier.height(6.dp))
+
+                        // Simultaneous Dual-Font Combined Preview
+                        Surface(
+                            shape = RoundedCornerShape(8.dp),
+                            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.08f),
+                            modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp)
+                        ) {
+                            Text(
+                                text = "Fajr 04:52 AM • ফজর ওয়াক্ত • সুবহানাল্লাহ",
+                                fontFamily = getDualActiveFontFamily(currentEnglishFont, currentBanglaFont),
+                                fontWeight = currentWeight.fontWeight,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.primary,
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 5.dp)
+                            )
+                        }
                         Spacer(modifier = Modifier.height(4.dp))
 
                         Text(

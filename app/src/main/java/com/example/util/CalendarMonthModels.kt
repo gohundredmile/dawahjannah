@@ -108,7 +108,8 @@ object CalendarMonthProvider {
     fun getGregorianMonth(
         targetMonthIndex: Int = 8, // September (0-based)
         targetYear: Int = 2026,
-        todayDay: Int = 4
+        todayDay: Int = 4,
+        highlightToday: Boolean = false
     ): GregorianMonthDetail {
         val cal = Calendar.getInstance().apply {
             set(Calendar.YEAR, targetYear)
@@ -132,7 +133,7 @@ object CalendarMonthProvider {
             list.add(
                 GregorianDayItem(
                     dayNumber = day,
-                    isToday = (targetMonthIndex == 8 && targetYear == 2026 && day == todayDay),
+                    isToday = (highlightToday && targetMonthIndex == 8 && targetYear == 2026 && day == todayDay),
                     colIndex = col
                 )
             )
@@ -161,7 +162,8 @@ object CalendarMonthProvider {
     fun getBengaliMonth(
         targetMonthIndex: Int = 4, // ভাদ্র (5th month, index 4)
         targetYear: Int = 1433,
-        todayDay: Int = 20
+        todayDay: Int = 20,
+        highlightToday: Boolean = false
     ): BengaliMonthDetail {
         // Bengali calendar: First 6 months (0..5) have 31 days.
         // Kartik to Magh (6..9) have 30 days. Phalgun (10) has 29/30. Chaitra (11) has 30.
@@ -202,7 +204,7 @@ object CalendarMonthProvider {
                 BengaliDayItem(
                     dayNumberBn = CalendarHelper.toBanglaNumber(day),
                     gregorianDayNumber = gregDay,
-                    isToday = (targetMonthIndex == 4 && day == todayDay),
+                    isToday = (highlightToday && targetMonthIndex == 4 && day == todayDay),
                     colIndex = col
                 )
             )
@@ -234,7 +236,8 @@ object CalendarMonthProvider {
     fun getHijriMonth(
         targetMonthIndex: Int = 2, // Rabi' al-Awwal (3rd month, index 2)
         targetYear: Int = 1448,
-        todayDay: Int = 22
+        todayDay: Int = 22,
+        highlightToday: Boolean = false
     ): HijriMonthDetail {
         val maxDays = 29 // or 30
 
@@ -267,7 +270,7 @@ object CalendarMonthProvider {
                     hijriDayArabic = toArabicNumerals(day),
                     hijriDayBn = CalendarHelper.toBanglaNumber(day),
                     gregorianSubDate = gregSub,
-                    isToday = (targetMonthIndex == 2 && day == todayDay),
+                    isToday = (highlightToday && targetMonthIndex == 2 && day == todayDay),
                     colIndex = col
                 )
             )

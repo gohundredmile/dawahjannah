@@ -1,5 +1,7 @@
 package com.example.ui.theme
 
+import android.content.Context
+import android.os.Build
 import androidx.compose.material3.Typography
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.ui.text.TextStyle
@@ -7,6 +9,7 @@ import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
+import com.example.R
 import com.example.data.model.BanglaFont
 import com.example.data.model.BanglaFontWeight
 import com.example.data.model.EnglishFont
@@ -19,73 +22,116 @@ val LocalAppFontFamily = compositionLocalOf<FontFamily> { FontFamily.SansSerif }
 val LocalEnglishFontFamily = compositionLocalOf<FontFamily> { FontFamily.SansSerif }
 val LocalBanglaFontFamily = compositionLocalOf<FontFamily> { FontFamily.Default }
 
+val ArabicFontFamily = FontFamily(
+    Font(resId = R.font.font_arabic_amiri, weight = FontWeight.Normal),
+    Font(resId = R.font.font_arabic_amiri, weight = FontWeight.Medium),
+    Font(resId = R.font.font_arabic_amiri, weight = FontWeight.Bold)
+)
+val LocalArabicFontFamily = compositionLocalOf<FontFamily> { ArabicFontFamily }
+
 fun getEnglishFontFamily(font: EnglishFont): FontFamily {
     return englishFontCache.getOrPut(font) {
         val resId = font.fontResId ?: return@getOrPut FontFamily.SansSerif
-        FontFamily(Font(resId = resId))
+        FontFamily(
+            Font(resId = resId, weight = FontWeight.W100),
+            Font(resId = resId, weight = FontWeight.W200),
+            Font(resId = resId, weight = FontWeight.W300),
+            Font(resId = resId, weight = FontWeight.W400),
+            Font(resId = resId, weight = FontWeight.W500),
+            Font(resId = resId, weight = FontWeight.W600),
+            Font(resId = resId, weight = FontWeight.W700),
+            Font(resId = resId, weight = FontWeight.W800),
+            Font(resId = resId, weight = FontWeight.W900)
+        )
     }
 }
 
 fun getBanglaFontFamily(font: BanglaFont): FontFamily {
     return banglaFontCache.getOrPut(font) {
         val resId = font.fontResId ?: return@getOrPut FontFamily.Default
-        FontFamily(Font(resId = resId))
+        FontFamily(
+            Font(resId = resId, weight = FontWeight.W100),
+            Font(resId = resId, weight = FontWeight.W200),
+            Font(resId = resId, weight = FontWeight.W300),
+            Font(resId = resId, weight = FontWeight.W400),
+            Font(resId = resId, weight = FontWeight.W500),
+            Font(resId = resId, weight = FontWeight.W600),
+            Font(resId = resId, weight = FontWeight.W700),
+            Font(resId = resId, weight = FontWeight.W800),
+            Font(resId = resId, weight = FontWeight.W900)
+        )
     }
 }
 
-private val dualFontCache = mutableMapOf<Pair<EnglishFont, BanglaFont>, FontFamily>()
+private val dualFontCache = mutableMapOf<Triple<EnglishFont, BanglaFont, Boolean>, FontFamily>()
 
+/**
+ * Dual Active Font Engine:
+ * Combines the selected English font and Bangla font into a unified Typeface.
+ *
+ * On Android Q+ (API 29+):
+ * Uses Android's Typeface.CustomFallbackBuilder to create an authentic composite Typeface
+ * where English/Latin characters are rendered by the selected English font, and Bengali
+ * characters are seamlessly rendered by the selected Bangla font as the primary custom fallback.
+ *
+ * Result:
+ * - Selecting any Bangla font in settings updates all Bengali text and numbers across the app.
+ * - Selecting any English font in settings updates all English text and numbers across the app.
+ * - Both fonts remain active simultaneously everywhere.
+ */
 fun getDualActiveFontFamily(
     englishFont: EnglishFont = EnglishFont.ROBOTO,
-    banglaFont: BanglaFont = BanglaFont.NOTO_SANS_BENGALI
+    banglaFont: BanglaFont = BanglaFont.NOTO_SANS_BENGALI,
+    context: Context? = null
 ): FontFamily {
-    return dualFontCache.getOrPut(englishFont to banglaFont) {
-        // When a custom Bangla font is chosen (e.g. Noto Sans, Hind Siliguri, Anek Bangla, Tiro Bangla),
-        // it must be the PRIMARY font in the font family so that the text engine renders Bengali characters
-        // with that specific Bangla font's glyphs, matras, and ligatures.
-        val fonts = mutableListOf<Font>()
+    val key = Triple(englishFont, banglaFont, context != null)
+    return dualFontCache.getOrPut(key) {
+        if (context != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            try {
+                val res = context.resources
+                val englishRes = englishFont.fontResId ?: R.font.font_roboto
+                val banglaRes = banglaFont.fontResId ?: R.font.font_noto_bengali
 
-        // 1) Bangla font first: Ensures selected Bangla font typography applies to all Bengali text
-        if (banglaFont.fontResId != null) {
-            fonts.add(Font(resId = banglaFont.fontResId))
+                val engFont = android.graphics.fonts.Font.Builder(res, englishRes).build()
+                val engFamily = android.graphics.fonts.FontFamily.Builder(engFont).build()
+
+                val bngFont = android.graphics.fonts.Font.Builder(res, banglaRes).build()
+                val bngFamily = android.graphics.fonts.FontFamily.Builder(bngFont).build()
+
+                val customTypeface = android.graphics.Typeface.CustomFallbackBuilder(engFamily)
+                    .addCustomFallback(bngFamily)
+                    .build()
+
+                return@getOrPut FontFamily(customTypeface)
+            } catch (e: Throwable) {
+                // Fallback to Compose font list below
+            }
         }
 
-        // 2) English font: Renders Latin characters, numbers, and symbols
-        if (englishFont != EnglishFont.SYSTEM_SANS && englishFont.fontResId != null) {
-            fonts.add(Font(resId = englishFont.fontResId))
-        }
-
-        if (fonts.isEmpty()) {
-            FontFamily.SansSerif
-        } else {
-            FontFamily(fonts)
-        }
+        // Fallback: If context is null or below API 29, prioritize the selected Bangla font
+        // so that the 90% Bengali text throughout the app always renders with the chosen font.
+        val banglaRes = banglaFont.fontResId ?: R.font.font_noto_bengali
+        FontFamily(Font(resId = banglaRes))
     }
 }
 
 fun getActiveAppFontFamily(
     englishFont: EnglishFont = EnglishFont.ROBOTO,
     banglaFont: BanglaFont = BanglaFont.NOTO_SANS_BENGALI,
-    primaryPreference: PrimaryFontPreference = PrimaryFontPreference.BANGLA_PRIMARY
+    primaryPreference: PrimaryFontPreference = PrimaryFontPreference.BANGLA_PRIMARY,
+    context: Context? = null
 ): FontFamily {
-    if (primaryPreference == PrimaryFontPreference.ENGLISH_PRIMARY && englishFont.fontResId != null) {
-        val fonts = mutableListOf<Font>()
-        fonts.add(Font(resId = englishFont.fontResId))
-        if (banglaFont.fontResId != null) {
-            fonts.add(Font(resId = banglaFont.fontResId))
-        }
-        return FontFamily(fonts)
-    }
-    return getDualActiveFontFamily(englishFont, banglaFont)
+    return getDualActiveFontFamily(englishFont, banglaFont, context)
 }
 
 fun getAppTypography(
     englishFont: EnglishFont = EnglishFont.ROBOTO,
     banglaFont: BanglaFont = BanglaFont.NOTO_SANS_BENGALI,
     weight: BanglaFontWeight = BanglaFontWeight.NORMAL,
-    primaryPreference: PrimaryFontPreference = PrimaryFontPreference.BANGLA_PRIMARY
+    primaryPreference: PrimaryFontPreference = PrimaryFontPreference.BANGLA_PRIMARY,
+    context: Context? = null
 ): Typography {
-    val family = getActiveAppFontFamily(englishFont, banglaFont, primaryPreference)
+    val family = getActiveAppFontFamily(englishFont, banglaFont, primaryPreference, context)
 
     val baseWeight = when (weight) {
         BanglaFontWeight.THIN -> FontWeight.W200
@@ -181,46 +227,56 @@ fun getAppTypography(
             fontFamily = family,
             fontWeight = baseWeight,
             fontSize = 15.sp,
-            lineHeight = 23.sp,
-            letterSpacing = 0.15.sp
+            lineHeight = 22.sp,
+            letterSpacing = 0.sp
         ),
         bodyMedium = TextStyle(
             fontFamily = family,
             fontWeight = baseWeight,
-            fontSize = 13.5.sp,
-            lineHeight = 20.sp,
-            letterSpacing = 0.15.sp
+            fontSize = 14.sp,
+            lineHeight = 21.sp,
+            letterSpacing = 0.sp
         ),
         bodySmall = TextStyle(
             fontFamily = family,
             fontWeight = baseWeight,
-            fontSize = 12.sp,
-            lineHeight = 17.sp,
-            letterSpacing = 0.15.sp
+            fontSize = 12.5.sp,
+            lineHeight = 18.sp,
+            letterSpacing = 0.sp
         ),
         labelLarge = TextStyle(
             fontFamily = family,
             fontWeight = mediumWeight,
-            fontSize = 13.sp,
-            lineHeight = 18.sp
+            fontSize = 13.5.sp,
+            lineHeight = 18.sp,
+            letterSpacing = 0.sp
         ),
         labelMedium = TextStyle(
             fontFamily = family,
             fontWeight = mediumWeight,
-            fontSize = 11.5.sp,
-            lineHeight = 16.sp
+            fontSize = 12.sp,
+            lineHeight = 16.sp,
+            letterSpacing = 0.sp
         ),
         labelSmall = TextStyle(
             fontFamily = family,
             fontWeight = mediumWeight,
-            fontSize = 10.5.sp,
-            lineHeight = 14.sp
+            fontSize = 11.sp,
+            lineHeight = 15.sp,
+            letterSpacing = 0.sp
         )
     )
 }
 
 fun getAppTypography(
-    font: BanglaFont = BanglaFont.NOTO_SANS_BENGALI,
+    englishFont: EnglishFont = EnglishFont.ROBOTO,
+    banglaFont: BanglaFont = BanglaFont.NOTO_SANS_BENGALI,
+    weight: BanglaFontWeight = BanglaFontWeight.NORMAL,
+    primaryPreference: PrimaryFontPreference = PrimaryFontPreference.BANGLA_PRIMARY
+): Typography = getAppTypography(englishFont, banglaFont, weight, primaryPreference, null)
+
+fun getAppTypography(
+    font: BanglaFont = BanglaFont.HIND_SILIGURI,
     weight: BanglaFontWeight = BanglaFontWeight.NORMAL
 ): Typography = getAppTypography(
     englishFont = EnglishFont.ROBOTO,
@@ -229,5 +285,5 @@ fun getAppTypography(
     primaryPreference = PrimaryFontPreference.BANGLA_PRIMARY
 )
 
-val Typography = getAppTypography(EnglishFont.ROBOTO, BanglaFont.NOTO_SANS_BENGALI, BanglaFontWeight.NORMAL, PrimaryFontPreference.BANGLA_PRIMARY)
+val Typography = getAppTypography(EnglishFont.ROBOTO, BanglaFont.HIND_SILIGURI, BanglaFontWeight.NORMAL, PrimaryFontPreference.BANGLA_PRIMARY)
 

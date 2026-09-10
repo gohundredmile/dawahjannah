@@ -8,6 +8,8 @@ data class PrayerTimeItem(
     val timeFormatted: String, // e.g. "4:24 AM"
     val startTimeFormatted: String = "",
     val endTimeFormatted: String = "",
+    val startFormattedBn: String = "",
+    val endFormattedBn: String = "",
     val durationBn: String = "",
     val timeMinutesFromMidnight: Int,
     val isPrayer: Boolean = true, // True for 5 daily prayers, false for sunrise/tahajjud info
@@ -50,15 +52,19 @@ data class DuaItem(
 
 data class RoutineItem(
     val id: String,
-    val timeSlotId: String, // e.g. "tahajjud", "fajr_sunrise", "ishraq_chasht", "work", "dhuhr", "asr_evening", "maghrib", "isha_sleep"
+    val timeSlotId: String, // e.g. "tahajjud", "before_fajr", "fajr_waqt", "after_fajr", "morning", "morning_to_noon", "dhuhr_waqt", "after_dhuhr", "asr_waqt", "after_asr", "maghrib_waqt", "after_maghrib", "isha_waqt", "after_isha", "before_sleep", "last_part_night"
     val timeSlotTitleBn: String,
     val titleBn: String,
-    val subtitleBn: String,
+    val subtitleBn: String = "",
     val descriptionBn: String,
-    val virtuesRewardBn: String,
-    val reference: String,
+    val virtuesRewardBn: String = "",
+    val reference: String = "",
     val isTopPriority: Boolean = false,
-    val priorityRank: Int = 99 // 1 to 10 for Top 10 High Priority
+    val priorityRank: Int = 99, // Order in list
+    val arabicText: String = "", // For Quranic verses/duas in routine
+    val tagBn: String = "", // e.g. "সর্বশ্রেষ্ঠ আয়াত", "দৈনিক সুরক্ষা", "নফল সালাত", "সমাপনী সালাত", "সুন্নাত"
+    val countBadgeBn: String = "", // e.g. "১ বার", "প্রতিটি ৩ বার", "২ থেকে ৮ রাকাত", "৩ রাকাত"
+    val extraBadgeBn: String = "" // e.g. "সূরা আল-বাকারা: ২৫৫"
 )
 
 data class HabitItem(
@@ -74,7 +80,32 @@ data class AllahNameItem(
     val arabicName: String,
     val pronunciationBn: String,
     val meaningBn: String,
-    val spiritualReflectionBn: String
+    val spiritualReflectionBn: String,
+    val fojilotBn: String = "",
+    val amolBn: String = ""
+)
+
+data class IslamicLifeCardItem(
+    val id: String,
+    val serialNumberBn: String = "",
+    val repetitionOrTimeBn: String = "",
+    val titleBn: String = "",
+    val subtitleBn: String = "",
+    val arabicText: String = "",
+    val pronunciationBn: String = "",
+    val meaningBn: String = "",
+    val fojilotBn: String = "",
+    val detailsBn: String = "",
+    val referenceBn: String = ""
+)
+
+data class IslamicLifeSection(
+    val id: String,
+    val titleBn: String,
+    val subtitleBn: String,
+    val noticeTextBn: String = "",
+    val noticeHighlightBn: String = "",
+    val items: List<IslamicLifeCardItem> = emptyList()
 )
 
 data class DuroodItem(

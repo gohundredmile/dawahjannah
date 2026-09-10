@@ -18,6 +18,7 @@ import com.example.data.datasource.HabitData
 import com.example.data.datasource.HealthDuaData
 import com.example.data.datasource.InspirationData
 import com.example.data.datasource.RoutineData
+import com.example.data.datasource.TasbihPresetsData
 import com.example.data.datasource.WisdomApiService
 import com.example.data.remote.GitHubReleaseInfo
 import com.example.data.remote.GitHubUpdateManager
@@ -33,11 +34,13 @@ import com.example.data.model.DuroodItem
 import com.example.data.model.EnglishFont
 import com.example.data.model.FontSizeScale
 import com.example.data.model.HealthDuaItem
+import com.example.data.model.IslamicLifeSection
 import com.example.data.model.PRESET_SALAT_PLACES
 import com.example.data.model.PrimaryFontPreference
 import com.example.data.model.RoutineItem
 import com.example.data.model.SalatConfiguration
 import com.example.data.model.SalatPlaceInfo
+import com.example.data.model.TasbihDhikrItem
 import com.example.data.model.ThemeMode
 import com.example.data.model.ThemeStyle
 import com.example.data.repository.AppRepository
@@ -61,24 +64,29 @@ enum class AppTab(val index: Int, val titleBn: String) {
     DUA(1, "মাসনুন দোয়া"),
     ROUTINE(2, "২৪ঘণ্টা আমল"),
     CHECKLIST(3, "চেকলিস্ট"),
-    MORE(4, "আরও")
+    MORE(4, "ইসলামী জীবন")
 }
 
 enum class MoreSubScreen(val titleBn: String) {
-    MAIN("আরও বিষয়সমূহ"),
-    NAMES_OF_ALLAH("আসমাউল হুসনা (৯৯ নাম)"),
+    MAIN("ইসলামী জীবন"),
+    SURAH_BAQARAH_LAST_2("সুরা বাকারাহ'র শেষ ২ আয়াত"),
+    DUROOD_AMOL("দুরুদ শরীফের আমল"),
+    NAMES_OF_ALLAH("আসমাউল হুসনা (আল্লাহ্‌র ৯৯টি নাম) বাংলা অর্থ সহ ফজিলত"),
     TASBIH("ডিজিটাল তাসবীহ"),
     DUROOD_ISTIGHFAR("দরূদ ও ইস্তিগফার"),
     HEALTH_DUAS("রোগ নিরাময় ও আশ্রয়"),
     SCRATCHPAD("ব্যক্তিগত দোয়া জার্নাল"),
-    SETTINGS("সেটিংস ও অ্যাপ থিম")
+    SETTINGS("সেটিংস ও অ্যাপ থিম"),
+    AYAT_DETECTOR_SOLVER("আয়াত ও হাদীস শুদ্ধিকরণ (Detector & Solver)"),
+    ISLAMIC_LIFE_SECTION_DETAIL("ইসলামী জীবন অধ্যায়")
 }
 
 data class TasbihState(
     val currentDhikr: String = "সুবহানাল্লাহ (سُبْحَانَ اللَّهِ)",
     val count: Int = 0,
     val target: Int = 33, // 33, 100, or 0 (Unlimited)
-    val totalCount: Int = 0
+    val totalCount: Int = 0,
+    val selectedItem: TasbihDhikrItem? = TasbihPresetsData.items.firstOrNull()
 )
 
 class MainViewModel(application: Application) : AndroidViewModel(application) {
@@ -94,6 +102,11 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val _moreSubScreen = MutableStateFlow(MoreSubScreen.MAIN)
     val moreSubScreen: StateFlow<MoreSubScreen> = _moreSubScreen.asStateFlow()
 
+    private val _selectedIslamicSection = MutableStateFlow<IslamicLifeSection?>(null)
+    val selectedIslamicSection: StateFlow<IslamicLifeSection?> = _selectedIslamicSection.asStateFlow()
+
+    private var previousTabBeforeSettings: AppTab? = null
+
     fun selectTab(tab: AppTab) {
         _currentTab.value = tab
     }
@@ -102,8 +115,27 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         _moreSubScreen.value = sub
     }
 
+    fun openIslamicLifeSection(section: IslamicLifeSection) {
+        _selectedIslamicSection.value = section
+        _moreSubScreen.value = MoreSubScreen.ISLAMIC_LIFE_SECTION_DETAIL
+    }
+
+    fun openSettings(fromTab: AppTab = AppTab.HOME) {
+        previousTabBeforeSettings = fromTab
+        _moreSubScreen.value = MoreSubScreen.SETTINGS
+        _currentTab.value = AppTab.MORE
+    }
+
     fun navigateBackToMore() {
-        _moreSubScreen.value = MoreSubScreen.MAIN
+        if (_moreSubScreen.value == MoreSubScreen.SETTINGS && previousTabBeforeSettings != null) {
+            val returnTab = previousTabBeforeSettings ?: AppTab.HOME
+            previousTabBeforeSettings = null
+            _moreSubScreen.value = MoreSubScreen.MAIN
+            _currentTab.value = returnTab
+        } else {
+            _selectedIslamicSection.value = null
+            _moreSubScreen.value = MoreSubScreen.MAIN
+        }
     }
 
     // CALENDAR & CLOCK & PRAYERS
@@ -283,7 +315,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     // INSPIRATION (LEGACY & LIVE WISDOM)
     val dailyInspiration: StateFlow<DailyInspiration> = MutableStateFlow(InspirationData.getTodayInspiration()).asStateFlow()
 
-    private val _wisdomState = MutableStateFlow(DailyWisdomState())
+    private val _wisdomState = MutableStateFlow(wisdomApiService.getTodayWisdom())
     val wisdomState: StateFlow<DailyWisdomState> = _wisdomState.asStateFlow()
 
     fun shuffleWisdom() {
@@ -369,7 +401,10 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     item.titleBn.contains(query, ignoreCase = true) ||
                     item.subtitleBn.contains(query, ignoreCase = true) ||
                     item.descriptionBn.contains(query, ignoreCase = true) ||
-                    item.virtuesRewardBn.contains(query, ignoreCase = true)
+                    item.virtuesRewardBn.contains(query, ignoreCase = true) ||
+                    item.arabicText.contains(query) ||
+                    item.tagBn.contains(query, ignoreCase = true) ||
+                    item.reference.contains(query, ignoreCase = true)
             matchesSlot && matchesQuery
         }.sortedBy { it.priorityRank }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), RoutineData.routineList)
@@ -441,7 +476,24 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun selectTasbihDhikr(dhikr: String) {
-        _tasbihState.value = _tasbihState.value.copy(currentDhikr = dhikr, count = 0)
+        val matched = TasbihPresetsData.items.find { 
+            it.bengaliName == dhikr || "${it.bengaliName} (${it.arabicText})" == dhikr 
+        }
+        _tasbihState.value = _tasbihState.value.copy(
+            currentDhikr = dhikr,
+            count = 0,
+            selectedItem = matched ?: _tasbihState.value.selectedItem
+        )
+    }
+
+    fun selectTasbihItem(item: TasbihDhikrItem) {
+        val displayTitle = if (item.arabicText.isNotBlank()) "${item.bengaliName} (${item.arabicText})" else item.bengaliName
+        _tasbihState.value = _tasbihState.value.copy(
+            currentDhikr = displayTitle,
+            count = 0,
+            selectedItem = item,
+            target = item.recommendedCount
+        )
     }
 
     // ASMAUL HUSNA
@@ -636,22 +688,40 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         _updateAlertMessage.value = null
     }
 
-    // TICKER COROUTINE FOR REALTIME CLOCK & COUNTDOWN
+    // TICKER COROUTINE FOR REALTIME CLOCK & COUNTDOWN & AUTOMATIC NEW DAY ROTATION
+    private var lastRecordedDayOfYear: Int = Calendar.getInstance().get(Calendar.DAY_OF_YEAR)
+
     init {
         viewModelScope.launch {
             while (true) {
                 delay(1000)
-                _currentDate.value = Date()
+                val now = Date()
+                _currentDate.value = now
+
+                val currentDayOfYear = Calendar.getInstance().apply { time = now }.get(Calendar.DAY_OF_YEAR)
+                if (currentDayOfYear != lastRecordedDayOfYear) {
+                    lastRecordedDayOfYear = currentDayOfYear
+                    // Forcefully/automatically rotate to new day's Ayat, Hadith, Quote & Inspiration
+                    _wisdomState.value = wisdomApiService.getTodayWisdom()
+                    viewModelScope.launch {
+                        try {
+                            val liveBundle = wisdomApiService.fetchWisdomBundle(shuffle = false)
+                            _wisdomState.value = liveBundle
+                        } catch (e: Exception) {
+                            // Keep today's offline wisdom
+                        }
+                    }
+                }
             }
         }
 
-        // Live API initial load
+        // Initial live API load for today's rotated Ayat, Hadith, Quote
         viewModelScope.launch {
             try {
                 val liveBundle = wisdomApiService.fetchWisdomBundle(shuffle = false)
                 _wisdomState.value = liveBundle
             } catch (e: Exception) {
-                // Keep default state
+                // Keep today's offline wisdom
             }
         }
     }

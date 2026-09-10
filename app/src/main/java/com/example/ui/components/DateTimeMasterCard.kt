@@ -11,6 +11,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -131,26 +132,30 @@ fun DateTimeMasterCard(
     val seconds = secFormat.format(currentTime)
     val amPm = amPmFormat.format(currentTime)
 
+    // Warm lite eye-soothing background matching screenshot (warm cream/ivory, never dark/black even in dark theme)
+    val liteEyeSoothingBg = Color(0xFFFFFDF7)
+    val soothingBorder = Color(0xFFF1E6D3)
+
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp)
+            .padding(horizontal = 8.dp, vertical = 6.dp)
             .animateContentSize()
             .testTag("date_time_master_card"),
-        shape = RoundedCornerShape(26.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
+        shape = RoundedCornerShape(22.dp),
+        colors = CardDefaults.cardColors(containerColor = liteEyeSoothingBg),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
+        border = BorderStroke(1.dp, soothingBorder)
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(18.dp),
+                .padding(horizontal = 12.dp, vertical = 12.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             // 1. BIG DIGITAL CLOCK DISPLAY (Replicating screenshot)
             Row(
-                modifier = Modifier.padding(top = 8.dp, bottom = 12.dp),
+                modifier = Modifier.padding(top = 6.dp, bottom = 10.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.Center
             ) {
@@ -160,7 +165,7 @@ fun DateTimeMasterCard(
                     fontSize = 52.sp,
                     fontWeight = MaterialTheme.typography.displayLarge.fontWeight ?: FontWeight.SemiBold,
                     fontFamily = LocalAppFontFamily.current,
-                    color = MaterialTheme.colorScheme.onSurface,
+                    color = Color(0xFF111827),
                     letterSpacing = (-1).sp
                 )
 
@@ -173,7 +178,7 @@ fun DateTimeMasterCard(
                     fontSize = 52.sp,
                     fontWeight = MaterialTheme.typography.displayLarge.fontWeight ?: FontWeight.SemiBold,
                     fontFamily = LocalAppFontFamily.current,
-                    color = MaterialTheme.colorScheme.onSurface,
+                    color = Color(0xFF111827),
                     letterSpacing = (-1).sp
                 )
 
@@ -190,7 +195,7 @@ fun DateTimeMasterCard(
                         text = seconds,
                         fontSize = 22.sp,
                         fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.75f)
+                        color = Color(0xFF4B5563)
                     )
                     Spacer(modifier = Modifier.height(2.dp))
                     Surface(
@@ -211,12 +216,12 @@ fun DateTimeMasterCard(
             // 2. MIDDLE BANGLA DAY & DATE PILL (Replicating screenshot)
             Surface(
                 shape = RoundedCornerShape(20.dp),
-                color = Color(0xFFF3F0FF),
-                border = BorderStroke(1.dp, Color(0xFFE0E7FF)),
-                modifier = Modifier.padding(bottom = 16.dp)
+                color = Color(0xFFE8F4ED),
+                border = BorderStroke(1.dp, Color(0xFFCBE5D6)),
+                modifier = Modifier.padding(bottom = 12.dp)
             ) {
                 Row(
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 7.dp),
+                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Icon(
@@ -230,14 +235,14 @@ fun DateTimeMasterCard(
                         text = "আজ ${calendarInfo.englishDay.replace(" (জুমাবার)", "")}, ${calendarInfo.bengaliMonth} ${calendarInfo.bengaliDateFormatted.substringBefore("(").trim()}",
                         style = MaterialTheme.typography.bodyMedium,
                         fontWeight = FontWeight.Bold,
-                        color = Color(0xFF312E81)
+                        color = Color(0xFF166534)
                     )
                 }
             }
 
             HorizontalDivider(
-                color = MaterialTheme.colorScheme.outline.copy(alpha = 0.15f),
-                modifier = Modifier.padding(bottom = 14.dp)
+                color = soothingBorder.copy(alpha = 0.8f),
+                modifier = Modifier.padding(bottom = 12.dp)
             )
 
             // 3. CALENDAR SECTION: 
@@ -336,7 +341,7 @@ fun DateTimeMasterCard(
                             isSelected = expandedCalendar == CalendarViewType.GREGORIAN,
                             accentColor = Color(0xFF0284C7),
                             selectedGradient = Brush.horizontalGradient(
-                                listOf(Color(0xFF0F172A), Color(0xFF1E293B), Color(0xFF1E3A8A))
+                                listOf(Color(0xFFE0F2FE), Color(0xFFF0F9FF), Color(0xFFE0F2FE))
                             ),
                             lightBgColor = Color(0xFFF0F9FF),
                             lightBorderColor = Color(0xFFBAE6FD),
@@ -387,7 +392,7 @@ fun DateTimeMasterCard(
                             isSelected = expandedCalendar == CalendarViewType.BENGALI,
                             accentColor = Color(0xFFD97706),
                             selectedGradient = Brush.horizontalGradient(
-                                listOf(Color(0xFF1E1B4B), Color(0xFF312E81), Color(0xFF4338CA))
+                                listOf(Color(0xFFFEF3C7), Color(0xFFFFFBEB), Color(0xFFFEF3C7))
                             ),
                             lightBgColor = Color(0xFFFEFCE8),
                             lightBorderColor = Color(0xFFFDE047),
@@ -438,7 +443,7 @@ fun DateTimeMasterCard(
                             isSelected = expandedCalendar == CalendarViewType.HIJRI,
                             accentColor = Color(0xFF059669),
                             selectedGradient = Brush.horizontalGradient(
-                                listOf(Color(0xFF064E3B), Color(0xFF022C22), Color(0xFF065F46))
+                                listOf(Color(0xFFDCFCE7), Color(0xFFF0FDF4), Color(0xFFDCFCE7))
                             ),
                             lightBgColor = Color(0xFFF0FDF4),
                             lightBorderColor = Color(0xFFBBF7D0),
@@ -496,15 +501,16 @@ private fun SingleTodayCalendarCard(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    // Single unified warm lite eye-soothing background (warm cream/ivory, never dark/black even in dark theme)
+    val warmCardBg = Color(0xFFFFFDF8)
+    val warmBorderColor = Color(0xFFF1E5D2)
+
     Surface(
         onClick = onClick,
-        shape = RoundedCornerShape(22.dp),
-        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.38f),
-        border = BorderStroke(
-            1.2.dp,
-            MaterialTheme.colorScheme.primary.copy(alpha = 0.28f)
-        ),
-        shadowElevation = 1.dp,
+        shape = RoundedCornerShape(18.dp),
+        color = warmCardBg,
+        border = BorderStroke(1.2.dp, warmBorderColor),
+        shadowElevation = 0.5.dp,
         modifier = modifier
             .fillMaxWidth()
             .testTag("single_today_calendar_card")
@@ -512,7 +518,7 @@ private fun SingleTodayCalendarCard(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp)
+                .padding(14.dp)
         ) {
             // Header Row: Badge & "Tap to expand" pill
             Row(
@@ -523,14 +529,14 @@ private fun SingleTodayCalendarCard(
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Surface(
                         shape = CircleShape,
-                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
+                        color = Color(0xFF10B981).copy(alpha = 0.16f),
                         modifier = Modifier.size(36.dp)
                     ) {
                         Box(contentAlignment = Alignment.Center) {
                             Icon(
                                 imageVector = Icons.Default.CalendarMonth,
                                 contentDescription = "Calendar",
-                                tint = MaterialTheme.colorScheme.primary,
+                                tint = Color(0xFF059669),
                                 modifier = Modifier.size(20.dp)
                             )
                         }
@@ -541,17 +547,17 @@ private fun SingleTodayCalendarCard(
                             text = "আজকের তারিখ (Today's Date)",
                             style = MaterialTheme.typography.titleSmall,
                             fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface
+                            color = Color(0xFF111827)
                         )
                         Surface(
                             shape = RoundedCornerShape(6.dp),
-                            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
+                            color = Color(0xFF059669).copy(alpha = 0.12f)
                         ) {
                             Text(
                                 text = "৩টি বর্ষপঞ্জি সংযুক্ত • ৩-ইন-১",
                                 fontSize = 9.5.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.primary,
+                                color = Color(0xFF059669),
                                 modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
                             )
                         }
@@ -559,38 +565,40 @@ private fun SingleTodayCalendarCard(
                 }
             }
 
-            Spacer(modifier = Modifier.height(14.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
             // Main Primary Date
             Text(
                 text = "$gregorianDateBn, $englishDay",
-                fontSize = 18.sp,
+                fontSize = 18.5.sp,
                 fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurface,
+                color = Color(0xFF111827),
                 letterSpacing = (-0.3).sp
             )
             Text(
                 text = calendarInfo.englishDateFormatted,
-                fontSize = 12.sp,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                fontSize = 12.5.sp,
+                color = Color(0xFF4B5563),
                 modifier = Modifier.padding(top = 2.dp)
             )
 
-            Spacer(modifier = Modifier.height(14.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
-            // 3 Calendar Horizontal Quick Cards
+            // 3 Calendar Horizontal Quick Cards (always clean white cards on lite warm background)
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
+                val cardBg = Color.White
+
                 // 1. Gregorian pill
                 TodayCalendarMiniBadge(
                     calendarName = "খ্রিস্টাব্দ",
                     dateText = gregorianDateBn.replace(" খ্রিস্টাব্দ", ""),
                     tagText = "ইংরেজি",
                     badgeColor = Color(0xFF0284C7),
-                    bgColor = Color(0xFFF0F9FF),
-                    borderColor = Color(0xFFBAE6FD),
+                    bgColor = cardBg,
+                    borderColor = Color(0xFFBAE6FD).copy(alpha = 0.85f),
                     modifier = Modifier.weight(1f)
                 )
 
@@ -600,8 +608,8 @@ private fun SingleTodayCalendarCard(
                     dateText = calendarInfo.bengaliDateFormatted.substringBefore("(").trim().replace(" বঙ্গাব্দ", ""),
                     tagText = calendarInfo.bengaliSeason,
                     badgeColor = Color(0xFFD97706),
-                    bgColor = Color(0xFFFEFCE8),
-                    borderColor = Color(0xFFFDE047),
+                    bgColor = cardBg,
+                    borderColor = Color(0xFFFDE047).copy(alpha = 0.85f),
                     modifier = Modifier.weight(1f)
                 )
 
@@ -611,8 +619,8 @@ private fun SingleTodayCalendarCard(
                     dateText = calendarInfo.hijriDateFormatted.replace(" হিজরি", "").trim(),
                     tagText = "চন্দ্রমাস",
                     badgeColor = Color(0xFF059669),
-                    bgColor = Color(0xFFF0FDF4),
-                    borderColor = Color(0xFFBBF7D0),
+                    bgColor = cardBg,
+                    borderColor = Color(0xFFBBF7D0).copy(alpha = 0.85f),
                     modifier = Modifier.weight(1f)
                 )
             }
@@ -622,21 +630,21 @@ private fun SingleTodayCalendarCard(
             // Bottom Tap Prompt Bar
             Surface(
                 shape = RoundedCornerShape(10.dp),
-                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.07f),
-                border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.16f)),
+                color = Color(0xFFE5F3EC),
+                border = BorderStroke(1.dp, Color(0xFFC8E3D3)),
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 10.dp, vertical = 7.dp),
+                        .padding(horizontal = 10.dp, vertical = 8.dp),
                     horizontalArrangement = Arrangement.Center,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Icon(
                         imageVector = Icons.Default.KeyboardArrowDown,
                         contentDescription = "Expand",
-                        tint = MaterialTheme.colorScheme.primary,
+                        tint = Color(0xFF059669),
                         modifier = Modifier.size(16.dp)
                     )
                     Spacer(modifier = Modifier.width(6.dp))
@@ -644,7 +652,7 @@ private fun SingleTodayCalendarCard(
                         text = "ট্যাপ করে ৩টি ক্যালেন্ডার আলাদাভাবে দেখুন ও বিস্তারিত খুলুন",
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.SemiBold,
-                        color = MaterialTheme.colorScheme.primary
+                        color = Color(0xFF047857)
                     )
                 }
             }
@@ -784,14 +792,14 @@ private fun DateInteractiveVerticalCard(
                 ) {
                     Surface(
                         shape = CircleShape,
-                        color = if (isSelected) Color.White.copy(alpha = 0.2f) else accentColor.copy(alpha = 0.14f),
+                        color = accentColor.copy(alpha = 0.14f),
                         modifier = Modifier.size(38.dp)
                     ) {
                         Box(contentAlignment = Alignment.Center) {
                             Icon(
                                 imageVector = icon,
                                 contentDescription = title,
-                                tint = if (isSelected) Color.White else accentColor,
+                                tint = accentColor,
                                 modifier = Modifier.size(20.dp)
                             )
                         }
@@ -804,17 +812,17 @@ private fun DateInteractiveVerticalCard(
                             text = title,
                             fontSize = 15.sp,
                             fontWeight = FontWeight.Bold,
-                            color = if (isSelected) Color.White else Color(0xFF0F172A)
+                            color = Color(0xFF0F172A)
                         )
                         Surface(
                             shape = RoundedCornerShape(6.dp),
-                            color = if (isSelected) Color.White.copy(alpha = 0.2f) else accentColor.copy(alpha = 0.1f)
+                            color = accentColor.copy(alpha = 0.12f)
                         ) {
                             Text(
                                 text = badgeText,
                                 fontSize = 9.5.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = if (isSelected) Color.White.copy(alpha = 0.95f) else accentColor,
+                                color = accentColor,
                                 modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
                             )
                         }
@@ -824,7 +832,7 @@ private fun DateInteractiveVerticalCard(
                 // Trailing Action Pill
                 Surface(
                     shape = RoundedCornerShape(12.dp),
-                    color = if (isSelected) Color.White.copy(alpha = 0.25f) else accentColor.copy(alpha = 0.12f)
+                    color = accentColor.copy(alpha = 0.14f)
                 ) {
                     Row(
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 5.dp),
@@ -834,13 +842,13 @@ private fun DateInteractiveVerticalCard(
                             text = if (isSelected) "ক্যালেন্ডার বন্ধ" else "মাসিক ভিউ",
                             fontSize = 11.sp,
                             fontWeight = FontWeight.Bold,
-                            color = if (isSelected) Color.White else accentColor
+                            color = accentColor
                         )
                         Spacer(modifier = Modifier.width(3.dp))
                         Icon(
                             imageVector = if (isSelected) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
                             contentDescription = if (isSelected) "Collapse" else "Expand",
-                            tint = if (isSelected) Color.White else accentColor,
+                            tint = accentColor,
                             modifier = Modifier.size(14.dp)
                         )
                     }
@@ -854,7 +862,7 @@ private fun DateInteractiveVerticalCard(
                 text = mainDate,
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Bold,
-                color = if (isSelected) Color.White else Color(0xFF0F172A),
+                color = Color(0xFF0F172A),
                 letterSpacing = (-0.3).sp
             )
 
@@ -862,7 +870,7 @@ private fun DateInteractiveVerticalCard(
                 Text(
                     text = subtitle,
                     fontSize = 12.sp,
-                    color = if (isSelected) Color.White.copy(alpha = 0.82f) else Color(0xFF475569),
+                    color = Color(0xFF475569),
                     modifier = Modifier.padding(top = 2.dp)
                 )
             }
@@ -872,10 +880,10 @@ private fun DateInteractiveVerticalCard(
             // Bottom Contextual Strip
             Surface(
                 shape = RoundedCornerShape(12.dp),
-                color = if (isSelected) Color.Black.copy(alpha = 0.22f) else Color.White.copy(alpha = 0.9f),
+                color = Color.White.copy(alpha = 0.95f),
                 border = BorderStroke(
                     1.dp,
-                    if (isSelected) Color.White.copy(alpha = 0.15f) else lightBorderColor.copy(alpha = 0.8f)
+                    lightBorderColor.copy(alpha = 0.85f)
                 ),
                 modifier = Modifier.fillMaxWidth()
             ) {
@@ -892,13 +900,13 @@ private fun DateInteractiveVerticalCard(
                                 text = item.first,
                                 fontSize = 9.sp,
                                 fontWeight = FontWeight.Medium,
-                                color = if (isSelected) Color.White.copy(alpha = 0.7f) else Color(0xFF64748B)
+                                color = Color(0xFF64748B)
                             )
                             Text(
                                 text = item.second,
                                 fontSize = 11.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = if (isSelected) Color.White else Color(0xFF0F172A)
+                                color = Color(0xFF0F172A)
                             )
                         }
 
@@ -907,10 +915,7 @@ private fun DateInteractiveVerticalCard(
                                 modifier = Modifier
                                     .width(1.dp)
                                     .height(18.dp)
-                                    .background(
-                                        if (isSelected) Color.White.copy(alpha = 0.2f)
-                                        else Color(0xFFE2E8F0)
-                                    )
+                                    .background(Color(0xFFE2E8F0))
                             )
                         }
                     }
@@ -925,9 +930,9 @@ private fun DateInteractiveVerticalCard(
             ) {
                 Column(modifier = Modifier.fillMaxWidth().padding(top = 12.dp)) {
                     Surface(
-                        color = MaterialTheme.colorScheme.surface,
+                        color = Color(0xFFFFFDF8),
                         shape = RoundedCornerShape(16.dp),
-                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.18f)),
+                        border = BorderStroke(1.dp, Color(0xFFF1E6D3)),
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Box(modifier = Modifier.padding(12.dp)) {
@@ -952,7 +957,7 @@ private fun ExpandedGregorianCalendarView(
     onNextMonth: () -> Unit
 ) {
     val monthData = remember(monthIndex, year) {
-        CalendarMonthProvider.getGregorianMonth(monthIndex, year, todayDay = 4)
+        CalendarMonthProvider.getGregorianMonth(monthIndex, year, todayDay = 4, highlightToday = false)
     }
 
     Column(modifier = Modifier.fillMaxWidth()) {
@@ -1203,7 +1208,7 @@ private fun ExpandedBengaliCalendarView(
     onNextMonth: () -> Unit
 ) {
     val monthData = remember(monthIndex, year) {
-        CalendarMonthProvider.getBengaliMonth(monthIndex, year, todayDay = 20)
+        CalendarMonthProvider.getBengaliMonth(monthIndex, year, todayDay = 20, highlightToday = false)
     }
 
     Column(modifier = Modifier.fillMaxWidth()) {
@@ -1467,7 +1472,7 @@ private fun ExpandedHijriCalendarView(
     onNextMonth: () -> Unit
 ) {
     val monthData = remember(monthIndex, year) {
-        CalendarMonthProvider.getHijriMonth(monthIndex, year, todayDay = 22)
+        CalendarMonthProvider.getHijriMonth(monthIndex, year, todayDay = 22, highlightToday = false)
     }
 
     Column(modifier = Modifier.fillMaxWidth()) {

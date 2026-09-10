@@ -365,9 +365,10 @@ fun DawahTheme(
         else -> false
     }
 
+    val context = androidx.compose.ui.platform.LocalContext.current
     val colorScheme = getAppColorScheme(themeStyle, isDark)
-    val typography = getAppTypography(englishFont, banglaFont, banglaWeight, primaryPreference)
-    val activeFamily = getActiveAppFontFamily(englishFont, banglaFont, primaryPreference)
+    val typography = getAppTypography(englishFont, banglaFont, banglaWeight, primaryPreference, context)
+    val activeFamily = getActiveAppFontFamily(englishFont, banglaFont, primaryPreference, context)
     val activeEnglishFamily = getEnglishFontFamily(englishFont)
     val activeBanglaFamily = getBanglaFontFamily(banglaFont)
 
@@ -379,6 +380,7 @@ fun DawahTheme(
             LocalAppFontFamily provides activeFamily,
             LocalEnglishFontFamily provides activeEnglishFamily,
             LocalBanglaFontFamily provides activeBanglaFamily,
+            LocalArabicFontFamily provides ArabicFontFamily,
             LocalTextStyle provides typography.bodyMedium
         ) {
             content()

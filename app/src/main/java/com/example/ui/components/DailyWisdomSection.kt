@@ -177,7 +177,7 @@ fun DailyWisdomSection(
                 )
                 Spacer(modifier = Modifier.width(4.dp))
                 Text(
-                    text = "Suffle Wisdom",
+                    text = "Shuffle Wisdom",
                     style = MaterialTheme.typography.labelMedium,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.primary

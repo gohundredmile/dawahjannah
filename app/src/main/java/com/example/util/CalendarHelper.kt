@@ -28,7 +28,9 @@ object CalendarHelper {
         val bengaliMonth: String,
         val bengaliSeason: String,
         val hijriDateFormatted: String,   // e.g., "২১ সফর, ১৪৪৮ হিজরি"
-        val hijriMonth: String
+        val hijriMonth: String,
+        val shortHijriWithDay: String = "",
+        val shortEngBengali: String = ""
     )
 
     private val banglaMonths = arrayOf(
@@ -56,10 +58,26 @@ object CalendarHelper {
         Calendar.SATURDAY to "শনিবার"
     )
 
+    private val englishShortDaysBn = mapOf(
+        Calendar.SUNDAY to "রবি",
+        Calendar.MONDAY to "সোম",
+        Calendar.TUESDAY to "মঙ্গল",
+        Calendar.WEDNESDAY to "বুধ",
+        Calendar.THURSDAY to "বৃহস্পতি",
+        Calendar.FRIDAY to "শুক্র",
+        Calendar.SATURDAY to "শনি"
+    )
+
+    private val englishMonthsBn = arrayOf(
+        "জানুয়ারি", "ফেব্রুয়ারি", "মার্চ", "এপ্রিল", "মে", "জুন",
+        "জুলাই", "আগস্ট", "সেপ্টেম্বর", "অক্টোবর", "নভেম্বর", "ডিসেম্বর"
+    )
+
     fun getTripleCalendar(date: Date = Date()): TripleCalendarInfo {
         val cal = Calendar.getInstance().apply { time = date }
         val dayOfWeek = cal.get(Calendar.DAY_OF_WEEK)
         val dayNameBn = englishDaysBn[dayOfWeek] ?: ""
+        val shortDayNameBn = englishShortDaysBn[dayOfWeek] ?: ""
 
         val engDateFormat = SimpleDateFormat("EEEE, dd MMMM yyyy", Locale.ENGLISH)
         val englishDateFormatted = engDateFormat.format(date)
@@ -71,6 +89,13 @@ object CalendarHelper {
         // Hijri Date approximation (Kuwaiti algorithm / Um Al Qura base)
         val hijriInfo = calculateHijriDate(cal)
 
+        val dayOfMonthStr = String.format(Locale.US, "%02d", cal.get(Calendar.DAY_OF_MONTH))
+        val engDayBn = toBanglaNumber(dayOfMonthStr)
+        val engMonthBn = englishMonthsBn.getOrElse(cal.get(Calendar.MONTH)) { "" }
+
+        val shortHijri = "$shortDayNameBn, ${toBanglaNumber(hijriInfo.first)} ${hijriInfo.second}"
+        val shortEngBn = "$engDayBn $engMonthBn, ${toBanglaNumber(bengaliInfo.first)} ${bengaliInfo.second}"
+
         return TripleCalendarInfo(
             englishDateFormatted = englishDateFormatted,
             englishDay = dayNameBn,
@@ -78,7 +103,9 @@ object CalendarHelper {
             bengaliMonth = bengaliInfo.second,
             bengaliSeason = bengaliInfo.fourth,
             hijriDateFormatted = "${toBanglaNumber(hijriInfo.first)} ${hijriInfo.second}, ${toBanglaNumber(hijriInfo.third)} হিজরি",
-            hijriMonth = hijriInfo.second
+            hijriMonth = hijriInfo.second,
+            shortHijriWithDay = shortHijri,
+            shortEngBengali = shortEngBn
         )
     }
 

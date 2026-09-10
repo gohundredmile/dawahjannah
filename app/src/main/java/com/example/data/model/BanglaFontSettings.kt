@@ -55,6 +55,41 @@ enum class BanglaFont(
     val googleFontName: String,
     @FontRes val fontResId: Int?
 ) {
+    SOLAIMAN_LIPI(
+        id = "solaiman_lipi",
+        displayNameEn = "SOLAIMAN LIPI",
+        displayNameBn = "সোলায়মান লিপি (জনপ্রিয় ও নিখুঁত)",
+        googleFontName = "Solaiman Lipi",
+        fontResId = R.font.font_solaiman_lipi
+    ),
+    KALPURUSH(
+        id = "kalpurush",
+        displayNameEn = "KALPURUSH",
+        displayNameBn = "কালপুরুষ (মার্জিত ও চিরচেনা)",
+        googleFontName = "Kalpurush",
+        fontResId = R.font.font_kalpurush
+    ),
+    SIYAM_RUPALI(
+        id = "siyam_rupali",
+        displayNameEn = "SIYAM RUPALI",
+        displayNameBn = "সিয়াম রূপালী (ক্লাসিক ও সাহিত্যিক)",
+        googleFontName = "Siyam Rupali",
+        fontResId = R.font.font_siyam_rupali
+    ),
+    NIKOSH(
+        id = "nikosh",
+        displayNameEn = "NIKOSH BAN",
+        displayNameBn = "নিকোশ (অফিসিয়াল ও স্পষ্ট)",
+        googleFontName = "Nikosh",
+        fontResId = R.font.font_nikosh
+    ),
+    ADORSHO_LIPI(
+        id = "adorsho_lipi",
+        displayNameEn = "ADORSHO LIPI",
+        displayNameBn = "আদর্শ লিপি (ঐতিহ্যবাহী পাঠযোগ্য)",
+        googleFontName = "Adorsho Lipi",
+        fontResId = R.font.font_adorsho_lipi
+    ),
     NOTO_SANS_BENGALI(
         id = "noto_sans_bengali",
         displayNameEn = "NOTO SANS BENGALI",

@@ -245,11 +245,11 @@ class AppRepository(private val context: Context) {
     }
 
     val banglaFontFlow: Flow<BanglaFont> = context.dataStore.data.map { prefs ->
-        val name = prefs[KEY_BANGLA_FONT] ?: BanglaFont.NOTO_SANS_BENGALI.name
+        val name = prefs[KEY_BANGLA_FONT] ?: BanglaFont.HIND_SILIGURI.name
         try {
             BanglaFont.valueOf(name)
         } catch (_: Exception) {
-            BanglaFont.NOTO_SANS_BENGALI
+            BanglaFont.HIND_SILIGURI
         }
     }
 

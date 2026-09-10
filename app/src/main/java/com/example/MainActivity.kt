@@ -5,6 +5,11 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
@@ -21,9 +26,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Density
+import com.example.ui.components.AppOpeningSplashScreen
 import com.example.ui.components.AuroraThemesModal
 import com.example.ui.components.BanglaFontSettingsDialog
 import com.example.ui.components.DawahBottomNavigationBar
@@ -45,6 +54,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        window.setBackgroundDrawableResource(R.drawable.img_splash_cover)
 
         setContent {
             val themeStyle by viewModel.themeStyle.collectAsState()
@@ -58,6 +68,7 @@ class MainActivity : ComponentActivity() {
             val isThemeModalOpen by viewModel.isThemeModalOpen.collectAsState()
             val currentTab by viewModel.currentTab.collectAsState()
             val currentMoreSub by viewModel.moreSubScreen.collectAsState()
+            var showWelcomeSplash by remember { mutableStateOf(true) }
 
             val baseDensity = LocalDensity.current
             val adjustedDensity = Density(
@@ -74,8 +85,9 @@ class MainActivity : ComponentActivity() {
                     banglaWeight = banglaFontWeight,
                     primaryPreference = primaryFontPreference
                 ) {
-                    Scaffold(
-                        modifier = Modifier.fillMaxSize(),
+                    Box(modifier = Modifier.fillMaxSize()) {
+                        Scaffold(
+                            modifier = Modifier.fillMaxSize(),
                         topBar = {
                             // Only show top bar for tabs when not handled inside sub-screens
                             if (currentTab != AppTab.HOME && !(currentTab == AppTab.MORE && currentMoreSub != MoreSubScreen.MAIN)) {
@@ -84,7 +96,7 @@ class MainActivity : ComponentActivity() {
                                         AppTab.DUA -> "মাসনুন দোয়া ভল্ট"
                                         AppTab.ROUTINE -> "২৪ ঘণ্টার সুন্নাত আমল"
                                         AppTab.CHECKLIST -> "দৈনিক আমল চেকলিস্ট"
-                                        AppTab.MORE -> "আরও অধ্যায় ও সেটিংস"
+                                        AppTab.MORE -> "ইসলামী জীবন"
                                         else -> "দাওয়াহ টু জান্নাহ"
                                     },
                                     actions = {
@@ -163,6 +175,20 @@ class MainActivity : ComponentActivity() {
                                 onDismiss = { viewModel.closeThemeModal() }
                             )
                         }
+                    }
+
+                    // Full-Screen Immersive Welcome / Splash Screen Overlay
+                    // Placed outside Scaffold so TopBar & BottomBar are completely hidden
+                    AnimatedVisibility(
+                        visible = showWelcomeSplash,
+                        enter = EnterTransition.None,
+                        exit = fadeOut(animationSpec = tween(500)),
+                        modifier = Modifier.fillMaxSize()
+                    ) {
+                        AppOpeningSplashScreen(
+                            onFinish = { showWelcomeSplash = false }
+                        )
+                    }
                     }
                 }
             }

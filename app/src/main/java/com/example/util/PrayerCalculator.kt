@@ -11,6 +11,7 @@ object PrayerCalculator {
         val activePrayer: PrayerTimeItem?,
         val nextPrayer: PrayerTimeItem?,
         val timeRemainingFormatted: String,
+        val countdownHMS: String = "০০:০০:০০",
         val salutationBn: String,
         val prayerList: List<PrayerTimeItem>,
         val forbiddenTimeInfo: ForbiddenTimeInfo = ForbiddenTimeInfo(),
@@ -19,7 +20,18 @@ object PrayerCalculator {
         val latitude: Double = 23.8103,
         val longitude: Double = 90.4125,
         val isGpsLocation: Boolean = false,
-        val isHanafiAsr: Boolean = true
+        val isHanafiAsr: Boolean = true,
+        val sunriseTimeFormatted: String = "০৫:৪২",
+        val sunsetTimeFormatted: String = "০৬:১১",
+        val dayProgressFraction: Float = 0.5f,
+        val nextSehriFormatted: String = "০৪:২৫",
+        val nextIftarFormatted: String = "০৬:১১",
+        val iftarRemainingHMS: String = "০১:১৮:৪৩",
+        val duhaTimeFormatted: String = "০৫:৫৮ - ১১:৫১",
+        val zawalStartTimeFormatted: String = "১১:৫৯",
+        val awwabinTimeFormatted: String = "মাগরিবের পর - ০৭:২৭",
+        val tahajjudTimeFormatted: String = "ইশার পর - ০৪:২৫",
+        val lastThirdOfNightFormatted: String = "০১:০১"
     )
 
     fun calculatePrayers(
@@ -95,6 +107,14 @@ object PrayerCalculator {
             return String.format(Locale.getDefault(), "%02d:%02d", h24, m)
         }
 
+        fun format24HourBn(totalMins: Int): String {
+            val normalized = ((totalMins % 1440) + 1440) % 1440
+            val h24 = normalized / 60
+            val m = normalized % 60
+            val str = String.format(Locale.getDefault(), "%02d:%02d", h24, m)
+            return CalendarHelper.toBanglaNumber(str)
+        }
+
         fun formatDuration(startMins: Int, endMins: Int): String {
             var diff = endMins - startMins
             if (diff < 0) diff += 1440
@@ -120,12 +140,12 @@ object PrayerCalculator {
         }
 
         val forbiddenInfo = ForbiddenTimeInfo(
-            sunriseStart24 = format24Hour(sunriseMin),
-            sunriseEnd24 = format24Hour(sunriseEndMin),
-            zawalStart24 = format24Hour(zawalStartMin),
-            zawalEnd24 = format24Hour(dhuhrMin),
-            sunsetStart24 = format24Hour(sunsetStartMin),
-            sunsetEnd24 = format24Hour(maghribMin),
+            sunriseStart24 = format24HourBn(sunriseMin),
+            sunriseEnd24 = format24HourBn(sunriseEndMin),
+            zawalStart24 = format24HourBn(zawalStartMin),
+            zawalEnd24 = format24HourBn(dhuhrMin),
+            sunsetStart24 = format24HourBn(sunsetStartMin),
+            sunsetEnd24 = format24HourBn(maghribMin),
             sunriseDisplay12 = "${format12Hour(sunriseMin)} - ${format12Hour(sunriseEndMin)}",
             zawalDisplay12 = "${format12Hour(zawalStartMin)} - ${format12Hour(dhuhrMin)}",
             sunsetDisplay12 = "${format12Hour(sunsetStartMin)} - ${format12Hour(maghribMin)}",
@@ -142,6 +162,8 @@ object PrayerCalculator {
             timeFormatted = format12Hour(fajrMin),
             startTimeFormatted = format12Hour(fajrMin),
             endTimeFormatted = format12Hour(sunriseMin),
+            startFormattedBn = format24HourBn(fajrMin),
+            endFormattedBn = format24HourBn(sunriseMin),
             durationBn = formatDuration(fajrMin, sunriseMin),
             timeMinutesFromMidnight = fajrMin,
             isPrayer = true,
@@ -160,6 +182,8 @@ object PrayerCalculator {
             timeFormatted = format12Hour(dhuhrMin),
             startTimeFormatted = format12Hour(dhuhrMin),
             endTimeFormatted = format12Hour(asrMin),
+            startFormattedBn = format24HourBn(dhuhrMin),
+            endFormattedBn = format24HourBn(asrMin),
             durationBn = formatDuration(dhuhrMin, asrMin),
             timeMinutesFromMidnight = dhuhrMin,
             isPrayer = true,
@@ -178,6 +202,8 @@ object PrayerCalculator {
             timeFormatted = format12Hour(asrMin),
             startTimeFormatted = format12Hour(asrMin),
             endTimeFormatted = format12Hour(maghribMin),
+            startFormattedBn = format24HourBn(asrMin),
+            endFormattedBn = format24HourBn(maghribMin),
             durationBn = formatDuration(asrMin, maghribMin),
             timeMinutesFromMidnight = asrMin,
             isPrayer = true,
@@ -196,6 +222,8 @@ object PrayerCalculator {
             timeFormatted = format12Hour(maghribMin),
             startTimeFormatted = format12Hour(maghribMin),
             endTimeFormatted = format12Hour(ishaMin),
+            startFormattedBn = format24HourBn(maghribMin),
+            endFormattedBn = format24HourBn(ishaMin),
             durationBn = formatDuration(maghribMin, ishaMin),
             timeMinutesFromMidnight = maghribMin,
             isPrayer = true,
@@ -214,6 +242,8 @@ object PrayerCalculator {
             timeFormatted = format12Hour(ishaMin),
             startTimeFormatted = format12Hour(ishaMin),
             endTimeFormatted = format12Hour(fajrMin),
+            startFormattedBn = format24HourBn(ishaMin),
+            endFormattedBn = format24HourBn(fajrMin),
             durationBn = formatDuration(ishaMin, fajrMin),
             timeMinutesFromMidnight = ishaMin,
             isPrayer = true,
@@ -268,6 +298,56 @@ object PrayerCalculator {
             "${CalendarHelper.toBanglaNumber(minsRemaining)} মিনিট ${CalendarHelper.toBanglaNumber(secsRemaining)} সেকেন্ড"
         }
 
+        val sunriseFormattedBn = format24HourBn(sunriseMin)
+        val sunsetFormattedBn = format24HourBn(maghribMin)
+
+        // Day progress fraction (0f to 1f)
+        val dayProgress = when {
+            currentTotalMinutes < sunriseMin -> 0.05f
+            currentTotalMinutes > maghribMin -> 0.95f
+            else -> {
+                val totalDayMinutes = (maghribMin - sunriseMin).toFloat().coerceAtLeast(1f)
+                ((currentTotalMinutes - sunriseMin).toFloat() / totalDayMinutes).coerceIn(0.05f, 0.95f)
+            }
+        }
+
+        // Countdown HMS in Bangla digits (e.g., "০১:২০:৪৮")
+        val hStr = String.format(Locale.US, "%02d", hoursRemaining)
+        val mStr = String.format(Locale.US, "%02d", minsRemaining)
+        val sStr = String.format(Locale.US, "%02d", secsRemaining)
+        val countdownHMS = "${CalendarHelper.toBanglaNumber(hStr)}:${CalendarHelper.toBanglaNumber(mStr)}:${CalendarHelper.toBanglaNumber(sStr)}"
+
+        // Next Sehri & Next Iftar
+        val nextSehriBn = format24HourBn(fajrMin)
+        val nextIftarBn = format24HourBn(maghribMin)
+
+        // Iftar countdown
+        val iftarTotalSec = maghribMin * 60
+        var iftarDiffSec = iftarTotalSec - currentTotalSeconds
+        if (iftarDiffSec < 0) {
+            iftarDiffSec += 24 * 3600
+        }
+        val iftarH = iftarDiffSec / 3600
+        val iftarM = (iftarDiffSec % 3600) / 60
+        val iftarS = iftarDiffSec % 60
+        val iftarHStr = String.format(Locale.US, "%02d", iftarH)
+        val iftarMStr = String.format(Locale.US, "%02d", iftarM)
+        val iftarSStr = String.format(Locale.US, "%02d", iftarS)
+        val iftarRemainingHMS = "${CalendarHelper.toBanglaNumber(iftarHStr)}:${CalendarHelper.toBanglaNumber(iftarMStr)}:${CalendarHelper.toBanglaNumber(iftarSStr)}"
+
+        // Nafl Prayers
+        val duhaStart = sunriseMin + 17
+        val duhaEnd = dhuhrMin - 8
+        val duhaFormatted = "${format24HourBn(duhaStart)} - ${format24HourBn(duhaEnd)}"
+        val zawalStartFormatted = format24HourBn(dhuhrMin)
+        val awwabinFormatted = "মাগরিবের পর - ${format24HourBn(maghribMin + 76)}"
+        val tahajjudFormatted = "ইশার পর - ${format24HourBn(fajrMin)}"
+
+        // Last third of night calculation
+        val nightDuration = (fajrMin + 1440) - maghribMin
+        val lastThirdStartMin = (maghribMin + (2 * nightDuration / 3)) % 1440
+        val lastThirdFormatted = format24HourBn(lastThirdStartMin)
+
         // Time-aware salutation
         val salutation = when {
             currentTotalMinutes < fajrMin -> "তাহাজ্জুদ ও নিশীথ ইবাদতের প্রহর — আসসালামু আলাইকুম"
@@ -283,6 +363,7 @@ object PrayerCalculator {
             activePrayer = activePrayer,
             nextPrayer = nextPrayer,
             timeRemainingFormatted = countdownFormatted,
+            countdownHMS = countdownHMS,
             salutationBn = salutation,
             prayerList = highlightedList,
             forbiddenTimeInfo = forbiddenInfo,
@@ -291,7 +372,18 @@ object PrayerCalculator {
             latitude = latitude,
             longitude = longitude,
             isGpsLocation = isGpsLocation,
-            isHanafiAsr = isHanafiAsr
+            isHanafiAsr = isHanafiAsr,
+            sunriseTimeFormatted = sunriseFormattedBn,
+            sunsetTimeFormatted = sunsetFormattedBn,
+            dayProgressFraction = dayProgress,
+            nextSehriFormatted = nextSehriBn,
+            nextIftarFormatted = nextIftarBn,
+            iftarRemainingHMS = iftarRemainingHMS,
+            duhaTimeFormatted = duhaFormatted,
+            zawalStartTimeFormatted = zawalStartFormatted,
+            awwabinTimeFormatted = awwabinFormatted,
+            tahajjudTimeFormatted = tahajjudFormatted,
+            lastThirdOfNightFormatted = lastThirdFormatted
         )
     }
 }

@@ -1,47 +1,33 @@
 package com.example.ui.screens
 
-import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AccessTime
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.LocalFireDepartment
 import androidx.compose.material.icons.filled.TouchApp
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Alignment
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.example.ui.components.DailyWisdomSection
 import com.example.ui.components.DateTimeMasterCard
 import com.example.ui.components.IslamicHeaderCover
-import com.example.ui.components.PrayerTimeItemCard
+import com.example.ui.components.QuickActionCard
 import com.example.ui.components.SalatTimingsSection
-import com.example.ui.components.TripleCalendarCard
+import com.example.ui.components.SehriIftarFullScreenDialog
+import com.example.ui.components.SehriIftarSummaryCard
 import com.example.ui.theme.IslamicGold
 import com.example.ui.viewmodel.AppTab
 import com.example.ui.viewmodel.MainViewModel
@@ -61,6 +47,8 @@ fun HomeScreen(
     val salatConfig by viewModel.salatConfig.collectAsState()
     val gpsStatusMessage by viewModel.gpsStatusMessage.collectAsState()
 
+    var showSehriIftarFullScreen by remember { mutableStateOf(false) }
+
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
@@ -74,8 +62,7 @@ fun HomeScreen(
                 countdownFormatted = prayerStatus.timeRemainingFormatted,
                 nextPrayerName = prayerStatus.nextPrayer?.nameBn ?: "ওয়াক্ত",
                 onOpenSettings = {
-                    viewModel.navigateToMoreSubScreen(MoreSubScreen.SETTINGS)
-                    viewModel.selectTab(AppTab.MORE)
+                    viewModel.openSettings(AppTab.HOME)
                 }
             )
         }
@@ -127,7 +114,16 @@ fun HomeScreen(
             DateTimeMasterCard(calendarInfo = tripleCalendar)
         }
 
-        // 4. Daily Prayer Times (Salat Timings & Forbidden Time)
+        // 4. সেহরি এবং ইফতারের সময়সূচী (Sehri & Ifter Timing)
+        item {
+            SehriIftarSummaryCard(
+                prayerStatus = prayerStatus,
+                salatConfig = salatConfig,
+                onOpenFullScreen = { showSehriIftarFullScreen = true }
+            )
+        }
+
+        // 5. Daily Prayer Times (Salat Timings & Forbidden Time)
         item {
             SalatTimingsSection(
                 prayerStatus = prayerStatus,
@@ -142,7 +138,7 @@ fun HomeScreen(
             )
         }
 
-        // 5. Daily Light & Inspiration: Holy Quran, Hadith, and Inspirational Quotes
+        // 6. Daily Light & Inspiration: Holy Quran, Hadith, and Inspirational Quotes
         item {
             DailyWisdomSection(
                 wisdomState = wisdomState,
@@ -150,49 +146,13 @@ fun HomeScreen(
             )
         }
     }
-}
 
-@Composable
-private fun QuickActionCard(
-    title: String,
-    value: String,
-    icon: ImageVector,
-    iconTint: Color,
-    modifier: Modifier = Modifier,
-    onClick: () -> Unit
-) {
-    Card(
-        modifier = modifier.clickable { onClick() },
-        shape = RoundedCornerShape(14.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
-        ),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.15f))
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(10.dp)
-        ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                tint = iconTint,
-                modifier = Modifier.size(20.dp)
-            )
-            Spacer(modifier = Modifier.height(6.dp))
-            Text(
-                text = title,
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            Text(
-                text = value,
-                style = MaterialTheme.typography.labelMedium,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurface,
-                maxLines = 1
-            )
-        }
+    // Full Screen Sawm & Ramadan Timing Expanded Dialog
+    if (showSehriIftarFullScreen) {
+        SehriIftarFullScreenDialog(
+            prayerStatus = prayerStatus,
+            salatConfig = salatConfig,
+            onDismiss = { showSehriIftarFullScreen = false }
+        )
     }
 }

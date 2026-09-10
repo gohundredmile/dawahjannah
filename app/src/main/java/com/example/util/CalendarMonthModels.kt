@@ -1,6 +1,8 @@
 package com.example.util
 
+import java.text.SimpleDateFormat
 import java.util.Calendar
+import java.util.Locale
 
 enum class CalendarViewType {
     NONE,
@@ -99,17 +101,16 @@ object CalendarMonthProvider {
     val hijriMonthNamesArabic = listOf(
         "محرم", "صفر", "ربيع الأول", "ربيع الثاني",
         "جمادى الأولى", "جمادى الآخرة", "رجب", "شعبان",
-        "رمضان", "شوال", "ذو القعدة", "ذو الحجة"
+        "রমضان", "شوال", "ذو القعدة", "ذو الحجة"
     )
 
     val hijriWeekdaysEn = listOf("Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat")
     val hijriWeekdaysAr = listOf("الأحد", "الإثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت")
 
     fun getGregorianMonth(
-        targetMonthIndex: Int = 8, // September (0-based)
-        targetYear: Int = 2026,
-        todayDay: Int = 4,
-        highlightToday: Boolean = false
+        targetMonthIndex: Int,
+        targetYear: Int,
+        todayCal: Calendar = Calendar.getInstance()
     ): GregorianMonthDetail {
         val cal = Calendar.getInstance().apply {
             set(Calendar.YEAR, targetYear)
@@ -120,8 +121,11 @@ object CalendarMonthProvider {
         val firstDayOfWeek = cal.get(Calendar.DAY_OF_WEEK) // 1=Sunday, 2=Monday, 3=Tuesday...
         val maxDays = cal.getActualMaximum(Calendar.DAY_OF_MONTH)
 
-        // Starting column index (0 for Sun, 1 for Mon, 2 for Tue...)
-        val startCol = firstDayOfWeek - 1
+        val todayDay = todayCal.get(Calendar.DAY_OF_MONTH)
+        val todayMonth = todayCal.get(Calendar.MONTH)
+        val todayYear = todayCal.get(Calendar.YEAR)
+
+        val startCol = firstDayOfWeek - 1 // 0 for Sun, 1 for Mon, 2 for Tue...
 
         val list = mutableListOf<GregorianDayItem?>()
         for (i in 0 until startCol) {
@@ -130,10 +134,11 @@ object CalendarMonthProvider {
 
         for (day in 1..maxDays) {
             val col = (startCol + day - 1) % 7
+            val isToday = (targetMonthIndex == todayMonth && targetYear == todayYear && day == todayDay)
             list.add(
                 GregorianDayItem(
                     dayNumber = day,
-                    isToday = (highlightToday && targetMonthIndex == 8 && targetYear == 2026 && day == todayDay),
+                    isToday = isToday,
                     colIndex = col
                 )
             )
@@ -159,52 +164,67 @@ object CalendarMonthProvider {
         )
     }
 
-    fun getBengaliMonth(
-        targetMonthIndex: Int = 4, // ভাদ্র (5th month, index 4)
-        targetYear: Int = 1433,
-        todayDay: Int = 20,
-        highlightToday: Boolean = false
-    ): BengaliMonthDetail {
-        // Bengali calendar: First 6 months (0..5) have 31 days.
-        // Kartik to Magh (6..9) have 30 days. Phalgun (10) has 29/30. Chaitra (11) has 30.
-        val maxDays = if (targetMonthIndex in 0..5) 31 else if (targetMonthIndex in 6..9) 30 else 30
-
-        // Weekday calculation for Bengali months:
-        // Weekdays in order: শনি(0), রবি(1), সোম(2), মঙ্গল(3), বুধ(4), বৃহঃ(5), শুক্র(6)
-        // For 1433 Bhadra (Index 4), 1st Bhadra = August 16, 2026 = Sunday (রবি) => Col 1!
-        val startCol = when (targetMonthIndex) {
-            0 -> 2 // Boishakh starts Tuesday (সোম/মঙ্গল)
-            1 -> 5 // Joistho
-            2 -> 1 // Ashar
-            3 -> 4 // Srabon
-            4 -> 1 // Bhadra: 1st is Sunday (রবি -> Col 1)
-            5 -> 4 // Ashwin
-            6 -> 0 // Kartik
-            7 -> 2 // Agrahayan
-            8 -> 4 // Poush
-            9 -> 6 // Magh
-            10 -> 1 // Falgun
-            else -> 3 // Chaitra
+    private fun getBengaliMonthStartGregorian(monthIndex: Int, bengaliYear: Int): Calendar {
+        val cal = Calendar.getInstance()
+        cal.set(Calendar.HOUR_OF_DAY, 12)
+        cal.set(Calendar.MINUTE, 0)
+        cal.set(Calendar.SECOND, 0)
+        cal.set(Calendar.MILLISECOND, 0)
+        when (monthIndex) {
+            0 -> { cal.set(Calendar.YEAR, bengaliYear + 593); cal.set(Calendar.MONTH, Calendar.APRIL); cal.set(Calendar.DAY_OF_MONTH, 14) }
+            1 -> { cal.set(Calendar.YEAR, bengaliYear + 593); cal.set(Calendar.MONTH, Calendar.MAY); cal.set(Calendar.DAY_OF_MONTH, 15) }
+            2 -> { cal.set(Calendar.YEAR, bengaliYear + 593); cal.set(Calendar.MONTH, Calendar.JUNE); cal.set(Calendar.DAY_OF_MONTH, 15) }
+            3 -> { cal.set(Calendar.YEAR, bengaliYear + 593); cal.set(Calendar.MONTH, Calendar.JULY); cal.set(Calendar.DAY_OF_MONTH, 16) }
+            4 -> { cal.set(Calendar.YEAR, bengaliYear + 593); cal.set(Calendar.MONTH, Calendar.AUGUST); cal.set(Calendar.DAY_OF_MONTH, 16) }
+            5 -> { cal.set(Calendar.YEAR, bengaliYear + 593); cal.set(Calendar.MONTH, Calendar.SEPTEMBER); cal.set(Calendar.DAY_OF_MONTH, 16) }
+            6 -> { cal.set(Calendar.YEAR, bengaliYear + 593); cal.set(Calendar.MONTH, Calendar.OCTOBER); cal.set(Calendar.DAY_OF_MONTH, 17) }
+            7 -> { cal.set(Calendar.YEAR, bengaliYear + 593); cal.set(Calendar.MONTH, Calendar.NOVEMBER); cal.set(Calendar.DAY_OF_MONTH, 16) }
+            8 -> { cal.set(Calendar.YEAR, bengaliYear + 593); cal.set(Calendar.MONTH, Calendar.DECEMBER); cal.set(Calendar.DAY_OF_MONTH, 16) }
+            9 -> { cal.set(Calendar.YEAR, bengaliYear + 594); cal.set(Calendar.MONTH, Calendar.JANUARY); cal.set(Calendar.DAY_OF_MONTH, 15) }
+            10 -> { cal.set(Calendar.YEAR, bengaliYear + 594); cal.set(Calendar.MONTH, Calendar.FEBRUARY); cal.set(Calendar.DAY_OF_MONTH, 14) }
+            else -> { cal.set(Calendar.YEAR, bengaliYear + 594); cal.set(Calendar.MONTH, Calendar.MARCH); cal.set(Calendar.DAY_OF_MONTH, 15) }
         }
+        return cal
+    }
+
+    fun getBengaliMonth(
+        targetMonthIndex: Int,
+        targetYear: Int,
+        todayCal: Calendar = Calendar.getInstance()
+    ): BengaliMonthDetail {
+        val todayBengali = CalendarHelper.getBengaliDateDetail(todayCal)
+
+        val isLeapYear = (targetYear % 4 == 0 && targetYear % 100 != 0) || (targetYear % 400 == 0)
+        val maxDays = when (targetMonthIndex) {
+            in 0..5 -> 31
+            in 6..9 -> 30
+            10 -> if (isLeapYear) 30 else 29
+            else -> 30
+        }
+
+        val startGregCal = getBengaliMonthStartGregorian(targetMonthIndex, targetYear)
+        val startCol = startGregCal.get(Calendar.DAY_OF_WEEK) % 7 // Saturday is 0 (7 % 7)
 
         val list = mutableListOf<BengaliDayItem?>()
         for (i in 0 until startCol) {
             list.add(null)
         }
 
-        // For Bhadra 1433: 1st Bhadra = 16 Aug. So day 1 -> 16. Day 17 -> 1 Sep. Day 20 -> 4 Sep.
         for (day in 1..maxDays) {
             val col = (startCol + day - 1) % 7
-            val gregDay = when {
-                targetMonthIndex == 4 && day <= 16 -> 15 + day // 16 Aug .. 31 Aug
-                targetMonthIndex == 4 && day > 16 -> day - 16   // 1 Sep .. 15 Sep
-                else -> (day % 30) + 1
+            val dayCal = (startGregCal.clone() as Calendar).apply {
+                add(Calendar.DAY_OF_MONTH, day - 1)
             }
+            val gregDay = dayCal.get(Calendar.DAY_OF_MONTH)
+            val isToday = (targetMonthIndex == todayBengali.monthIndex &&
+                           targetYear == todayBengali.year &&
+                           day == todayBengali.day)
+
             list.add(
                 BengaliDayItem(
                     dayNumberBn = CalendarHelper.toBanglaNumber(day),
                     gregorianDayNumber = gregDay,
-                    isToday = (highlightToday && targetMonthIndex == 4 && day == todayDay),
+                    isToday = isToday,
                     colIndex = col
                 )
             )
@@ -229,48 +249,78 @@ object CalendarMonthProvider {
             seasonTitle = season.first,
             seasonDescription = season.second,
             days = list,
-            currentDayBn = todayDay
+            currentDayBn = todayBengali.day
         )
     }
 
-    fun getHijriMonth(
-        targetMonthIndex: Int = 2, // Rabi' al-Awwal (3rd month, index 2)
-        targetYear: Int = 1448,
-        todayDay: Int = 22,
-        highlightToday: Boolean = false
-    ): HijriMonthDetail {
-        val maxDays = 29 // or 30
+    private fun getHijriMonthStartGregorian(
+        targetMonthIndex: Int,
+        targetYear: Int,
+        todayCal: Calendar = Calendar.getInstance()
+    ): Calendar {
+        val todayHijri = CalendarHelper.getHijriDateDetail(todayCal)
+        val monthDiff = (targetYear - todayHijri.year) * 12 + (targetMonthIndex - todayHijri.monthIndex)
+        val approxDays = Math.round(monthDiff * 29.5305888) - (todayHijri.day - 1)
+        val testCal = (todayCal.clone() as Calendar).apply {
+            add(Calendar.DAY_OF_MONTH, approxDays.toInt())
+        }
 
-        // Weekday order: Sun(0), Mon(1), Tue(2), Wed(3), Thu(4), Fri(5), Sat(6)
-        // For 1448 Rabi' al-Awwal, 1st Rabi' al-Awwal was Friday August 14, 2026 => Col 5
-        // 15 Rabi' al-Awwal = 28 Aug (Friday, col 5)
-        // 22 Rabi' al-Awwal = 4 Sep (Friday, col 5)
-        val startCol = 5 // Friday
+        for (offset in -3..3) {
+            val candidate = (testCal.clone() as Calendar).apply { add(Calendar.DAY_OF_MONTH, offset) }
+            val h = CalendarHelper.getHijriDateDetail(candidate)
+            if (h.day == 1 && h.monthIndex == targetMonthIndex) {
+                return candidate
+            }
+        }
+        return testCal
+    }
+
+    fun getHijriMonth(
+        targetMonthIndex: Int,
+        targetYear: Int,
+        todayCal: Calendar = Calendar.getInstance()
+    ): HijriMonthDetail {
+        val todayHijri = CalendarHelper.getHijriDateDetail(todayCal)
+
+        val startGregCal = getHijriMonthStartGregorian(targetMonthIndex, targetYear, todayCal)
+        // Sunday is 0 (Calendar.SUNDAY = 1)
+        val startCol = (startGregCal.get(Calendar.DAY_OF_WEEK) - 1).let { if (it < 0) 6 else it }
 
         val list = mutableListOf<HijriDayItem?>()
         for (i in 0 until startCol) {
             list.add(null)
         }
 
+        // Hijri lunar months generally have 29 or 30 days
+        val maxDays = if (targetMonthIndex % 2 == 0) 30 else 29
+
         val arabicDigits = charArrayOf('٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩')
         fun toArabicNumerals(n: Int): String {
             return n.toString().map { if (it in '0'..'9') arabicDigits[it - '0'] else it }.joinToString("")
         }
 
+        val monthFmt = SimpleDateFormat("MMM", Locale.ENGLISH)
+
         for (day in 1..maxDays) {
             val col = (startCol + day - 1) % 7
-            val gregSub = when {
-                targetMonthIndex == 2 && day <= 18 -> "${13 + day} Aug"
-                targetMonthIndex == 2 && day > 18 -> "${day - 18} Sep"
-                else -> "${(day % 28) + 1} Date"
+            val dayCal = (startGregCal.clone() as Calendar).apply {
+                add(Calendar.DAY_OF_MONTH, day - 1)
             }
+            val gregDay = dayCal.get(Calendar.DAY_OF_MONTH)
+            val gregMonthName = monthFmt.format(dayCal.time)
+            val gregSub = "$gregDay $gregMonthName"
+
+            val isToday = (targetMonthIndex == todayHijri.monthIndex &&
+                           targetYear == todayHijri.year &&
+                           day == todayHijri.day)
+
             list.add(
                 HijriDayItem(
                     hijriDayEng = day,
                     hijriDayArabic = toArabicNumerals(day),
                     hijriDayBn = CalendarHelper.toBanglaNumber(day),
                     gregorianSubDate = gregSub,
-                    isToday = (highlightToday && targetMonthIndex == 2 && day == todayDay),
+                    isToday = isToday,
                     colIndex = col
                 )
             )
@@ -285,7 +335,7 @@ object CalendarMonthProvider {
             5 -> Pair("جمادى الآخرة (Jumada al-Thani)", "Preparing soul and mind for sacred months")
             6 -> Pair("رجب (Rajab)", "Al-Isra wal-Mi'raj & Sacred Month of forgiveness")
             7 -> Pair("شعبان (Sha'ban)", "Shab-e-Barat & Month of fasting preparation")
-            8 -> Pair("رمضان (Ramadan)", "The Blessed Month of Fasting, Laylatul Qadr & Quran")
+            8 -> Pair("রমাদান (Ramadan)", "The Blessed Month of Fasting, Laylatul Qadr & Quran")
             9 -> Pair("شوال (Shawwal)", "Eid al-Fitr & Sunnah Fasts of Shawwal")
             10 -> Pair("ذو القعدة (Dhu al-Qa'dah)", "Sacred Month of peace, unity & contemplation")
             else -> Pair("ذو الحجة (Dhu al-Hijjah)", "10 Blessed Days of Dhul Hijjah, Day of Arafah & Eid al-Adha")
@@ -300,7 +350,7 @@ object CalendarMonthProvider {
             eventTitle = events.first,
             eventDescription = events.second,
             days = list,
-            currentDayHijri = todayDay
+            currentDayHijri = todayHijri.day
         )
     }
 }

@@ -22,8 +22,10 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.ColorLens
 import androidx.compose.material.icons.filled.DarkMode
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.FontDownload
 import androidx.compose.material.icons.filled.FormatSize
+import androidx.compose.material.icons.filled.HelpOutline
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.Schedule
@@ -39,6 +41,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
@@ -47,6 +50,9 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -81,6 +87,11 @@ fun SettingsScreen(viewModel: MainViewModel) {
     val isHanafiAsr by viewModel.isHanafiAsr.collectAsState()
     val updateMessage by viewModel.updateAlertMessage.collectAsState()
     val latestReleaseInfo by viewModel.latestReleaseInfo.collectAsState()
+
+    var showRepoConfigDialog by remember { mutableStateOf(false) }
+    var showSyncHelpDialog by remember { mutableStateOf(false) }
+    var inputOwner by remember { mutableStateOf(viewModel.gitHubUpdateManager.repoOwner) }
+    var inputRepo by remember { mutableStateOf(viewModel.gitHubUpdateManager.repoName) }
 
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
@@ -467,15 +478,70 @@ fun SettingsScreen(viewModel: MainViewModel) {
                         color = MaterialTheme.colorScheme.primary
                     )
                     Text(
-                        text = "গিটহাব (GitHub Releases) থেকে সর্বশেষ APK সংস্করণ যাচাই করুন এবং নতুন রমাদান/হজ্জ ও জরুরি দোয়াসমূহ ওভার-দ্য-এয়ার সিঙ্ক করুন।",
+                        text = "গিটহাব (GitHub Releases ও Raw JSON) থেকে সর্বশেষ APK ও নতুন অধ্যায় ওভার-দ্য-এয়ার সিঙ্ক করুন।",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.padding(top = 2.dp)
                     )
 
-                    Spacer(modifier = Modifier.height(10.dp))
+                    Spacer(modifier = Modifier.height(8.dp))
 
-                    OutlinedButton(
+                    // Current Repo Target Badge
+                    Surface(
+                        shape = RoundedCornerShape(8.dp),
+                        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.15f)),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(
+                                text = "টার্গেট: github.com/${viewModel.gitHubUpdateManager.repoOwner}/${viewModel.gitHubUpdateManager.repoName}",
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.SemiBold,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    // Action buttons: Configure & Help
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        OutlinedButton(
+                            onClick = {
+                                inputOwner = viewModel.gitHubUpdateManager.repoOwner
+                                inputRepo = viewModel.gitHubUpdateManager.repoName
+                                showRepoConfigDialog = true
+                            },
+                            shape = RoundedCornerShape(10.dp),
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Icon(Icons.Default.Edit, contentDescription = null, modifier = Modifier.size(14.dp))
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text("রিপোজিটরি পরিবর্তন", fontSize = 12.sp)
+                        }
+
+                        OutlinedButton(
+                            onClick = { showSyncHelpDialog = true },
+                            shape = RoundedCornerShape(10.dp),
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Icon(Icons.Default.HelpOutline, contentDescription = null, modifier = Modifier.size(14.dp))
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text("সিঙ্ক কিভাবে কাজ করে?", fontSize = 12.sp)
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Button(
                         onClick = { viewModel.checkForAppUpdates() },
                         shape = RoundedCornerShape(10.dp),
                         modifier = Modifier.fillMaxWidth()
@@ -489,6 +555,23 @@ fun SettingsScreen(viewModel: MainViewModel) {
                         Text("গিটহাব আপডেট ও সিঙ্ক চেক করুন")
                     }
 
+                    Spacer(modifier = Modifier.height(6.dp))
+
+                    OutlinedButton(
+                        onClick = { viewModel.testLocalAppUpdatesSync() },
+                        shape = RoundedCornerShape(10.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Check,
+                            contentDescription = null,
+                            modifier = Modifier.size(15.dp),
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text("app-updates.json প্রিভিউ / টেস্ট", fontSize = 12.sp)
+                    }
+
                     if (latestReleaseInfo?.hasNewerVersion == true && latestReleaseInfo?.downloadUrl != null) {
                         Spacer(modifier = Modifier.height(8.dp))
                         Button(
@@ -500,6 +583,98 @@ fun SettingsScreen(viewModel: MainViewModel) {
                         }
                     }
                 }
+            }
+
+            // GitHub Repo Configuration Dialog
+            if (showRepoConfigDialog) {
+                AlertDialog(
+                    onDismissRequest = { showRepoConfigDialog = false },
+                    title = { Text("গিটহাব রিপোজিটরি কনফিগারেশন") },
+                    text = {
+                        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                            Text(
+                                "আপনার নিজস্ব গিটহাব পাবলিক রিপোজিটরির নাম ও ইউজারনেম দিন যেখান থেকে কনটেন্ট সিঙ্ক হবে:",
+                                style = MaterialTheme.typography.bodySmall
+                            )
+                            OutlinedTextField(
+                                value = inputOwner,
+                                onValueChange = { inputOwner = it },
+                                label = { Text("GitHub Owner / Username") },
+                                singleLine = true,
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                            OutlinedTextField(
+                                value = inputRepo,
+                                onValueChange = { inputRepo = it },
+                                label = { Text("Repository Name") },
+                                singleLine = true,
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                        }
+                    },
+                    confirmButton = {
+                        Button(
+                            onClick = {
+                                viewModel.updateGitHubRepo(inputOwner, inputRepo)
+                                showRepoConfigDialog = false
+                            }
+                        ) {
+                            Text("সংরক্ষণ করুন")
+                        }
+                    },
+                    dismissButton = {
+                        TextButton(onClick = { showRepoConfigDialog = false }) {
+                            Text("বাতিল")
+                        }
+                    }
+                )
+            }
+
+            // Sync Explanation Dialog
+            if (showSyncHelpDialog) {
+                AlertDialog(
+                    onDismissRequest = { showSyncHelpDialog = false },
+                    title = { Text("অ্যাকাউন্ট সংযোগ ছাড়াই সিঙ্ক কিভাবে কাজ করে?") },
+                    text = {
+                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Text(
+                                "১. পাবলিক রিড অ্যাক্সেস (No Account Needed):",
+                                fontWeight = FontWeight.Bold,
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                            Text(
+                                "গিটহাবের উন্মুক্ত (Public) রিপোজিটরি থেকে ডেটা পড়তে কোনো অ্যাকাউন্টে লগইন করার প্রয়োজন নেই। সাধারণ ইন্টারনেট ব্রাউজিংয়ের মতো অ্যাপটি সরাসরি ওপেন HTTP GET রিকোয়েস্টের মাধ্যমে পাবলিক ডেটা ডাউনলোড করে।",
+                                style = MaterialTheme.typography.bodySmall
+                            )
+                            Text(
+                                "২. ডেভেলপার সেটআপ (One-time Setup):",
+                                fontWeight = FontWeight.Bold,
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                            Text(
+                                "আপনি আপনার গিটহাব অ্যাকাউন্টে একটি পাবলিক রিপোজিটরি তৈরি করে তাতে 'app-updates.json' ফাইল রাখবেন অথবা GitHub Releases-এ নতুন APK আপলোড করবেন।",
+                                style = MaterialTheme.typography.bodySmall
+                            )
+                            Text(
+                                "৩. অ্যাপ ব্যবহারকারীর জন্য সুবিধা:",
+                                fontWeight = FontWeight.Bold,
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                            Text(
+                                "অ্যাপ ব্যবহারকারীরা শুধু 'সিঙ্ক' চাপলেই স্বয়ংক্রিয়ভাবে নতুন কনটেন্ট ও আপডেট ডাউনলোড হয়ে যাবে। ব্যবহারকারীর কোনো গিটহাব অ্যাকাউন্ট লাগবে না।",
+                                style = MaterialTheme.typography.bodySmall
+                            )
+                        }
+                    },
+                    confirmButton = {
+                        Button(onClick = { showSyncHelpDialog = false }) {
+                            Text("বুঝেছি")
+                        }
+                    }
+                )
             }
             Spacer(modifier = Modifier.height(16.dp))
         }

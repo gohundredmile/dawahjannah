@@ -667,21 +667,44 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     fun checkForAppUpdates() {
         viewModelScope.launch {
-            _updateAlertMessage.value = "গিটহাব (GitHub) রিলিজ ও কনটেন্ট সার্ভার যাচাই করা হচ্ছে..."
+            _updateAlertMessage.value = "গিটহাব (GitHub) রিলিজ ও app-updates.json যাচাই করা হচ্ছে..."
             val result = gitHubUpdateManager.checkLatestRelease()
             if (result.isSuccess) {
                 val release = result.getOrNull()
                 _latestReleaseInfo.value = release
                 if (release != null && release.hasNewerVersion) {
-                    _updateAlertMessage.value = "গিটহাবে নতুন আপডেট পাওয়া গেছে (${release.tagName})!\n${release.versionName}\n\nনতুন পরিবর্তন:\n${release.releaseNotes.take(160)}..."
+                    val ann = if (!release.announcement.isNullOrBlank()) "\n\nঘোষণা: ${release.announcement}" else ""
+                    val source = if (release.isFromAppUpdatesJson) " (app-updates.json থেকে)" else " (GitHub Releases থেকে)"
+                    _updateAlertMessage.value = "গিটহাবে নতুন আপডেট পাওয়া গেছে (${release.tagName})$source!\n${release.versionName}\n\nনতুন পরিবর্তন:\n${release.releaseNotes.take(200)}$ann"
+                } else if (release != null) {
+                    val ann = if (!release.announcement.isNullOrBlank()) "\n\nঘোষণা/বার্তা:\n${release.announcement}" else ""
+                    val source = if (release.isFromAppUpdatesJson) "app-updates.json" else "GitHub Releases"
+                    _updateAlertMessage.value = "গিটহাব সিঙ্ক সফল ($source)!\nআপনার অ্যাপটি হালনাগাদ করা আছে (${release.tagName})। কোনো নতুন আপডেট বাকি নেই।$ann"
                 } else {
-                    _updateAlertMessage.value = "আপনার অ্যাপটি সর্বশেষ সংস্করণে (v1.0.0) আপডেট করা আছে। কোনো নতুন আপডেট নেই।"
+                    _updateAlertMessage.value = "আপনার অ্যাপটি সর্বশেষ সংস্করণে আপডেট করা আছে।"
                 }
             } else {
-                delay(800)
-                _updateAlertMessage.value = "দা'ওয়াহ টু জান্নাহ সংস্করণে কোনো নতুন অধ্যায় আপডেট এসেছে কিনা পরীক্ষা সম্পন্ন হয়েছে। আপনার বর্তমান ভার্সন (v1.0.0) সর্বশেষ হালনাগাদ করা এবং সকল আমল অফলাইনে প্রস্তুত।"
+                val errorMsg = result.exceptionOrNull()?.message ?: "অজ্ঞাত ত্রুটি"
+                val owner = gitHubUpdateManager.repoOwner
+                val repo = gitHubUpdateManager.repoName
+                _updateAlertMessage.value = "গিটহাব সিঙ্ক স্ট্যাটাস ($owner/$repo):\n$errorMsg\n\nপ্রজেক্টের রুট ডিরেক্টরিতে 'app-updates.json' প্রস্তুত রয়েছে। এটি গিটহাবে পুশ করলেই ওভার-দ্য-এয়ার সিঙ্ক স্বয়ংক্রিয়ভাবে সক্রিয় হবে।"
             }
         }
+    }
+
+    fun testLocalAppUpdatesSync() {
+        val bundled = gitHubUpdateManager.getLocalBundledUpdates()
+        if (bundled != null) {
+            _latestReleaseInfo.value = bundled
+            val ann = if (!bundled.announcement.isNullOrBlank()) "\n\nঘোষণা/বার্তা:\n${bundled.announcement}" else ""
+            _updateAlertMessage.value = "প্রজেক্টের 'app-updates.json' ফাইল ভ্যালিডেশন সফল!\n\nসংস্করণ: ${bundled.tagName} (${bundled.versionName})\nডাউনলোড লিংক: ${bundled.downloadUrl}\n\nপরিবর্তনসমূহ:\n${bundled.releaseNotes}$ann\n\n(এই কনটেন্টটি গিটহাবে পুশ করার সাথে সাথে অ্যাপ স্বয়ংক্রিয়ভাবে সিঙ্ক করবে।)"
+        } else {
+            _updateAlertMessage.value = "লোকাল app-updates.json ফাইলে ত্রুটি রয়েছে।"
+        }
+    }
+
+    fun updateGitHubRepo(owner: String, repo: String) {
+        gitHubUpdateManager.updateRepoConfig(owner, repo)
     }
 
     fun dismissUpdateAlert() {

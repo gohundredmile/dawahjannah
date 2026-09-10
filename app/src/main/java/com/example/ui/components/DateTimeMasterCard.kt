@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -37,6 +38,7 @@ import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Explore
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material.icons.filled.Today
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
@@ -61,6 +63,9 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import com.example.ui.theme.LocalAppFontFamily
+import com.example.ui.theme.LocalArabicFontFamily
+import com.example.ui.theme.LocalBanglaFontFamily
+import com.example.ui.theme.LocalEnglishFontFamily
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -112,15 +117,19 @@ fun DateTimeMasterCard(
     val banglaYearStr = CalendarHelper.toBanglaNumber(currentYear)
     val dynamicGregorianDateBn = "$banglaDayStr $engMonthBn $banglaYearStr খ্রিস্টাব্দ"
 
-    // Navigation states for expanded views
-    var gregMonthIndex by remember { mutableIntStateOf(cal.get(Calendar.MONTH)) }
-    var gregYear by remember { mutableIntStateOf(cal.get(Calendar.YEAR)) }
+    val todayGreg = remember(currentTime) { CalendarHelper.getGregorianDateDetail(cal) }
+    val todayBengali = remember(currentTime) { CalendarHelper.getBengaliDateDetail(cal) }
+    val todayHijri = remember(currentTime) { CalendarHelper.getHijriDateDetail(cal) }
 
-    var banglaMonthIndex by remember { mutableIntStateOf(4) } // Bhadra (4)
-    var banglaYear by remember { mutableIntStateOf(1433) }
+    // Navigation states for expanded views dynamically initialized to real today's date
+    var gregMonthIndex by remember(currentTime) { mutableIntStateOf(todayGreg.monthIndex) }
+    var gregYear by remember(currentTime) { mutableIntStateOf(todayGreg.year) }
 
-    var hijriMonthIndex by remember { mutableIntStateOf(2) } // Rabi' al-Awwal (2)
-    var hijriYear by remember { mutableIntStateOf(1448) }
+    var banglaMonthIndex by remember(currentTime) { mutableIntStateOf(todayBengali.monthIndex) }
+    var banglaYear by remember(currentTime) { mutableIntStateOf(todayBengali.year) }
+
+    var hijriMonthIndex by remember(currentTime) { mutableIntStateOf(todayHijri.monthIndex) }
+    var hijriYear by remember(currentTime) { mutableIntStateOf(todayHijri.year) }
 
     val hourFormat = remember { SimpleDateFormat("hh", Locale.ENGLISH) }
     val minFormat = remember { SimpleDateFormat("mm", Locale.ENGLISH) }
@@ -361,6 +370,7 @@ fun DateTimeMasterCard(
                                 ExpandedGregorianCalendarView(
                                     monthIndex = gregMonthIndex,
                                     year = gregYear,
+                                    todayCal = cal,
                                     onSelectMonth = { gregMonthIndex = it },
                                     onPrevMonth = {
                                         if (gregMonthIndex == 0) {
@@ -377,6 +387,10 @@ fun DateTimeMasterCard(
                                         } else {
                                             gregMonthIndex++
                                         }
+                                    },
+                                    onGoToToday = {
+                                        gregMonthIndex = todayGreg.monthIndex
+                                        gregYear = todayGreg.year
                                     }
                                 )
                             }
@@ -387,7 +401,7 @@ fun DateTimeMasterCard(
                             title = "বাংলা বর্ষপঞ্জি",
                             badgeText = "BENGALI SAN • বঙ্গাব্দ সন",
                             mainDate = calendarInfo.bengaliDateFormatted.substringBefore("(").trim(),
-                            subtitle = "ঋতু: ${calendarInfo.bengaliSeason} • বাংলা সন ১৪৩৩",
+                            subtitle = "ঋতু: ${calendarInfo.bengaliSeason} • বাংলা সন ${todayBengali.year}",
                             icon = Icons.Default.AutoAwesome,
                             isSelected = expandedCalendar == CalendarViewType.BENGALI,
                             accentColor = Color(0xFFD97706),
@@ -399,7 +413,7 @@ fun DateTimeMasterCard(
                             infoItems = listOf(
                                 "ঋতু" to calendarInfo.bengaliSeason,
                                 "মাস" to "${calendarInfo.bengaliMonth} মাস",
-                                "সন" to "১৪৩৩ বঙ্গাব্দ"
+                                "সন" to "${CalendarHelper.toBanglaNumber(todayBengali.year)} বঙ্গাব্দ"
                             ),
                             onClick = {
                                 expandedCalendar = if (expandedCalendar == CalendarViewType.BENGALI) {
@@ -412,6 +426,7 @@ fun DateTimeMasterCard(
                                 ExpandedBengaliCalendarView(
                                     monthIndex = banglaMonthIndex,
                                     year = banglaYear,
+                                    todayCal = cal,
                                     onSelectMonth = { banglaMonthIndex = it },
                                     onPrevMonth = {
                                         if (banglaMonthIndex == 0) {
@@ -428,6 +443,10 @@ fun DateTimeMasterCard(
                                         } else {
                                             banglaMonthIndex++
                                         }
+                                    },
+                                    onGoToToday = {
+                                        banglaMonthIndex = todayBengali.monthIndex
+                                        banglaYear = todayBengali.year
                                     }
                                 )
                             }
@@ -438,7 +457,7 @@ fun DateTimeMasterCard(
                             title = "হিজরি ইসলামিক সন",
                             badgeText = "HIJRI ISLAMIC • চন্দ্রমাস",
                             mainDate = calendarInfo.hijriDateFormatted,
-                            subtitle = "উম্মুল কুরা ভিত্তিক চন্দ্রমাস • হিজরি ১৪৪৮",
+                            subtitle = "উম্মুল কুরা ভিত্তিক চন্দ্রমাস • হিজরি ${todayHijri.year}",
                             icon = Icons.Default.Explore,
                             isSelected = expandedCalendar == CalendarViewType.HIJRI,
                             accentColor = Color(0xFF059669),
@@ -450,7 +469,7 @@ fun DateTimeMasterCard(
                             infoItems = listOf(
                                 "বার" to calendarInfo.englishDay.substringBefore(" "),
                                 "মাস" to "${calendarInfo.hijriMonth} মাস",
-                                "সন" to "১৪৪৮ হিজরি"
+                                "সন" to "${CalendarHelper.toBanglaNumber(todayHijri.year)} হিজরি"
                             ),
                             onClick = {
                                 expandedCalendar = if (expandedCalendar == CalendarViewType.HIJRI) {
@@ -463,13 +482,14 @@ fun DateTimeMasterCard(
                                 ExpandedHijriCalendarView(
                                     monthIndex = hijriMonthIndex,
                                     year = hijriYear,
+                                    todayCal = cal,
                                     onSelectMonth = { hijriMonthIndex = it },
                                     onPrevMonth = {
                                         if (hijriMonthIndex == 0) {
                                             hijriMonthIndex = 11
                                             hijriYear--
                                         } else {
-                                            hijriMonthIndex++
+                                            hijriMonthIndex--
                                         }
                                     },
                                     onNextMonth = {
@@ -479,6 +499,10 @@ fun DateTimeMasterCard(
                                         } else {
                                             hijriMonthIndex++
                                         }
+                                    },
+                                    onGoToToday = {
+                                        hijriMonthIndex = todayHijri.monthIndex
+                                        hijriYear = todayHijri.year
                                     }
                                 )
                             }
@@ -952,13 +976,20 @@ private fun DateInteractiveVerticalCard(
 private fun ExpandedGregorianCalendarView(
     monthIndex: Int,
     year: Int,
+    todayCal: Calendar = Calendar.getInstance(),
     onSelectMonth: (Int) -> Unit,
     onPrevMonth: () -> Unit,
-    onNextMonth: () -> Unit
+    onNextMonth: () -> Unit,
+    onGoToToday: () -> Unit
 ) {
-    val monthData = remember(monthIndex, year) {
-        CalendarMonthProvider.getGregorianMonth(monthIndex, year, todayDay = 4, highlightToday = false)
+    val monthData = remember(monthIndex, year, todayCal) {
+        CalendarMonthProvider.getGregorianMonth(monthIndex, year, todayCal)
     }
+    val todayDetail = remember(todayCal) { CalendarHelper.getGregorianDateDetail(todayCal) }
+    val isViewingCurrentMonth = (monthIndex == todayDetail.monthIndex && year == todayDetail.year)
+
+    val englishFont = LocalEnglishFontFamily.current
+    val banglaFont = LocalBanglaFontFamily.current
 
     Column(modifier = Modifier.fillMaxWidth()) {
         // Header & Season Card Row
@@ -967,18 +998,18 @@ private fun ExpandedGregorianCalendarView(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            // Navigation: < September 2026 >
+            // Navigation: < Month Year > + "আজ" jump button
             Row(verticalAlignment = Alignment.CenterVertically) {
                 IconButton(
                     onClick = onPrevMonth,
                     modifier = Modifier
-                        .size(34.dp)
+                        .size(36.dp)
                         .border(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.2f), RoundedCornerShape(10.dp))
                 ) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowBackIos,
                         contentDescription = "Previous Month",
-                        modifier = Modifier.size(12.dp)
+                        modifier = Modifier.size(13.dp)
                     )
                 }
 
@@ -989,7 +1020,8 @@ private fun ExpandedGregorianCalendarView(
                         Text(
                             text = monthData.monthName,
                             style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.Bold,
+                            fontFamily = englishFont
                         )
                         Spacer(modifier = Modifier.width(6.dp))
                         Surface(
@@ -1001,8 +1033,41 @@ private fun ExpandedGregorianCalendarView(
                                 style = MaterialTheme.typography.labelSmall,
                                 fontWeight = FontWeight.Bold,
                                 color = Color(0xFF4F46E5),
+                                fontFamily = englishFont,
                                 modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
                             )
+                        }
+
+                        // Quick "আজ" button if navigated away from today's month
+                        if (!isViewingCurrentMonth) {
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Surface(
+                                onClick = onGoToToday,
+                                shape = RoundedCornerShape(8.dp),
+                                color = Color(0xFF4F46E5).copy(alpha = 0.12f),
+                                border = BorderStroke(1.dp, Color(0xFF4F46E5).copy(alpha = 0.35f))
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Today,
+                                        contentDescription = "আজকের দিনে যান",
+                                        tint = Color(0xFF4F46E5),
+                                        modifier = Modifier.size(12.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(3.dp))
+                                    Text(
+                                        text = "আজ",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        fontWeight = FontWeight.Bold,
+                                        color = Color(0xFF4F46E5),
+                                        fontFamily = banglaFont,
+                                        fontSize = 10.sp
+                                    )
+                                }
+                            }
                         }
                     }
                     Text(
@@ -1010,7 +1075,8 @@ private fun ExpandedGregorianCalendarView(
                         style = MaterialTheme.typography.labelSmall,
                         fontSize = 9.sp,
                         fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                        fontFamily = englishFont
                     )
                 }
 
@@ -1019,13 +1085,13 @@ private fun ExpandedGregorianCalendarView(
                 IconButton(
                     onClick = onNextMonth,
                     modifier = Modifier
-                        .size(34.dp)
+                        .size(36.dp)
                         .border(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.2f), RoundedCornerShape(10.dp))
                 ) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowForwardIos,
                         contentDescription = "Next Month",
-                        modifier = Modifier.size(12.dp)
+                        modifier = Modifier.size(13.dp)
                     )
                 }
             }
@@ -1035,26 +1101,27 @@ private fun ExpandedGregorianCalendarView(
                 shape = RoundedCornerShape(14.dp),
                 color = Color(0xFFEA580C),
                 modifier = Modifier
-                    .widthIn(max = 170.dp)
-                    .padding(start = 6.dp)
+                    .widthIn(max = 160.dp)
+                    .padding(start = 4.dp)
             ) {
                 Row(
-                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Icon(
                         imageVector = Icons.Default.AutoAwesome,
                         contentDescription = "Season",
                         tint = Color.White,
-                        modifier = Modifier.size(16.dp)
+                        modifier = Modifier.size(15.dp)
                     )
-                    Spacer(modifier = Modifier.width(6.dp))
+                    Spacer(modifier = Modifier.width(5.dp))
                     Column {
                         Text(
                             text = monthData.seasonTitle,
                             style = MaterialTheme.typography.labelSmall,
                             fontWeight = FontWeight.Bold,
                             color = Color.White,
+                            fontFamily = englishFont,
                             maxLines = 1
                         )
                         Text(
@@ -1062,6 +1129,7 @@ private fun ExpandedGregorianCalendarView(
                             style = MaterialTheme.typography.labelSmall,
                             fontSize = 8.sp,
                             color = Color.White.copy(alpha = 0.9f),
+                            fontFamily = englishFont,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
                         )
@@ -1084,7 +1152,11 @@ private fun ExpandedGregorianCalendarView(
                 Surface(
                     onClick = { onSelectMonth(index) },
                     shape = RoundedCornerShape(12.dp),
-                    color = if (isSelected) Color(0xFF4F46E5) else Color.Transparent,
+                    color = if (isSelected) Color(0xFF4F46E5) else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f),
+                    border = BorderStroke(
+                        1.dp,
+                        if (isSelected) Color(0xFF4F46E5) else MaterialTheme.colorScheme.outline.copy(alpha = 0.15f)
+                    ),
                     modifier = Modifier.padding(vertical = 2.dp)
                 ) {
                     Text(
@@ -1092,6 +1164,7 @@ private fun ExpandedGregorianCalendarView(
                         style = MaterialTheme.typography.labelMedium,
                         fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
                         color = if (isSelected) Color.White else MaterialTheme.colorScheme.onSurfaceVariant,
+                        fontFamily = englishFont,
                         modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
                     )
                 }
@@ -1105,17 +1178,28 @@ private fun ExpandedGregorianCalendarView(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(4.dp)
         ) {
-            CalendarMonthProvider.gregorianWeekdays.forEach { day ->
+            CalendarMonthProvider.gregorianWeekdays.forEachIndexed { colIdx, day ->
+                val headerBg = when (colIdx) {
+                    0 -> Color(0xFFFFF1F2) // Sunday soft peach
+                    5 -> Color(0xFFECFDF5) // Friday soft mint
+                    else -> MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f)
+                }
+                val headerColor = when (colIdx) {
+                    0 -> Color(0xFFBE123C) // Sunday rose
+                    5 -> Color(0xFF047857) // Friday emerald
+                    else -> MaterialTheme.colorScheme.onSurfaceVariant
+                }
                 Surface(
                     shape = RoundedCornerShape(8.dp),
-                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
+                    color = headerBg,
                     modifier = Modifier.weight(1f)
                 ) {
                     Text(
                         text = day,
                         style = MaterialTheme.typography.labelSmall,
-                        fontWeight = FontWeight.SemiBold,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        fontWeight = FontWeight.Bold,
+                        color = headerColor,
+                        fontFamily = englishFont,
                         textAlign = TextAlign.Center,
                         modifier = Modifier.padding(vertical = 6.dp)
                     )
@@ -1127,7 +1211,7 @@ private fun ExpandedGregorianCalendarView(
 
         // Calendar Days 7-column Grid
         val rows = monthData.days.chunked(7)
-        Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        Column(verticalArrangement = Arrangement.spacedBy(5.dp)) {
             rows.forEach { rowItems ->
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -1153,44 +1237,73 @@ private fun GregorianDayCell(
     modifier: Modifier = Modifier
 ) {
     val isToday = item.isToday
+    val englishFont = LocalEnglishFontFamily.current
+    val banglaFont = LocalBanglaFontFamily.current
 
-    // Subtle column pastel tint matching screenshots
-    val bgColor = when {
-        isToday -> Color(0xFF4F46E5)
+    val regularBg = when {
         item.colIndex == 0 -> Color(0xFFFFF1F2) // Sunday soft peach
-        item.colIndex in 1..2 -> Color(0xFFFFFBEB) // Mon-Tue cream
-        item.colIndex in 3..4 -> Color(0xFFF0FDFA) // Wed-Thu mint
-        else -> Color(0xFFEFF6FF) // Fri-Sat soft blue
+        item.colIndex in 1..4 -> Color(0xFFFFFDF8) // Mon-Thu warm cream
+        item.colIndex == 5 -> Color(0xFFECFDF5) // Friday soft mint
+        else -> Color(0xFFEFF6FF) // Saturday soft blue
     }
 
     Surface(
-        modifier = modifier.aspectRatio(0.95f),
+        modifier = modifier.aspectRatio(0.92f),
         shape = RoundedCornerShape(12.dp),
-        color = bgColor,
+        color = if (isToday) Color.Transparent else regularBg,
         border = BorderStroke(
-            1.dp,
-            if (isToday) Color(0xFF4F46E5) else MaterialTheme.colorScheme.outline.copy(alpha = 0.12f)
-        )
+            if (isToday) 1.5.dp else 1.dp,
+            if (isToday) Color(0xFF818CF8) else MaterialTheme.colorScheme.outline.copy(alpha = 0.12f)
+        ),
+        shadowElevation = if (isToday) 2.dp else 0.dp
     ) {
-        Column(
-            modifier = Modifier.padding(vertical = 4.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .then(
+                    if (isToday) {
+                        Modifier.background(
+                            Brush.verticalGradient(
+                                listOf(Color(0xFF4338CA), Color(0xFF6366F1))
+                            )
+                        )
+                    } else Modifier
+                ),
+            contentAlignment = Alignment.Center
         ) {
-            Text(
-                text = "${item.dayNumber}",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = if (isToday) FontWeight.Black else FontWeight.Bold,
-                color = if (isToday) Color.White else MaterialTheme.colorScheme.onSurface
-            )
-            if (isToday) {
-                Spacer(modifier = Modifier.height(2.dp))
-                Box(
-                    modifier = Modifier
-                        .size(4.dp)
-                        .clip(CircleShape)
-                        .background(Color.White)
+            Column(
+                modifier = Modifier.padding(vertical = 3.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                Text(
+                    text = "${item.dayNumber}",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = if (isToday) FontWeight.Black else FontWeight.Bold,
+                    color = when {
+                        isToday -> Color.White
+                        item.colIndex == 0 -> Color(0xFFBE123C)
+                        item.colIndex == 5 -> Color(0xFF047857)
+                        else -> MaterialTheme.colorScheme.onSurface
+                    },
+                    fontFamily = englishFont
                 )
+                if (isToday) {
+                    Surface(
+                        shape = RoundedCornerShape(6.dp),
+                        color = Color.White.copy(alpha = 0.25f),
+                        modifier = Modifier.padding(top = 1.dp)
+                    ) {
+                        Text(
+                            text = "আজ",
+                            fontSize = 7.5.sp,
+                            fontWeight = FontWeight.Black,
+                            color = Color.White,
+                            fontFamily = banglaFont,
+                            modifier = Modifier.padding(horizontal = 4.dp, vertical = 0.5.dp)
+                        )
+                    }
+                }
             }
         }
     }
@@ -1203,13 +1316,20 @@ private fun GregorianDayCell(
 private fun ExpandedBengaliCalendarView(
     monthIndex: Int,
     year: Int,
+    todayCal: Calendar = Calendar.getInstance(),
     onSelectMonth: (Int) -> Unit,
     onPrevMonth: () -> Unit,
-    onNextMonth: () -> Unit
+    onNextMonth: () -> Unit,
+    onGoToToday: () -> Unit
 ) {
-    val monthData = remember(monthIndex, year) {
-        CalendarMonthProvider.getBengaliMonth(monthIndex, year, todayDay = 20, highlightToday = false)
+    val monthData = remember(monthIndex, year, todayCal) {
+        CalendarMonthProvider.getBengaliMonth(monthIndex, year, todayCal)
     }
+    val todayDetail = remember(todayCal) { CalendarHelper.getBengaliDateDetail(todayCal) }
+    val isViewingCurrentMonth = (monthIndex == todayDetail.monthIndex && year == todayDetail.year)
+
+    val banglaFont = LocalBanglaFontFamily.current
+    val englishFont = LocalEnglishFontFamily.current
 
     Column(modifier = Modifier.fillMaxWidth()) {
         // Header & Season Card Row
@@ -1218,18 +1338,18 @@ private fun ExpandedBengaliCalendarView(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            // Navigation: < ভাদ্র (১৪৩৩ বঙ্গাব্দ) >
+            // Navigation: < ভাদ্র (১৪৩৩ বঙ্গাব্দ) > + "আজ" jump button
             Row(verticalAlignment = Alignment.CenterVertically) {
                 IconButton(
                     onClick = onPrevMonth,
                     modifier = Modifier
-                        .size(34.dp)
+                        .size(36.dp)
                         .border(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.2f), RoundedCornerShape(10.dp))
                 ) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowBackIos,
                         contentDescription = "Previous Month",
-                        modifier = Modifier.size(12.dp)
+                        modifier = Modifier.size(13.dp)
                     )
                 }
 
@@ -1240,20 +1360,54 @@ private fun ExpandedBengaliCalendarView(
                         Text(
                             text = monthData.monthNameBn,
                             style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.Bold,
+                            fontFamily = banglaFont
                         )
                         Spacer(modifier = Modifier.width(6.dp))
                         Surface(
                             shape = RoundedCornerShape(8.dp),
-                            color = Color(0xFFEEF2FF)
+                            color = Color(0xFFFEF3C7)
                         ) {
                             Text(
                                 text = "(${monthData.yearBn} বঙ্গাব্দ)",
                                 style = MaterialTheme.typography.labelSmall,
                                 fontWeight = FontWeight.Bold,
-                                color = Color(0xFF4F46E5),
+                                color = Color(0xFFB45309),
+                                fontFamily = banglaFont,
                                 modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
                             )
+                        }
+
+                        // Quick "আজ" button if navigated away from today's month
+                        if (!isViewingCurrentMonth) {
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Surface(
+                                onClick = onGoToToday,
+                                shape = RoundedCornerShape(8.dp),
+                                color = Color(0xFFD97706).copy(alpha = 0.12f),
+                                border = BorderStroke(1.dp, Color(0xFFD97706).copy(alpha = 0.35f))
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Today,
+                                        contentDescription = "আজকের দিনে যান",
+                                        tint = Color(0xFFD97706),
+                                        modifier = Modifier.size(12.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(3.dp))
+                                    Text(
+                                        text = "আজ",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        fontWeight = FontWeight.Bold,
+                                        color = Color(0xFFD97706),
+                                        fontFamily = banglaFont,
+                                        fontSize = 10.sp
+                                    )
+                                }
+                            }
                         }
                     }
                     Text(
@@ -1261,7 +1415,8 @@ private fun ExpandedBengaliCalendarView(
                         style = MaterialTheme.typography.labelSmall,
                         fontSize = 9.sp,
                         fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                        fontFamily = banglaFont
                     )
                 }
 
@@ -1270,42 +1425,43 @@ private fun ExpandedBengaliCalendarView(
                 IconButton(
                     onClick = onNextMonth,
                     modifier = Modifier
-                        .size(34.dp)
+                        .size(36.dp)
                         .border(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.2f), RoundedCornerShape(10.dp))
                 ) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowForwardIos,
                         contentDescription = "Next Month",
-                        modifier = Modifier.size(12.dp)
+                        modifier = Modifier.size(13.dp)
                     )
                 }
             }
 
-            // Right side: শরৎকাল (শরৎ) Season Card
+            // Right side: শরৎকাল Season Card
             Surface(
                 shape = RoundedCornerShape(14.dp),
-                color = Color(0xFF0284C7),
+                color = Color(0xFFD97706),
                 modifier = Modifier
-                    .widthIn(max = 170.dp)
-                    .padding(start = 6.dp)
+                    .widthIn(max = 160.dp)
+                    .padding(start = 4.dp)
             ) {
                 Row(
-                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Icon(
                         imageVector = Icons.Default.AutoAwesome,
                         contentDescription = "Season",
                         tint = Color.White,
-                        modifier = Modifier.size(16.dp)
+                        modifier = Modifier.size(15.dp)
                     )
-                    Spacer(modifier = Modifier.width(6.dp))
+                    Spacer(modifier = Modifier.width(5.dp))
                     Column {
                         Text(
                             text = monthData.seasonTitle,
                             style = MaterialTheme.typography.labelSmall,
                             fontWeight = FontWeight.Bold,
                             color = Color.White,
+                            fontFamily = banglaFont,
                             maxLines = 1
                         )
                         Text(
@@ -1313,6 +1469,7 @@ private fun ExpandedBengaliCalendarView(
                             style = MaterialTheme.typography.labelSmall,
                             fontSize = 8.sp,
                             color = Color.White.copy(alpha = 0.9f),
+                            fontFamily = banglaFont,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
                         )
@@ -1335,7 +1492,11 @@ private fun ExpandedBengaliCalendarView(
                 Surface(
                     onClick = { onSelectMonth(index) },
                     shape = RoundedCornerShape(12.dp),
-                    color = if (isSelected) Color(0xFF4F46E5) else Color.Transparent,
+                    color = if (isSelected) Color(0xFFD97706) else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f),
+                    border = BorderStroke(
+                        1.dp,
+                        if (isSelected) Color(0xFFD97706) else MaterialTheme.colorScheme.outline.copy(alpha = 0.15f)
+                    ),
                     modifier = Modifier.padding(vertical = 2.dp)
                 ) {
                     Text(
@@ -1343,6 +1504,7 @@ private fun ExpandedBengaliCalendarView(
                         style = MaterialTheme.typography.labelMedium,
                         fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
                         color = if (isSelected) Color.White else MaterialTheme.colorScheme.onSurfaceVariant,
+                        fontFamily = banglaFont,
                         modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
                     )
                 }
@@ -1356,17 +1518,28 @@ private fun ExpandedBengaliCalendarView(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(4.dp)
         ) {
-            CalendarMonthProvider.bengaliWeekdays.forEach { day ->
+            CalendarMonthProvider.bengaliWeekdays.forEachIndexed { colIdx, day ->
+                val headerBg = when (colIdx) {
+                    1 -> Color(0xFFFFF1F2) // Robi soft peach
+                    6 -> Color(0xFFECFDF5) // Shukro soft mint
+                    else -> MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f)
+                }
+                val headerColor = when (colIdx) {
+                    1 -> Color(0xFFBE123C) // Robi rose
+                    6 -> Color(0xFF047857) // Shukro emerald
+                    else -> MaterialTheme.colorScheme.onSurfaceVariant
+                }
                 Surface(
                     shape = RoundedCornerShape(8.dp),
-                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
+                    color = headerBg,
                     modifier = Modifier.weight(1f)
                 ) {
                     Text(
                         text = day,
                         style = MaterialTheme.typography.labelSmall,
-                        fontWeight = FontWeight.SemiBold,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        fontWeight = FontWeight.Bold,
+                        color = headerColor,
+                        fontFamily = banglaFont,
                         textAlign = TextAlign.Center,
                         modifier = Modifier.padding(vertical = 6.dp)
                     )
@@ -1378,7 +1551,7 @@ private fun ExpandedBengaliCalendarView(
 
         // Calendar Days 7-column Grid
         val rows = monthData.days.chunked(7)
-        Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        Column(verticalArrangement = Arrangement.spacedBy(5.dp)) {
             rows.forEach { rowItems ->
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -1404,57 +1577,90 @@ private fun BengaliDayCell(
     modifier: Modifier = Modifier
 ) {
     val isToday = item.isToday
+    val banglaFont = LocalBanglaFontFamily.current
+    val englishFont = LocalEnglishFontFamily.current
 
-    val bgColor = when {
-        isToday -> Color(0xFF4F46E5)
-        item.colIndex in 0..1 -> Color(0xFFFFF1F2) // Shoni-Robi soft peach
-        item.colIndex in 2..3 -> Color(0xFFFFFBEB) // Som-Mongol cream
-        item.colIndex in 4..5 -> Color(0xFFF0FDFA) // Budh-Briho mint
-        else -> Color(0xFFEFF6FF) // Shukro soft blue
+    val regularBg = when {
+        item.colIndex == 1 -> Color(0xFFFFF1F2) // Robibar soft peach
+        item.colIndex in 2..5 -> Color(0xFFFFFDF8) // Som-Briho warm cream
+        item.colIndex == 6 -> Color(0xFFECFDF5) // Shukrobar soft mint
+        else -> Color(0xFFEFF6FF) // Shonibar soft blue
     }
 
     Surface(
-        modifier = modifier.aspectRatio(0.95f),
+        modifier = modifier.aspectRatio(0.92f),
         shape = RoundedCornerShape(12.dp),
-        color = bgColor,
+        color = if (isToday) Color.Transparent else regularBg,
         border = BorderStroke(
-            1.dp,
-            if (isToday) Color(0xFF4F46E5) else MaterialTheme.colorScheme.outline.copy(alpha = 0.12f)
-        )
+            if (isToday) 1.5.dp else 1.dp,
+            if (isToday) Color(0xFFFCD34D) else MaterialTheme.colorScheme.outline.copy(alpha = 0.12f)
+        ),
+        shadowElevation = if (isToday) 2.dp else 0.dp
     ) {
-        Column(
+        Box(
             modifier = Modifier
-                .padding(horizontal = 4.dp, vertical = 4.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.SpaceBetween
-        ) {
-            Text(
-                text = item.dayNumberBn,
-                style = MaterialTheme.typography.titleSmall,
-                fontWeight = if (isToday) FontWeight.Black else FontWeight.Bold,
-                color = if (isToday) Color.White else MaterialTheme.colorScheme.onSurface
-            )
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.End,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                if (isToday) {
-                    Box(
-                        modifier = Modifier
-                            .size(4.dp)
-                            .clip(CircleShape)
-                            .background(Color.White)
-                    )
-                    Spacer(modifier = Modifier.width(3.dp))
-                }
-                Text(
-                    text = "${item.gregorianDayNumber}",
-                    fontSize = 9.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    color = if (isToday) Color.White.copy(alpha = 0.9f) else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                .fillMaxSize()
+                .then(
+                    if (isToday) {
+                        Modifier.background(
+                            Brush.verticalGradient(
+                                listOf(Color(0xFFB45309), Color(0xFFF59E0B))
+                            )
+                        )
+                    } else Modifier
                 )
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 4.dp, vertical = 3.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(
+                    text = item.dayNumberBn,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = if (isToday) FontWeight.Black else FontWeight.Bold,
+                    color = when {
+                        isToday -> Color.White
+                        item.colIndex == 1 -> Color(0xFFBE123C)
+                        item.colIndex == 6 -> Color(0xFF047857)
+                        else -> MaterialTheme.colorScheme.onSurface
+                    },
+                    fontFamily = banglaFont
+                )
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    if (isToday) {
+                        Surface(
+                            shape = RoundedCornerShape(6.dp),
+                            color = Color.White.copy(alpha = 0.3f)
+                        ) {
+                            Text(
+                                text = "আজ",
+                                fontSize = 7.sp,
+                                fontWeight = FontWeight.Black,
+                                color = Color.White,
+                                fontFamily = banglaFont,
+                                modifier = Modifier.padding(horizontal = 3.dp, vertical = 0.5.dp)
+                            )
+                        }
+                    } else {
+                        Spacer(modifier = Modifier.width(1.dp))
+                    }
+
+                    Text(
+                        text = "${item.gregorianDayNumber}",
+                        fontSize = 9.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = if (isToday) Color.White.copy(alpha = 0.95f) else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                        fontFamily = englishFont
+                    )
+                }
             }
         }
     }
@@ -1467,13 +1673,21 @@ private fun BengaliDayCell(
 private fun ExpandedHijriCalendarView(
     monthIndex: Int,
     year: Int,
+    todayCal: Calendar = Calendar.getInstance(),
     onSelectMonth: (Int) -> Unit,
     onPrevMonth: () -> Unit,
-    onNextMonth: () -> Unit
+    onNextMonth: () -> Unit,
+    onGoToToday: () -> Unit
 ) {
-    val monthData = remember(monthIndex, year) {
-        CalendarMonthProvider.getHijriMonth(monthIndex, year, todayDay = 22, highlightToday = false)
+    val monthData = remember(monthIndex, year, todayCal) {
+        CalendarMonthProvider.getHijriMonth(monthIndex, year, todayCal)
     }
+    val todayDetail = remember(todayCal) { CalendarHelper.getHijriDateDetail(todayCal) }
+    val isViewingCurrentMonth = (monthIndex == todayDetail.monthIndex && year == todayDetail.year)
+
+    val arabicFont = LocalArabicFontFamily.current
+    val banglaFont = LocalBanglaFontFamily.current
+    val englishFont = LocalEnglishFontFamily.current
 
     Column(modifier = Modifier.fillMaxWidth()) {
         // Header & Event Card Row
@@ -1482,18 +1696,18 @@ private fun ExpandedHijriCalendarView(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            // Navigation: < Rabi' al-Awwal (ربيع الأول) (১৪৪৮ AH) >
+            // Navigation: < Rabi' al-Awwal (ربيع الأول) (১৪৪৮ AH) > + "আজ" jump button
             Row(verticalAlignment = Alignment.CenterVertically) {
                 IconButton(
                     onClick = onPrevMonth,
                     modifier = Modifier
-                        .size(34.dp)
+                        .size(36.dp)
                         .border(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.2f), RoundedCornerShape(10.dp))
                 ) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowBackIos,
                         contentDescription = "Previous Month",
-                        modifier = Modifier.size(12.dp)
+                        modifier = Modifier.size(13.dp)
                     )
                 }
 
@@ -1505,6 +1719,7 @@ private fun ExpandedHijriCalendarView(
                             text = "${monthData.monthNameEn} (${monthData.monthNameAr})",
                             style = MaterialTheme.typography.titleSmall,
                             fontWeight = FontWeight.Bold,
+                            fontFamily = arabicFont,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
                         )
@@ -1518,8 +1733,41 @@ private fun ExpandedHijriCalendarView(
                                 style = MaterialTheme.typography.labelSmall,
                                 fontWeight = FontWeight.Bold,
                                 color = Color(0xFF15803D),
+                                fontFamily = banglaFont,
                                 modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
                             )
+                        }
+
+                        // Quick "আজ" button if navigated away from today's month
+                        if (!isViewingCurrentMonth) {
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Surface(
+                                onClick = onGoToToday,
+                                shape = RoundedCornerShape(8.dp),
+                                color = Color(0xFF059669).copy(alpha = 0.12f),
+                                border = BorderStroke(1.dp, Color(0xFF059669).copy(alpha = 0.35f))
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Today,
+                                        contentDescription = "আজকের দিনে যান",
+                                        tint = Color(0xFF059669),
+                                        modifier = Modifier.size(12.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(3.dp))
+                                    Text(
+                                        text = "আজ",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        fontWeight = FontWeight.Bold,
+                                        color = Color(0xFF059669),
+                                        fontFamily = banglaFont,
+                                        fontSize = 10.sp
+                                    )
+                                }
+                            }
                         }
                     }
                     Text(
@@ -1527,7 +1775,8 @@ private fun ExpandedHijriCalendarView(
                         style = MaterialTheme.typography.labelSmall,
                         fontSize = 9.sp,
                         fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                        fontFamily = englishFont
                     )
                 }
 
@@ -1536,13 +1785,13 @@ private fun ExpandedHijriCalendarView(
                 IconButton(
                     onClick = onNextMonth,
                     modifier = Modifier
-                        .size(34.dp)
+                        .size(36.dp)
                         .border(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.2f), RoundedCornerShape(10.dp))
                 ) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowForwardIos,
                         contentDescription = "Next Month",
-                        modifier = Modifier.size(12.dp)
+                        modifier = Modifier.size(13.dp)
                     )
                 }
             }
@@ -1552,26 +1801,27 @@ private fun ExpandedHijriCalendarView(
                 shape = RoundedCornerShape(14.dp),
                 color = Color(0xFF059669),
                 modifier = Modifier
-                    .widthIn(max = 170.dp)
-                    .padding(start = 6.dp)
+                    .widthIn(max = 160.dp)
+                    .padding(start = 4.dp)
             ) {
                 Row(
-                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Icon(
                         imageVector = Icons.Default.AutoAwesome,
                         contentDescription = "Event",
                         tint = Color.White,
-                        modifier = Modifier.size(16.dp)
+                        modifier = Modifier.size(15.dp)
                     )
-                    Spacer(modifier = Modifier.width(6.dp))
+                    Spacer(modifier = Modifier.width(5.dp))
                     Column {
                         Text(
                             text = monthData.eventTitle,
                             style = MaterialTheme.typography.labelSmall,
                             fontWeight = FontWeight.Bold,
                             color = Color.White,
+                            fontFamily = arabicFont,
                             maxLines = 1
                         )
                         Text(
@@ -1579,6 +1829,7 @@ private fun ExpandedHijriCalendarView(
                             style = MaterialTheme.typography.labelSmall,
                             fontSize = 8.sp,
                             color = Color.White.copy(alpha = 0.9f),
+                            fontFamily = englishFont,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
                         )
@@ -1598,19 +1849,38 @@ private fun ExpandedHijriCalendarView(
         ) {
             CalendarMonthProvider.hijriMonthNames.forEachIndexed { index, name ->
                 val isSelected = monthIndex == index
+                val arabicMonthName = CalendarMonthProvider.hijriMonthNamesArabic.getOrElse(index) { "" }
                 Surface(
                     onClick = { onSelectMonth(index) },
                     shape = RoundedCornerShape(12.dp),
-                    color = if (isSelected) Color(0xFF4F46E5) else Color.Transparent,
+                    color = if (isSelected) Color(0xFF059669) else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f),
+                    border = BorderStroke(
+                        1.dp,
+                        if (isSelected) Color(0xFF059669) else MaterialTheme.colorScheme.outline.copy(alpha = 0.15f)
+                    ),
                     modifier = Modifier.padding(vertical = 2.dp)
                 ) {
-                    Text(
-                        text = name,
-                        style = MaterialTheme.typography.labelMedium,
-                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                        color = if (isSelected) Color.White else MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
-                    )
+                    Row(
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = name,
+                            style = MaterialTheme.typography.labelMedium,
+                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                            color = if (isSelected) Color.White else MaterialTheme.colorScheme.onSurfaceVariant,
+                            fontFamily = englishFont
+                        )
+                        if (arabicMonthName.isNotEmpty()) {
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = arabicMonthName,
+                                fontSize = 10.sp,
+                                color = if (isSelected) Color.White.copy(alpha = 0.9f) else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                                fontFamily = arabicFont
+                            )
+                        }
+                    }
                 }
             }
         }
@@ -1625,9 +1895,23 @@ private fun ExpandedHijriCalendarView(
             for (i in 0 until 7) {
                 val enDay = CalendarMonthProvider.hijriWeekdaysEn[i]
                 val arDay = CalendarMonthProvider.hijriWeekdaysAr[i]
+                val isJummah = (i == 5) // Friday
+                val isSunday = (i == 0) // Sunday
+
+                val headerBg = when {
+                    isJummah -> Color(0xFFECFDF5)
+                    isSunday -> Color(0xFFFFF1F2)
+                    else -> MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f)
+                }
+                val headerColor = when {
+                    isJummah -> Color(0xFF047857)
+                    isSunday -> Color(0xFFBE123C)
+                    else -> MaterialTheme.colorScheme.onSurfaceVariant
+                }
+
                 Surface(
                     shape = RoundedCornerShape(8.dp),
-                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
+                    color = headerBg,
                     modifier = Modifier.weight(1f)
                 ) {
                     Column(
@@ -1637,13 +1921,15 @@ private fun ExpandedHijriCalendarView(
                         Text(
                             text = enDay,
                             style = MaterialTheme.typography.labelSmall,
-                            fontWeight = FontWeight.SemiBold,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            fontWeight = FontWeight.Bold,
+                            color = headerColor,
+                            fontFamily = englishFont
                         )
                         Text(
                             text = arDay,
                             fontSize = 8.sp,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                            color = headerColor.copy(alpha = 0.85f),
+                            fontFamily = arabicFont
                         )
                     }
                 }
@@ -1654,7 +1940,7 @@ private fun ExpandedHijriCalendarView(
 
         // Calendar Days 7-column Grid
         val rows = monthData.days.chunked(7)
-        Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        Column(verticalArrangement = Arrangement.spacedBy(5.dp)) {
             rows.forEach { rowItems ->
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -1680,63 +1966,104 @@ private fun HijriDayCell(
     modifier: Modifier = Modifier
 ) {
     val isToday = item.isToday
+    val arabicFont = LocalArabicFontFamily.current
+    val banglaFont = LocalBanglaFontFamily.current
+    val englishFont = LocalEnglishFontFamily.current
 
-    val bgColor = when {
-        isToday -> Color(0xFF4F46E5)
+    val regularBg = when {
         item.colIndex == 0 -> Color(0xFFFFF1F2) // Sunday soft peach
-        item.colIndex in 1..2 -> Color(0xFFFFFBEB) // Mon-Tue cream
-        item.colIndex in 3..4 -> Color(0xFFF0FDFA) // Wed-Thu mint
-        else -> Color(0xFFEFF6FF) // Fri-Sat soft blue
+        item.colIndex == 5 -> Color(0xFFECFDF5) // Friday soft mint
+        item.colIndex in 1..4 -> Color(0xFFF7FDF9) // Sage ivory
+        else -> Color(0xFFEFF6FF) // Saturday soft blue
     }
 
     Surface(
-        modifier = modifier.aspectRatio(0.95f),
+        modifier = modifier.aspectRatio(0.92f),
         shape = RoundedCornerShape(12.dp),
-        color = bgColor,
+        color = if (isToday) Color.Transparent else regularBg,
         border = BorderStroke(
-            1.dp,
-            if (isToday) Color(0xFF4F46E5) else MaterialTheme.colorScheme.outline.copy(alpha = 0.12f)
-        )
+            if (isToday) 1.5.dp else 1.dp,
+            if (isToday) Color(0xFF6EE7B7) else MaterialTheme.colorScheme.outline.copy(alpha = 0.12f)
+        ),
+        shadowElevation = if (isToday) 2.dp else 0.dp
     ) {
-        Column(
-            modifier = Modifier.padding(horizontal = 2.dp, vertical = 4.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.SpaceBetween
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .then(
+                    if (isToday) {
+                        Modifier.background(
+                            Brush.verticalGradient(
+                                listOf(Color(0xFF065F46), Color(0xFF10B981))
+                            )
+                        )
+                    } else Modifier
+                )
         ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Center
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 2.dp, vertical = 3.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.SpaceBetween
             ) {
-                Text(
-                    text = "${item.hijriDayEng}",
-                    style = MaterialTheme.typography.titleSmall,
-                    fontWeight = if (isToday) FontWeight.Black else FontWeight.Bold,
-                    color = if (isToday) Color.White else Color(0xFF047857)
-                )
-                Spacer(modifier = Modifier.width(2.dp))
-                Text(
-                    text = "(${item.hijriDayBn})",
-                    fontSize = 10.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = if (isToday) Color.White.copy(alpha = 0.85f) else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
-                )
-                if (isToday) {
+                // Arabic numeral & Bangla numeral
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    Text(
+                        text = item.hijriDayArabic,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = if (isToday) FontWeight.Black else FontWeight.Bold,
+                        color = if (isToday) Color.White else Color(0xFF047857),
+                        fontFamily = arabicFont
+                    )
                     Spacer(modifier = Modifier.width(2.dp))
-                    Box(
-                        modifier = Modifier
-                            .size(4.dp)
-                            .clip(CircleShape)
-                            .background(Color.White)
+                    Text(
+                        text = "(${item.hijriDayBn})",
+                        fontSize = 9.5.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = if (isToday) Color.White.copy(alpha = 0.9f) else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.75f),
+                        fontFamily = banglaFont
+                    )
+                }
+
+                // Bottom row: "আজ" badge and Gregorian sub date
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 2.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    if (isToday) {
+                        Surface(
+                            shape = RoundedCornerShape(6.dp),
+                            color = Color.White.copy(alpha = 0.3f)
+                        ) {
+                            Text(
+                                text = "আজ",
+                                fontSize = 7.sp,
+                                fontWeight = FontWeight.Black,
+                                color = Color.White,
+                                fontFamily = banglaFont,
+                                modifier = Modifier.padding(horizontal = 3.dp, vertical = 0.5.dp)
+                            )
+                        }
+                    } else {
+                        Spacer(modifier = Modifier.width(1.dp))
+                    }
+
+                    Text(
+                        text = item.gregorianSubDate,
+                        fontSize = 8.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = if (isToday) Color.White.copy(alpha = 0.95f) else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                        fontFamily = englishFont
                     )
                 }
             }
-
-            Text(
-                text = item.gregorianSubDate,
-                fontSize = 9.sp,
-                fontWeight = FontWeight.SemiBold,
-                color = if (isToday) Color.White.copy(alpha = 0.9f) else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.75f)
-            )
         }
     }
 }

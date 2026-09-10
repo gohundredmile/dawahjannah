@@ -33,6 +33,29 @@ object CalendarHelper {
         val shortEngBengali: String = ""
     )
 
+    data class BengaliDateDetail(
+        val day: Int,
+        val monthIndex: Int, // 0..11
+        val monthName: String,
+        val year: Int,
+        val season: String
+    )
+
+    data class HijriDateDetail(
+        val day: Int,
+        val monthIndex: Int, // 0..11
+        val monthNameEn: String,
+        val monthNameAr: String,
+        val monthNameBn: String,
+        val year: Int
+    )
+
+    data class GregorianDateDetail(
+        val day: Int,
+        val monthIndex: Int, // 0..11
+        val year: Int
+    )
+
     private val banglaMonths = arrayOf(
         "বৈশাখ", "জ্যৈষ্ঠ", "আষাঢ়", "শ্রাবণ", "ভাদ্র", "আশ্বিন",
         "কার্তিক", "অগ্রহায়ণ", "পৌষ", "মাঘ", "ফাল্গুন", "চৈত্র"
@@ -47,6 +70,51 @@ object CalendarHelper {
         "জমাদিউল আউয়াল", "জমাদিউস সানি", "রজব", "শাবান",
         "রমাদান", "শাওয়াল", "জিলকদ", "জিলহজ্জ"
     )
+
+    private val hijriMonthsAr = arrayOf(
+        "محرم", "صفر", "ربيع الأول", "ربيع الثاني",
+        "جمادى الأولى", "جمادى الآخرة", "رجب", "شعبان",
+        "رمضان", "শوال", "ذو القعدة", "ذو الحجة"
+    )
+
+    private val hijriMonthsEn = arrayOf(
+        "Muharram", "Safar", "Rabi' al-Awwal", "Rabi' al-Thani",
+        "Jumada al-Awwal", "Jumada al-Thani", "Rajab", "Sha'ban",
+        "Ramadan", "Shawwal", "Dhu al-Qa'dah", "Dhu al-Hijjah"
+    )
+
+    fun getGregorianDateDetail(cal: Calendar = Calendar.getInstance()): GregorianDateDetail {
+        return GregorianDateDetail(
+            day = cal.get(Calendar.DAY_OF_MONTH),
+            monthIndex = cal.get(Calendar.MONTH),
+            year = cal.get(Calendar.YEAR)
+        )
+    }
+
+    fun getBengaliDateDetail(cal: Calendar = Calendar.getInstance()): BengaliDateDetail {
+        val q = calculateBengaliDate(cal)
+        val monthIndex = banglaMonths.indexOf(q.second).let { if (it >= 0) it else 0 }
+        return BengaliDateDetail(
+            day = q.first,
+            monthIndex = monthIndex,
+            monthName = q.second,
+            year = q.third,
+            season = q.fourth
+        )
+    }
+
+    fun getHijriDateDetail(cal: Calendar = Calendar.getInstance()): HijriDateDetail {
+        val t = calculateHijriDate(cal)
+        val monthIndex = hijriMonths.indexOf(t.second).let { if (it >= 0) it else 0 }
+        return HijriDateDetail(
+            day = t.first,
+            monthIndex = monthIndex,
+            monthNameEn = hijriMonthsEn.getOrElse(monthIndex) { "Rabi' al-Awwal" },
+            monthNameAr = hijriMonthsAr.getOrElse(monthIndex) { "ربيع الأول" },
+            monthNameBn = t.second,
+            year = t.third
+        )
+    }
 
     private val englishDaysBn = mapOf(
         Calendar.SUNDAY to "রবিবার",

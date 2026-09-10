@@ -702,13 +702,13 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 if (release != null && release.hasNewerVersion) {
                     val ann = if (!release.announcement.isNullOrBlank()) "\n\nঘোষণা: ${release.announcement}" else ""
                     val source = if (release.isFromAppUpdatesJson) " (app-updates.json থেকে)" else " (GitHub Releases থেকে)"
-                    _updateAlertMessage.value = "গিটহাবে নতুন আপডেট পাওয়া গেছে (${release.tagName})$source!\n${release.versionName}\n\nনতুন পরিবর্তন:\n${release.releaseNotes.take(200)}$ann\n\n'নতুন ভার্শন ডাউনলোড করুন' বাটনে চাপলে সরাসরি অ্যাপের ভেতর সমস্ত কনটেন্ট সক্রিয় হবে।"
+                    _updateAlertMessage.value = "গিটহাবে নতুন সংস্করণ পাওয়া গেছে (${release.tagName})$source!\n${release.versionName}\n\nনতুন পরিবর্তন:\n${release.releaseNotes.take(250)}$ann\n\n'APK ডাউনলোড' চাপলে নতুন সংস্করণ ডাউনলোড হবে অথবা 'কনটেন্ট সিঙ্ক' চাপলে অ্যাপের ভেতরে ওভার-দ্য-এয়ার কনটেন্ট আপডেট হবে।"
                 } else if (release != null) {
                     val ann = if (!release.announcement.isNullOrBlank()) "\n\nঘোষণা/বার্তা:\n${release.announcement}" else ""
                     val source = if (release.isFromAppUpdatesJson) "app-updates.json" else "GitHub Releases"
-                    _updateAlertMessage.value = "গিটহাব সিঙ্ক সফল ($source)!\nআপনার অ্যাপটি হালনাগাদ করা আছে (${release.tagName})। কোনো নতুন আপডেট বাকি নেই।$ann"
+                    _updateAlertMessage.value = "গিটহাব সিঙ্ক স্ট্যাটাস ($source):\nআপনার অ্যাপ ও কনটেন্ট সম্পূর্ণ হালনাগাদ রয়েছে (v${gitHubUpdateManager.appliedContentVersion})। কোনো নতুন আপডেট বাকি নেই।$ann"
                 } else {
-                    _updateAlertMessage.value = "আপনার অ্যাপটি সর্বশেষ সংস্করণে আপডেট করা আছে।"
+                    _updateAlertMessage.value = "আপনার অ্যাপটি সর্বশেষ সংস্করণে (v${gitHubUpdateManager.appliedContentVersion}) আপডেট করা আছে।"
                 }
             } else {
                 val errorMsg = result.exceptionOrNull()?.message ?: "অজ্ঞাত ত্রুটি"
@@ -720,27 +720,55 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     /**
-     * Downloads and applies updates directly in-app to the respective places (Dua Vault, Islamic Life, Announcements)
-     * without redirecting to external browser or GitHub release page.
+     * Downloads the real APK for the new release via Android DownloadManager or browser
      */
-    fun downloadAndApplyInAppUpdate() {
+    fun downloadNewApkVersion() {
+        val release = _latestReleaseInfo.value
+        val url = release?.downloadUrl
+            ?: "https://github.com/${gitHubUpdateManager.repoOwner}/${gitHubUpdateManager.repoName}/releases/latest"
+        val versionName = release?.tagName ?: "latest"
+
+        val result = gitHubUpdateManager.downloadApk(url, versionName)
+        if (result.isSuccess) {
+            val isDirectApk = url.endsWith(".apk", ignoreCase = true) || url.contains("/download/")
+            _updateAlertMessage.value = if (isDirectApk) {
+                "দা'ওয়াহ টু জান্নাহ ($versionName) APK ডাউনলোড শুরু হয়েছে!\n\n" +
+                "ডাউনলোড নোটিফিকেশন বার থেকে প্রগ্রেস দেখতে পারবেন। ডাউনলোড শেষ হলে ফাইলটিতে ট্যাপ করে নতুন সংস্করণ ইনস্টল করুন।"
+            } else {
+                "গিটহাব অফিসিয়াল রিলিজ পেজ ব্রাউজারে খোলা হয়েছে:\n$url\n\n" +
+                "সেখান থেকে 'Assets' সেকশন থেকে সর্বশেষ APK ফাইলটি ডাউনলোড করে ফোনে ইনস্টল করে নিন।"
+            }
+        } else {
+            _updateAlertMessage.value = "APK ডাউনলোড লিঙ্ক খুলতে সমস্যা হয়েছে: ${result.exceptionOrNull()?.message}"
+        }
+    }
+
+    /**
+     * Downloads and applies updates directly in-app to the respective places (Dua Vault, Islamic Life, Announcements)
+     * over-the-air from GitHub, strictly without fake notices.
+     */
+    fun downloadAndApplyInAppUpdate(isLocalPreview: Boolean = false) {
         viewModelScope.launch {
             _isDownloadingUpdate.value = true
-            _updateAlertMessage.value = "ইন-অ্যাপ কনটেন্ট ডাউনলোড ও প্রয়োগ করা হচ্ছে... অনুগ্রহ করে অপেক্ষা করুন।"
-            val result = gitHubUpdateManager.downloadAndApplyContentUpdates()
+            _updateAlertMessage.value = if (isLocalPreview) {
+                "লোকাল প্যাকেজের app-updates.json লোড করা হচ্ছে..."
+            } else {
+                "গিটহাব থেকে সরাসরি ওভার-দ্য-এয়ার কনটেন্ট ডাউনলোড করা হচ্ছে... অনুগ্রহ করে অপেক্ষা করুন।"
+            }
+            val result = gitHubUpdateManager.downloadAndApplyContentUpdates(allowLocalAssetFallback = isLocalPreview)
             _isDownloadingUpdate.value = false
             if (result.isSuccess) {
                 val bundle = result.getOrThrow()
-                applyContentBundleToApp(bundle, notifyUser = true)
+                applyContentBundleToApp(bundle, notifyUser = true, isLocalPreview = isLocalPreview)
                 _latestReleaseInfo.value = _latestReleaseInfo.value?.copy(hasNewerVersion = false)
             } else {
                 val errorMsg = result.exceptionOrNull()?.message ?: "অজ্ঞাত ত্রুটি"
-                _updateAlertMessage.value = "ইন-অ্যাপ কনটেন্ট ডাউনলোড ব্যর্থ হয়েছে: $errorMsg\n\nঅনুগ্রহ করে ইন্টারনেট সংযোগ পরীক্ষা করে পুনরায় চেষ্টা করুন।"
+                _updateAlertMessage.value = "কনটেন্ট ডাউনলোড সম্পন্ন করা যায়নি:\n\n$errorMsg"
             }
         }
     }
 
-    private fun applyContentBundleToApp(bundle: RemoteContentBundle, notifyUser: Boolean) {
+    private fun applyContentBundleToApp(bundle: RemoteContentBundle, notifyUser: Boolean, isLocalPreview: Boolean = false) {
         val convertedDuas = bundle.extraDuas.map { remote ->
             val catName = if (remote.category.isNotBlank()) remote.category else "অন্যান্য দোয়া"
             val safeCatId = "cat_remote_" + kotlin.math.abs(remote.category.hashCode())
@@ -785,7 +813,12 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
 
         if (notifyUser) {
-            _updateAlertMessage.value = "আলহামদুলিল্লাহ! নতুন ভার্সন (${bundle.tagName}) এর কনটেন্ট সফলভাবে অ্যাপের যথাস্থানে ডাউনলোড ও প্রয়োগ করা হয়েছে!\n\n• দো'আ ভল্টে ${convertedDuas.size}টি নতুন দো'আ সক্রিয় হয়েছে।\n• দো'আ কবুল হওয়ার স্থান ও সময়ের সর্বশেষ তথ্য আপডেট হয়েছে।\n\n(কোনো বাহ্যিক ব্রাউজার ছাড়াই সরাসরি অ্যাপের ভেতরেই ডাউনলোড সম্পন্ন হয়েছে।)"
+            val prefix = if (isLocalPreview) "লোকাল এসেট প্রিভিউ" else "গিটহাব অনলাইন ওটিএ"
+            _updateAlertMessage.value = "আলহামদুলিল্লাহ! ($prefix) থেকে সংস্করণ ${bundle.tagName} সফলভাবে প্রয়োগ করা হয়েছে!\n\n" +
+                "• কনটেন্ট ভার্সন: v${bundle.versionName}\n" +
+                "• দো'আ ভল্টে নতুন দো'আ: ${convertedDuas.size}টি সক্রিয়\n" +
+                if (!bundle.announcement.isNullOrBlank()) "• নতুন ঘোষণা: ${bundle.announcement}\n" else "" +
+                "\nঅ্যাপের সমস্ত কনটেন্ট সফলভাবে হালনাগাদ করা হয়েছে।"
         }
     }
 
@@ -794,14 +827,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun testLocalAppUpdatesSync() {
-        val bundled = gitHubUpdateManager.getLocalBundledUpdates()
-        if (bundled != null) {
-            _latestReleaseInfo.value = bundled
-            val ann = if (!bundled.announcement.isNullOrBlank()) "\n\nঘোষণা/বার্তা:\n${bundled.announcement}" else ""
-            _updateAlertMessage.value = "প্রজেক্টের 'app-updates.json' ফাইল ভ্যালিডেশন সফল!\n\nসংস্করণ: ${bundled.tagName} (${bundled.versionName})\n\nপরিবর্তনসমূহ:\n${bundled.releaseNotes}$ann\n\n'নতুন ভার্শন ডাউনলোড করুন' বাটনে ট্যাপ করে সরাসরি অ্যাপেই এই কনটেন্ট প্রয়োগ করা যাবে।"
-        } else {
-            _updateAlertMessage.value = "লোকাল app-updates.json ফাইলে ত্রুটি রয়েছে।"
-        }
+        downloadAndApplyInAppUpdate(isLocalPreview = true)
     }
 
     fun updateGitHubRepo(owner: String, repo: String) {

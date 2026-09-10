@@ -84,8 +84,27 @@ class GitHubUpdateManager(private val context: Context) {
             .apply()
     }
 
+    val bundledVersionName: String by lazy {
+        try {
+            val stream = context.assets.open("app-updates.json")
+            val content = stream.bufferedReader().use { it.readText() }
+            val json = JSONObject(content)
+            json.optString("versionName", "1.0.7").removePrefix("v").removePrefix("V").trim()
+        } catch (_: Exception) {
+            "1.0.7"
+        }
+    }
+
     var appliedContentVersion: String
-        get() = prefs.getString("applied_content_version", "1.0.0") ?: "1.0.0"
+        get() {
+            val saved = prefs.getString("applied_content_version", null)
+            val bundled = bundledVersionName
+            if (saved == null || isVersionNewer(bundled, saved)) {
+                prefs.edit().putString("applied_content_version", bundled).apply()
+                return bundled
+            }
+            return saved
+        }
         set(value) = prefs.edit().putString("applied_content_version", value.trim()).apply()
 
     val currentAppVersion: String
@@ -348,14 +367,17 @@ class GitHubUpdateManager(private val context: Context) {
 
     /**
      * Downloads over-the-air content and saves it persistently inside the app's local storage.
-     * Tapping the update button triggers this directly without redirecting outside the app.
+     * When allowLocalAssetFallback is false (default), it strictly performs remote fetch from GitHub
+     * and never fakes a successful download if remote fetch fails.
      */
     suspend fun downloadAndApplyContentUpdates(
         owner: String = repoOwner,
-        repo: String = repoName
+        repo: String = repoName,
+        allowLocalAssetFallback: Boolean = false
     ): Result<RemoteContentBundle> = withContext(Dispatchers.IO) {
         try {
             var rawJsonString: String? = null
+            var lastErrorMessage: String? = null
 
             // 1. Try remote GitHub raw content first
             val branchUrls = listOf(
@@ -376,24 +398,38 @@ class GitHubUpdateManager(private val context: Context) {
                             rawJsonString = body
                             break
                         }
+                    } else {
+                        lastErrorMessage = "HTTP ${response.code} (${response.message})"
                     }
-                } catch (_: Exception) {
+                } catch (e: Exception) {
+                    lastErrorMessage = e.localizedMessage ?: e.message
                 }
             }
 
-            // 2. If network request failed, fall back to bundled asset
+            // 2. Only fallback to bundled asset if explicitly allowed for testing
             if (rawJsonString == null) {
-                try {
-                    val stream = context.assets.open("app-updates.json")
-                    rawJsonString = stream.bufferedReader().use { it.readText() }
-                } catch (e: Exception) {
-                    return@withContext Result.failure(Exception("আপডেট কনটেন্ট পাওয়া যায়নি: ${e.message}"))
+                if (allowLocalAssetFallback) {
+                    try {
+                        val stream = context.assets.open("app-updates.json")
+                        rawJsonString = stream.bufferedReader().use { it.readText() }
+                    } catch (e: Exception) {
+                        return@withContext Result.failure(Exception("লোকাল এসেট কনটেন্ট পড়া যায়নি: ${e.message}"))
+                    }
+                } else {
+                    val reason = lastErrorMessage ?: "গিটহাব সার্ভারের সাথে সংযোগ স্থাপন করা সম্ভব হয়নি।"
+                    return@withContext Result.failure(
+                        Exception(
+                            "গিটহাব ($owner/$repo) থেকে রিমোট 'app-updates.json' ফাইল ডাউনলোড করা যায়নি।\n\n" +
+                            "কারিগরি স্ট্যাটাস: $reason\n\n" +
+                            "সঠিক সিঙ্কের জন্য নিশ্চিত করুন যে গিটহাব পাবলিক রিপোজিটরিতে 'app-updates.json' পুশ করা আছে এবং ডিভাইসে ইন্টারনেট সচল আছে।"
+                        )
+                    )
                 }
             }
 
             val json = JSONObject(rawJsonString)
-            val version = json.optInt("versionCode", json.optInt("version", 103))
-            val versionName = json.optString("versionName", "1.0.3")
+            val version = json.optInt("versionCode", json.optInt("version", 107))
+            val versionName = json.optString("versionName", bundledVersionName)
             val tagName = json.optString("tagName", "v$versionName")
             val releaseTitle = json.optString("releaseTitle", "দা'ওয়াহ টু জান্নাহ - সংস্করণ $versionName")
             val releaseNotes = json.optString("releaseNotes", "নিয়মিত আপডেট ও নতুন কনটেন্ট সংযোজন।")
@@ -478,8 +514,8 @@ class GitHubUpdateManager(private val context: Context) {
 
             if (content.isBlank()) return null
             val json = JSONObject(content)
-            val version = json.optInt("versionCode", json.optInt("version", 103))
-            val versionName = json.optString("versionName", "1.0.3")
+            val version = json.optInt("versionCode", json.optInt("version", 107))
+            val versionName = json.optString("versionName", bundledVersionName)
             val tagName = json.optString("tagName", "v$versionName")
             val releaseTitle = json.optString("releaseTitle", "দা'ওয়াহ টু জান্নাহ - সংস্করণ $versionName")
             val releaseNotes = json.optString("releaseNotes", "")
@@ -534,6 +570,50 @@ class GitHubUpdateManager(private val context: Context) {
     }
 
     /**
+     * Downloads APK using Android DownloadManager or opens the browser download link
+     */
+    fun downloadApk(url: String, versionName: String): Result<String> {
+        return try {
+            val cleanUrl = url.trim()
+            if (cleanUrl.isBlank()) {
+                return Result.failure(Exception("ডাউনলোড লিঙ্ক পাওয়া যায়নি।"))
+            }
+
+            val isDirectApk = cleanUrl.endsWith(".apk", ignoreCase = true) || cleanUrl.contains("/download/")
+
+            if (isDirectApk) {
+                try {
+                    val dm = context.getSystemService(Context.DOWNLOAD_SERVICE) as? android.app.DownloadManager
+                    if (dm != null) {
+                        val uri = Uri.parse(cleanUrl)
+                        val fileName = "dawah-to-jannah-${versionName.replace(" ", "_")}.apk"
+                        val request = android.app.DownloadManager.Request(uri)
+                            .setTitle("Dawah to Jannah $versionName")
+                            .setDescription("দা'ওয়াহ টু জান্নাহ APK ডাউনলোড হচ্ছে...")
+                            .setNotificationVisibility(android.app.DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
+                            .setDestinationInExternalPublicDir(android.os.Environment.DIRECTORY_DOWNLOADS, fileName)
+                            .setMimeType("application/vnd.android.package-archive")
+
+                        dm.enqueue(request)
+                    }
+                } catch (_: Exception) {
+                    // Fallback to browser
+                }
+            }
+
+            // Launch browser / system viewer so user has clear UI feedback & download control
+            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(cleanUrl)).apply {
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK
+            }
+            context.startActivity(intent)
+
+            Result.success(cleanUrl)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    /**
      * Opens download link or browser for APK update
      */
     fun openDownloadPage(url: String) {
@@ -546,9 +626,12 @@ class GitHubUpdateManager(private val context: Context) {
         }
     }
 
-    private fun isVersionNewer(remoteVer: String, localVer: String): Boolean {
-        val remoteParts = remoteVer.split(".").mapNotNull { it.toIntOrNull() }
-        val localParts = localVer.split(".").mapNotNull { it.toIntOrNull() }
+    fun isVersionNewer(remoteVer: String, localVer: String): Boolean {
+        val cleanRemote = remoteVer.trim().removePrefix("v").removePrefix("V")
+        val cleanLocal = localVer.trim().removePrefix("v").removePrefix("V")
+
+        val remoteParts = cleanRemote.split(".").mapNotNull { it.toIntOrNull() }
+        val localParts = cleanLocal.split(".").mapNotNull { it.toIntOrNull() }
 
         val length = maxOf(remoteParts.size, localParts.size)
         for (i in 0 until length) {

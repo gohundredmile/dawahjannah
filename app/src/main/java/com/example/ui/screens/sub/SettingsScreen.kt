@@ -497,16 +497,19 @@ fun SettingsScreen(viewModel: MainViewModel) {
                         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.15f)),
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        Row(
-                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween
+                        Column(
+                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
                         ) {
                             Text(
-                                text = "টার্গেট: github.com/${viewModel.gitHubUpdateManager.repoOwner}/${viewModel.gitHubUpdateManager.repoName}",
+                                text = "কনটেন্ট ভার্সন: v${viewModel.appliedContentVersion} • ইনস্টলড ভার্সন: 1.0",
                                 style = MaterialTheme.typography.labelSmall,
-                                fontWeight = FontWeight.SemiBold,
+                                fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.primary
+                            )
+                            Text(
+                                text = "টার্গেট রিপো: github.com/${viewModel.gitHubUpdateManager.repoOwner}/${viewModel.gitHubUpdateManager.repoName}",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
                     }
@@ -573,7 +576,7 @@ fun SettingsScreen(viewModel: MainViewModel) {
                             tint = MaterialTheme.colorScheme.primary
                         )
                         Spacer(modifier = Modifier.width(6.dp))
-                        Text("app-updates.json প্রিভিউ / টেস্ট", fontSize = 12.sp)
+                        Text("app-updates.json লোকাল টেস্ট", fontSize = 12.sp)
                     }
 
                     Spacer(modifier = Modifier.height(8.dp))
@@ -591,11 +594,11 @@ fun SettingsScreen(viewModel: MainViewModel) {
                                 strokeWidth = 2.dp
                             )
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text("ইন-অ্যাপ কনটেন্ট ডাউনলোড ও প্রয়োগ হচ্ছে...")
+                            Text("কনটেন্ট ডাউনলোড ও সিঙ্ক হচ্ছে...")
                         }
                     } else {
                         Button(
-                            onClick = { viewModel.downloadAndApplyInAppUpdate() },
+                            onClick = { viewModel.downloadNewApkVersion() },
                             shape = RoundedCornerShape(10.dp),
                             modifier = Modifier.fillMaxWidth(),
                             colors = ButtonDefaults.buttonColors(
@@ -608,7 +611,23 @@ fun SettingsScreen(viewModel: MainViewModel) {
                                 modifier = Modifier.size(16.dp)
                             )
                             Spacer(modifier = Modifier.width(6.dp))
-                            Text("নতুন ভার্শন ডাউনলোড করুন")
+                            Text(if (latestReleaseInfo?.hasNewerVersion == true) "নতুন সংস্করণ APK ডাউনলোড করুন" else "নতুন সংস্করণ APK ডাউনলোড (GitHub Releases)")
+                        }
+
+                        Spacer(modifier = Modifier.height(6.dp))
+
+                        OutlinedButton(
+                            onClick = { viewModel.downloadAndApplyInAppUpdate(isLocalPreview = false) },
+                            shape = RoundedCornerShape(10.dp),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.CloudDownload,
+                                contentDescription = null,
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text("অনলাইন কনটেন্ট সিঙ্ক করুন (OTA)", fontSize = 13.sp)
                         }
                     }
                 }
@@ -728,7 +747,7 @@ fun SettingsScreen(viewModel: MainViewModel) {
                         color = MaterialTheme.colorScheme.primary
                     )
                     Text(
-                        text = "ভার্সন ১.০.০ (রিলিজ সংস্করণ) • প্যাকেজ: com.dawahtojannah.app",
+                        text = "ভার্সন ১.০ (কনটেন্ট v${viewModel.appliedContentVersion}) • প্যাকেজ: com.dawahtojannah.app",
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -754,9 +773,9 @@ fun SettingsScreen(viewModel: MainViewModel) {
             confirmButton = {
                 if (latestReleaseInfo?.hasNewerVersion == true) {
                     Button(onClick = {
-                        viewModel.downloadAndApplyInAppUpdate()
+                        viewModel.downloadNewApkVersion()
                     }) {
-                        Text("নতুন ভার্শন ডাউনলোড করুন")
+                        Text("APK ডাউনলোড করুন")
                     }
                 } else {
                     Button(onClick = { viewModel.dismissUpdateAlert() }) {
@@ -766,8 +785,16 @@ fun SettingsScreen(viewModel: MainViewModel) {
             },
             dismissButton = if (latestReleaseInfo?.hasNewerVersion == true) {
                 {
-                    TextButton(onClick = { viewModel.dismissUpdateAlert() }) {
-                        Text("পরে")
+                    Row {
+                        OutlinedButton(onClick = {
+                            viewModel.downloadAndApplyInAppUpdate(isLocalPreview = false)
+                        }) {
+                            Text("কনটেন্ট সিঙ্ক")
+                        }
+                        Spacer(modifier = Modifier.width(4.dp))
+                        TextButton(onClick = { viewModel.dismissUpdateAlert() }) {
+                            Text("পরে")
+                        }
                     }
                 }
             } else null

@@ -108,16 +108,20 @@ fun IslamicLifeSectionDetailScreen(
     }
 
     val isSalamBefore = section.id == "salam_before"
+    val isFarzAfter = section.id == "farz_after"
+    val isDuaRichSection = isSalamBefore || isFarzAfter
+
     var searchQuery by remember { mutableStateOf("") }
     var selectedCategoryFilter by remember(section.id) {
-        mutableStateOf(if (isSalamBefore) "সকল দো'আ" else "সকল")
+        mutableStateOf(if (isDuaRichSection) "সকল দো'আ" else "সকল")
     }
-    var showAurora by remember(section.id) { mutableStateOf(isSalamBefore) }
+    var showAurora by remember(section.id) { mutableStateOf(isDuaRichSection) }
     var fontScale by remember { mutableStateOf(1.0f) }
 
     val categoryFilters = remember(section.id) {
         when (section.id) {
             "salam_before" -> listOf("সকল দো'আ", "সালাতে সালামের পূর্বে", "কোরআনের দো'আ", "সহীহ হাদিসের দো'আ")
+            "farz_after" -> listOf("সকল দো'আ", "সালামের পর প্রাথমিক", "হিদায়াত ও দ্বীন", "পানাহ ও নিরাপত্তা", "রিযিক ও বরকত", "বিশেষ আমল ও ইস্তেগফার", "শেষ পরিণতি ও জান্নাত")
             "tawbah_istighfar" -> listOf("সকল", "মৌলিক ইস্তিগফার", "৫০টি ইস্তেগফার ও দু'আ", "১৬টি গুনাহ মোচনকারী আমল")
             else -> emptyList()
         }
@@ -128,6 +132,12 @@ fun IslamicLifeSectionDetailScreen(
             "সালাতে সালামের পূর্বে" -> section.items.filter { it.id.startsWith("sb_salam_") }
             "কোরআনের দো'আ" -> section.items.filter { it.id.startsWith("sb_quran_") }
             "সহীহ হাদিসের দো'আ" -> section.items.filter { it.id.startsWith("sb_hadith_") }
+            "সালামের পর প্রাথমিক" -> section.items.filter { it.id.startsWith("fa_core_") }
+            "হিদায়াত ও দ্বীন" -> section.items.filter { it.id.startsWith("fa_guidance_") }
+            "পানাহ ও নিরাপত্তা" -> section.items.filter { it.id.startsWith("fa_refuge_") }
+            "রিযিক ও বরকত" -> section.items.filter { it.id.startsWith("fa_rizq_") }
+            "বিশেষ আমল ও ইস্তেগফার" -> section.items.filter { it.id.startsWith("fa_virtue_") }
+            "শেষ পরিণতি ও জান্নাত" -> section.items.filter { it.id.startsWith("fa_end_") }
             "মৌলিক ইস্তিগফার" -> section.items.filter { it.id.startsWith("ti_") && !it.id.startsWith("ti_dua_") && !it.id.startsWith("ti_deed_") }
             "৫০টি ইস্তেগফার ও দু'আ" -> section.items.filter { it.id.startsWith("ti_dua_") }
             "১৬টি গুনাহ মোচনকারী আমল" -> section.items.filter { it.id.startsWith("ti_deed_") }
@@ -238,7 +248,7 @@ fun IslamicLifeSectionDetailScreen(
             )
 
             // User Friendly Quick Controls Banner (Font Scale & Aurora Status)
-            if (isSalamBefore) {
+            if (isDuaRichSection) {
                 Surface(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -459,6 +469,12 @@ fun IslamicLifeSectionDetailScreen(
                                 "সালাতে সালামের পূর্বে" -> section.items.count { it.id.startsWith("sb_salam_") }
                                 "কোরআনের দো'আ" -> section.items.count { it.id.startsWith("sb_quran_") }
                                 "সহীহ হাদিসের দো'আ" -> section.items.count { it.id.startsWith("sb_hadith_") }
+                                "সালামের পর প্রাথমিক" -> section.items.count { it.id.startsWith("fa_core_") }
+                                "হিদায়াত ও দ্বীন" -> section.items.count { it.id.startsWith("fa_guidance_") }
+                                "পানাহ ও নিরাপত্তা" -> section.items.count { it.id.startsWith("fa_refuge_") }
+                                "রিযিক ও বরকত" -> section.items.count { it.id.startsWith("fa_rizq_") }
+                                "বিশেষ আমল ও ইস্তেগফার" -> section.items.count { it.id.startsWith("fa_virtue_") }
+                                "শেষ পরিণতি ও জান্নাত" -> section.items.count { it.id.startsWith("fa_end_") }
                                 "মৌলিক ইস্তিগফার" -> section.items.count { it.id.startsWith("ti_") && !it.id.startsWith("ti_dua_") && !it.id.startsWith("ti_deed_") }
                                 "৫০টি ইস্তেগফার ও দু'আ" -> section.items.count { it.id.startsWith("ti_dua_") }
                                 "১৬টি গুনাহ মোচনকারী আমল" -> section.items.count { it.id.startsWith("ti_deed_") }

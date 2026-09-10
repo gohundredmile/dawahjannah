@@ -153,6 +153,23 @@ fun MoreScreen(
                 Spacer(modifier = Modifier.height(16.dp))
             }
 
+            // Featured: Dua Acceptance Times & Duas (New)
+            item {
+                MoreFeatureItem(
+                    title = "★দোয়া কবুল হওয়ার সময় ও দোয়া★",
+                    subtitle = "যে উপায়ে দোয়া অতি দ্রুত কবুল হয়, আযান-ইকামতের বিশেষ আমল ও সিজদায় পাঠযোগ্য মাসনূন দোয়া",
+                    icon = Icons.Default.AutoAwesome,
+                    iconTint = IslamicGold,
+                    badge = "বিশেষ আমল • নতুন",
+                    onClick = {
+                        IslamicLifeData.sections.find { it.id == "dua_acceptance_times" }?.let {
+                            viewModel.openIslamicLifeSection(it)
+                        }
+                    }
+                )
+                Spacer(modifier = Modifier.height(10.dp))
+            }
+
             // Featured: Durood Sharif Amol with Live Aurora
             item {
                 MoreFeatureItem(

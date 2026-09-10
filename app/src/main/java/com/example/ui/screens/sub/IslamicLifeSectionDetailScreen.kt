@@ -83,6 +83,7 @@ fun IslamicLifeSectionDetailScreen(
     val context = LocalContext.current
 
     val sectionIcon = when (section.id) {
+        "dua_acceptance_times" -> Icons.Default.AutoAwesome
         "daily_dhikr_tasbih_tahlil" -> Icons.Default.AutoAwesome
         "salat_matters", "salam_before", "farz_after" -> Icons.Default.Mosque
         "fajr_maghrib", "fajr_maghrib_amols" -> Icons.Default.WbSunny
@@ -95,6 +96,7 @@ fun IslamicLifeSectionDetailScreen(
     }
 
     val iconTint = when (section.id) {
+        "dua_acceptance_times" -> IslamicGold
         "daily_dhikr_tasbih_tahlil" -> IslamicGold
         "tahajjud_guide" -> Color(0xFF2563EB)
         "baqarah_last_two", "surah_baqarah_last_2" -> IslamicGold

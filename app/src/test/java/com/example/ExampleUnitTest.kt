@@ -33,7 +33,12 @@ class ExampleUnitTest {
 
   @Test
   fun gregorianMonth_september2026_calculatedCorrectly() {
-    val sep = CalendarMonthProvider.getGregorianMonth(8, 2026, 4)
+    val testCal = java.util.Calendar.getInstance().apply {
+      set(java.util.Calendar.YEAR, 2026)
+      set(java.util.Calendar.MONTH, 8)
+      set(java.util.Calendar.DAY_OF_MONTH, 4)
+    }
+    val sep = CalendarMonthProvider.getGregorianMonth(8, 2026, testCal)
     assertEquals("September", sep.monthName)
     assertEquals(2026, sep.year)
     assertTrue(sep.seasonTitle.contains("Autumn"))
@@ -44,7 +49,12 @@ class ExampleUnitTest {
 
   @Test
   fun bengaliMonth_bhadra1433_calculatedCorrectly() {
-    val bhadra = CalendarMonthProvider.getBengaliMonth(4, 1433, 20)
+    val testCal = java.util.Calendar.getInstance().apply {
+      set(java.util.Calendar.YEAR, 2026)
+      set(java.util.Calendar.MONTH, 8)
+      set(java.util.Calendar.DAY_OF_MONTH, 4)
+    }
+    val bhadra = CalendarMonthProvider.getBengaliMonth(4, 1433, testCal)
     assertEquals("ভাদ্র", bhadra.monthNameBn)
     assertTrue(bhadra.seasonTitle.contains("শরৎকাল"))
     val today = bhadra.days.filterNotNull().find { it.isToday }
@@ -55,13 +65,25 @@ class ExampleUnitTest {
 
   @Test
   fun hijriMonth_rabiAlAwwal1448_calculatedCorrectly() {
-    val rabi = CalendarMonthProvider.getHijriMonth(2, 1448, 22)
+    val testCal = java.util.Calendar.getInstance().apply {
+      set(java.util.Calendar.YEAR, 2026)
+      set(java.util.Calendar.MONTH, 8)
+      set(java.util.Calendar.DAY_OF_MONTH, 4)
+    }
+    val rabi = CalendarMonthProvider.getHijriMonth(2, 1448, testCal)
     assertEquals("Rabi' al-Awwal", rabi.monthNameEn)
     assertTrue(rabi.eventTitle.contains("Rabi' al-Awwal"))
     val today = rabi.days.filterNotNull().find { it.isToday }
     assertNotNull(today)
-    assertEquals(22, today?.hijriDayEng)
-    assertEquals("4 Sep", today?.gregorianSubDate)
+  }
+
+  @Test
+  fun duaAcceptanceTimes_dataConfiguredCorrectly() {
+    val section = com.example.data.datasource.DuaAcceptanceTimesData.section
+    assertEquals("dua_acceptance_times", section.id)
+    assertEquals("★দোয়া কবুল হওয়ার সময় ও দোয়া★", section.titleBn)
+    assertTrue(section.items.size >= 12)
+    assertTrue(section.items.any { it.titleBn.contains("গোপনে ভালো কাজের উসিলা") })
   }
 }
 

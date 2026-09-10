@@ -6,6 +6,9 @@ import com.example.data.model.IslamicLifeSection
 object IslamicLifeData {
 
     val sections: List<IslamicLifeSection> = listOf(
+        // ★দোয়া কবুল হওয়ার সময় ও দোয়া★
+        DuaAcceptanceTimesData.section,
+
         // সারাদিনের যিকির, তাসবিহ তাহলিল - আরবি - বাংলা অর্থ
         DailyDhikrTasbihData.section,
 

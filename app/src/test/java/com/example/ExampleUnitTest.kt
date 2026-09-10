@@ -82,8 +82,12 @@ class ExampleUnitTest {
     val section = com.example.data.datasource.DuaAcceptanceTimesData.section
     assertEquals("dua_acceptance_times", section.id)
     assertEquals("★দোয়া কবুল হওয়ার সময় ও দোয়া★", section.titleBn)
-    assertTrue(section.items.size >= 12)
+    assertTrue(section.items.size >= 30)
     assertTrue(section.items.any { it.titleBn.contains("গোপনে ভালো কাজের উসিলা") })
+    assertTrue(section.items.any { it.titleBn.contains("২৯টি স্থান, ক্ষেত্র ও সময়") })
+    assertTrue(section.items.any { it.titleBn.contains("ইসমে আযম") })
+    assertTrue(section.items.any { it.titleBn.contains("হাঁচি দেওয়ার সুন্নাহ নিয়ম") })
+    assertTrue(section.items.any { it.titleBn.contains("সালামের সম্ভাষণ") })
   }
 }
 

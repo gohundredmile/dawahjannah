@@ -16,16 +16,23 @@ import com.example.data.model.PrimaryFontPreference
 import com.example.data.model.ThemeMode
 import com.example.data.model.ThemeStyle
 
+private fun Color.relativeLuminance(): Float {
+    return 0.299f * red + 0.587f * green + 0.114f * blue
+}
+
 private val EmeraldLightColors = lightColorScheme(
     primary = NaturalForestGreen,
     onPrimary = Color.White,
     primaryContainer = Color(0xFFE7F3ED),
-    onPrimaryContainer = NaturalForestGreen,
+    onPrimaryContainer = NaturalTextPrimaryLight,
     secondary = NaturalAmberGold,
     onSecondary = Color.White,
     secondaryContainer = NaturalCreamGold,
-    onSecondaryContainer = NaturalForestGreen,
+    onSecondaryContainer = NaturalTextPrimaryLight,
     tertiary = Color(0xFFB45309),
+    onTertiary = Color.White,
+    tertiaryContainer = Color(0xFFFEF3C7),
+    onTertiaryContainer = NaturalTextPrimaryLight,
     background = NaturalBackgroundLight,
     surface = NaturalSurfaceLight,
     onBackground = NaturalTextPrimaryLight,
@@ -39,12 +46,15 @@ private val EmeraldDarkColors = darkColorScheme(
     primary = NaturalForestGreenDark,
     onPrimary = Color(0xFF022C22),
     primaryContainer = Color(0xFF1B3B2F),
-    onPrimaryContainer = Color(0xFFA7F3D0),
+    onPrimaryContainer = Color(0xFFF1F5F9),
     secondary = Color(0xFFFBBF24),
     onSecondary = Color(0xFF451A03),
     secondaryContainer = NaturalCreamGoldDark,
-    onSecondaryContainer = Color(0xFFFDE68A),
+    onSecondaryContainer = Color(0xFFF1F5F9),
     tertiary = Color(0xFFFCD34D),
+    onTertiary = Color(0xFF451A03),
+    tertiaryContainer = Color(0xFF382D12),
+    onTertiaryContainer = Color(0xFFF1F5F9),
     background = NaturalBackgroundDark,
     surface = NaturalSurfaceDark,
     onBackground = NaturalTextPrimaryDark,
@@ -61,48 +71,72 @@ private fun createLightPalette(
     background: Color = NaturalBackgroundLight,
     surface: Color = Color.White,
     outline: Color = NaturalBorderLight
-) = lightColorScheme(
-    primary = primary,
-    onPrimary = Color.White,
-    primaryContainer = primary.copy(alpha = 0.12f),
-    onPrimaryContainer = primary,
-    secondary = secondary,
-    onSecondary = Color.White,
-    secondaryContainer = secondary.copy(alpha = 0.15f),
-    onSecondaryContainer = secondary,
-    tertiary = tertiary,
-    background = background,
-    surface = surface,
-    onBackground = NaturalTextPrimaryLight,
-    onSurface = NaturalTextPrimaryLight,
-    surfaceVariant = surface,
-    onSurfaceVariant = NaturalTextSecondaryLight,
-    outline = outline
-)
+): ColorScheme {
+    val textPrimary = NaturalTextPrimaryLight // 0xFF1A1C19: Deep high-contrast text on all light containers
+    val textSecondary = NaturalTextSecondaryLight // 0xFF444743: Readable secondary text
+    val onPrimaryColor = if (primary.relativeLuminance() > 0.48f) textPrimary else Color.White
+    val onSecondaryColor = if (secondary.relativeLuminance() > 0.48f) textPrimary else Color.White
+    val onTertiaryColor = if (tertiary.relativeLuminance() > 0.48f) textPrimary else Color.White
+
+    return lightColorScheme(
+        primary = primary,
+        onPrimary = onPrimaryColor,
+        primaryContainer = primary.copy(alpha = 0.14f),
+        onPrimaryContainer = textPrimary,
+        secondary = secondary,
+        onSecondary = onSecondaryColor,
+        secondaryContainer = secondary.copy(alpha = 0.14f),
+        onSecondaryContainer = textPrimary,
+        tertiary = tertiary,
+        onTertiary = onTertiaryColor,
+        tertiaryContainer = tertiary.copy(alpha = 0.14f),
+        onTertiaryContainer = textPrimary,
+        background = background,
+        surface = surface,
+        onBackground = textPrimary,
+        onSurface = textPrimary,
+        surfaceVariant = NaturalSurfaceVariantLight,
+        onSurfaceVariant = textSecondary,
+        outline = outline
+    )
+}
 
 private fun createDarkPalette(
     primary: Color,
     secondary: Color,
+    tertiary: Color = Color(0xFFFCD34D),
     background: Color = Color(0xFF0F172A),
     surface: Color = Color(0xFF1E293B),
     outline: Color = Color(0xFF334155)
-) = darkColorScheme(
-    primary = primary,
-    onPrimary = Color(0xFF022C22),
-    primaryContainer = primary.copy(alpha = 0.2f),
-    onPrimaryContainer = primary,
-    secondary = secondary,
-    onSecondary = Color(0xFF451A03),
-    secondaryContainer = secondary.copy(alpha = 0.2f),
-    onSecondaryContainer = secondary,
-    background = background,
-    surface = surface,
-    onBackground = Color(0xFFF1F5F9),
-    onSurface = Color(0xFFF1F5F9),
-    surfaceVariant = Color(0xFF26354A),
-    onSurfaceVariant = Color(0xFF94A3B8),
-    outline = outline
-)
+): ColorScheme {
+    val textPrimaryDark = Color(0xFFF1F5F9) // High-contrast clean off-white text on dark backgrounds
+    val textSecondaryDark = Color(0xFFCBD5E1) // Readable light slate text
+    val onPrimaryColor = if (primary.relativeLuminance() > 0.38f) Color(0xFF0F172A) else Color.White
+    val onSecondaryColor = if (secondary.relativeLuminance() > 0.38f) Color(0xFF0F172A) else Color.White
+    val onTertiaryColor = if (tertiary.relativeLuminance() > 0.38f) Color(0xFF0F172A) else Color.White
+
+    return darkColorScheme(
+        primary = primary,
+        onPrimary = onPrimaryColor,
+        primaryContainer = primary.copy(alpha = 0.22f),
+        onPrimaryContainer = textPrimaryDark,
+        secondary = secondary,
+        onSecondary = onSecondaryColor,
+        secondaryContainer = secondary.copy(alpha = 0.22f),
+        onSecondaryContainer = textPrimaryDark,
+        tertiary = tertiary,
+        onTertiary = onTertiaryColor,
+        tertiaryContainer = tertiary.copy(alpha = 0.22f),
+        onTertiaryContainer = textPrimaryDark,
+        background = background,
+        surface = surface,
+        onBackground = textPrimaryDark,
+        onSurface = textPrimaryDark,
+        surfaceVariant = Color(0xFF26354A),
+        onSurfaceVariant = textSecondaryDark,
+        outline = outline
+    )
+}
 
 fun getAppColorScheme(
     style: ThemeStyle,

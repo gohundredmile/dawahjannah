@@ -269,7 +269,7 @@ fun InteractiveRoutineCard(
                 text = item.titleBn,
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
-                color = if (isCompleted) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
+                color = MaterialTheme.colorScheme.onSurface,
                 lineHeight = 24.sp
             )
 

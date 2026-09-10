@@ -826,7 +826,7 @@ fun DuroodAmolFullScreen(
  * Floating glowing waves that slowly drift and breathe across the screen.
  */
 @Composable
-private fun LiveAuroraWallpaperBackground() {
+internal fun LiveAuroraWallpaperBackground() {
     val infiniteTransition = rememberInfiniteTransition(label = "auroraTransition")
 
     // Slow organic rotating phases

@@ -72,8 +72,8 @@ private fun createLightPalette(
     surface: Color = Color.White,
     outline: Color = NaturalBorderLight
 ): ColorScheme {
-    val textPrimary = NaturalTextPrimaryLight // 0xFF1A1C19: Deep high-contrast text on all light containers
-    val textSecondary = NaturalTextSecondaryLight // 0xFF444743: Readable secondary text
+    val textPrimary = Color(0xFF111827) // Deep jet black (slate-900) high-contrast text on all light/green containers
+    val textSecondary = Color(0xFF374151) // Highly readable secondary text (slate-700)
     val onPrimaryColor = if (primary.relativeLuminance() > 0.48f) textPrimary else Color.White
     val onSecondaryColor = if (secondary.relativeLuminance() > 0.48f) textPrimary else Color.White
     val onTertiaryColor = if (tertiary.relativeLuminance() > 0.48f) textPrimary else Color.White

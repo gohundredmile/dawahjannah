@@ -107,11 +107,17 @@ fun IslamicLifeSectionDetailScreen(
         else -> MaterialTheme.colorScheme.primary
     }
 
+    val isSalamBefore = section.id == "salam_before"
     var searchQuery by remember { mutableStateOf("") }
-    var selectedCategoryFilter by remember { mutableStateOf("সকল") }
+    var selectedCategoryFilter by remember(section.id) {
+        mutableStateOf(if (isSalamBefore) "সকল দো'আ" else "সকল")
+    }
+    var showAurora by remember(section.id) { mutableStateOf(isSalamBefore) }
+    var fontScale by remember { mutableStateOf(1.0f) }
 
     val categoryFilters = remember(section.id) {
         when (section.id) {
+            "salam_before" -> listOf("সকল দো'আ", "সালাতে সালামের পূর্বে", "কোরআনের দো'আ", "সহীহ হাদিসের দো'আ")
             "tawbah_istighfar" -> listOf("সকল", "মৌলিক ইস্তিগফার", "৫০টি ইস্তেগফার ও দু'আ", "১৬টি গুনাহ মোচনকারী আমল")
             else -> emptyList()
         }
@@ -119,6 +125,9 @@ fun IslamicLifeSectionDetailScreen(
 
     val filteredItems = remember(section.items, searchQuery, selectedCategoryFilter) {
         val baseList = when (selectedCategoryFilter) {
+            "সালাতে সালামের পূর্বে" -> section.items.filter { it.id.startsWith("sb_salam_") }
+            "কোরআনের দো'আ" -> section.items.filter { it.id.startsWith("sb_quran_") }
+            "সহীহ হাদিসের দো'আ" -> section.items.filter { it.id.startsWith("sb_hadith_") }
             "মৌলিক ইস্তিগফার" -> section.items.filter { it.id.startsWith("ti_") && !it.id.startsWith("ti_dua_") && !it.id.startsWith("ti_deed_") }
             "৫০টি ইস্তেগফার ও দু'আ" -> section.items.filter { it.id.startsWith("ti_dua_") }
             "১৬টি গুনাহ মোচনকারী আমল" -> section.items.filter { it.id.startsWith("ti_deed_") }
@@ -140,40 +149,142 @@ fun IslamicLifeSectionDetailScreen(
         }
     }
 
-    Column(modifier = Modifier.fillMaxSize()) {
-        DawahTopAppBar(
-            title = section.titleBn,
-            canNavigateBack = true,
-            onNavigateBack = onBack,
-            actions = {
-                IconButton(
-                    onClick = {
-                        val shareText = buildString {
-                            appendLine("📖 ${section.titleBn}")
-                            if (section.subtitleBn.isNotBlank()) appendLine(section.subtitleBn)
-                            if (section.noticeTextBn.isNotBlank()) {
-                                appendLine("\n📌 ${section.noticeHighlightBn}")
-                                appendLine(section.noticeTextBn)
+    Box(modifier = Modifier.fillMaxSize()) {
+        if (showAurora) {
+            LiveAuroraWallpaperBackground()
+        }
+
+        Column(modifier = Modifier.fillMaxSize()) {
+            DawahTopAppBar(
+                title = section.titleBn,
+                canNavigateBack = true,
+                onNavigateBack = onBack,
+                actions = {
+                    // Font Scale: Decrease (A-)
+                    IconButton(
+                        onClick = {
+                            if (fontScale > 0.86f) {
+                                fontScale = (fontScale - 0.12f).coerceAtLeast(0.85f)
                             }
-                            appendLine("\n— মোট ${section.items.size} টি গুরুত্বপূর্ণ বিষয় সংকলিত")
-                            appendLine("— দাওয়াহ টু জান্নাহ অ্যাপ")
-                        }
-                        val intent = Intent().apply {
-                            action = Intent.ACTION_SEND
-                            putExtra(Intent.EXTRA_TEXT, shareText)
-                            type = "text/plain"
-                        }
-                        context.startActivity(Intent.createChooser(intent, "শেয়ার করুন"))
+                        },
+                        modifier = Modifier.size(36.dp)
+                    ) {
+                        Text(
+                            text = "A-",
+                            fontWeight = FontWeight.Bold,
+                            style = MaterialTheme.typography.titleMedium,
+                            color = MaterialTheme.colorScheme.primary
+                        )
                     }
+
+                    // Font Scale: Increase (A+)
+                    IconButton(
+                        onClick = {
+                            if (fontScale < 1.39f) {
+                                fontScale = (fontScale + 0.12f).coerceAtMost(1.40f)
+                            }
+                        },
+                        modifier = Modifier.size(36.dp)
+                    ) {
+                        Text(
+                            text = "A+",
+                            fontWeight = FontWeight.Bold,
+                            style = MaterialTheme.typography.titleMedium,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    }
+
+                    // Aurora Wallpaper live ambient toggle
+                    IconButton(
+                        onClick = { showAurora = !showAurora },
+                        modifier = Modifier.size(36.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.AutoAwesome,
+                            contentDescription = "Toggle Aurora Wallpaper",
+                            tint = if (showAurora) IslamicGold else MaterialTheme.colorScheme.outline
+                        )
+                    }
+
+                    // Share Section
+                    IconButton(
+                        onClick = {
+                            val shareText = buildString {
+                                appendLine("📖 ${section.titleBn}")
+                                if (section.subtitleBn.isNotBlank()) appendLine(section.subtitleBn)
+                                if (section.noticeTextBn.isNotBlank()) {
+                                    appendLine("\n📌 ${section.noticeHighlightBn}")
+                                    appendLine(section.noticeTextBn)
+                                }
+                                appendLine("\n— মোট ${section.items.size} টি গুরুত্বপূর্ণ বিষয় সংকলিত")
+                                appendLine("— দাওয়াহ টু জান্নাহ অ্যাপ")
+                            }
+                            val intent = Intent().apply {
+                                action = Intent.ACTION_SEND
+                                putExtra(Intent.EXTRA_TEXT, shareText)
+                                type = "text/plain"
+                            }
+                            context.startActivity(Intent.createChooser(intent, "শেয়ার করুন"))
+                        },
+                        modifier = Modifier.size(36.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Share,
+                            contentDescription = "Share Section",
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                }
+            )
+
+            // User Friendly Quick Controls Banner (Font Scale & Aurora Status)
+            if (isSalamBefore) {
+                Surface(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 4.dp),
+                    shape = RoundedCornerShape(12.dp),
+                    color = if (showAurora) Color.White.copy(alpha = 0.88f) else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f),
+                    border = BorderStroke(1.dp, IslamicGold.copy(alpha = 0.3f))
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.Share,
-                        contentDescription = "Share Section",
-                        tint = MaterialTheme.colorScheme.primary
-                    )
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 12.dp, vertical = 6.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = Icons.Default.AutoAwesome,
+                                contentDescription = null,
+                                tint = IslamicGold,
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(
+                                text = if (showAurora) "লাইভ অরোরা ওয়ালপেপার: চালু" else "লাইভ অরোরা: বন্ধ",
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                        }
+
+                        Surface(
+                            shape = RoundedCornerShape(6.dp),
+                            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
+                        ) {
+                            Text(
+                                text = "হরফের আকার: ${(fontScale * 100).toInt()}%",
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                            )
+                        }
+                    }
                 }
             }
-        )
 
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
@@ -343,12 +454,25 @@ fun IslamicLifeSectionDetailScreen(
                     ) {
                         items(categoryFilters) { cat ->
                             val isSelected = selectedCategoryFilter == cat
+                            val count = when (cat) {
+                                "সকল দো'আ" -> section.items.size
+                                "সালাতে সালামের পূর্বে" -> section.items.count { it.id.startsWith("sb_salam_") }
+                                "কোরআনের দো'আ" -> section.items.count { it.id.startsWith("sb_quran_") }
+                                "সহীহ হাদিসের দো'আ" -> section.items.count { it.id.startsWith("sb_hadith_") }
+                                "মৌলিক ইস্তিগফার" -> section.items.count { it.id.startsWith("ti_") && !it.id.startsWith("ti_dua_") && !it.id.startsWith("ti_deed_") }
+                                "৫০টি ইস্তেগফার ও দু'আ" -> section.items.count { it.id.startsWith("ti_dua_") }
+                                "১৬টি গুনাহ মোচনকারী আমল" -> section.items.count { it.id.startsWith("ti_deed_") }
+                                "সকল" -> section.items.size
+                                else -> 0
+                            }
+                            val displayLabel = if (count > 0) "$cat (${CalendarHelper.toBanglaNumber(count)})" else cat
+
                             FilterChip(
                                 selected = isSelected,
                                 onClick = { selectedCategoryFilter = cat },
                                 label = {
                                     Text(
-                                        text = cat,
+                                        text = displayLabel,
                                         fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
                                         fontSize = 13.sp
                                     )
@@ -405,7 +529,12 @@ fun IslamicLifeSectionDetailScreen(
                 itemsIndexed(filteredItems, key = { index, item -> item.id.ifBlank { "item_$index" } }) { idx, item ->
                     val originalIndex = section.items.indexOf(item)
                     val displayIndex = if (originalIndex >= 0) originalIndex + 1 else idx + 1
-                    IslamicLifeDetailCard(item = item, index = displayIndex)
+                    IslamicLifeDetailCard(
+                        item = item,
+                        index = displayIndex,
+                        fontScale = fontScale,
+                        isAuroraActive = showAurora
+                    )
                 }
             }
 
@@ -415,11 +544,14 @@ fun IslamicLifeSectionDetailScreen(
         }
     }
 }
+}
 
 @Composable
 private fun IslamicLifeDetailCard(
     item: IslamicLifeCardItem,
-    index: Int
+    index: Int,
+    fontScale: Float = 1.0f,
+    isAuroraActive: Boolean = false
 ) {
     val context = LocalContext.current
     val itemSubtitle = item.subtitleBn.ifBlank { item.repetitionOrTimeBn }
@@ -429,9 +561,12 @@ private fun IslamicLifeDetailCard(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(18.dp),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
+            containerColor = if (isAuroraActive) Color.White.copy(alpha = 0.92f) else MaterialTheme.colorScheme.surface
         ),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.18f))
+        border = BorderStroke(
+            1.dp,
+            if (isAuroraActive) MaterialTheme.colorScheme.primary.copy(alpha = 0.25f) else MaterialTheme.colorScheme.outline.copy(alpha = 0.18f)
+        )
     ) {
         Column(
             modifier = Modifier
@@ -499,15 +634,15 @@ private fun IslamicLifeDetailCard(
                             val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
                             val clip = ClipData.newPlainText("Islamic Amol", copyPayload)
                             clipboard.setPrimaryClip(clip)
-                            Toast.makeText(context, "ক্লিপবোর্ডে কপি করা হয়েছে", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, "দো'আটি ক্লিপবোর্ডে কপি করা হয়েছে", Toast.LENGTH_SHORT).show()
                         },
-                        modifier = Modifier.size(34.dp)
+                        modifier = Modifier.size(36.dp)
                     ) {
                         Icon(
                             imageVector = Icons.Default.ContentCopy,
                             contentDescription = "Copy Item",
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.size(18.dp)
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(20.dp)
                         )
                     }
 
@@ -533,13 +668,13 @@ private fun IslamicLifeDetailCard(
                             }
                             context.startActivity(Intent.createChooser(intent, "শেয়ার করুন"))
                         },
-                        modifier = Modifier.size(34.dp)
+                        modifier = Modifier.size(36.dp)
                     ) {
                         Icon(
                             imageVector = Icons.Default.Share,
                             contentDescription = "Share Item",
                             tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.size(18.dp)
+                            modifier = Modifier.size(20.dp)
                         )
                     }
                 }
@@ -550,10 +685,12 @@ private fun IslamicLifeDetailCard(
             // Title
             Text(
                 text = item.titleBn,
-                style = MaterialTheme.typography.titleMedium,
+                style = MaterialTheme.typography.titleMedium.copy(
+                    fontSize = (16 * fontScale).sp,
+                    lineHeight = (24 * fontScale).sp
+                ),
                 fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurface,
-                lineHeight = 24.sp
+                color = MaterialTheme.colorScheme.onSurface
             )
 
             // Subtitle if different
@@ -561,9 +698,11 @@ private fun IslamicLifeDetailCard(
                 Spacer(modifier = Modifier.height(2.dp))
                 Text(
                     text = itemSubtitle,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.primary,
-                    lineHeight = 18.sp
+                    style = MaterialTheme.typography.bodySmall.copy(
+                        fontSize = (13 * fontScale).sp,
+                        lineHeight = (18 * fontScale).sp
+                    ),
+                    color = MaterialTheme.colorScheme.primary
                 )
             }
 
@@ -573,8 +712,8 @@ private fun IslamicLifeDetailCard(
                 Surface(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(14.dp),
-                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f),
-                    border = BorderStroke(1.dp, IslamicGold.copy(alpha = 0.35f))
+                    color = if (isAuroraActive) Color(0xFFF0FDF4).copy(alpha = 0.75f) else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f),
+                    border = BorderStroke(1.dp, IslamicGold.copy(alpha = 0.4f))
                 ) {
                     Column(
                         modifier = Modifier
@@ -585,8 +724,8 @@ private fun IslamicLifeDetailCard(
                             text = item.arabicText,
                             fontFamily = LocalArabicFontFamily.current,
                             style = MaterialTheme.typography.headlineSmall.copy(
-                                fontSize = 23.sp,
-                                lineHeight = 42.sp
+                                fontSize = (23 * fontScale).sp,
+                                lineHeight = (42 * fontScale).sp
                             ),
                             fontWeight = FontWeight.Normal,
                             color = IslamicGold,
@@ -608,16 +747,18 @@ private fun IslamicLifeDetailCard(
                     Column(modifier = Modifier.padding(10.dp)) {
                         Text(
                             text = "উচ্চারণ:",
-                            style = MaterialTheme.typography.labelSmall,
+                            style = MaterialTheme.typography.labelSmall.copy(fontSize = (12 * fontScale).sp),
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.secondary
                         )
                         Spacer(modifier = Modifier.height(2.dp))
                         Text(
                             text = item.pronunciationBn,
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurface,
-                            lineHeight = 22.sp
+                            style = MaterialTheme.typography.bodyMedium.copy(
+                                fontSize = (15 * fontScale).sp,
+                                lineHeight = (22 * fontScale).sp
+                            ),
+                            color = MaterialTheme.colorScheme.onSurface
                         )
                     }
                 }
@@ -628,7 +769,8 @@ private fun IslamicLifeDetailCard(
                 Spacer(modifier = Modifier.height(10.dp))
                 RichIslamicTextLayout(
                     text = item.meaningBn,
-                    defaultHeader = if (item.detailsBn.isBlank() && item.fojilotBn.isBlank()) "বাংলা অর্থ:" else "অর্থ ও তাৎপর্য:"
+                    defaultHeader = if (item.detailsBn.isBlank() && item.fojilotBn.isBlank()) "বাংলা অর্থ:" else "অর্থ ও তাৎপর্য:",
+                    fontScale = fontScale
                 )
             }
 
@@ -636,7 +778,11 @@ private fun IslamicLifeDetailCard(
             if (detailsText.isNotBlank()) {
                 Spacer(modifier = Modifier.height(10.dp))
                 if (detailsText.startsWith("📌") || detailsText.contains("ফুটনোটঃ") || detailsText.contains("• (১)")) {
-                    RichIslamicTextLayout(text = detailsText, defaultHeader = "ফজিলত ও আমলের রূপরেখা:")
+                    RichIslamicTextLayout(
+                        text = detailsText,
+                        defaultHeader = "ফজিলত ও আমলের রূপরেখা:",
+                        fontScale = fontScale
+                    )
                 } else {
                     Surface(
                         modifier = Modifier.fillMaxWidth(),
@@ -662,16 +808,18 @@ private fun IslamicLifeDetailCard(
                             Column {
                                 Text(
                                     text = "ফজিলত ও আমলের রূপরেখা:",
-                                    style = MaterialTheme.typography.labelSmall,
+                                    style = MaterialTheme.typography.labelSmall.copy(fontSize = (12 * fontScale).sp),
                                     fontWeight = FontWeight.Bold,
                                     color = MaterialTheme.colorScheme.primary
                                 )
                                 Spacer(modifier = Modifier.height(2.dp))
                                 Text(
                                     text = detailsText,
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurface,
-                                    lineHeight = 20.sp
+                                    style = MaterialTheme.typography.bodySmall.copy(
+                                        fontSize = (13.5f * fontScale).sp,
+                                        lineHeight = (20 * fontScale).sp
+                                    ),
+                                    color = MaterialTheme.colorScheme.onSurface
                                 )
                             }
                         }
@@ -688,7 +836,7 @@ private fun IslamicLifeDetailCard(
                 ) {
                     Text(
                         text = "সূত্র: ${item.referenceBn}",
-                        style = MaterialTheme.typography.labelSmall,
+                        style = MaterialTheme.typography.labelSmall.copy(fontSize = (11.5f * fontScale).sp),
                         fontWeight = FontWeight.Medium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
@@ -702,7 +850,8 @@ private fun IslamicLifeDetailCard(
 @Composable
 private fun RichIslamicTextLayout(
     text: String,
-    defaultHeader: String = "অর্থ ও তাৎপর্য:"
+    defaultHeader: String = "অর্থ ও তাৎপর্য:",
+    fontScale: Float = 1.0f
 ) {
     val hasRichMarkers = text.contains("📜") || text.contains("✨") || text.contains("🔍") ||
             text.contains("📌") || text.contains("❝") || text.contains("১.") ||
@@ -718,7 +867,7 @@ private fun RichIslamicTextLayout(
                 if (defaultHeader.isNotBlank()) {
                     Text(
                         text = defaultHeader,
-                        style = MaterialTheme.typography.labelSmall,
+                        style = MaterialTheme.typography.labelSmall.copy(fontSize = (12 * fontScale).sp),
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.primary
                     )
@@ -726,9 +875,11 @@ private fun RichIslamicTextLayout(
                 }
                 Text(
                     text = text,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    lineHeight = 22.sp
+                    style = MaterialTheme.typography.bodyMedium.copy(
+                        fontSize = (14.5f * fontScale).sp,
+                        lineHeight = (22 * fontScale).sp
+                    ),
+                    color = MaterialTheme.colorScheme.onSurface
                 )
             }
         }
@@ -771,7 +922,7 @@ private fun RichIslamicTextLayout(
                                 Spacer(modifier = Modifier.width(6.dp))
                                 Text(
                                     text = title,
-                                    style = MaterialTheme.typography.labelMedium,
+                                    style = MaterialTheme.typography.labelMedium.copy(fontSize = (13 * fontScale).sp),
                                     fontWeight = FontWeight.Bold,
                                     color = MaterialTheme.colorScheme.secondary
                                 )
@@ -779,9 +930,11 @@ private fun RichIslamicTextLayout(
                             Spacer(modifier = Modifier.height(6.dp))
                             Text(
                                 text = body,
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurface,
-                                lineHeight = 22.sp
+                                style = MaterialTheme.typography.bodyMedium.copy(
+                                    fontSize = (14.5f * fontScale).sp,
+                                    lineHeight = (22 * fontScale).sp
+                                ),
+                                color = MaterialTheme.colorScheme.onSurface
                             )
                         }
                     }
@@ -814,13 +967,13 @@ private fun RichIslamicTextLayout(
                                 Spacer(modifier = Modifier.width(6.dp))
                                 Text(
                                     text = title,
-                                    style = MaterialTheme.typography.labelMedium,
+                                    style = MaterialTheme.typography.labelMedium.copy(fontSize = (13 * fontScale).sp),
                                     fontWeight = FontWeight.Bold,
                                     color = MaterialTheme.colorScheme.tertiary
                                 )
                             }
                             Spacer(modifier = Modifier.height(6.dp))
-                            RenderQuoteOrText(body)
+                            RenderQuoteOrText(body, fontScale)
                         }
                     }
                 }
@@ -852,13 +1005,13 @@ private fun RichIslamicTextLayout(
                                 Spacer(modifier = Modifier.width(6.dp))
                                 Text(
                                     text = title,
-                                    style = MaterialTheme.typography.labelMedium,
+                                    style = MaterialTheme.typography.labelMedium.copy(fontSize = (13 * fontScale).sp),
                                     fontWeight = FontWeight.Bold,
                                     color = MaterialTheme.colorScheme.primary
                                 )
                             }
                             Spacer(modifier = Modifier.height(6.dp))
-                            RenderQuoteOrText(body)
+                            RenderQuoteOrText(body, fontScale)
                         }
                     }
                 }
@@ -883,7 +1036,7 @@ private fun RichIslamicTextLayout(
                                 Spacer(modifier = Modifier.width(6.dp))
                                 Text(
                                     text = "তাহক্বীক ও ফিক্বহী জ্ঞাতব্য বিষয়াবলী:",
-                                    style = MaterialTheme.typography.labelMedium,
+                                    style = MaterialTheme.typography.labelMedium.copy(fontSize = (13 * fontScale).sp),
                                     fontWeight = FontWeight.Bold,
                                     color = MaterialTheme.colorScheme.primary
                                 )
@@ -908,9 +1061,11 @@ private fun RichIslamicTextLayout(
                                                 )
                                                 Text(
                                                     text = bullet,
-                                                    style = MaterialTheme.typography.bodySmall,
-                                                    color = MaterialTheme.colorScheme.onSurface,
-                                                    lineHeight = 20.sp
+                                                    style = MaterialTheme.typography.bodySmall.copy(
+                                                        fontSize = (13 * fontScale).sp,
+                                                        lineHeight = (20 * fontScale).sp
+                                                    ),
+                                                    color = MaterialTheme.colorScheme.onSurface
                                                 )
                                             }
                                         }
@@ -919,9 +1074,11 @@ private fun RichIslamicTextLayout(
                             } else {
                                 Text(
                                     text = cleanText,
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurface,
-                                    lineHeight = 20.sp
+                                    style = MaterialTheme.typography.bodySmall.copy(
+                                        fontSize = (13 * fontScale).sp,
+                                        lineHeight = (20 * fontScale).sp
+                                    ),
+                                    color = MaterialTheme.colorScheme.onSurface
                                 )
                             }
                         }
@@ -961,14 +1118,14 @@ private fun RichIslamicTextLayout(
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Text(
                                     text = stepTitle.removeSuffix(":"),
-                                    style = MaterialTheme.typography.titleSmall,
+                                    style = MaterialTheme.typography.titleSmall.copy(fontSize = (14 * fontScale).sp),
                                     fontWeight = FontWeight.Bold,
                                     color = MaterialTheme.colorScheme.onSurface
                                 )
                             }
                             if (stepBody.isNotBlank()) {
                                 Spacer(modifier = Modifier.height(6.dp))
-                                RenderQuoteOrText(stepBody)
+                                RenderQuoteOrText(stepBody, fontScale)
                             }
                         }
                     }
@@ -992,10 +1149,12 @@ private fun RichIslamicTextLayout(
                             Spacer(modifier = Modifier.width(10.dp))
                             Text(
                                 text = trimmed.removeSurrounding("❝", "❞").trim(),
-                                style = MaterialTheme.typography.bodyMedium,
+                                style = MaterialTheme.typography.bodyMedium.copy(
+                                    fontSize = (14 * fontScale).sp,
+                                    lineHeight = (22 * fontScale).sp
+                                ),
                                 fontStyle = androidx.compose.ui.text.font.FontStyle.Italic,
-                                color = MaterialTheme.colorScheme.onSurface,
-                                lineHeight = 22.sp
+                                color = MaterialTheme.colorScheme.onSurface
                             )
                         }
                     }
@@ -1011,9 +1170,11 @@ private fun RichIslamicTextLayout(
                         Column(modifier = Modifier.padding(10.dp)) {
                             Text(
                                 text = trimmed,
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurface,
-                                lineHeight = 22.sp
+                                style = MaterialTheme.typography.bodyMedium.copy(
+                                    fontSize = (14.5f * fontScale).sp,
+                                    lineHeight = (22 * fontScale).sp
+                                ),
+                                color = MaterialTheme.colorScheme.onSurface
                             )
                         }
                     }
@@ -1024,7 +1185,7 @@ private fun RichIslamicTextLayout(
 }
 
 @Composable
-private fun RenderQuoteOrText(raw: String) {
+private fun RenderQuoteOrText(raw: String, fontScale: Float = 1.0f) {
     if (raw.contains("❝") && raw.contains("❞")) {
         val parts = raw.split("❝")
         Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -1032,9 +1193,11 @@ private fun RenderQuoteOrText(raw: String) {
             if (before.isNotBlank()) {
                 Text(
                     text = before,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    lineHeight = 22.sp
+                    style = MaterialTheme.typography.bodyMedium.copy(
+                        fontSize = (14.5f * fontScale).sp,
+                        lineHeight = (22 * fontScale).sp
+                    ),
+                    color = MaterialTheme.colorScheme.onSurface
                 )
             }
             if (parts.size > 1) {
@@ -1058,10 +1221,12 @@ private fun RenderQuoteOrText(raw: String) {
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
                             text = quote,
-                            style = MaterialTheme.typography.bodyMedium,
+                            style = MaterialTheme.typography.bodyMedium.copy(
+                                fontSize = (14.5f * fontScale).sp,
+                                lineHeight = (22 * fontScale).sp
+                            ),
                             fontWeight = FontWeight.Medium,
-                            color = MaterialTheme.colorScheme.onSurface,
-                            lineHeight = 22.sp
+                            color = MaterialTheme.colorScheme.onSurface
                         )
                     }
                 }
@@ -1069,9 +1234,11 @@ private fun RenderQuoteOrText(raw: String) {
                 if (after.isNotBlank()) {
                     Text(
                         text = after,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        lineHeight = 20.sp
+                        style = MaterialTheme.typography.bodySmall.copy(
+                            fontSize = (13 * fontScale).sp,
+                            lineHeight = (20 * fontScale).sp
+                        ),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
@@ -1079,9 +1246,11 @@ private fun RenderQuoteOrText(raw: String) {
     } else {
         Text(
             text = raw,
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurface,
-            lineHeight = 22.sp
+            style = MaterialTheme.typography.bodyMedium.copy(
+                fontSize = (14.5f * fontScale).sp,
+                lineHeight = (22 * fontScale).sp
+            ),
+            color = MaterialTheme.colorScheme.onSurface
         )
     }
 }

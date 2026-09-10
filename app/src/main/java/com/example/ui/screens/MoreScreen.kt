@@ -153,6 +153,23 @@ fun MoreScreen(
                 Spacer(modifier = Modifier.height(16.dp))
             }
 
+            // Featured: Salam Before Duas (New - 56 Duas with Live Aurora & Tabs)
+            item {
+                MoreFeatureItem(
+                    title = "সালাম ফিরানোর আগে সালাতের ভিতর পঠিতব্য দো'আ",
+                    subtitle = "সালাতে সালামের পূর্বে ৫৬টি মাসনূন ও সহীহ দো'আ — লাইভ অরোরা ভিউ, ফন্ট স্কেলিং ও কপি ফিচারসহ",
+                    icon = Icons.Default.Mosque,
+                    iconTint = Color(0xFF10B981),
+                    badge = "৫৬টি দো'আ • লাইভ অরোরা",
+                    onClick = {
+                        IslamicLifeData.sections.find { it.id == "salam_before" }?.let {
+                            viewModel.openIslamicLifeSection(it)
+                        }
+                    }
+                )
+                Spacer(modifier = Modifier.height(10.dp))
+            }
+
             // Featured: Dua Acceptance Times & Duas (New)
             item {
                 MoreFeatureItem(

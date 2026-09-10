@@ -286,7 +286,7 @@ private fun HabitCheckItem(
                         text = habit.titleBn,
                         style = MaterialTheme.typography.bodyMedium,
                         fontWeight = if (isChecked) FontWeight.Bold else FontWeight.SemiBold,
-                        color = if (isChecked) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
+                        color = MaterialTheme.colorScheme.onSurface
                     )
                     Surface(
                         color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f),

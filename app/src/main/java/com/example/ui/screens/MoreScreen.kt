@@ -170,6 +170,23 @@ fun MoreScreen(
                 Spacer(modifier = Modifier.height(10.dp))
             }
 
+            // Featured: Salatul Hajat / Proyojon Puron er Namaz (New)
+            item {
+                MoreFeatureItem(
+                    title = "সালাতুল হাজত / প্রয়োজন পূরনের নামাজ",
+                    subtitle = "হালাল চাহিদা পূরণ, রোগমুক্তি, সংকট থেকে উত্তরণ ও মনের আশা পূরণের বিশেষ নফল নামাজ ও দোয়া",
+                    icon = Icons.Default.Mosque,
+                    iconTint = Color(0xFF6366F1),
+                    badge = "প্রয়োজনের নামাজ • নতুন",
+                    onClick = {
+                        IslamicLifeData.sections.find { it.id == "salatul_hajat" }?.let {
+                            viewModel.openIslamicLifeSection(it)
+                        }
+                    }
+                )
+                Spacer(modifier = Modifier.height(10.dp))
+            }
+
             // Featured: Physical Health Dua & Healing Amol (New)
             item {
                 MoreFeatureItem(

@@ -9,6 +9,9 @@ object IslamicLifeData {
         // ★দোয়া কবুল হওয়ার সময় ও দোয়া★
         DuaAcceptanceTimesData.section,
 
+        // সালাতুল হাজত / প্রয়োজন পূরনের নামাজ
+        SalatulHajatData.section,
+
         // ★শারীরিক সুস্থ্যতার জন্য দোয়া★
         PhysicalHealthDuaData.section,
 

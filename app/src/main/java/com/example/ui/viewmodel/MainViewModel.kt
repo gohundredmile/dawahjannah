@@ -702,11 +702,11 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 if (release != null && release.hasNewerVersion) {
                     val ann = if (!release.announcement.isNullOrBlank()) "\n\nঘোষণা: ${release.announcement}" else ""
                     val source = if (release.isFromAppUpdatesJson) " (app-updates.json থেকে)" else " (GitHub Releases থেকে)"
-                    _updateAlertMessage.value = "গিটহাবে নতুন সংস্করণ পাওয়া গেছে (${release.tagName})$source!\n${release.versionName}\n\nনতুন পরিবর্তন:\n${release.releaseNotes.take(250)}$ann\n\n'APK ডাউনলোড' চাপলে নতুন সংস্করণ ডাউনলোড হবে অথবা 'কনটেন্ট সিঙ্ক' চাপলে অ্যাপের ভেতরে ওভার-দ্য-এয়ার কনটেন্ট আপডেট হবে।"
+                    _updateAlertMessage.value = "গিটহাবে নতুন সংস্করণ পাওয়া গেছে (${release.tagName})$source!\n${release.versionName}\n\nনতুন পরিবর্তন:\n${release.releaseNotes.take(300)}$ann\n\n'অনলাইন কনটেন্ট সিঙ্ক' বাটনে চাপলে সমস্ত নতুন দো'আ ও আমল সরাসরি অ্যাপে আপডেট হবে।"
                 } else if (release != null) {
                     val ann = if (!release.announcement.isNullOrBlank()) "\n\nঘোষণা/বার্তা:\n${release.announcement}" else ""
                     val source = if (release.isFromAppUpdatesJson) "app-updates.json" else "GitHub Releases"
-                    _updateAlertMessage.value = "গিটহাব সিঙ্ক স্ট্যাটাস ($source):\nআপনার অ্যাপ ও কনটেন্ট সম্পূর্ণ হালনাগাদ রয়েছে (v${gitHubUpdateManager.appliedContentVersion})। কোনো নতুন আপডেট বাকি নেই।$ann"
+                    _updateAlertMessage.value = "গিটহাব সিঙ্ক স্ট্যাটাস ($source):\nআপনার অ্যাপ ও কনটেন্ট সম্পূর্ণ হালনাগাদ রয়েছে (v${gitHubUpdateManager.appliedContentVersion} - কোড: ${gitHubUpdateManager.appliedVersionCode})। কোনো নতুন আপডেট বাকি নেই।$ann"
                 } else {
                     _updateAlertMessage.value = "আপনার অ্যাপটি সর্বশেষ সংস্করণে (v${gitHubUpdateManager.appliedContentVersion}) আপডেট করা আছে।"
                 }
@@ -768,6 +768,29 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    /**
+     * Forces clearing the persisted downloaded cache, re-reads fresh bundled updates,
+     * and triggers a fresh sync check with cache-busting.
+     */
+    fun forceRefreshContentUpdates() {
+        viewModelScope.launch {
+            _isDownloadingUpdate.value = true
+            val refreshed = gitHubUpdateManager.forceReloadAndResync()
+            if (refreshed != null) {
+                applyContentBundleToApp(refreshed, notifyUser = false)
+            }
+            val remoteResult = gitHubUpdateManager.downloadAndApplyContentUpdates(allowLocalAssetFallback = true)
+            _isDownloadingUpdate.value = false
+            if (remoteResult.isSuccess) {
+                val bundle = remoteResult.getOrThrow()
+                applyContentBundleToApp(bundle, notifyUser = true, isLocalPreview = false)
+                _latestReleaseInfo.value = _latestReleaseInfo.value?.copy(hasNewerVersion = false)
+            } else {
+                _updateAlertMessage.value = "ক্যাশ রিফ্রেশ সম্পন্ন হয়েছে!\nসর্বশেষ বান্ডেল v${gitHubUpdateManager.appliedContentVersion} (কোড: ${gitHubUpdateManager.appliedVersionCode}) সক্রিয় করা হয়েছে (${refreshed?.extraDuas?.size ?: 0}টি দো'আ অন্তর্ভুক্ত)।"
+            }
+        }
+    }
+
     private fun applyContentBundleToApp(bundle: RemoteContentBundle, notifyUser: Boolean, isLocalPreview: Boolean = false) {
         val convertedDuas = bundle.extraDuas.map { remote ->
             val catName = if (remote.category.isNotBlank()) remote.category else "অন্যান্য দোয়া"
@@ -813,12 +836,12 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
 
         if (notifyUser) {
-            val prefix = if (isLocalPreview) "লোকাল এসেট প্রিভিউ" else "গিটহাব অনলাইন ওটিএ"
-            _updateAlertMessage.value = "আলহামদুলিল্লাহ! ($prefix) থেকে সংস্করণ ${bundle.tagName} সফলভাবে প্রয়োগ করা হয়েছে!\n\n" +
-                "• কনটেন্ট ভার্সন: v${bundle.versionName}\n" +
-                "• দো'আ ভল্টে নতুন দো'আ: ${convertedDuas.size}টি সক্রিয়\n" +
-                if (!bundle.announcement.isNullOrBlank()) "• নতুন ঘোষণা: ${bundle.announcement}\n" else "" +
-                "\nঅ্যাপের সমস্ত কনটেন্ট সফলভাবে হালনাগাদ করা হয়েছে।"
+            val sourceText = bundle.sourceDescription
+            _updateAlertMessage.value = "আলহামদুলিল্লাহ! ($sourceText) থেকে সংস্করণ ${bundle.tagName} সফলভাবে প্রয়োগ করা হয়েছে!\n\n" +
+                "• কনটেন্ট ভার্সন: v${bundle.versionName} (কোড: ${bundle.version})\n" +
+                "• দো'আ ভল্টে ওটিএ দো'আ: ${convertedDuas.size}টি সক্রিয়\n" +
+                if (!bundle.announcement.isNullOrBlank()) "• সক্রিয় ঘোষণা: ${bundle.announcement}\n" else "" +
+                "\nঅ্যাপের সমস্ত কনটেন্ট ও নতুন আমল সফলভাবে হালনাগাদ করা হয়েছে।"
         }
     }
 

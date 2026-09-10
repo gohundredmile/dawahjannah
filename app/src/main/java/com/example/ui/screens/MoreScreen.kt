@@ -170,6 +170,23 @@ fun MoreScreen(
                 Spacer(modifier = Modifier.height(10.dp))
             }
 
+            // Featured: Physical Health Dua & Healing Amol (New)
+            item {
+                MoreFeatureItem(
+                    title = "★শারীরিক সুস্থ্যতার জন্য দোয়া★",
+                    subtitle = "দেহের প্রত্যেক অঙ্গ সুস্থ রাখা, আইয়ূব (আঃ)-এর আরোগ্য আমল, মাথা ব্যথা নিরাময়, শিফার আসমাউল হুসনা ও রোগী দেখার দোয়া",
+                    icon = Icons.Default.Healing,
+                    iconTint = Color(0xFF0D9488),
+                    badge = "সুস্থতার আমল • নতুন",
+                    onClick = {
+                        IslamicLifeData.sections.find { it.id == "physical_health_dua" }?.let {
+                            viewModel.openIslamicLifeSection(it)
+                        }
+                    }
+                )
+                Spacer(modifier = Modifier.height(10.dp))
+            }
+
             // Featured: Durood Sharif Amol with Live Aurora
             item {
                 MoreFeatureItem(

@@ -29,6 +29,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Density
@@ -37,6 +38,7 @@ import com.example.ui.components.AuroraThemesModal
 import com.example.ui.components.BanglaFontSettingsDialog
 import com.example.ui.components.DawahBottomNavigationBar
 import com.example.ui.components.DawahTopAppBar
+import com.example.ui.components.LiveAuroraWallpaperBackground
 import com.example.ui.screens.ChecklistScreen
 import com.example.ui.screens.HomeScreen
 import com.example.ui.screens.MasnunDuaScreen
@@ -86,8 +88,12 @@ class MainActivity : ComponentActivity() {
                     primaryPreference = primaryFontPreference
                 ) {
                     Box(modifier = Modifier.fillMaxSize()) {
+                        // Magnificent Lite Background with Live Aurora Wallpaper throughout the app
+                        LiveAuroraWallpaperBackground()
+
                         Scaffold(
                             modifier = Modifier.fillMaxSize(),
+                            containerColor = Color.Transparent,
                         topBar = {
                             // Only show top bar for tabs when not handled inside sub-screens
                             if (currentTab != AppTab.HOME && !(currentTab == AppTab.MORE && currentMoreSub != MoreSubScreen.MAIN)) {

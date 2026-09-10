@@ -170,6 +170,40 @@ fun MoreScreen(
                 Spacer(modifier = Modifier.height(10.dp))
             }
 
+            // Featured: Farz After Duas (42 Duas with Live Aurora & Tabs)
+            item {
+                MoreFeatureItem(
+                    title = "★★★ফরজ নামাজের পর, সালাম ফিরিয়ে দোয়া ★★★",
+                    subtitle = "ফরজ সালাতের সালাম ফিরানোর পরবর্তী ৪২টি সহীহ ও মাসনূন দোয়াসমূহ, তাসবীহ, ইস্তিগফার ও রিযিকের আমল",
+                    icon = Icons.Default.Mosque,
+                    iconTint = Color(0xFF059669),
+                    badge = "৪২টি দো'আ • লাইভ অরোরা",
+                    onClick = {
+                        IslamicLifeData.sections.find { it.id == "farz_after" }?.let {
+                            viewModel.openIslamicLifeSection(it)
+                        }
+                    }
+                )
+                Spacer(modifier = Modifier.height(10.dp))
+            }
+
+            // Featured: Surah Al-Imran 26-27 Amol
+            item {
+                MoreFeatureItem(
+                    title = "★★★সূরা আল ইমরান ২৬-২৭ নং আয়াত পাঠের ফজিলত★★★",
+                    subtitle = "রিজিক, সম্মান, ক্ষমতা ইজ্জত আল্লাহ দিতে পারেন — হযরত মু‘আয (রা.)-এর ঋণমুক্তি ও বরকতের বিশেষ কুর‘আনী আমল",
+                    icon = Icons.Default.AutoAwesome,
+                    iconTint = IslamicGold,
+                    badge = "কুরআনী আমল • লাইভ অরোরা",
+                    onClick = {
+                        IslamicLifeData.sections.find { it.id == "surah_ali_imran_26_27" }?.let {
+                            viewModel.openIslamicLifeSection(it)
+                        }
+                    }
+                )
+                Spacer(modifier = Modifier.height(10.dp))
+            }
+
             // Featured: Dua Acceptance Times & Duas (New)
             item {
                 MoreFeatureItem(

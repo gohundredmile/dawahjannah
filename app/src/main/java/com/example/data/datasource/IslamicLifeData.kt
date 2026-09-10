@@ -24,6 +24,9 @@ object IslamicLifeData {
         // 2. ★★★ফরজ নামাজের পর, সালাম ফিরিয়ে দোয়া ★★★
         FarzAfterDuaData.section,
 
+        // ★★★সূরা আল ইমরান ২৬-২৭ নং আয়াত পাঠের ফজিলত: রিজিক, সম্মান, ক্ষমতা ইজ্জত আল্লাহ দিতে পারেন।★★★
+        SurahAliImranAmolData.section,
+
         // 3. শুধুমাত্র ফজর ও মাগরিবের নামাযের পর আমল (Specimen screenshot)
         IslamicLifeSection(
             id = "fajr_maghrib",

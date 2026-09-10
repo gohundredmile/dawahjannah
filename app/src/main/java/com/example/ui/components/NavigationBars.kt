@@ -67,7 +67,7 @@ fun DawahTopAppBar(
         },
         actions = actions,
         colors = TopAppBarDefaults.topAppBarColors(
-            containerColor = MaterialTheme.colorScheme.surface
+            containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.88f)
         )
     )
 }
@@ -79,13 +79,13 @@ fun DawahBottomNavigationBar(
 ) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
-        color = MaterialTheme.colorScheme.surface,
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.7f)),
+        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.92f),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)),
         tonalElevation = 2.dp
     ) {
         NavigationBar(
             modifier = Modifier.windowInsetsPadding(WindowInsets.navigationBars),
-            containerColor = MaterialTheme.colorScheme.surface,
+            containerColor = Color.Transparent,
             tonalElevation = 0.dp
         ) {
             val navItemColors = NavigationBarItemDefaults.colors(

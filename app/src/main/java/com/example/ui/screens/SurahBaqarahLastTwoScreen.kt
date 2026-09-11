@@ -39,6 +39,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -63,9 +65,9 @@ fun SurahBaqarahLastTwoScreen(
     val context = LocalContext.current
     val banglaFont = LocalBanglaFontFamily.current
 
-    val baqarahItems = remember {
-        IslamicLifeData.sections.firstOrNull { it.id == "surah_baqarah_last_2" }?.items
-    }
+    val dynamicSections by viewModel.islamicLifeSections.collectAsState()
+    val baqarahItems = dynamicSections.firstOrNull { it.id == "surah_baqarah_last_2" }?.items
+        ?: IslamicLifeData.sections.firstOrNull { it.id == "surah_baqarah_last_2" }?.items
     val ayat285 = baqarahItems?.getOrNull(0)
     val ayat286 = baqarahItems?.getOrNull(1)
 

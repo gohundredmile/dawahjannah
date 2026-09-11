@@ -112,6 +112,11 @@ fun MoreScreen(
             }
         }
     } else {
+        val dynamicSections by viewModel.islamicLifeSections.collectAsState()
+        val salamSec = viewModel.getIslamicLifeSection("salam_before")
+        val farzSec = viewModel.getIslamicLifeSection("farz_after")
+        val dhikrSec = viewModel.getIslamicLifeSection("daily_dhikr_tasbih_tahlil")
+
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
@@ -155,14 +160,15 @@ fun MoreScreen(
 
             // Featured: Salam Before Duas (New - 56 Duas with Live Aurora & Tabs)
             item {
+                val countBn = CalendarHelper.toBanglaNumber(salamSec?.items?.size ?: 56)
                 MoreFeatureItem(
                     title = "সালাম ফিরানোর আগে সালাতের ভিতর পঠিতব্য দো'আ",
-                    subtitle = "সালাতে সালামের পূর্বে ৫৬টি মাসনূন ও সহীহ দো'আ — লাইভ অরোরা ভিউ, ফন্ট স্কেলিং ও কপি ফিচারসহ",
+                    subtitle = "সালাতে সালামের পূর্বে ${countBn}টি মাসনূন ও সহীহ দো'আ — লাইভ অরোরা ভিউ, ফন্ট স্কেলিং ও কপি ফিচারসহ",
                     icon = Icons.Default.Mosque,
                     iconTint = Color(0xFF10B981),
-                    badge = "৫৬টি দো'আ • লাইভ অরোরা",
+                    badge = "${countBn}টি দো'আ • লাইভ অরোরা",
                     onClick = {
-                        IslamicLifeData.sections.find { it.id == "salam_before" }?.let {
+                        (viewModel.getIslamicLifeSection("salam_before") ?: IslamicLifeData.sections.find { it.id == "salam_before" })?.let {
                             viewModel.openIslamicLifeSection(it)
                         }
                     }
@@ -172,14 +178,15 @@ fun MoreScreen(
 
             // Featured: Farz After Duas (42 Duas with Live Aurora & Tabs)
             item {
+                val countBn = CalendarHelper.toBanglaNumber(farzSec?.items?.size ?: 42)
                 MoreFeatureItem(
                     title = "★★★ফরজ নামাজের পর, সালাম ফিরিয়ে দোয়া ★★★",
-                    subtitle = "ফরজ সালাতের সালাম ফিরানোর পরবর্তী ৪২টি সহীহ ও মাসনূন দোয়াসমূহ, তাসবীহ, ইস্তিগফার ও রিযিকের আমল",
+                    subtitle = "ফরজ সালাতের সালাম ফিরানোর পরবর্তী ${countBn}টি সহীহ ও মাসনূন দোয়াসমূহ, তাসবীহ, ইস্তিগফার ও রিযিকের আমল",
                     icon = Icons.Default.Mosque,
                     iconTint = Color(0xFF059669),
-                    badge = "৪২টি দো'আ • লাইভ অরোরা",
+                    badge = "${countBn}টি দো'আ • লাইভ অরোরা",
                     onClick = {
-                        IslamicLifeData.sections.find { it.id == "farz_after" }?.let {
+                        (viewModel.getIslamicLifeSection("farz_after") ?: IslamicLifeData.sections.find { it.id == "farz_after" })?.let {
                             viewModel.openIslamicLifeSection(it)
                         }
                     }
@@ -196,7 +203,7 @@ fun MoreScreen(
                     iconTint = IslamicGold,
                     badge = "কুরআনী আমল • লাইভ অরোরা",
                     onClick = {
-                        IslamicLifeData.sections.find { it.id == "surah_ali_imran_26_27" }?.let {
+                        (viewModel.getIslamicLifeSection("surah_ali_imran_26_27") ?: IslamicLifeData.sections.find { it.id == "surah_ali_imran_26_27" })?.let {
                             viewModel.openIslamicLifeSection(it)
                         }
                     }
@@ -213,7 +220,7 @@ fun MoreScreen(
                     iconTint = IslamicGold,
                     badge = "বিশেষ আমল • নতুন",
                     onClick = {
-                        IslamicLifeData.sections.find { it.id == "dua_acceptance_times" }?.let {
+                        (viewModel.getIslamicLifeSection("dua_acceptance_times") ?: IslamicLifeData.sections.find { it.id == "dua_acceptance_times" })?.let {
                             viewModel.openIslamicLifeSection(it)
                         }
                     }
@@ -230,7 +237,7 @@ fun MoreScreen(
                     iconTint = Color(0xFF6366F1),
                     badge = "প্রয়োজনের নামাজ • নতুন",
                     onClick = {
-                        IslamicLifeData.sections.find { it.id == "salatul_hajat" }?.let {
+                        (viewModel.getIslamicLifeSection("salatul_hajat") ?: IslamicLifeData.sections.find { it.id == "salatul_hajat" })?.let {
                             viewModel.openIslamicLifeSection(it)
                         }
                     }
@@ -247,7 +254,7 @@ fun MoreScreen(
                     iconTint = Color(0xFF0D9488),
                     badge = "সুস্থতার আমল • নতুন",
                     onClick = {
-                        IslamicLifeData.sections.find { it.id == "physical_health_dua" }?.let {
+                        (viewModel.getIslamicLifeSection("physical_health_dua") ?: IslamicLifeData.sections.find { it.id == "physical_health_dua" })?.let {
                             viewModel.openIslamicLifeSection(it)
                         }
                     }
@@ -270,14 +277,15 @@ fun MoreScreen(
 
             // Featured: Daily Dhikr, Tasbih Tahlil
             item {
+                val countBn = CalendarHelper.toBanglaNumber(dhikrSec?.items?.size ?: 45)
                 MoreFeatureItem(
                     title = "সারাদিনের যিকির, তাসবিহ তাহলিল - আরবি - বাংলা অর্থ",
-                    subtitle = "দৈনন্দিন ৪৫টি মোবারক যিকির, তাসবিহ ও তাহলিল আরবি উচ্চারণ ও বাংলা অর্থসহ",
+                    subtitle = "দৈনন্দিন ${countBn}টি মোবারক যিকির, তাসবিহ ও তাহলিল আরবি উচ্চারণ ও বাংলা অর্থসহ",
                     icon = Icons.Default.AutoAwesome,
                     iconTint = IslamicGold,
-                    badge = "৪৫টি যিকির • নতুন",
+                    badge = "${countBn}টি যিকির • নতুন",
                     onClick = {
-                        IslamicLifeData.sections.find { it.id == "daily_dhikr_tasbih_tahlil" }?.let {
+                        (viewModel.getIslamicLifeSection("daily_dhikr_tasbih_tahlil") ?: IslamicLifeData.sections.find { it.id == "daily_dhikr_tasbih_tahlil" })?.let {
                             viewModel.openIslamicLifeSection(it)
                         }
                     }
@@ -372,7 +380,7 @@ fun MoreScreen(
             }
 
             // Sections List: On tapping Heading opens content on full screen
-            items(IslamicLifeData.sections, key = { it.id }) { section ->
+            items(dynamicSections, key = { it.id }) { section ->
                 IslamicLifeSectionNavCard(
                     section = section,
                     onClick = {

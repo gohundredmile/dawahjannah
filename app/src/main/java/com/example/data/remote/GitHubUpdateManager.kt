@@ -36,7 +36,9 @@ data class RemoteContentBundle(
     val extraDuas: List<RemoteDuaItem> = emptyList(),
     val isApplied: Boolean = true,
     val appliedAt: Long = System.currentTimeMillis(),
-    val sourceDescription: String = "GitHub OTA"
+    val sourceDescription: String = "GitHub OTA",
+    val contentHash: String = "",
+    val lastUpdated: String = ""
 )
 
 @JsonClass(generateAdapter = true)
@@ -47,7 +49,12 @@ data class RemoteDuaItem(
     val arabic: String,
     val pronunciationBn: String,
     val meaningBn: String,
-    val reference: String
+    val reference: String,
+    val virtuesBn: String = "",
+    val serialNumberBn: String = "",
+    val repetitionOrTimeBn: String = "",
+    val detailsBn: String = "",
+    val targetSectionId: String = ""
 )
 
 /**
@@ -132,15 +139,44 @@ class GitHubUpdateManager(private val context: Context) {
         }
         set(value) = prefs.edit().putString("applied_content_version", value.trim()).apply()
 
+    var appliedContentHash: String
+        get() = prefs.getString("applied_content_hash", "") ?: ""
+        set(value) = prefs.edit().putString("applied_content_hash", value).apply()
+
+    var appliedLastUpdated: String
+        get() = prefs.getString("applied_last_updated", "") ?: ""
+        set(value) = prefs.edit().putString("applied_last_updated", value).apply()
+
     val currentAppVersion: String
         get() = appliedContentVersion
 
+    fun calculateHash(content: String): String {
+        return try {
+            val md = java.security.MessageDigest.getInstance("MD5")
+            val bytes = md.digest(content.toByteArray(Charsets.UTF_8))
+            bytes.joinToString("") { "%02x".format(it) }
+        } catch (_: Exception) {
+            content.hashCode().toString()
+        }
+    }
+
     /**
      * Builds candidate URLs with cache-busting timestamp parameter to bypass GitHub CDN's 5-minute cache.
+     * Includes direct Git API endpoint (zero edge cache delay), jsDelivr, and GitHub raw with HEAD.
      */
     private fun getCandidateUrls(owner: String, repo: String): List<String> {
         val ts = System.currentTimeMillis()
         return listOf(
+            // 1. Direct GitHub Git contents API (instant, bypasses Fastly 5-min edge cache)
+            "https://api.github.com/repos/$owner/$repo/contents/app-updates.json",
+            "https://api.github.com/repos/$owner/$repo/contents/app/src/main/assets/app-updates.json",
+            // 2. jsDelivr CDN with @main / @latest
+            "https://cdn.jsdelivr.net/gh/$owner/$repo@main/app-updates.json?ts=$ts",
+            "https://cdn.jsdelivr.net/gh/$owner/$repo@latest/app-updates.json?ts=$ts",
+            // 3. GitHub Raw with HEAD (always latest commit)
+            "https://raw.githubusercontent.com/$owner/$repo/HEAD/app-updates.json?ts=$ts",
+            "https://raw.githubusercontent.com/$owner/$repo/HEAD/app/src/main/assets/app-updates.json?ts=$ts",
+            // 4. GitHub Raw with main / master branches
             "https://raw.githubusercontent.com/$owner/$repo/main/app-updates.json?ts=$ts",
             "https://raw.githubusercontent.com/$owner/$repo/main/app/src/main/assets/app-updates.json?ts=$ts",
             "https://raw.githubusercontent.com/$owner/$repo/master/app-updates.json?ts=$ts",
@@ -249,10 +285,13 @@ class GitHubUpdateManager(private val context: Context) {
         // Fallback: Check local bundled asset so user always sees valid info
         val localBundled = getLocalBundledUpdates()
         if (localBundled != null) {
+            val localHasNewer = localBundled.remoteVersionCode > appliedVersionCode ||
+                    isVersionNewer(localBundled.versionName, appliedContentVersion) ||
+                    (localBundled.announcement != null && localBundled.announcement != prefs.getString("applied_announcement_id", ""))
             return@withContext Result.success(
                 localBundled.copy(
-                    hasNewerVersion = false,
-                    releaseNotes = localBundled.releaseNotes + "\n\n(লোকাল অফলাইন মোড: গিটহাব সংযোগ পাওয়া যায়নি, লোকাল ডাটাবেস সম্পূর্ণ প্রস্তুত।)"
+                    hasNewerVersion = localHasNewer,
+                    releaseNotes = localBundled.releaseNotes + "\n\n(লোকাল অফলাইন মোড: গিটহাব সংযোগ না পাওয়া গেলেও লোকাল প্যাকেজ ডাটা সম্পূর্ণ প্রস্তুত।)"
                 )
             )
         }
@@ -273,17 +312,21 @@ class GitHubUpdateManager(private val context: Context) {
 
         for (url in candidateUrls) {
             try {
-                val req = Request.Builder()
+                val reqBuilder = Request.Builder()
                     .url(url)
                     .header("User-Agent", "DawahToJannah-Android-App")
-                    .header("Cache-Control", "no-cache, no-store, must-revalidate")
+                    .header("Cache-Control", "no-cache, no-store, must-revalidate, max-age=0")
                     .header("Pragma", "no-cache")
-                    .build()
-                val resp = client.newCall(req).execute()
+
+                if (url.contains("api.github.com")) {
+                    reqBuilder.header("Accept", "application/vnd.github.v3.raw")
+                }
+
+                val resp = client.newCall(reqBuilder.build()).execute()
                 if (resp.isSuccessful) {
                     val body = resp.body?.string()
                     if (!body.isNullOrBlank()) {
-                        val parsed = parseAppUpdatesJson(JSONObject(body), owner, repo)
+                        val parsed = parseAppUpdatesJson(JSONObject(body), owner, repo, rawContentString = body)
                         return Result.success(parsed)
                     }
                 }
@@ -295,9 +338,16 @@ class GitHubUpdateManager(private val context: Context) {
     }
 
     /**
-     * Parses the standardized app-updates.json format
+     * Parses the standardized app-updates.json format.
+     * Accurately detects ANY newly added content, modified hashes, or updated lastUpdated dates
+     * even if the author forgot to bump the semver version numbers!
      */
-    fun parseAppUpdatesJson(json: JSONObject, owner: String, repo: String): GitHubReleaseInfo {
+    fun parseAppUpdatesJson(
+        json: JSONObject,
+        owner: String,
+        repo: String,
+        rawContentString: String? = null
+    ): GitHubReleaseInfo {
         val versionCode = json.optInt("versionCode", 109)
         val versionName = json.optString("versionName", "1.0.9")
         val tagName = json.optString("tagName", "v$versionName")
@@ -307,6 +357,8 @@ class GitHubUpdateManager(private val context: Context) {
         val apkDownloadUrl = json.optString("apkDownloadUrl", "https://github.com/$owner/$repo/releases")
 
         // Parse announcement
+        val announcementObj = json.optJSONObject("announcement")
+        val announcementId = announcementObj?.optString("id", "") ?: ""
         val announcementText = when {
             json.has("announcement") -> {
                 val ann = json.opt("announcement")
@@ -321,16 +373,31 @@ class GitHubUpdateManager(private val context: Context) {
             else -> null
         }
 
-        val cleanVersion = versionName.removePrefix("v").trim()
+        val contentUpdates = json.optJSONObject("contentUpdates")
+        val lastUpdated = contentUpdates?.optString("lastUpdated", "") ?: ""
+        val remoteHash = if (!rawContentString.isNullOrBlank()) calculateHash(rawContentString) else ""
+
+        val cleanVersion = versionName.removePrefix("v").removePrefix("V").trim()
         val hasNewerVer = isVersionNewer(cleanVersion, currentAppVersion)
         val hasHigherCode = versionCode > appliedVersionCode
 
-        // Also check if remote has extra duas that might not be applied
-        val remoteDuasCount = json.optJSONObject("contentUpdates")?.optJSONArray("newDuas")?.length() ?: 0
-        val currentDuasCount = getPersistedDownloadedUpdates()?.extraDuas?.size ?: 0
-        val hasMoreDuas = remoteDuasCount > currentDuasCount
+        // Compare content hashes
+        val hasDifferentHash = remoteHash.isNotBlank() && appliedContentHash.isNotBlank() && remoteHash != appliedContentHash
 
-        val hasNewer = hasNewerVer || hasHigherCode || (hasMoreDuas && remoteDuasCount > 0)
+        // Check if remote has extra or different count of duas
+        val remoteDuasCount = contentUpdates?.optJSONArray("newDuas")?.length() ?: 0
+        val currentDuasCount = getPersistedDownloadedUpdates()?.extraDuas?.size ?: 0
+        val hasDifferentDuasCount = remoteDuasCount != currentDuasCount
+
+        // Check if lastUpdated date has been modified
+        val hasNewerLastUpdated = lastUpdated.isNotBlank() && appliedLastUpdated.isNotBlank() && lastUpdated != appliedLastUpdated
+
+        // Check if announcement is newly activated
+        val hasNewAnnouncement = announcementId.isNotBlank() && announcementId != prefs.getString("applied_announcement_id", "")
+
+        val hasNewer = hasNewerVer || hasHigherCode || hasDifferentHash ||
+                (hasDifferentDuasCount && remoteDuasCount > 0) ||
+                hasNewerLastUpdated || hasNewAnnouncement
 
         return GitHubReleaseInfo(
             tagName = tagName,
@@ -353,7 +420,7 @@ class GitHubUpdateManager(private val context: Context) {
         return try {
             val stream = context.assets.open("app-updates.json")
             val content = stream.bufferedReader().use { it.readText() }
-            parseAppUpdatesJson(JSONObject(content), repoOwner, repoName)
+            parseAppUpdatesJson(JSONObject(content), repoOwner, repoName, rawContentString = content)
         } catch (_: Exception) {
             null
         }
@@ -362,12 +429,12 @@ class GitHubUpdateManager(private val context: Context) {
     /**
      * Downloads over-the-air content and saves it persistently inside the app's local storage.
      * Uses cache-busting HTTP headers and query params.
-     * If remote fetch fails or is offline, intelligently syncs from local bundled asset if bundled has newer content.
+     * If remote fetch fails or is offline, intelligently syncs from local bundled asset.
      */
     suspend fun downloadAndApplyContentUpdates(
         owner: String = repoOwner,
         repo: String = repoName,
-        allowLocalAssetFallback: Boolean = false
+        allowLocalAssetFallback: Boolean = true
     ): Result<RemoteContentBundle> = withContext(Dispatchers.IO) {
         try {
             var rawJsonString: String? = null
@@ -378,13 +445,17 @@ class GitHubUpdateManager(private val context: Context) {
             val candidateUrls = getCandidateUrls(owner, repo)
             for (url in candidateUrls) {
                 try {
-                    val request = Request.Builder()
+                    val reqBuilder = Request.Builder()
                         .url(url)
                         .header("User-Agent", "DawahToJannah-Android-App")
-                        .header("Cache-Control", "no-cache, no-store, must-revalidate")
+                        .header("Cache-Control", "no-cache, no-store, must-revalidate, max-age=0")
                         .header("Pragma", "no-cache")
-                        .build()
-                    val response = client.newCall(request).execute()
+
+                    if (url.contains("api.github.com")) {
+                        reqBuilder.header("Accept", "application/vnd.github.v3.raw")
+                    }
+
+                    val response = client.newCall(reqBuilder.build()).execute()
                     if (response.isSuccessful) {
                         val body = response.body?.string()
                         if (!body.isNullOrBlank()) {
@@ -402,23 +473,12 @@ class GitHubUpdateManager(private val context: Context) {
 
             // 2. Fallback to bundled asset if remote unavailable OR if allowLocalAssetFallback is true
             if (rawJsonString == null) {
-                if (allowLocalAssetFallback || bundledVersionCode >= appliedVersionCode) {
-                    try {
-                        val stream = context.assets.open("app-updates.json")
-                        rawJsonString = stream.bufferedReader().use { it.readText() }
-                        sourceDescription = if (allowLocalAssetFallback) "লোকাল এসেট প্রিভিউ" else "ইন-অ্যাপ প্যাকেজ এসেট (অফলাইন মোড)"
-                    } catch (e: Exception) {
-                        return@withContext Result.failure(Exception("লোকাল এসেট কনটেন্ট পড়া যায়নি: ${e.message}"))
-                    }
-                } else {
-                    val reason = lastErrorMessage ?: "গিটহাব সার্ভারের সাথে সংযোগ স্থাপন করা সম্ভব হয়নি।"
-                    return@withContext Result.failure(
-                        Exception(
-                            "গিটহাব ($owner/$repo) থেকে রিমোট 'app-updates.json' ফাইল ডাউনলোড করা যায়নি।\n\n" +
-                            "কারিগরি স্ট্যাটাস: $reason\n\n" +
-                            "পরামর্শ: প্রজেক্টের রুটে এবং গিটহাবে 'app-updates.json' পুশ করা আছে কিনা নিশ্চিত করুন।"
-                        )
-                    )
+                try {
+                    val stream = context.assets.open("app-updates.json")
+                    rawJsonString = stream.bufferedReader().use { it.readText() }
+                    sourceDescription = if (allowLocalAssetFallback) "ইন-অ্যাপ বান্ডেল এসেট (লোকাল সিঙ্ক)" else "ইন-অ্যাপ প্যাকেজ এসেট (অফলাইন মোড)"
+                } catch (e: Exception) {
+                    return@withContext Result.failure(Exception("লোকাল এসেট কনটেন্ট পড়া যায়নি: ${e.message} (রিমোট ত্রুটি: $lastErrorMessage)"))
                 }
             }
 
@@ -432,11 +492,17 @@ class GitHubUpdateManager(private val context: Context) {
             } catch (_: Exception) {
             }
 
-            // Record applied versions in SharedPreferences
+            // Record applied versions and hash in SharedPreferences
             appliedContentVersion = bundle.versionName
             appliedVersionCode = bundle.version
+            appliedContentHash = bundle.contentHash
+            appliedLastUpdated = bundle.lastUpdated
+
+            val json = JSONObject(rawJsonString)
+            val annId = json.optJSONObject("announcement")?.optString("id", "") ?: ""
             prefs.edit()
                 .putString("applied_tag_name", bundle.tagName)
+                .putString("applied_announcement_id", annId)
                 .putLong("last_download_time", System.currentTimeMillis())
                 .apply()
 
@@ -448,7 +514,7 @@ class GitHubUpdateManager(private val context: Context) {
 
     /**
      * Reads locally persisted updates from filesDir or bundled asset.
-     * Compares version codes: If bundled asset in the APK is newer than the saved file,
+     * Compares version codes & content hashes: If bundled asset in the APK is newer or modified,
      * it automatically upgrades to the bundled asset so the app is never stuck on stale content.
      */
     fun getPersistedDownloadedUpdates(): RemoteContentBundle? {
@@ -456,11 +522,12 @@ class GitHubUpdateManager(private val context: Context) {
             val bundledBundle = getBundledAssetBundle()
             val savedBundle = getSavedDownloadedBundle()
 
-            // If bundled APK has a higher version code or newer versionName than saved disk cache,
+            // If bundled APK has a higher version code, newer content hash, or more duas than saved disk cache,
             // upgrade immediately to bundled asset!
             if (bundledBundle != null && savedBundle != null) {
                 val bundledIsNewer = bundledBundle.version > savedBundle.version ||
                         isVersionNewer(bundledBundle.versionName, savedBundle.versionName) ||
+                        (bundledBundle.contentHash.isNotBlank() && bundledBundle.contentHash != savedBundle.contentHash) ||
                         bundledBundle.extraDuas.size > savedBundle.extraDuas.size
 
                 if (bundledIsNewer) {
@@ -474,6 +541,8 @@ class GitHubUpdateManager(private val context: Context) {
                     }
                     appliedContentVersion = bundledBundle.versionName
                     appliedVersionCode = bundledBundle.version
+                    appliedContentHash = bundledBundle.contentHash
+                    appliedLastUpdated = bundledBundle.lastUpdated
                     return bundledBundle
                 }
                 return savedBundle
@@ -521,12 +590,17 @@ class GitHubUpdateManager(private val context: Context) {
             prefs.edit()
                 .remove("applied_content_version")
                 .remove("applied_version_code")
+                .remove("applied_content_hash")
+                .remove("applied_last_updated")
+                .remove("applied_announcement_id")
                 .apply()
 
             val bundled = getBundledAssetBundle()
             if (bundled != null) {
                 appliedContentVersion = bundled.versionName
                 appliedVersionCode = bundled.version
+                appliedContentHash = bundled.contentHash
+                appliedLastUpdated = bundled.lastUpdated
                 // Write back fresh
                 try {
                     val stream = context.assets.open("app-updates.json")
@@ -566,6 +640,7 @@ class GitHubUpdateManager(private val context: Context) {
 
             val extraDuas = mutableListOf<RemoteDuaItem>()
             val contentUpdates = json.optJSONObject("contentUpdates")
+            val lastUpdated = contentUpdates?.optString("lastUpdated", "") ?: ""
             val duasArray = contentUpdates?.optJSONArray("newDuas") ?: json.optJSONArray("extraDuas")
             if (duasArray != null) {
                 for (i in 0 until duasArray.length()) {
@@ -578,7 +653,12 @@ class GitHubUpdateManager(private val context: Context) {
                             arabic = d.optString("arabic", ""),
                             pronunciationBn = d.optString("pronunciationBn", ""),
                             meaningBn = d.optString("meaningBn", ""),
-                            reference = d.optString("reference", "")
+                            reference = d.optString("reference", ""),
+                            virtuesBn = d.optString("virtuesBn", d.optString("fojilotBn", "")),
+                            serialNumberBn = d.optString("serialNumberBn", ""),
+                            repetitionOrTimeBn = d.optString("repetitionOrTimeBn", ""),
+                            detailsBn = d.optString("detailsBn", ""),
+                            targetSectionId = d.optString("targetSectionId", "")
                         )
                     )
                 }
@@ -593,7 +673,9 @@ class GitHubUpdateManager(private val context: Context) {
                 announcement = announcementText,
                 extraDuas = extraDuas,
                 isApplied = true,
-                sourceDescription = source
+                sourceDescription = source,
+                contentHash = calculateHash(rawJsonString),
+                lastUpdated = lastUpdated
             )
         } catch (_: Exception) {
             null

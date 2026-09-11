@@ -17,6 +17,7 @@ import com.example.data.datasource.DuroodData
 import com.example.data.datasource.HabitData
 import com.example.data.datasource.HealthDuaData
 import com.example.data.datasource.InspirationData
+import com.example.data.datasource.IslamicLifeData
 import com.example.data.datasource.RoutineData
 import com.example.data.datasource.TasbihPresetsData
 import com.example.data.datasource.WisdomApiService
@@ -35,6 +36,7 @@ import com.example.data.model.DuroodItem
 import com.example.data.model.EnglishFont
 import com.example.data.model.FontSizeScale
 import com.example.data.model.HealthDuaItem
+import com.example.data.model.IslamicLifeCardItem
 import com.example.data.model.IslamicLifeSection
 import com.example.data.model.PRESET_SALAT_PLACES
 import com.example.data.model.PrimaryFontPreference
@@ -48,6 +50,7 @@ import com.example.data.repository.AppRepository
 import com.example.util.CalendarHelper
 import com.example.util.PrayerCalculator
 import com.example.util.VibrationHelper
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -56,6 +59,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.util.Calendar
 import java.util.Date
 import java.util.Locale
@@ -366,6 +370,13 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     private val _dynamicCategories = MutableStateFlow<List<DuaVaultData.Category>>(DuaVaultData.categories)
     val allDuaCategories = _dynamicCategories.asStateFlow()
+
+    private val _islamicLifeSections = MutableStateFlow<List<IslamicLifeSection>>(IslamicLifeData.sections)
+    val islamicLifeSections: StateFlow<List<IslamicLifeSection>> = _islamicLifeSections.asStateFlow()
+
+    fun getIslamicLifeSection(id: String): IslamicLifeSection? {
+        return _islamicLifeSections.value.find { it.id == id } ?: IslamicLifeData.sections.find { it.id == id }
+    }
 
     val filteredDuas = combine(
         _duaSearchQuery,
@@ -803,7 +814,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 arabicText = remote.arabic,
                 pronunciationBn = remote.pronunciationBn,
                 meaningBn = remote.meaningBn,
-                virtuesBn = "ইন-অ্যাপ ওটিএ কনটেন্ট আপডেট থেকে যুক্ত।",
+                virtuesBn = if (remote.virtuesBn.isNotBlank()) remote.virtuesBn else "ইন-অ্যাপ ওটিএ কনটেন্ট আপডেট থেকে যুক্ত।",
                 reference = remote.reference,
                 isBookmarked = false
             )
@@ -822,6 +833,94 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             }
         _dynamicCategories.value = DuaVaultData.categories + newCategories
 
+        // Merge extra duas into IslamicLife sections so MoreScreen immediately reflects new content
+        val baseSections = IslamicLifeData.sections.map { it.copy(items = it.items.toMutableList()) }.toMutableList()
+        val extraItemsByTargetSection = mutableMapOf<String, MutableList<IslamicLifeCardItem>>()
+        val unassignedCategoryItems = mutableMapOf<String, MutableList<IslamicLifeCardItem>>()
+
+        for (remote in bundle.extraDuas) {
+            val cardItem = IslamicLifeCardItem(
+                id = remote.id,
+                serialNumberBn = if (remote.serialNumberBn.isNotBlank()) remote.serialNumberBn else "",
+                titleBn = remote.titleBn,
+                repetitionOrTimeBn = remote.repetitionOrTimeBn,
+                arabicText = remote.arabic,
+                pronunciationBn = remote.pronunciationBn,
+                meaningBn = remote.meaningBn,
+                fojilotBn = if (remote.virtuesBn.isNotBlank()) remote.virtuesBn else "ইন-অ্যাপ ওটিএ কনটেন্ট আপডেট থেকে যুক্ত।",
+                detailsBn = remote.detailsBn,
+                referenceBn = remote.reference
+            )
+
+            val targetSecId = when {
+                remote.targetSectionId.isNotBlank() -> remote.targetSectionId
+                remote.category.contains("সালাম", ignoreCase = true) || remote.category.contains("salam", ignoreCase = true) -> "salam_before"
+                remote.category.contains("ফরজ", ignoreCase = true) || remote.category.contains("farz", ignoreCase = true) || remote.category.contains("ফরয", ignoreCase = true) -> "farz_after"
+                remote.category.contains("হাজত", ignoreCase = true) || remote.category.contains("hajat", ignoreCase = true) -> "salatul_hajat"
+                remote.category.contains("স্বাস্থ্য", ignoreCase = true) || remote.category.contains("রোগ", ignoreCase = true) || remote.category.contains("শিফা", ignoreCase = true) -> "physical_health_dua"
+                remote.category.contains("কবুল", ignoreCase = true) || remote.category.contains("সময়", ignoreCase = true) -> "dua_acceptance_times"
+                remote.category.contains("তাসবীহ", ignoreCase = true) || remote.category.contains("তাহলীল", ignoreCase = true) || remote.category.contains("জিকির", ignoreCase = true) -> "daily_dhikr_tasbih_tahlil"
+                remote.category.contains("ইমরান", ignoreCase = true) -> "surah_ali_imran_26_27"
+                remote.category.contains("বাকারা", ignoreCase = true) -> "surah_baqarah_last_2"
+                remote.category.contains("ফজর", ignoreCase = true) || remote.category.contains("মাগরিব", ignoreCase = true) -> "fajr_maghrib"
+                else -> ""
+            }
+
+            if (targetSecId.isNotBlank()) {
+                extraItemsByTargetSection.getOrPut(targetSecId) { mutableListOf() }.add(cardItem)
+            } else {
+                val catName = if (remote.category.isNotBlank()) remote.category else "নতুন কনটেন্ট আমল"
+                unassignedCategoryItems.getOrPut(catName) { mutableListOf() }.add(cardItem)
+            }
+        }
+
+        // Apply to matching sections in baseSections
+        val updatedSections = baseSections.map { section ->
+            val addedForThis = extraItemsByTargetSection[section.id]
+            if (!addedForThis.isNullOrEmpty()) {
+                val mergedItems = section.items.toMutableList()
+                for (newItem in addedForThis) {
+                    val existingIndex = mergedItems.indexOfFirst { it.id == newItem.id }
+                    if (existingIndex >= 0) {
+                        mergedItems[existingIndex] = newItem
+                    } else {
+                        mergedItems.add(newItem)
+                    }
+                }
+                section.copy(items = mergedItems)
+            } else {
+                section
+            }
+        }.toMutableList()
+
+        // For unassigned categories, create dynamic sections so they are accessible in MoreScreen
+        for ((catName, itemsList) in unassignedCategoryItems) {
+            val dynamicSecId = "sec_ota_" + kotlin.math.abs(catName.hashCode())
+            val existingSecIndex = updatedSections.indexOfFirst { it.id == dynamicSecId }
+            if (existingSecIndex >= 0) {
+                updatedSections[existingSecIndex] = updatedSections[existingSecIndex].copy(items = itemsList)
+            } else {
+                updatedSections.add(
+                    IslamicLifeSection(
+                        id = dynamicSecId,
+                        titleBn = catName,
+                        subtitleBn = "ওভার-দ্য-এয়ার কনটেন্ট আপডেট থেকে সংকলিত (${itemsList.size}টি আমল)",
+                        items = itemsList
+                    )
+                )
+            }
+        }
+
+        _islamicLifeSections.value = updatedSections
+
+        // Refresh currently opened section if user is actively viewing it
+        _selectedIslamicSection.value?.let { current ->
+            val fresh = updatedSections.find { it.id == current.id }
+            if (fresh != null) {
+                _selectedIslamicSection.value = fresh
+            }
+        }
+
         // Handle announcement
         if (!bundle.announcement.isNullOrBlank()) {
             val parts = bundle.announcement.split("\n", limit = 2)
@@ -839,9 +938,10 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             val sourceText = bundle.sourceDescription
             _updateAlertMessage.value = "আলহামদুলিল্লাহ! ($sourceText) থেকে সংস্করণ ${bundle.tagName} সফলভাবে প্রয়োগ করা হয়েছে!\n\n" +
                 "• কনটেন্ট ভার্সন: v${bundle.versionName} (কোড: ${bundle.version})\n" +
-                "• দো'আ ভল্টে ওটিএ দো'আ: ${convertedDuas.size}টি সক্রিয়\n" +
+                "• ওটিএ দো'আ ও আমল: ${convertedDuas.size}টি সক্রিয়\n" +
+                "• ইসলামী জীবন অধ্যায়: ${updatedSections.size}টি বিভাগ হালনাগাদ\n" +
                 if (!bundle.announcement.isNullOrBlank()) "• সক্রিয় ঘোষণা: ${bundle.announcement}\n" else "" +
-                "\nঅ্যাপের সমস্ত কনটেন্ট ও নতুন আমল সফলভাবে হালনাগাদ করা হয়েছে।"
+                "\nঅ্যাপের সমস্ত কনটেন্ট ও নতুন আমল সফলভাবে তাজা করা হয়েছে।"
         }
     }
 
@@ -869,6 +969,30 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         val initialUpdates = gitHubUpdateManager.getPersistedDownloadedUpdates()
         if (initialUpdates != null) {
             applyContentBundleToApp(initialUpdates, notifyUser = false)
+        }
+
+        // Automatic non-blocking OTA sync on startup
+        viewModelScope.launch(Dispatchers.IO) {
+            delay(1500)
+            try {
+                val releaseCheck = gitHubUpdateManager.checkLatestRelease()
+                if (releaseCheck.isSuccess) {
+                    val info = releaseCheck.getOrThrow()
+                    withContext(Dispatchers.Main) {
+                        _latestReleaseInfo.value = info
+                    }
+                    if (info.hasNewerVersion && info.isContentUpdateOnly) {
+                        val dlResult = gitHubUpdateManager.downloadAndApplyContentUpdates(allowLocalAssetFallback = true)
+                        if (dlResult.isSuccess) {
+                            val bundle = dlResult.getOrThrow()
+                            withContext(Dispatchers.Main) {
+                                applyContentBundleToApp(bundle, notifyUser = false)
+                            }
+                        }
+                    }
+                }
+            } catch (_: Exception) {
+            }
         }
 
         viewModelScope.launch {

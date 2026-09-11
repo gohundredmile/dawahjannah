@@ -40,6 +40,8 @@ import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.CheckCircleOutline
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Checkbox
+import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -59,8 +61,10 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.model.RoutineItem
@@ -124,6 +128,22 @@ fun InteractiveRoutineCard(
                     verticalArrangement = Arrangement.spacedBy(4.dp),
                     modifier = Modifier.weight(1f)
                 ) {
+                    // Section Number Badge (e.g., "বিভাগ ১", "বিভাগ ২")
+                    if (item.sectionNumberBn.isNotEmpty()) {
+                        Surface(
+                            shape = RoundedCornerShape(8.dp),
+                            color = MaterialTheme.colorScheme.primaryContainer
+                        ) {
+                            Text(
+                                text = "বিভাগ ${item.sectionNumberBn}",
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer,
+                                modifier = Modifier.padding(horizontal = 7.dp, vertical = 3.dp)
+                            )
+                        }
+                    }
+
                     // Tag Badge (e.g., "নফল সালাত", "দৈনিক সুরক্ষা")
                     if (item.tagBn.isNotEmpty()) {
                         Surface(
@@ -200,21 +220,35 @@ fun InteractiveRoutineCard(
                     }
                 }
 
-                // Completion Toggle + Action buttons
+                // Completion Checkbox & Action buttons
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(2.dp)
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
-                    IconButton(
-                        onClick = { onToggleCompleted(!isCompleted) },
-                        modifier = Modifier.size(36.dp)
-                    ) {
-                        Icon(
-                            imageVector = if (isCompleted) Icons.Default.CheckCircle else Icons.Outlined.CheckCircleOutline,
-                            contentDescription = if (isCompleted) "সম্পন্ন" else "অসম্পন্ন",
-                            tint = if (isCompleted) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline,
-                            modifier = Modifier.size(24.dp)
-                        )
+                    // Prominent Checkbox
+                    Checkbox(
+                        checked = isCompleted,
+                        onCheckedChange = { onToggleCompleted(it) },
+                        colors = CheckboxDefaults.colors(
+                            checkedColor = MaterialTheme.colorScheme.primary,
+                            uncheckedColor = MaterialTheme.colorScheme.outline
+                        ),
+                        modifier = Modifier.size(32.dp)
+                    )
+
+                    if (isCompleted) {
+                        Surface(
+                            shape = RoundedCornerShape(6.dp),
+                            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
+                        ) {
+                            Text(
+                                text = "সম্পন্ন",
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                            )
+                        }
                     }
 
                     IconButton(
@@ -227,6 +261,14 @@ fun InteractiveRoutineCard(
                                 if (item.arabicText.isNotEmpty()) {
                                     appendLine()
                                     appendLine(item.arabicText)
+                                }
+                                if (item.pronunciationBn.isNotEmpty()) {
+                                    appendLine()
+                                    appendLine("উচ্চারণ: ${item.pronunciationBn}")
+                                }
+                                if (item.meaningBn.isNotEmpty()) {
+                                    appendLine()
+                                    appendLine("অর্থ: ${item.meaningBn}")
                                 }
                                 appendLine()
                                 appendLine("আমল বিবরণ:")
@@ -264,13 +306,15 @@ fun InteractiveRoutineCard(
 
             Spacer(modifier = Modifier.height(10.dp))
 
-            // Title
+            // Title (clickable to toggle check)
             Text(
                 text = item.titleBn,
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurface,
-                lineHeight = 24.sp
+                color = if (isCompleted) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
+                lineHeight = 24.sp,
+                textDecoration = if (isCompleted) TextDecoration.LineThrough else TextDecoration.None,
+                modifier = Modifier.clickable { onToggleCompleted(!isCompleted) }
             )
 
             // Subtitle
@@ -341,6 +385,57 @@ fun InteractiveRoutineCard(
                                     )
                                 }
                             }
+                        }
+                    }
+                }
+
+                if (item.pronunciationBn.isNotEmpty()) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Surface(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(10.dp),
+                        color = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.35f)
+                    ) {
+                        Column(modifier = Modifier.padding(10.dp)) {
+                            Text(
+                                text = "উচ্চারণ:",
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                            Spacer(modifier = Modifier.height(2.dp))
+                            Text(
+                                text = item.pronunciationBn,
+                                style = MaterialTheme.typography.bodySmall,
+                                fontStyle = FontStyle.Italic,
+                                color = MaterialTheme.colorScheme.onSurface,
+                                lineHeight = 20.sp
+                            )
+                        }
+                    }
+                }
+
+                if (item.meaningBn.isNotEmpty()) {
+                    Spacer(modifier = Modifier.height(6.dp))
+                    Surface(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(10.dp),
+                        color = MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.3f)
+                    ) {
+                        Column(modifier = Modifier.padding(10.dp)) {
+                            Text(
+                                text = "অর্থ:",
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.tertiary
+                            )
+                            Spacer(modifier = Modifier.height(2.dp))
+                            Text(
+                                text = item.meaningBn,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurface,
+                                lineHeight = 20.sp
+                            )
                         }
                     }
                 }

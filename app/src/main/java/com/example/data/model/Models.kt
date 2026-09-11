@@ -64,7 +64,13 @@ data class RoutineItem(
     val arabicText: String = "", // For Quranic verses/duas in routine
     val tagBn: String = "", // e.g. "সর্বশ্রেষ্ঠ আয়াত", "দৈনিক সুরক্ষা", "নফল সালাত", "সমাপনী সালাত", "সুন্নাত"
     val countBadgeBn: String = "", // e.g. "১ বার", "প্রতিটি ৩ বার", "২ থেকে ৮ রাকাত", "৩ রাকাত"
-    val extraBadgeBn: String = "" // e.g. "সূরা আল-বাকারা: ২৫৫"
+    val extraBadgeBn: String = "", // e.g. "সূরা আল-বাকারা: ২৫৫"
+    val pronunciationBn: String = "",
+    val meaningBn: String = "",
+    val isMinimumRoutine: Boolean = false,
+    val isIdealRoutine: Boolean = true,
+    val sectionNumberBn: String = "",
+    val targetCount: Int = 1
 )
 
 data class HabitItem(

@@ -424,6 +424,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             val matchesSlot = when (slot) {
                 "all" -> true
                 "top10" -> item.isTopPriority
+                "minimum" -> item.isMinimumRoutine
+                "ideal" -> item.isIdealRoutine
                 else -> item.timeSlotId == slot
             }
             val matchesQuery = query.isBlank() ||
@@ -432,6 +434,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     item.descriptionBn.contains(query, ignoreCase = true) ||
                     item.virtuesRewardBn.contains(query, ignoreCase = true) ||
                     item.arabicText.contains(query) ||
+                    item.pronunciationBn.contains(query, ignoreCase = true) ||
+                    item.meaningBn.contains(query, ignoreCase = true) ||
                     item.tagBn.contains(query, ignoreCase = true) ||
                     item.reference.contains(query, ignoreCase = true)
             matchesSlot && matchesQuery

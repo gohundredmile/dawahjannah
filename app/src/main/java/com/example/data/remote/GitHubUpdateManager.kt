@@ -10,6 +10,7 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.json.JSONObject
 import java.util.concurrent.TimeUnit
+import com.example.util.ExcludedIslamicLifeTopics
 
 @JsonClass(generateAdapter = true)
 data class GitHubReleaseInfo(
@@ -525,10 +526,13 @@ class GitHubUpdateManager(private val context: Context) {
             // If bundled APK has a higher version code, newer content hash, or more duas than saved disk cache,
             // upgrade immediately to bundled asset!
             if (bundledBundle != null && savedBundle != null) {
+                val savedHasExcluded = savedBundle.extraDuas.any { 
+                    ExcludedIslamicLifeTopics.isExcluded(it.category) || ExcludedIslamicLifeTopics.isExcluded(it.titleBn) 
+                }
                 val bundledIsNewer = bundledBundle.version > savedBundle.version ||
+                        savedHasExcluded ||
                         isVersionNewer(bundledBundle.versionName, savedBundle.versionName) ||
-                        (bundledBundle.contentHash.isNotBlank() && bundledBundle.contentHash != savedBundle.contentHash) ||
-                        bundledBundle.extraDuas.size > savedBundle.extraDuas.size
+                        (bundledBundle.contentHash.isNotBlank() && bundledBundle.contentHash != savedBundle.contentHash)
 
                 if (bundledIsNewer) {
                     // Update cache file with newer bundled content
@@ -645,11 +649,16 @@ class GitHubUpdateManager(private val context: Context) {
             if (duasArray != null) {
                 for (i in 0 until duasArray.length()) {
                     val d = duasArray.getJSONObject(i)
+                    val cat = d.optString("category", "অন্যান্য দোয়া")
+                    val title = d.optString("titleBn", "")
+                    if (ExcludedIslamicLifeTopics.isExcluded(cat) || ExcludedIslamicLifeTopics.isExcluded(title)) {
+                        continue
+                    }
                     extraDuas.add(
                         RemoteDuaItem(
                             id = d.optString("id", "dua_remote_$i"),
-                            category = d.optString("category", "অন্যান্য দোয়া"),
-                            titleBn = d.optString("titleBn", ""),
+                            category = cat,
+                            titleBn = title,
                             arabic = d.optString("arabic", ""),
                             pronunciationBn = d.optString("pronunciationBn", ""),
                             meaningBn = d.optString("meaningBn", ""),

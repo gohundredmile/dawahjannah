@@ -7,36 +7,53 @@ import android.content.Intent
 import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import android.view.SoundEffectConstants
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
+import androidx.compose.foundation.basicMarquee
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AutoAwesome
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.FormatListNumbered
+import androidx.compose.material.icons.filled.FormatQuote
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.TouchApp
 import androidx.compose.material.icons.filled.Vibration
+import androidx.compose.material.icons.filled.VolumeOff
+import androidx.compose.material.icons.filled.VolumeUp
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -69,32 +86,48 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.material.icons.filled.ExpandLess
+import androidx.compose.material.icons.filled.ExpandMore
 import com.example.data.datasource.TasbihPresetsData
 import com.example.data.model.TasbihDhikrItem
 import com.example.ui.theme.IslamicGold
 import com.example.ui.theme.IslamicGoldLight
 import com.example.ui.viewmodel.MainViewModel
 import com.example.util.CalendarHelper
+import com.example.util.VibrationHelper
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TasbihScreen(viewModel: MainViewModel) {
+fun TasbihScreen(
+    viewModel: MainViewModel,
+    contentPadding: PaddingValues = PaddingValues(0.dp)
+) {
     val state by viewModel.tasbihState.collectAsState()
     val context = LocalContext.current
+    val view = LocalView.current
     val coroutineScope = rememberCoroutineScope()
 
     var selectedTab by remember { mutableIntStateOf(0) } // 0: কাউন্টার ও যিকির, 1: ২৭টি তাসবিহ ও দো'আ তালিকা
     var searchQuery by remember { mutableStateOf("") }
     var showDhikrPickerSheet by remember { mutableStateOf(false) }
+    var isSoundEnabled by remember { mutableStateOf(true) }
+    var isVibrationEnabled by remember { mutableStateOf(true) }
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     val allPresets = remember { TasbihPresetsData.items }
@@ -120,6 +153,7 @@ fun TasbihScreen(viewModel: MainViewModel) {
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .padding(contentPadding)
             .background(MaterialTheme.colorScheme.background)
     ) {
         // Tab Row: ডিজিটাল তাসবীহ কাউন্টার vs ২৭টি পূর্ণ যিকির ও আমল তালিকা
@@ -170,6 +204,24 @@ fun TasbihScreen(viewModel: MainViewModel) {
 
         if (selectedTab == 0) {
             // ==================== TAB 0: COUNTER MODE ====================
+            val isDarkTheme = isSystemInDarkTheme()
+            val chipListState = rememberLazyListState()
+
+            // Auto-scroll chip list to selected item
+            LaunchedEffect(activeItem.id) {
+                val index = allPresets.indexOfFirst { it.id == activeItem.id }
+                if (index >= 0) {
+                    chipListState.animateScrollToItem((index + 1).coerceAtMost(allPresets.size))
+                }
+            }
+
+            var isTapPressed by remember { mutableStateOf(false) }
+            val tapScale by animateFloatAsState(
+                targetValue = if (isTapPressed) 0.94f else 1f,
+                animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessLow),
+                label = "tapScale"
+            )
+
             LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
@@ -179,96 +231,148 @@ fun TasbihScreen(viewModel: MainViewModel) {
                 item {
                     Spacer(modifier = Modifier.height(12.dp))
 
-                    // Target Presets
+                    // Target Presets Segmented Selector
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceEvenly
-                    ) {
-                        listOf(33 to "৩৩ বার", 100 to "১০০ বার", 0 to "সীমাহীন").forEach { (target, label) ->
-                            FilterChip(
-                                selected = state.target == target,
-                                onClick = { viewModel.setTasbihTarget(target) },
-                                label = { Text(label) },
-                                colors = FilterChipDefaults.filterChipColors(
-                                    selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
-                                    selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer
-                                )
-                            )
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.height(10.dp))
-
-                    // Dhikr selection chips horizontally with 'সকল তালিকা' quick button
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .horizontalScroll(rememberScrollState()),
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        // Quick Button to open full selector
-                        Surface(
-                            modifier = Modifier
-                                .clip(RoundedCornerShape(8.dp))
-                                .clickable { showDhikrPickerSheet = true },
-                            color = IslamicGold.copy(alpha = 0.15f),
-                            border = BorderStroke(1.dp, IslamicGold.copy(alpha = 0.4f)),
-                            shape = RoundedCornerShape(8.dp)
-                        ) {
-                            Row(
-                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 7.dp),
-                                verticalAlignment = Alignment.CenterVertically
+                        listOf(33 to "৩৩ বার", 100 to "১০০ বার", 0 to "সীমাহীন").forEach { (target, label) ->
+                            val isTargetSelected = state.target == target
+                            Surface(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .clickable { viewModel.setTasbihTarget(target) },
+                                shape = RoundedCornerShape(12.dp),
+                                color = if (isTargetSelected) Color(0xFF047857) else MaterialTheme.colorScheme.surface,
+                                border = BorderStroke(
+                                    width = if (isTargetSelected) 1.5.dp else 1.dp,
+                                    color = if (isTargetSelected) IslamicGold else MaterialTheme.colorScheme.outline.copy(alpha = 0.2f)
+                                ),
+                                shadowElevation = if (isTargetSelected) 3.dp else 0.dp
                             ) {
-                                Icon(
-                                    imageVector = Icons.Default.FormatListNumbered,
-                                    contentDescription = "সকল তালিকা",
-                                    tint = IslamicGold,
-                                    modifier = Modifier.size(15.dp)
-                                )
-                                Spacer(modifier = Modifier.width(4.dp))
-                                Text(
-                                    text = "সকল তাসবিহ (${allPresets.size}টি)",
-                                    fontSize = 12.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.onSurface
-                                )
-                            }
-                        }
-
-                        // Presets chips
-                        allPresets.forEach { item ->
-                            val isSelected = activeItem.id == item.id
-                            FilterChip(
-                                selected = isSelected,
-                                onClick = { viewModel.selectTasbihItem(item) },
-                                label = {
+                                Box(
+                                    modifier = Modifier.padding(vertical = 10.dp),
+                                    contentAlignment = Alignment.Center
+                                ) {
                                     Text(
-                                        text = item.bengaliName,
-                                        fontSize = 12.sp,
-                                        maxLines = 1,
-                                        overflow = TextOverflow.Ellipsis
+                                        text = label,
+                                        fontSize = 13.sp,
+                                        fontWeight = if (isTargetSelected) FontWeight.Bold else FontWeight.Medium,
+                                        color = if (isTargetSelected) Color.White else MaterialTheme.colorScheme.onSurface
                                     )
                                 }
-                            )
+                            }
                         }
                     }
 
                     Spacer(modifier = Modifier.height(12.dp))
 
+                    // Dhikr selection chips with high-contrast colorization and right-to-left marquee for big tasbih
+                    LazyRow(
+                        state = chipListState,
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        // Quick Button to open full selector
+                        item {
+                            Surface(
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(20.dp))
+                                    .clickable { showDhikrPickerSheet = true },
+                                color = IslamicGold.copy(alpha = 0.15f),
+                                border = BorderStroke(1.2.dp, IslamicGold.copy(alpha = 0.6f)),
+                                shape = RoundedCornerShape(20.dp)
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 9.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.FormatListNumbered,
+                                        contentDescription = "সকল তালিকা",
+                                        tint = IslamicGold,
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(5.dp))
+                                    Text(
+                                        text = "সকল (${allPresets.size}টি)",
+                                        fontSize = 12.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.onSurface
+                                    )
+                                }
+                            }
+                        }
+
+                        // Presets chips with high contrast colorization and right-to-left marquee for big tasbih
+                        items(allPresets, key = { it.id }) { item ->
+                            val isSelected = activeItem.id == item.id
+                            Surface(
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(20.dp))
+                                    .clickable { viewModel.selectTasbihItem(item) }
+                                    .then(
+                                        if (isSelected) Modifier.shadow(elevation = 4.dp, shape = RoundedCornerShape(20.dp))
+                                        else Modifier
+                                    ),
+                                shape = RoundedCornerShape(20.dp),
+                                color = if (isSelected) {
+                                    Color(0xFF047857) // Deep Islamic emerald green
+                                } else {
+                                    MaterialTheme.colorScheme.surface
+                                },
+                                border = BorderStroke(
+                                    width = if (isSelected) 1.5.dp else 1.dp,
+                                    color = if (isSelected) IslamicGold else MaterialTheme.colorScheme.outline.copy(alpha = 0.22f)
+                                )
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 9.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    if (isSelected) {
+                                        Icon(
+                                            imageVector = Icons.Default.Check,
+                                            contentDescription = null,
+                                            tint = IslamicGoldLight,
+                                            modifier = Modifier
+                                                .size(15.dp)
+                                                .padding(end = 4.dp)
+                                        )
+                                    }
+                                    Text(
+                                        text = item.bengaliName,
+                                        color = if (isSelected) Color.White else MaterialTheme.colorScheme.onSurface,
+                                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                        fontSize = 13.sp,
+                                        maxLines = 1,
+                                        modifier = Modifier
+                                            .widthIn(max = if (isSelected) 180.dp else 140.dp)
+                                            .basicMarquee(iterations = Int.MAX_VALUE)
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(14.dp))
+
                     // Current Dhikr Active Display Card with Arabic, Meaning & Virtues
                     Card(
                         modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(16.dp),
+                        shape = RoundedCornerShape(18.dp),
                         colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+                            containerColor = if (isDarkTheme) Color(0xFF0F1E19) else Color(0xFFF9FDFB)
                         ),
-                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.15f))
+                        border = BorderStroke(1.2.dp, if (isDarkTheme) MaterialTheme.colorScheme.outline.copy(alpha = 0.25f) else Color(0xFFD1E7DD))
                     ) {
                         Column(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(14.dp),
+                                .padding(16.dp),
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
                             Row(
@@ -277,16 +381,27 @@ fun TasbihScreen(viewModel: MainViewModel) {
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Surface(
-                                    shape = RoundedCornerShape(6.dp),
-                                    color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.7f)
+                                    shape = RoundedCornerShape(8.dp),
+                                    color = Color(0xFF047857)
                                 ) {
-                                    Text(
-                                        text = "বর্তমান তাসবিহ",
-                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
-                                        style = MaterialTheme.typography.labelSmall,
-                                        color = MaterialTheme.colorScheme.onPrimaryContainer,
-                                        fontWeight = FontWeight.Bold
-                                    )
+                                    Row(
+                                        modifier = Modifier.padding(horizontal = 9.dp, vertical = 4.dp),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.AutoAwesome,
+                                            contentDescription = null,
+                                            tint = IslamicGoldLight,
+                                            modifier = Modifier.size(13.dp)
+                                        )
+                                        Spacer(modifier = Modifier.width(4.dp))
+                                        Text(
+                                            text = "বর্তমান তাসবিহ",
+                                            style = MaterialTheme.typography.labelSmall,
+                                            color = Color.White,
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                    }
                                 }
 
                                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -343,164 +458,343 @@ fun TasbihScreen(viewModel: MainViewModel) {
                                 }
                             }
 
-                            Spacer(modifier = Modifier.height(6.dp))
+                            Spacer(modifier = Modifier.height(10.dp))
 
-                            // Bengali Title
+                            // Bengali Title (with marquee if big tasbih)
                             Text(
                                 text = activeItem.bengaliName,
-                                style = MaterialTheme.typography.titleMedium,
+                                style = MaterialTheme.typography.titleMedium.copy(fontSize = 17.sp),
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.onSurface,
-                                textAlign = TextAlign.Center
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .basicMarquee(iterations = Int.MAX_VALUE)
+                                    .padding(horizontal = 4.dp)
                             )
 
-                            // Arabic Script
+                            // Arabic Script Box (Colorized with contrast, and RTL scrolling for big tasbih)
                             if (activeItem.arabicText.isNotBlank()) {
-                                Spacer(modifier = Modifier.height(8.dp))
+                                Spacer(modifier = Modifier.height(10.dp))
                                 Surface(
                                     modifier = Modifier.fillMaxWidth(),
-                                    shape = RoundedCornerShape(10.dp),
-                                    color = MaterialTheme.colorScheme.surface.copy(alpha = 0.9f),
-                                    border = BorderStroke(1.dp, IslamicGold.copy(alpha = 0.25f))
+                                    shape = RoundedCornerShape(14.dp),
+                                    color = if (isDarkTheme) Color(0xFF03261C) else Color(0xFFF0FDF4),
+                                    border = BorderStroke(1.5.dp, IslamicGold.copy(alpha = 0.65f))
                                 ) {
-                                    Text(
-                                        text = activeItem.arabicText,
-                                        modifier = Modifier.padding(10.dp),
-                                        style = MaterialTheme.typography.titleLarge.copy(fontSize = 20.sp),
-                                        fontWeight = FontWeight.SemiBold,
-                                        color = MaterialTheme.colorScheme.primary,
-                                        textAlign = TextAlign.Center,
-                                        lineHeight = 32.sp
-                                    )
+                                    CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
+                                        Box(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .padding(horizontal = 14.dp, vertical = 10.dp),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            Text(
+                                                text = activeItem.arabicText,
+                                                style = MaterialTheme.typography.titleLarge.copy(
+                                                    fontSize = 22.sp,
+                                                    lineHeight = 36.sp
+                                                ),
+                                                fontWeight = FontWeight.Bold,
+                                                color = if (isDarkTheme) IslamicGoldLight else Color(0xFF064E3B),
+                                                textAlign = TextAlign.Center,
+                                                modifier = Modifier
+                                                    .fillMaxWidth()
+                                                    .basicMarquee(iterations = Int.MAX_VALUE)
+                                            )
+                                        }
+                                    }
                                 }
                             }
 
                             // Meaning
                             if (activeItem.meaningBn.isNotBlank()) {
-                                Spacer(modifier = Modifier.height(6.dp))
-                                Text(
-                                    text = "অর্থ: ${activeItem.meaningBn}",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    textAlign = TextAlign.Center,
-                                    lineHeight = 18.sp
-                                )
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(horizontal = 4.dp),
+                                    verticalAlignment = Alignment.Top
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.FormatQuote,
+                                        contentDescription = null,
+                                        tint = IslamicGold,
+                                        modifier = Modifier
+                                            .size(16.dp)
+                                            .padding(top = 2.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(4.dp))
+                                    Text(
+                                        text = activeItem.meaningBn,
+                                        style = MaterialTheme.typography.bodySmall.copy(lineHeight = 18.sp),
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        fontWeight = FontWeight.Medium
+                                    )
+                                }
                             }
 
                             // Virtue
                             if (activeItem.virtueBn.isNotBlank()) {
-                                Spacer(modifier = Modifier.height(6.dp))
+                                Spacer(modifier = Modifier.height(8.dp))
                                 Row(
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .background(
-                                            IslamicGold.copy(alpha = 0.08f),
-                                            RoundedCornerShape(8.dp)
+                                            if (isDarkTheme) IslamicGold.copy(alpha = 0.12f) else Color(0xFFFFFBEB),
+                                            RoundedCornerShape(10.dp)
                                         )
-                                        .padding(8.dp),
+                                        .border(
+                                            1.dp,
+                                            IslamicGold.copy(alpha = 0.35f),
+                                            RoundedCornerShape(10.dp)
+                                        )
+                                        .padding(10.dp),
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
                                     Icon(
                                         imageVector = Icons.Default.Info,
                                         contentDescription = null,
                                         tint = IslamicGold,
-                                        modifier = Modifier.size(15.dp)
+                                        modifier = Modifier.size(16.dp)
                                     )
-                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Spacer(modifier = Modifier.width(8.dp))
                                     Text(
                                         text = activeItem.virtueBn,
-                                        style = MaterialTheme.typography.labelSmall,
+                                        style = MaterialTheme.typography.labelSmall.copy(lineHeight = 16.sp),
                                         color = MaterialTheme.colorScheme.onSurface,
-                                        lineHeight = 15.sp
+                                        fontWeight = FontWeight.Medium
                                     )
                                 }
                             }
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(18.dp))
+                    Spacer(modifier = Modifier.height(14.dp))
 
-                    // Tactile Tap Button with Circular Progress
-                    val progress = if (state.target > 0) (state.count.toFloat() / state.target).coerceIn(0f, 1f) else 1f
+                    // Quick Toolbar (Sound, Vibration, Cycle, Reset)
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 8.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        // Sound & Vibration Toggles
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Surface(
+                                shape = RoundedCornerShape(10.dp),
+                                color = if (isSoundEnabled) Color(0xFF047857).copy(alpha = 0.15f) else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                                border = BorderStroke(1.dp, if (isSoundEnabled) Color(0xFF047857).copy(alpha = 0.4f) else Color.Transparent),
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(10.dp))
+                                    .clickable { isSoundEnabled = !isSoundEnabled }
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 5.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Icon(
+                                        imageVector = if (isSoundEnabled) Icons.Default.VolumeUp else Icons.Default.VolumeOff,
+                                        contentDescription = "Sound Toggle",
+                                        tint = if (isSoundEnabled) Color(0xFF047857) else MaterialTheme.colorScheme.onSurfaceVariant,
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(4.dp))
+                                    Text(
+                                        text = if (isSoundEnabled) "শব্দ চালু" else "শব্দ বন্ধ",
+                                        fontSize = 11.sp,
+                                        fontWeight = FontWeight.Medium,
+                                        color = if (isSoundEnabled) Color(0xFF047857) else MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.width(8.dp))
+
+                            Surface(
+                                shape = RoundedCornerShape(10.dp),
+                                color = if (isVibrationEnabled) Color(0xFF047857).copy(alpha = 0.15f) else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                                border = BorderStroke(1.dp, if (isVibrationEnabled) Color(0xFF047857).copy(alpha = 0.4f) else Color.Transparent),
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(10.dp))
+                                    .clickable { isVibrationEnabled = !isVibrationEnabled }
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 5.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Vibration,
+                                        contentDescription = "Vibration Toggle",
+                                        tint = if (isVibrationEnabled) Color(0xFF047857) else MaterialTheme.colorScheme.onSurfaceVariant,
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(4.dp))
+                                    Text(
+                                        text = if (isVibrationEnabled) "কম্পন চালু" else "কম্পন বন্ধ",
+                                        fontSize = 11.sp,
+                                        fontWeight = FontWeight.Medium,
+                                        color = if (isVibrationEnabled) Color(0xFF047857) else MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                            }
+                        }
+
+                        // Cycle counter indicator
+                        val cycleCount = if (state.target > 0) state.totalCount / state.target else (state.totalCount / 33)
+                        Surface(
+                            shape = RoundedCornerShape(10.dp),
+                            color = IslamicGold.copy(alpha = 0.14f),
+                            border = BorderStroke(1.dp, IslamicGold.copy(alpha = 0.45f))
+                        ) {
+                            Text(
+                                text = "চক্র: ${CalendarHelper.toBanglaNumber(cycleCount)}",
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSurface,
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 5.dp)
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(14.dp))
+
+                    // Tactile Tap Button with Animated Circular Progress
+                    val rawProgress = if (state.target > 0) (state.count.toFloat() / state.target).coerceIn(0f, 1f) else 1f
+                    val animatedProgress by animateFloatAsState(
+                        targetValue = rawProgress,
+                        label = "circularProgress"
+                    )
 
                     Box(
                         contentAlignment = Alignment.Center,
-                        modifier = Modifier.size(230.dp)
+                        modifier = Modifier.size(240.dp)
                     ) {
+                        // Outer decorative ring
+                        Surface(
+                            modifier = Modifier.size(236.dp),
+                            shape = CircleShape,
+                            color = Color.Transparent,
+                            border = BorderStroke(2.dp, IslamicGold.copy(alpha = 0.3f))
+                        ) {}
+
                         if (state.target > 0) {
                             CircularProgressIndicator(
-                                progress = { progress },
-                                modifier = Modifier.fillMaxSize(),
-                                strokeWidth = 8.dp,
+                                progress = { animatedProgress },
+                                modifier = Modifier.size(236.dp),
+                                strokeWidth = 9.dp,
                                 color = IslamicGold,
                                 trackColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.15f)
                             )
                         }
 
-                        // Big Circular Tap Area
+                        // Big Circular Tap Area with tactile spring animation
                         Box(
                             modifier = Modifier
-                                .size(200.dp)
+                                .size(206.dp)
+                                .graphicsLayer {
+                                    scaleX = tapScale
+                                    scaleY = tapScale
+                                }
+                                .shadow(8.dp, CircleShape)
                                 .clip(CircleShape)
                                 .background(
                                     Brush.radialGradient(
                                         colors = listOf(
-                                            MaterialTheme.colorScheme.primary,
-                                            MaterialTheme.colorScheme.primary.copy(alpha = 0.82f)
+                                            Color(0xFF059669), // Emerald
+                                            Color(0xFF047857),
+                                            Color(0xFF064E3B)  // Deep Forest Emerald
                                         )
                                     )
                                 )
+                                .border(3.dp, IslamicGold.copy(alpha = 0.7f), CircleShape)
                                 .clickable(
                                     interactionSource = remember { MutableInteractionSource() },
                                     indication = null
                                 ) {
+                                    isTapPressed = true
+                                    if (isSoundEnabled) {
+                                        view.playSoundEffect(SoundEffectConstants.CLICK)
+                                    }
+                                    if (isVibrationEnabled) {
+                                        VibrationHelper.vibrate(context, 40)
+                                    }
                                     viewModel.incrementTasbih()
+                                    coroutineScope.launch {
+                                        kotlinx.coroutines.delay(100)
+                                        isTapPressed = false
+                                    }
                                 },
                             contentAlignment = Alignment.Center
                         ) {
-                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.Center
+                            ) {
                                 Text(
                                     text = CalendarHelper.toBanglaNumber(state.count),
-                                    style = MaterialTheme.typography.displayMedium,
-                                    fontWeight = FontWeight.Bold,
+                                    style = MaterialTheme.typography.displayMedium.copy(fontSize = 46.sp),
+                                    fontWeight = FontWeight.ExtraBold,
                                     color = Color.White
                                 )
                                 if (state.target > 0) {
-                                    Text(
-                                        text = "লক্ষ্য: ${CalendarHelper.toBanglaNumber(state.target)}",
-                                        style = MaterialTheme.typography.labelMedium,
-                                        color = IslamicGoldLight
-                                    )
+                                    Surface(
+                                        shape = RoundedCornerShape(12.dp),
+                                        color = Color.Black.copy(alpha = 0.25f),
+                                        modifier = Modifier.padding(top = 2.dp)
+                                    ) {
+                                        Text(
+                                            text = "লক্ষ্য: ${CalendarHelper.toBanglaNumber(state.target)}",
+                                            style = MaterialTheme.typography.labelMedium,
+                                            fontWeight = FontWeight.SemiBold,
+                                            color = IslamicGoldLight,
+                                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
+                                        )
+                                    }
                                 } else {
                                     Text(
                                         text = "আনলিমিটেড",
                                         style = MaterialTheme.typography.labelSmall,
+                                        fontWeight = FontWeight.Medium,
                                         color = IslamicGoldLight
                                     )
                                 }
                                 Spacer(modifier = Modifier.height(4.dp))
-                                Text(
-                                    text = "স্পর্শ করুন",
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = Color.White.copy(alpha = 0.8f)
-                                )
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.Center
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.TouchApp,
+                                        contentDescription = null,
+                                        tint = Color.White.copy(alpha = 0.85f),
+                                        modifier = Modifier.size(14.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(3.dp))
+                                    Text(
+                                        text = "স্পর্শ করে গণনা করুন",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = Color.White.copy(alpha = 0.9f)
+                                    )
+                                }
                             }
                         }
                     }
 
                     Spacer(modifier = Modifier.height(18.dp))
 
-                    // Total Counts & Actions
+                    // Total Counts & Actions Card
                     Card(
                         modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(14.dp),
+                        shape = RoundedCornerShape(16.dp),
                         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
                         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.15f))
                     ) {
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(horizontal = 16.dp, vertical = 10.dp),
+                                .padding(horizontal = 16.dp, vertical = 12.dp),
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
@@ -514,14 +808,15 @@ fun TasbihScreen(viewModel: MainViewModel) {
                                     text = "${CalendarHelper.toBanglaNumber(state.totalCount)} বার",
                                     style = MaterialTheme.typography.titleMedium,
                                     fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.primary
+                                    color = Color(0xFF047857)
                                 )
                             }
 
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 OutlinedButton(
                                     onClick = { viewModel.resetTasbih() },
-                                    shape = RoundedCornerShape(10.dp)
+                                    shape = RoundedCornerShape(10.dp),
+                                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.4f))
                                 ) {
                                     Icon(
                                         imageVector = Icons.Default.Refresh,
@@ -549,10 +844,10 @@ fun TasbihScreen(viewModel: MainViewModel) {
                             imageVector = Icons.Default.Vibration,
                             contentDescription = null,
                             tint = MaterialTheme.colorScheme.outline,
-                            modifier = Modifier.size(16.dp)
+                            modifier = Modifier.size(15.dp)
                         )
                         Text(
-                            text = "প্রতিটি ট্যাপে মৃদু হ্যাপটিক ভাইব্রেশন ও টার্গেটে পৌঁছে দীর্ঘ কম্পন অনুভূত হবে।",
+                            text = "প্রতিটি ট্যাপে মৃদু ভাইব্রেশন ও লক্ষ্য অর্জনে দীর্ঘ কম্পন অনুভূত হবে।",
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.outline,
                             modifier = Modifier.padding(start = 6.dp)

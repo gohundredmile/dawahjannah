@@ -38,12 +38,13 @@ import com.example.ui.components.AuroraThemesModal
 import com.example.ui.components.BanglaFontSettingsDialog
 import com.example.ui.components.DawahBottomNavigationBar
 import com.example.ui.components.DawahTopAppBar
+import com.example.ui.components.HomeIslamicTopAppBar
 import com.example.ui.components.LiveAuroraWallpaperBackground
-import com.example.ui.screens.ChecklistScreen
 import com.example.ui.screens.HomeScreen
 import com.example.ui.screens.MasnunDuaScreen
 import com.example.ui.screens.MoreScreen
 import com.example.ui.screens.RoutineScreen
+import com.example.ui.screens.sub.TasbihScreen
 import com.example.ui.theme.DawahTheme
 import com.example.ui.viewmodel.AppTab
 import com.example.ui.viewmodel.MainViewModel
@@ -56,7 +57,6 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        window.setBackgroundDrawableResource(R.drawable.img_splash_cover)
 
         setContent {
             val themeStyle by viewModel.themeStyle.collectAsState()
@@ -68,6 +68,7 @@ class MainActivity : ComponentActivity() {
             val primaryFontPreference by viewModel.primaryFontPreference.collectAsState()
             val isFontMenuOpen by viewModel.isFontMenuOpen.collectAsState()
             val isThemeModalOpen by viewModel.isThemeModalOpen.collectAsState()
+            val auroraConfig by viewModel.auroraConfig.collectAsState()
             val currentTab by viewModel.currentTab.collectAsState()
             val currentMoreSub by viewModel.moreSubScreen.collectAsState()
             var showWelcomeSplash by remember { mutableStateOf(true) }
@@ -88,22 +89,30 @@ class MainActivity : ComponentActivity() {
                     primaryPreference = primaryFontPreference
                 ) {
                     Box(modifier = Modifier.fillMaxSize()) {
-                        // Magnificent Lite Background with Live Aurora Wallpaper throughout the app
-                        LiveAuroraWallpaperBackground()
+                        // Magnificent Lite Background with Live Aurora Wave Wallpaper throughout the app
+                        LiveAuroraWallpaperBackground(
+                            config = auroraConfig,
+                            themeStyle = themeStyle,
+                            isDark = themeStyle.isDark
+                        )
 
                         Scaffold(
                             modifier = Modifier.fillMaxSize(),
                             containerColor = Color.Transparent,
                         topBar = {
-                            // Only show top bar for tabs when not handled inside sub-screens
-                            if (currentTab != AppTab.HOME && !(currentTab == AppTab.MORE && currentMoreSub != MoreSubScreen.MAIN)) {
+                            if (currentTab == AppTab.HOME) {
+                                HomeIslamicTopAppBar(
+                                    onOpenFontMenu = { viewModel.openFontMenu() },
+                                    onOpenThemeModal = { viewModel.openThemeModal() }
+                                )
+                            } else if (!(currentTab == AppTab.MORE && currentMoreSub != MoreSubScreen.MAIN)) {
                                 DawahTopAppBar(
                                     title = when (currentTab) {
                                         AppTab.DUA -> "মাসনুন দোয়া ভল্ট"
                                         AppTab.ROUTINE -> "২৪ ঘণ্টার সুন্নাত আমল"
-                                        AppTab.CHECKLIST -> "দৈনিক আমল চেকলিস্ট"
+                                        AppTab.TASBIH -> "ডিজিটাল তাসবিহ ও জিকির"
                                         AppTab.MORE -> "ইসলামী জীবন"
-                                        else -> "দাওয়াহ টু জান্নাহ"
+                                        else -> "দা'ওয়াহ টু জান্নাহ্"
                                     },
                                     actions = {
                                         IconButton(onClick = { viewModel.openFontMenu() }) {
@@ -130,15 +139,7 @@ class MainActivity : ComponentActivity() {
                         }
                     ) { innerPadding ->
                         Box(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .then(
-                                    if (currentTab == AppTab.HOME) {
-                                        Modifier.windowInsetsPadding(WindowInsets.statusBars)
-                                    } else {
-                                        Modifier
-                                    }
-                                )
+                            modifier = Modifier.fillMaxSize()
                         ) {
                             when (currentTab) {
                                 AppTab.HOME -> HomeScreen(
@@ -153,7 +154,7 @@ class MainActivity : ComponentActivity() {
                                     viewModel = viewModel,
                                     contentPadding = innerPadding
                                 )
-                                AppTab.CHECKLIST -> ChecklistScreen(
+                                AppTab.TASBIH -> TasbihScreen(
                                     viewModel = viewModel,
                                     contentPadding = innerPadding
                                 )
@@ -172,12 +173,14 @@ class MainActivity : ComponentActivity() {
                             )
                         }
 
-                        // Aurora Themes Modal (All 15 Themes from Web App)
+                        // Aurora Themes Modal (All 15 Themes + Live Aurora Waves)
                         if (isThemeModalOpen) {
                             AuroraThemesModal(
                                 currentTheme = themeStyle,
                                 onSelectTheme = { theme -> viewModel.setThemeStyle(theme) },
                                 onSelectRandom = { viewModel.selectRandomTheme() },
+                                auroraConfig = auroraConfig,
+                                onUpdateAuroraConfig = { newCfg -> viewModel.updateAuroraConfig(newCfg) },
                                 onDismiss = { viewModel.closeThemeModal() }
                             )
                         }

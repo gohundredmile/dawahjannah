@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
@@ -26,21 +27,26 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.Shuffle
+import androidx.compose.material.icons.filled.Speed
+import androidx.compose.material.icons.filled.Tune
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.Waves
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -59,7 +65,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import com.example.data.model.AuroraWallpaperConfig
+import com.example.data.model.AuroraWavePreset
 import com.example.data.model.ThemeStyle
+
+enum class ModalSectionTab(val title: String) {
+    THEMES("🎨 থিম কালার প্যালেট"),
+    AURORA_WAVES("🌊 লাইভ অরোরা ওয়েভ")
+}
 
 enum class ThemeFilterTab(val title: String) {
     ALL("সব থিম (15)"),
@@ -121,32 +134,32 @@ fun getThemeColorSpec(style: ThemeStyle): ThemeColorSpec {
             primaryColor = Color(0xFF0284C7)
         )
         ThemeStyle.CHAMOMILE_TEA -> ThemeColorSpec(
-            gradientColors = listOf(Color(0xFFFEF9C3), Color(0xFFFDE047), Color(0xFFFACC15)),
+            gradientColors = listOf(Color(0xFFFEFCE8), Color(0xFFFEF08A), Color(0xFFFDE047)),
+            dotColors = listOf(Color(0xFFCA8A04), Color(0xFFEAB308), Color(0xFFFACC15)),
+            primaryColor = Color(0xFFCA8A04)
+        )
+        ThemeStyle.FOREST_BATHING, ThemeStyle.EMERALD_JANNAH -> ThemeColorSpec(
+            gradientColors = listOf(Color(0xFFF0FDF4), Color(0xFFA7F3D0), Color(0xFF6EE7B7)),
+            dotColors = listOf(Color(0xFF047857), Color(0xFF059669), Color(0xFF10B981)),
+            primaryColor = Color(0xFF047857)
+        )
+        ThemeStyle.ETHEREAL_SAND -> ThemeColorSpec(
+            gradientColors = listOf(Color(0xFFFFFBEB), Color(0xFFFDE68A), Color(0xFFFCD34D)),
             dotColors = listOf(Color(0xFFB45309), Color(0xFFD97706), Color(0xFFF59E0B)),
             primaryColor = Color(0xFFB45309)
         )
-        ThemeStyle.FOREST_BATHING, ThemeStyle.EMERALD_JANNAH -> ThemeColorSpec(
-            gradientColors = listOf(Color(0xFFDCFCE7), Color(0xFF86EFAC), Color(0xFF4ADE80)),
-            dotColors = listOf(Color(0xFF15803D), Color(0xFF16A34A), Color(0xFF22C55E)),
-            primaryColor = Color(0xFF15803D)
-        )
-        ThemeStyle.ETHEREAL_SAND -> ThemeColorSpec(
-            gradientColors = listOf(Color(0xFFFEF3C7), Color(0xFFFDE68A), Color(0xFFFCD34D)),
-            dotColors = listOf(Color(0xFF92400E), Color(0xFFB45309), Color(0xFFD97706)),
-            primaryColor = Color(0xFF92400E)
-        )
         ThemeStyle.VELVET_PLUM -> ThemeColorSpec(
-            gradientColors = listOf(Color(0xFFFAE8FF), Color(0xFFF0ABFC), Color(0xFFE879F9)),
-            dotColors = listOf(Color(0xFFA21CAF), Color(0xFFC026D3), Color(0xFFE879F9)),
-            primaryColor = Color(0xFFA21CAF)
+            gradientColors = listOf(Color(0xFFFDF2F8), Color(0xFFFBCFE8), Color(0xFFF9A8D4)),
+            dotColors = listOf(Color(0xFF9D174D), Color(0xFFBE185D), Color(0xFFDB2777)),
+            primaryColor = Color(0xFF9D174D)
         )
         ThemeStyle.SILVER_BIRCH -> ThemeColorSpec(
-            gradientColors = listOf(Color(0xFFF1F5F9), Color(0xFFCBD5E1), Color(0xFF94A3B8)),
-            dotColors = listOf(Color(0xFF334155), Color(0xFF475569), Color(0xFF64748B)),
-            primaryColor = Color(0xFF334155)
+            gradientColors = listOf(Color(0xFFF8FAFC), Color(0xFFE2E8F0), Color(0xFFCBD5E1)),
+            dotColors = listOf(Color(0xFF475569), Color(0xFF64748B), Color(0xFF94A3B8)),
+            primaryColor = Color(0xFF475569)
         )
         ThemeStyle.MINT_MATCHA -> ThemeColorSpec(
-            gradientColors = listOf(Color(0xFFDCFCE7), Color(0xFFBBF7D0), Color(0xFF86EFAC)),
+            gradientColors = listOf(Color(0xFFF0FDF4), Color(0xFFBBF7D0), Color(0xFF86EFAC)),
             dotColors = listOf(Color(0xFF16A34A), Color(0xFF22C55E), Color(0xFF4ADE80)),
             primaryColor = Color(0xFF16A34A)
         )
@@ -158,11 +171,13 @@ fun AuroraThemesModal(
     currentTheme: ThemeStyle,
     onSelectTheme: (ThemeStyle) -> Unit,
     onSelectRandom: () -> Unit,
+    auroraConfig: AuroraWallpaperConfig = AuroraWallpaperConfig(),
+    onUpdateAuroraConfig: (AuroraWallpaperConfig) -> Unit = {},
     onDismiss: () -> Unit
 ) {
+    var activeModalTab by remember { mutableStateOf(ModalSectionTab.THEMES) }
     var selectedFilter by remember { mutableStateOf(ThemeFilterTab.ALL) }
 
-    // Unique list of 15 themes (excluding EMERALD_JANNAH which is aliased to FOREST_BATHING)
     val allThemes = remember {
         ThemeStyle.entries.filter { it != ThemeStyle.EMERALD_JANNAH }
     }
@@ -182,7 +197,7 @@ fun AuroraThemesModal(
         Surface(
             modifier = Modifier
                 .fillMaxWidth(0.96f)
-                .fillMaxHeight(0.92f)
+                .fillMaxHeight(0.93f)
                 .clip(RoundedCornerShape(24.dp))
                 .testTag("aurora_themes_modal"),
             color = Color.White,
@@ -192,7 +207,7 @@ fun AuroraThemesModal(
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(horizontal = 20.dp, vertical = 18.dp)
+                    .padding(horizontal = 18.dp, vertical = 16.dp)
             ) {
                 // -------------------------------------------------------------
                 // 1. TOP HEADER: Palette Icon, Title, Random Button, Close
@@ -206,80 +221,78 @@ fun AuroraThemesModal(
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier.weight(1f)
                     ) {
-                        // Mint Green Icon Capsule
                         Box(
                             modifier = Modifier
-                                .size(44.dp)
-                                .clip(RoundedCornerShape(14.dp))
+                                .size(42.dp)
+                                .clip(RoundedCornerShape(13.dp))
                                 .background(Color(0xFFE8FDF3)),
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(
-                                imageVector = Icons.Default.Palette,
+                                imageVector = if (activeModalTab == ModalSectionTab.THEMES) Icons.Default.Palette else Icons.Default.Waves,
                                 contentDescription = null,
                                 tint = Color(0xFF059669),
-                                modifier = Modifier.size(24.dp)
+                                modifier = Modifier.size(23.dp)
                             )
                         }
 
-                        Spacer(modifier = Modifier.width(12.dp))
+                        Spacer(modifier = Modifier.width(10.dp))
 
                         Column {
                             Text(
-                                text = "সকল অরোরা থিমসমূহ (All 15 Themes)",
+                                text = if (activeModalTab == ModalSectionTab.THEMES) "সকল অরোরা থিমসমূহ" else "লাইভ অরোরা ওয়েভ ওয়ালপেপার",
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold,
                                 color = Color(0xFF1E293B),
-                                fontSize = 17.sp
+                                fontSize = 16.5.sp
                             )
                             Spacer(modifier = Modifier.height(2.dp))
                             Text(
-                                text = "আপনার পছন্দের রঙ ও আবহের থিম নির্বাচন করুন • স্বয়ংক্রিয়ভাবে সংরক্ষিত থাকবে",
+                                text = if (activeModalTab == ModalSectionTab.THEMES) "১৫টি স্নিগ্ধ থিম ও রঙ নির্বাচন করুন" else "জীবন্ত সুদৃশ্য ঢেউ, নূরানি কণা ও উজ্জ্বলতা পরিবর্তন",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = Color(0xFF64748B),
-                                fontSize = 11.5.sp,
+                                fontSize = 11.sp,
                                 maxLines = 1,
                                 overflow = TextOverflow.Ellipsis
                             )
                         }
                     }
 
-                    Spacer(modifier = Modifier.width(8.dp))
+                    Spacer(modifier = Modifier.width(6.dp))
 
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        // Random Button
-                        OutlinedButton(
-                            onClick = onSelectRandom,
-                            shape = RoundedCornerShape(12.dp),
-                            border = BorderStroke(1.dp, Color(0xFFE2E8F0)),
-                            colors = ButtonDefaults.outlinedButtonColors(
-                                containerColor = Color(0xFFF8FAFC)
-                            ),
-                            contentPadding = PaddingValues(horizontal = 10.dp, vertical = 6.dp),
-                            modifier = Modifier.testTag("theme_random_button")
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Shuffle,
-                                contentDescription = "Random",
-                                tint = Color(0xFF475569),
-                                modifier = Modifier.size(15.dp)
-                            )
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text(
-                                text = "র‍্যান্ডম",
-                                fontSize = 12.sp,
-                                fontWeight = FontWeight.SemiBold,
-                                color = Color(0xFF475569)
-                            )
+                        if (activeModalTab == ModalSectionTab.THEMES) {
+                            OutlinedButton(
+                                onClick = onSelectRandom,
+                                shape = RoundedCornerShape(12.dp),
+                                border = BorderStroke(1.dp, Color(0xFFE2E8F0)),
+                                colors = ButtonDefaults.outlinedButtonColors(
+                                    containerColor = Color(0xFFF8FAFC)
+                                ),
+                                contentPadding = PaddingValues(horizontal = 9.dp, vertical = 5.dp),
+                                modifier = Modifier.testTag("theme_random_button")
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Shuffle,
+                                    contentDescription = "Random",
+                                    tint = Color(0xFF475569),
+                                    modifier = Modifier.size(14.dp)
+                                )
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text(
+                                    text = "র‍্যান্ডম",
+                                    fontSize = 11.5.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = Color(0xFF475569)
+                                )
+                            }
+                            Spacer(modifier = Modifier.width(6.dp))
                         }
 
-                        Spacer(modifier = Modifier.width(6.dp))
-
-                        // Close Button
                         IconButton(
                             onClick = onDismiss,
                             modifier = Modifier
-                                .size(34.dp)
+                                .size(32.dp)
                                 .clip(CircleShape)
                                 .background(Color(0xFFF1F5F9))
                         ) {
@@ -287,97 +300,753 @@ fun AuroraThemesModal(
                                 imageVector = Icons.Default.Close,
                                 contentDescription = "Close",
                                 tint = Color(0xFF64748B),
-                                modifier = Modifier.size(18.dp)
+                                modifier = Modifier.size(17.dp)
                             )
                         }
                     }
                 }
 
-                Spacer(modifier = Modifier.height(14.dp))
+                Spacer(modifier = Modifier.height(12.dp))
 
                 // -------------------------------------------------------------
-                // 2. FILTER TABS & CURRENT THEME PILL
+                // 2. MAIN MODAL SEGMENTED TABS: [🎨 থিম প্যালেট] | [🌊 লাইভ অরোরা ওয়েভ]
                 // -------------------------------------------------------------
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .horizontalScroll(rememberScrollState()),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
+                Surface(
+                    shape = RoundedCornerShape(14.dp),
+                    color = Color(0xFFF1F5F9),
+                    modifier = Modifier.fillMaxWidth()
                 ) {
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        ThemeFilterTab.entries.forEach { tab ->
-                            val isSelected = selectedFilter == tab
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(4.dp),
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        ModalSectionTab.entries.forEach { tab ->
+                            val isSelected = activeModalTab == tab
                             Surface(
-                                onClick = { selectedFilter = tab },
-                                shape = RoundedCornerShape(12.dp),
-                                color = if (isSelected) Color(0xFF0F172A) else Color(0xFFF1F5F9),
-                                border = BorderStroke(
-                                    1.dp,
-                                    if (isSelected) Color(0xFF0F172A) else Color(0xFFE2E8F0)
-                                ),
-                                modifier = Modifier.testTag("filter_${tab.name}")
+                                onClick = { activeModalTab = tab },
+                                shape = RoundedCornerShape(11.dp),
+                                color = if (isSelected) Color.White else Color.Transparent,
+                                shadowElevation = if (isSelected) 2.dp else 0.dp,
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .testTag("modal_tab_${tab.name}")
                             ) {
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(vertical = 8.dp),
+                                    horizontalArrangement = Arrangement.Center,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(
+                                        text = tab.title,
+                                        fontSize = 12.5.sp,
+                                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                        color = if (isSelected) Color(0xFF0F172A) else Color(0xFF64748B)
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                // -------------------------------------------------------------
+                // 3. TAB CONTENT
+                // -------------------------------------------------------------
+                if (activeModalTab == ModalSectionTab.THEMES) {
+                    // Quick Aurora Status Strip on Themes tab
+                    Surface(
+                        shape = RoundedCornerShape(12.dp),
+                        color = Color(0xFFF8FAFC),
+                        border = BorderStroke(1.dp, Color(0xFFE2E8F0)),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { activeModalTab = ModalSectionTab.AURORA_WAVES }
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 7.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(10.dp)
+                                        .clip(CircleShape)
+                                        .background(if (auroraConfig.isEnabled) Color(0xFF10B981) else Color(0xFF94A3B8))
+                                )
                                 Text(
-                                    text = tab.title,
-                                    fontSize = 12.sp,
-                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                                    color = if (isSelected) Color.White else Color(0xFF475569),
-                                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
+                                    text = "লাইভ অরোরা ওয়েভ: ${if (auroraConfig.isEnabled) "চালু" else "বন্ধ"} (${auroraConfig.preset.titleBn})",
+                                    fontSize = 11.5.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = Color(0xFF334155)
+                                )
+                            }
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text(
+                                    text = "ওয়েভ কাস্টমাইজ ➔",
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color(0xFF059669)
                                 )
                             }
                         }
                     }
 
-                    Spacer(modifier = Modifier.width(16.dp))
+                    Spacer(modifier = Modifier.height(10.dp))
 
-                    // Current Active Theme Label
+                    // Filter tabs (All, Light, Dark)
                     Row(
-                        verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier
-                            .clip(RoundedCornerShape(12.dp))
-                            .background(Color(0xFFF8FAFC))
-                            .border(1.dp, Color(0xFFE2E8F0), RoundedCornerShape(12.dp))
-                            .padding(horizontal = 10.dp, vertical = 5.dp)
+                            .fillMaxWidth()
+                            .horizontalScroll(rememberScrollState()),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        val activeSpec = getThemeColorSpec(currentTheme)
-                        Box(
+                        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                            ThemeFilterTab.entries.forEach { tab ->
+                                val isSelected = selectedFilter == tab
+                                Surface(
+                                    onClick = { selectedFilter = tab },
+                                    shape = RoundedCornerShape(10.dp),
+                                    color = if (isSelected) Color(0xFF0F172A) else Color(0xFFF1F5F9),
+                                    border = BorderStroke(
+                                        1.dp,
+                                        if (isSelected) Color(0xFF0F172A) else Color(0xFFE2E8F0)
+                                    ),
+                                    modifier = Modifier.testTag("filter_${tab.name}")
+                                ) {
+                                    Text(
+                                        text = tab.title,
+                                        fontSize = 11.5.sp,
+                                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                        color = if (isSelected) Color.White else Color(0xFF475569),
+                                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp)
+                                    )
+                                }
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.width(8.dp))
+
+                        // Current theme badge
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
                             modifier = Modifier
-                                .size(8.dp)
-                                .clip(CircleShape)
-                                .background(activeSpec.primaryColor)
-                        )
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Text(
-                            text = "বর্তমান: ${currentTheme.displayNameEn}",
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.SemiBold,
-                            color = Color(0xFF334155)
-                        )
+                                .clip(RoundedCornerShape(10.dp))
+                                .background(Color(0xFFF8FAFC))
+                                .border(1.dp, Color(0xFFE2E8F0), RoundedCornerShape(10.dp))
+                                .padding(horizontal = 8.dp, vertical = 4.dp)
+                        ) {
+                            val activeSpec = getThemeColorSpec(currentTheme)
+                            Box(
+                                modifier = Modifier
+                                    .size(7.dp)
+                                    .clip(CircleShape)
+                                    .background(activeSpec.primaryColor)
+                            )
+                            Spacer(modifier = Modifier.width(5.dp))
+                            Text(
+                                text = currentTheme.displayNameEn,
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = Color(0xFF334155)
+                            )
+                        }
                     }
-                }
 
-                Spacer(modifier = Modifier.height(14.dp))
+                    Spacer(modifier = Modifier.height(10.dp))
 
-                // -------------------------------------------------------------
-                // 3. THEME CARDS GRID
-                // -------------------------------------------------------------
-                LazyVerticalGrid(
-                    columns = GridCells.Adaptive(minSize = 260.dp),
-                    modifier = Modifier
-                        .weight(1f)
-                        .fillMaxWidth(),
-                    verticalArrangement = Arrangement.spacedBy(12.dp),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    contentPadding = PaddingValues(bottom = 8.dp)
-                ) {
-                    items(filteredThemes, key = { it.name }) { theme ->
-                        val isSelected = (theme == currentTheme) || (theme == ThemeStyle.FOREST_BATHING && currentTheme == ThemeStyle.EMERALD_JANNAH)
-                        ThemeCardItem(
-                            theme = theme,
-                            isSelected = isSelected,
-                            onSelect = { onSelectTheme(theme) }
-                        )
+                    // Theme Grid
+                    LazyVerticalGrid(
+                        columns = GridCells.Adaptive(minSize = 250.dp),
+                        modifier = Modifier
+                            .weight(1f)
+                            .fillMaxWidth(),
+                        verticalArrangement = Arrangement.spacedBy(10.dp),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp),
+                        contentPadding = PaddingValues(bottom = 6.dp)
+                    ) {
+                        items(filteredThemes, key = { it.name }) { theme ->
+                            val isSelected = (theme == currentTheme) || (theme == ThemeStyle.FOREST_BATHING && currentTheme == ThemeStyle.EMERALD_JANNAH)
+                            ThemeCardItem(
+                                theme = theme,
+                                isSelected = isSelected,
+                                onSelect = { onSelectTheme(theme) }
+                            )
+                        }
+                    }
+                } else {
+                    // =========================================================
+                    // 🌊 LIVE AURORA WAVE WALLPAPER CUSTOMIZATION SECTION
+                    // =========================================================
+                    LazyColumn(
+                        modifier = Modifier
+                            .weight(1f)
+                            .fillMaxWidth(),
+                        verticalArrangement = Arrangement.spacedBy(14.dp),
+                        contentPadding = PaddingValues(bottom = 8.dp)
+                    ) {
+                        // A. Real-time Live Wallpaper Viewport Preview
+                        item {
+                            Card(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(135.dp),
+                                shape = RoundedCornerShape(18.dp),
+                                border = BorderStroke(1.5.dp, Color(0xFFE2E8F0)),
+                                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                            ) {
+                                Box(modifier = Modifier.fillMaxSize()) {
+                                    // Render real LiveAuroraWallpaperBackground inside preview
+                                    LiveAuroraWallpaperBackground(
+                                        config = auroraConfig,
+                                        themeStyle = currentTheme,
+                                        isDark = currentTheme.isDark
+                                    )
+
+                                    // Top-left preview badge
+                                    Surface(
+                                        shape = RoundedCornerShape(10.dp),
+                                        color = Color.Black.copy(alpha = 0.55f),
+                                        modifier = Modifier
+                                            .align(Alignment.TopStart)
+                                            .padding(10.dp)
+                                    ) {
+                                        Row(
+                                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.spacedBy(5.dp)
+                                        ) {
+                                            Icon(
+                                                imageVector = Icons.Default.Waves,
+                                                contentDescription = null,
+                                                tint = Color(0xFF34D399),
+                                                modifier = Modifier.size(13.dp)
+                                            )
+                                            Text(
+                                                text = "লাইভ প্রিভিউ (Live Wave Preview)",
+                                                fontSize = 10.5.sp,
+                                                fontWeight = FontWeight.Bold,
+                                                color = Color.White
+                                            )
+                                        }
+                                    }
+
+                                    // Bottom status pill
+                                    Surface(
+                                        shape = RoundedCornerShape(10.dp),
+                                        color = Color.White.copy(alpha = 0.9f),
+                                        modifier = Modifier
+                                            .align(Alignment.BottomEnd)
+                                            .padding(10.dp)
+                                    ) {
+                                        Text(
+                                            text = if (auroraConfig.isEnabled) "● তরঙ্গ চলমান" else "○ বন্ধ",
+                                            fontSize = 11.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = if (auroraConfig.isEnabled) Color(0xFF059669) else Color(0xFF64748B),
+                                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                                        )
+                                    }
+                                }
+                            }
+                        }
+
+                        // B. Master Switch Row
+                        item {
+                            Surface(
+                                shape = RoundedCornerShape(14.dp),
+                                color = Color(0xFFF8FAFC),
+                                border = BorderStroke(1.dp, Color(0xFFE2E8F0)),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(horizontal = 14.dp, vertical = 10.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(10.dp),
+                                        modifier = Modifier.weight(1f)
+                                    ) {
+                                        Box(
+                                            modifier = Modifier
+                                                .size(36.dp)
+                                                .clip(CircleShape)
+                                                .background(if (auroraConfig.isEnabled) Color(0xFFECFDF5) else Color(0xFFF1F5F9)),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            Icon(
+                                                imageVector = Icons.Default.Waves,
+                                                contentDescription = null,
+                                                tint = if (auroraConfig.isEnabled) Color(0xFF059669) else Color(0xFF64748B),
+                                                modifier = Modifier.size(20.dp)
+                                            )
+                                        }
+                                        Column {
+                                            Text(
+                                                text = "লাইভ অরোরা ওয়েভ ওয়ালপেপার",
+                                                fontWeight = FontWeight.Bold,
+                                                fontSize = 13.5.sp,
+                                                color = Color(0xFF0F172A)
+                                            )
+                                            Text(
+                                                text = if (auroraConfig.isEnabled) "অ্যাপের সর্বত্র জীবন্ত আলো ও তরঙ্গের প্রবাহ সক্রিয়" else "ওয়ালপেপার স্থির ও বন্ধ",
+                                                fontSize = 11.sp,
+                                                color = Color(0xFF64748B)
+                                            )
+                                        }
+                                    }
+
+                                    Switch(
+                                        checked = auroraConfig.isEnabled,
+                                        onCheckedChange = { isChecked ->
+                                            onUpdateAuroraConfig(auroraConfig.copy(isEnabled = isChecked))
+                                        },
+                                        colors = SwitchDefaults.colors(
+                                            checkedThumbColor = Color.White,
+                                            checkedTrackColor = Color(0xFF10B981)
+                                        )
+                                    )
+                                }
+                            }
+                        }
+
+                        // C. Wave Preset Styles
+                        item {
+                            Column(modifier = Modifier.fillMaxWidth()) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Palette,
+                                        contentDescription = null,
+                                        tint = Color(0xFF059669),
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                    Text(
+                                        text = "ওয়েভ স্টাইল ও কালার প্যালেট",
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 13.sp,
+                                        color = Color(0xFF1E293B)
+                                    )
+                                }
+                                Spacer(modifier = Modifier.height(8.dp))
+
+                                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                    AuroraWavePreset.entries.forEach { preset ->
+                                        val isSelected = auroraConfig.preset == preset
+                                        val previewColors = if (preset == AuroraWavePreset.THEME_DYNAMIC) {
+                                            auroraConfig.getEffectiveColors(currentTheme)
+                                        } else {
+                                            preset.colors
+                                        }
+
+                                        Surface(
+                                            onClick = {
+                                                onUpdateAuroraConfig(auroraConfig.copy(preset = preset))
+                                            },
+                                            shape = RoundedCornerShape(12.dp),
+                                            color = if (isSelected) Color(0xFFF0FDF4) else Color(0xFFF8FAFC),
+                                            border = BorderStroke(
+                                                if (isSelected) 1.5.dp else 1.dp,
+                                                if (isSelected) Color(0xFF10B981) else Color(0xFFE2E8F0)
+                                            ),
+                                            modifier = Modifier.fillMaxWidth()
+                                        ) {
+                                            Row(
+                                                modifier = Modifier
+                                                    .fillMaxWidth()
+                                                    .padding(horizontal = 12.dp, vertical = 9.dp),
+                                                verticalAlignment = Alignment.CenterVertically,
+                                                horizontalArrangement = Arrangement.SpaceBetween
+                                            ) {
+                                                Row(
+                                                    verticalAlignment = Alignment.CenterVertically,
+                                                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                                                    modifier = Modifier.weight(1f)
+                                                ) {
+                                                    // Color Dot Capsule
+                                                    Row(
+                                                        horizontalArrangement = Arrangement.spacedBy(3.dp),
+                                                        verticalAlignment = Alignment.CenterVertically
+                                                    ) {
+                                                        previewColors.take(3).forEach { color ->
+                                                            Box(
+                                                                modifier = Modifier
+                                                                    .size(9.dp)
+                                                                    .clip(CircleShape)
+                                                                    .background(color)
+                                                            )
+                                                        }
+                                                    }
+
+                                                    Column {
+                                                        Text(
+                                                            text = preset.titleBn,
+                                                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.SemiBold,
+                                                            fontSize = 13.sp,
+                                                            color = if (isSelected) Color(0xFF065F46) else Color(0xFF1E293B)
+                                                        )
+                                                        Text(
+                                                            text = preset.descriptionBn,
+                                                            fontSize = 11.sp,
+                                                            color = Color(0xFF64748B),
+                                                            maxLines = 1,
+                                                            overflow = TextOverflow.Ellipsis
+                                                        )
+                                                    }
+                                                }
+
+                                                if (isSelected) {
+                                                    Icon(
+                                                        imageVector = Icons.Default.Check,
+                                                        contentDescription = "Selected",
+                                                        tint = Color(0xFF10B981),
+                                                        modifier = Modifier.size(18.dp)
+                                                    )
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        // D. Wave Visibility & Intensity
+                        item {
+                            Column(modifier = Modifier.fillMaxWidth()) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Visibility,
+                                        contentDescription = null,
+                                        tint = Color(0xFF0284C7),
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                    Text(
+                                        text = "তরঙ্গের দৃশ্যমানতা ও উজ্জ্বলতা",
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 13.sp,
+                                        color = Color(0xFF1E293B)
+                                    )
+                                }
+                                Spacer(modifier = Modifier.height(8.dp))
+
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
+                                    val levels = listOf(
+                                        Triple("মৃদু (35%)", 0.35f, "স্নিগ্ধ"),
+                                        Triple("উজ্জ্বল (65%)", 0.65f, "স্পষ্ট দৃশ্যমান"),
+                                        Triple("দীপ্তিময় (90%)", 0.90f, "প্রবল নূর")
+                                    )
+                                    levels.forEach { (label, value, sub) ->
+                                        val isSelected = Math.abs(auroraConfig.intensity - value) < 0.1f
+                                        Surface(
+                                            onClick = {
+                                                onUpdateAuroraConfig(auroraConfig.copy(intensity = value))
+                                            },
+                                            shape = RoundedCornerShape(11.dp),
+                                            color = if (isSelected) Color(0xFF0F172A) else Color(0xFFF1F5F9),
+                                            border = BorderStroke(
+                                                1.dp,
+                                                if (isSelected) Color(0xFF0F172A) else Color(0xFFE2E8F0)
+                                            ),
+                                            modifier = Modifier.weight(1f)
+                                        ) {
+                                            Column(
+                                                modifier = Modifier
+                                                    .fillMaxWidth()
+                                                    .padding(vertical = 8.dp, horizontal = 6.dp),
+                                                horizontalAlignment = Alignment.CenterHorizontally
+                                            ) {
+                                                Text(
+                                                    text = label,
+                                                    fontSize = 12.sp,
+                                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                                    color = if (isSelected) Color.White else Color(0xFF334155)
+                                                )
+                                                Text(
+                                                    text = sub,
+                                                    fontSize = 9.5.sp,
+                                                    color = if (isSelected) Color(0xFF94A3B8) else Color(0xFF64748B)
+                                                )
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        // E. Wave Flow Speed
+                        item {
+                            Column(modifier = Modifier.fillMaxWidth()) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Speed,
+                                        contentDescription = null,
+                                        tint = Color(0xFFD97706),
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                    Text(
+                                        text = "ওয়েভ প্রবাহের গতি (Flow Speed)",
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 13.sp,
+                                        color = Color(0xFF1E293B)
+                                    )
+                                }
+                                Spacer(modifier = Modifier.height(8.dp))
+
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
+                                    val speeds = listOf(
+                                        Pair("শান্ত ধীর (0.6x)", 0.6f),
+                                        Pair("স্বাভাবিক (1.0x)", 1.0f),
+                                        Pair("গতিশীল (1.5x)", 1.5f)
+                                    )
+                                    speeds.forEach { (label, value) ->
+                                        val isSelected = Math.abs(auroraConfig.speed - value) < 0.15f
+                                        Surface(
+                                            onClick = {
+                                                onUpdateAuroraConfig(auroraConfig.copy(speed = value))
+                                            },
+                                            shape = RoundedCornerShape(11.dp),
+                                            color = if (isSelected) Color(0xFF0F172A) else Color(0xFFF1F5F9),
+                                            border = BorderStroke(
+                                                1.dp,
+                                                if (isSelected) Color(0xFF0F172A) else Color(0xFFE2E8F0)
+                                            ),
+                                            modifier = Modifier.weight(1f)
+                                        ) {
+                                            Row(
+                                                modifier = Modifier
+                                                    .fillMaxWidth()
+                                                    .padding(vertical = 8.dp, horizontal = 4.dp),
+                                                horizontalArrangement = Arrangement.Center,
+                                                verticalAlignment = Alignment.CenterVertically
+                                            ) {
+                                                Text(
+                                                    text = label,
+                                                    fontSize = 11.5.sp,
+                                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                                    color = if (isSelected) Color.White else Color(0xFF334155)
+                                                )
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        // F. Floating Celestial Noor Particles & Stars Toggle
+                        item {
+                            Surface(
+                                shape = RoundedCornerShape(14.dp),
+                                color = Color(0xFFF8FAFC),
+                                border = BorderStroke(1.dp, Color(0xFFE2E8F0)),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(horizontal = 14.dp, vertical = 10.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(10.dp),
+                                        modifier = Modifier.weight(1f)
+                                    ) {
+                                        Box(
+                                            modifier = Modifier
+                                                .size(34.dp)
+                                                .clip(CircleShape)
+                                                .background(Color(0xFFFEF3C7)),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            Icon(
+                                                imageVector = Icons.Default.AutoAwesome,
+                                                contentDescription = null,
+                                                tint = Color(0xFFD97706),
+                                                modifier = Modifier.size(18.dp)
+                                            )
+                                        }
+                                        Column {
+                                            Text(
+                                                text = "নূরানি আলোককণা ও নক্ষত্র প্রভাব",
+                                                fontWeight = FontWeight.Bold,
+                                                fontSize = 13.sp,
+                                                color = Color(0xFF0F172A)
+                                            )
+                                            Text(
+                                                text = "আকাশে আলতো ভাসমান আধ্যাত্মিক আলোর কণা",
+                                                fontSize = 11.sp,
+                                                color = Color(0xFF64748B)
+                                            )
+                                        }
+                                    }
+
+                                    Switch(
+                                        checked = auroraConfig.showParticles,
+                                        onCheckedChange = { isChecked ->
+                                            onUpdateAuroraConfig(auroraConfig.copy(showParticles = isChecked))
+                                        },
+                                        colors = SwitchDefaults.colors(
+                                            checkedThumbColor = Color.White,
+                                            checkedTrackColor = Color(0xFF10B981)
+                                        )
+                                    )
+                                }
+                            }
+                        }
+
+                        // G. Glowing Wave Crest Contours Toggle
+                        item {
+                            Surface(
+                                shape = RoundedCornerShape(14.dp),
+                                color = Color(0xFFF8FAFC),
+                                border = BorderStroke(1.dp, Color(0xFFE2E8F0)),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(horizontal = 14.dp, vertical = 10.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(10.dp),
+                                        modifier = Modifier.weight(1f)
+                                    ) {
+                                        Box(
+                                            modifier = Modifier
+                                                .size(34.dp)
+                                                .clip(CircleShape)
+                                                .background(Color(0xFFE0F2FE)),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            Icon(
+                                                imageVector = Icons.Default.Waves,
+                                                contentDescription = null,
+                                                tint = Color(0xFF0284C7),
+                                                modifier = Modifier.size(18.dp)
+                                            )
+                                        }
+                                        Column {
+                                            Text(
+                                                text = "তরঙ্গের উজ্জ্বল কিনারা ও আভা",
+                                                fontWeight = FontWeight.Bold,
+                                                fontSize = 13.sp,
+                                                color = Color(0xFF0F172A)
+                                            )
+                                            Text(
+                                                text = "তরঙ্গের বাঁকে স্পষ্ট দীপ্তিময় আউটলাইন রেখা",
+                                                fontSize = 11.sp,
+                                                color = Color(0xFF64748B)
+                                            )
+                                        }
+                                    }
+
+                                    Switch(
+                                        checked = auroraConfig.showWaveContours,
+                                        onCheckedChange = { isChecked ->
+                                            onUpdateAuroraConfig(auroraConfig.copy(showWaveContours = isChecked))
+                                        },
+                                        colors = SwitchDefaults.colors(
+                                            checkedThumbColor = Color.White,
+                                            checkedTrackColor = Color(0xFF10B981)
+                                        )
+                                    )
+                                }
+                            }
+                        }
+
+                        // H. Northern Lights Aurora Ray Pillars Toggle
+                        item {
+                            Surface(
+                                shape = RoundedCornerShape(14.dp),
+                                color = Color(0xFFF8FAFC),
+                                border = BorderStroke(1.dp, Color(0xFFE2E8F0)),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(horizontal = 14.dp, vertical = 10.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(10.dp),
+                                        modifier = Modifier.weight(1f)
+                                    ) {
+                                        Box(
+                                            modifier = Modifier
+                                                .size(34.dp)
+                                                .clip(CircleShape)
+                                                .background(Color(0xFFEDE9FE)),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            Icon(
+                                                imageVector = Icons.Filled.AutoAwesome,
+                                                contentDescription = null,
+                                                tint = Color(0xFF7C3AED),
+                                                modifier = Modifier.size(18.dp)
+                                            )
+                                        }
+                                        Column {
+                                            Text(
+                                                text = "নর্দার্ন লাইটস আলোর স্তম্ভ (Aurora Pillars)",
+                                                fontWeight = FontWeight.Bold,
+                                                fontSize = 13.sp,
+                                                color = Color(0xFF0F172A)
+                                            )
+                                            Text(
+                                                text = "আকাশে ধীরগতির ঊর্ধ্বমুখী আলোর রশ্মি ও পর্দা",
+                                                fontSize = 11.sp,
+                                                color = Color(0xFF64748B)
+                                            )
+                                        }
+                                    }
+
+                                    Switch(
+                                        checked = auroraConfig.showAuroraRays,
+                                        onCheckedChange = { isChecked ->
+                                            onUpdateAuroraConfig(auroraConfig.copy(showAuroraRays = isChecked))
+                                        },
+                                        colors = SwitchDefaults.colors(
+                                            checkedThumbColor = Color.White,
+                                            checkedTrackColor = Color(0xFF10B981)
+                                        )
+                                    )
+                                }
+                            }
+                        }
                     }
                 }
 
@@ -392,7 +1061,7 @@ fun AuroraThemesModal(
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text(
-                        text = "✨ আপনার ডিভাইসে স্বয়ংক্রিয়ভাবে সংরক্ষিত থাকে (Instant Local Storage)",
+                        text = "✨ সেটিংসে যেকোনো পরিবর্তন সাথে সাথে সংরক্ষিত হয়",
                         style = MaterialTheme.typography.bodySmall,
                         fontSize = 11.5.sp,
                         color = Color(0xFF64748B),
@@ -405,7 +1074,7 @@ fun AuroraThemesModal(
                         colors = ButtonDefaults.buttonColors(
                             containerColor = Color(0xFF10B981)
                         ),
-                        contentPadding = PaddingValues(horizontal = 22.dp, vertical = 8.dp),
+                        contentPadding = PaddingValues(horizontal = 20.dp, vertical = 7.dp),
                         modifier = Modifier.testTag("theme_modal_done_button")
                     ) {
                         Text(
@@ -451,16 +1120,14 @@ private fun ThemeCardItem(
                 .fillMaxWidth()
                 .padding(12.dp)
         ) {
-            // Capsule banner at top with gradient and 3 color dots
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(44.dp)
+                    .height(42.dp)
                     .clip(RoundedCornerShape(10.dp))
                     .background(Brush.horizontalGradient(spec.gradientColors)),
                 contentAlignment = Alignment.CenterEnd
             ) {
-                // Translucent Capsule for 3 Color Preview Dots
                 Surface(
                     shape = RoundedCornerShape(12.dp),
                     color = Color.White.copy(alpha = 0.85f),
@@ -485,7 +1152,6 @@ private fun ThemeCardItem(
 
             Spacer(modifier = Modifier.height(10.dp))
 
-            // Title + Active Badge
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
@@ -528,7 +1194,6 @@ private fun ThemeCardItem(
 
             Spacer(modifier = Modifier.height(4.dp))
 
-            // Bengali Subtitle / Description
             Text(
                 text = "${theme.displayNameBn} (${theme.descriptionBn})",
                 fontSize = 11.5.sp,
@@ -539,7 +1204,6 @@ private fun ThemeCardItem(
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // Bottom Row: Slug + Selection status
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,

@@ -23,43 +23,33 @@ val LocalEnglishFontFamily = compositionLocalOf<FontFamily> { FontFamily.SansSer
 val LocalBanglaFontFamily = compositionLocalOf<FontFamily> { FontFamily.Default }
 
 val ArabicFontFamily = FontFamily(
-    Font(resId = R.font.font_arabic_amiri, weight = FontWeight.Normal),
-    Font(resId = R.font.font_arabic_amiri, weight = FontWeight.Medium),
-    Font(resId = R.font.font_arabic_amiri, weight = FontWeight.Bold)
+    Font(resId = R.font.font_arabic_amiri, weight = FontWeight.Normal)
 )
 val LocalArabicFontFamily = compositionLocalOf<FontFamily> { ArabicFontFamily }
 
 fun getEnglishFontFamily(font: EnglishFont): FontFamily {
     return englishFontCache.getOrPut(font) {
         val resId = font.fontResId ?: return@getOrPut FontFamily.SansSerif
-        FontFamily(
-            Font(resId = resId, weight = FontWeight.W100),
-            Font(resId = resId, weight = FontWeight.W200),
-            Font(resId = resId, weight = FontWeight.W300),
-            Font(resId = resId, weight = FontWeight.W400),
-            Font(resId = resId, weight = FontWeight.W500),
-            Font(resId = resId, weight = FontWeight.W600),
-            Font(resId = resId, weight = FontWeight.W700),
-            Font(resId = resId, weight = FontWeight.W800),
-            Font(resId = resId, weight = FontWeight.W900)
-        )
+        try {
+            FontFamily(
+                Font(resId = resId, weight = FontWeight.Normal)
+            )
+        } catch (e: Throwable) {
+            FontFamily.SansSerif
+        }
     }
 }
 
 fun getBanglaFontFamily(font: BanglaFont): FontFamily {
     return banglaFontCache.getOrPut(font) {
         val resId = font.fontResId ?: return@getOrPut FontFamily.Default
-        FontFamily(
-            Font(resId = resId, weight = FontWeight.W100),
-            Font(resId = resId, weight = FontWeight.W200),
-            Font(resId = resId, weight = FontWeight.W300),
-            Font(resId = resId, weight = FontWeight.W400),
-            Font(resId = resId, weight = FontWeight.W500),
-            Font(resId = resId, weight = FontWeight.W600),
-            Font(resId = resId, weight = FontWeight.W700),
-            Font(resId = resId, weight = FontWeight.W800),
-            Font(resId = resId, weight = FontWeight.W900)
-        )
+        try {
+            FontFamily(
+                Font(resId = resId, weight = FontWeight.Normal)
+            )
+        } catch (e: Throwable) {
+            FontFamily.Default
+        }
     }
 }
 
@@ -111,7 +101,11 @@ fun getDualActiveFontFamily(
         // Fallback: If context is null or below API 29, prioritize the selected Bangla font
         // so that the 90% Bengali text throughout the app always renders with the chosen font.
         val banglaRes = banglaFont.fontResId ?: R.font.font_noto_bengali
-        FontFamily(Font(resId = banglaRes))
+        try {
+            FontFamily(Font(resId = banglaRes, weight = FontWeight.Normal))
+        } catch (e: Throwable) {
+            FontFamily.Default
+        }
     }
 }
 

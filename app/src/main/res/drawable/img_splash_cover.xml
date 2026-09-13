@@ -1,0 +1,141 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="360dp"
+    android:height="640dp"
+    android:viewportWidth="360"
+    android:viewportHeight="640">
+
+    <!-- Background Base Layer: Deepest Celestial Midnight Navy -->
+    <path
+        android:fillColor="#040810"
+        android:pathData="M0,0h360v640h-360z" />
+
+    <!-- Ambient Subtle Starfield Points -->
+    <path
+        android:fillColor="#4082B4"
+        android:pathData="M45,80h2v2h-2z M120,45h1.5v1.5h-1.5z M240,65h2v2h-2z M315,110h1.5v1.5h-1.5z M70,160h1.5v1.5h-1.5z M290,190h2v2h-2z M50,320h1.5v1.5h-1.5z M320,380h2v2h-2z M90,520h1.5v1.5h-1.5z M270,550h2v2h-2z" />
+    <path
+        android:fillColor="#E5B842"
+        android:pathData="M80,95h2v2h-2z M160,75h1.5v1.5h-1.5z M205,85h2v2h-2z M280,140h1.5v1.5h-1.5z M35,240h2v2h-2z M330,270h1.5v1.5h-1.5z M110,410h2v2h-2z M260,430h1.5v1.5h-1.5z" />
+
+    <!-- Celestial Deep Midnight Gradient Bands (layered for depth) -->
+    <path
+        android:fillColor="#091526"
+        android:pathData="M0,0 L360,0 L360,280 C260,320 100,320 0,280 Z" />
+    <path
+        android:fillColor="#0F2438"
+        android:pathData="M0,0 L360,0 L360,180 C240,220 120,220 0,180 Z" />
+    <path
+        android:fillColor="#08302A"
+        android:pathData="M0,540 C100,500 260,500 360,540 L360,640 L0,640 Z" />
+
+    <!-- Grand Cathedral-Style Islamic Outer Arch (Mihrab Framework) -->
+    <path
+        android:strokeColor="#1E4D3E"
+        android:strokeWidth="1.5"
+        android:pathData="M20,640 L20,240 C20,130 90,50 180,20 C270,50 340,130 340,240 L340,640" />
+
+    <path
+        android:strokeColor="#ECC25A"
+        android:strokeWidth="1"
+        android:pathData="M35,640 L35,250 C35,150 100,75 180,45 C260,75 325,150 325,250 L325,640" />
+
+    <!-- Inner Arabesque Vault Dome Curve -->
+    <path
+        android:strokeColor="#D4AF37"
+        android:strokeWidth="0.8"
+        android:pathData="M55,640 L55,270 C55,185 110,110 180,85 C250,110 305,185 305,270 L305,640" />
+
+    <!-- Hanging Golden Lantern Left -->
+    <!-- Lantern Cord -->
+    <path
+        android:strokeColor="#C59B27"
+        android:strokeWidth="1"
+        android:pathData="M85,0 L85,150" />
+    <!-- Lantern Top Cap -->
+    <path
+        android:fillColor="#E5B842"
+        android:pathData="M78,150 L92,150 L88,145 L82,145 Z" />
+    <!-- Lantern Glass Body (Warm Amber Glow) -->
+    <path
+        android:fillColor="#FFD269"
+        android:pathData="M76,150 L94,150 L91,175 L79,175 Z" />
+    <!-- Lantern Core Light -->
+    <path
+        android:fillColor="#FFF8D6"
+        android:pathData="M81,155 L89,155 L87,170 L83,170 Z" />
+    <!-- Lantern Bottom Base -->
+    <path
+        android:fillColor="#C59B27"
+        android:pathData="M78,175 L92,175 L85,185 Z" />
+
+    <!-- Hanging Golden Lantern Right -->
+    <!-- Lantern Cord -->
+    <path
+        android:strokeColor="#C59B27"
+        android:strokeWidth="1"
+        android:pathData="M275,0 L275,170" />
+    <!-- Lantern Top Cap -->
+    <path
+        android:fillColor="#E5B842"
+        android:pathData="M268,170 L282,170 L278,165 L272,165 Z" />
+    <!-- Lantern Glass Body -->
+    <path
+        android:fillColor="#FFD269"
+        android:pathData="M266,170 L284,170 L281,195 L269,195 Z" />
+    <!-- Lantern Core Light -->
+    <path
+        android:fillColor="#FFF8D6"
+        android:pathData="M271,175 L279,175 L277,190 L273,190 Z" />
+    <!-- Lantern Bottom Base -->
+    <path
+        android:fillColor="#C59B27"
+        android:pathData="M268,195 L282,195 L275,205 Z" />
+
+    <!-- Center Grand Chandelier Cord & Finial -->
+    <path
+        android:strokeColor="#ECC25A"
+        android:strokeWidth="1.5"
+        android:pathData="M180,0 L180,105" />
+    <path
+        android:fillColor="#FFD700"
+        android:pathData="M174,105 L186,105 L180,118 Z" />
+
+    <!-- Central Majestic Crescent Moon (Top Sky Centerpiece) -->
+    <path
+        android:fillColor="#FFF4B8"
+        android:pathData="M180,115 C164,115 152,127 152,143 C152,159 164,171 180,171 C171,169 162,160 162,143 C162,126 171,117 180,115 Z" />
+
+    <!-- Five-Point Star beside Crescent -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M180,133 L182,139 L188,139 L183,143 L185,149 L180,145 L175,149 L177,143 L172,139 L178,139 Z" />
+
+    <!-- Geometric Arabesque Dome Ceiling Petal Radiations -->
+    <path
+        android:strokeColor="#245A46"
+        android:strokeWidth="0.8"
+        android:pathData="M180,85 C140,130 110,190 90,260" />
+    <path
+        android:strokeColor="#245A46"
+        android:strokeWidth="0.8"
+        android:pathData="M180,85 C220,130 250,190 270,260" />
+    <path
+        android:strokeColor="#245A46"
+        android:strokeWidth="0.8"
+        android:pathData="M180,85 C160,140 145,200 135,265" />
+    <path
+        android:strokeColor="#245A46"
+        android:strokeWidth="0.8"
+        android:pathData="M180,85 C200,140 215,200 225,265" />
+
+    <!-- Soft Golden Horizon / Courtyard Mosque Silhouette at Bottom -->
+    <path
+        android:fillColor="#05101A"
+        android:pathData="M0,580 L40,575 L70,582 L100,560 L120,575 L150,568 L170,550 L180,535 L190,550 L210,568 L240,575 L260,560 L290,582 L320,575 L360,580 L360,640 L0,640 Z" />
+
+    <!-- Subtle Golden Edge on Bottom Silhouette -->
+    <path
+        android:strokeColor="#785E23"
+        android:strokeWidth="1"
+        android:pathData="M0,580 L40,575 L70,582 L100,560 L120,575 L150,568 L170,550 L180,535 L190,550 L210,568 L240,575 L260,560 L290,582 L320,575 L360,580" />
+</vector>

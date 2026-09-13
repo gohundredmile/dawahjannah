@@ -50,6 +50,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.datasource.IslamicLifeData
 import com.example.data.model.IslamicLifeSection
+import com.example.util.ExcludedIslamicLifeTopics
 import com.example.ui.components.DawahTopAppBar
 import com.example.ui.screens.sub.AsmaulHusnaScreen
 import com.example.ui.screens.sub.AyatDetectorAndSolverScreen
@@ -61,6 +62,7 @@ import com.example.ui.screens.sub.ScratchpadScreen
 import com.example.ui.screens.sub.SettingsScreen
 import com.example.ui.screens.sub.TasbihScreen
 import com.example.ui.theme.IslamicGold
+import com.example.ui.viewmodel.AppTab
 import com.example.ui.viewmodel.MainViewModel
 import com.example.ui.viewmodel.MoreSubScreen
 import com.example.util.CalendarHelper
@@ -113,9 +115,11 @@ fun MoreScreen(
         }
     } else {
         val dynamicSections by viewModel.islamicLifeSections.collectAsState()
+        val visibleSections = remember(dynamicSections) {
+            dynamicSections.filterNot { ExcludedIslamicLifeTopics.isExcluded(it.titleBn) }
+        }
         val salamSec = viewModel.getIslamicLifeSection("salam_before")
         val farzSec = viewModel.getIslamicLifeSection("farz_after")
-        val dhikrSec = viewModel.getIslamicLifeSection("daily_dhikr_tasbih_tahlil")
 
         LazyColumn(
             modifier = Modifier
@@ -194,16 +198,16 @@ fun MoreScreen(
                 Spacer(modifier = Modifier.height(10.dp))
             }
 
-            // Featured: Surah Al-Imran 26-27 Amol
+            // Featured: Night Awakening Dua (★যদি রাত্রে ঘুম ভেঙ্গে যায় অতঃপর নিচের বাক্যগুলো পাঠ করবেন★)
             item {
                 MoreFeatureItem(
-                    title = "★★★সূরা আল ইমরান ২৬-২৭ নং আয়াত পাঠের ফজিলত★★★",
-                    subtitle = "রিজিক, সম্মান, ক্ষমতা ইজ্জত আল্লাহ দিতে পারেন — হযরত মু‘আয (রা.)-এর ঋণমুক্তি ও বরকতের বিশেষ কুর‘আনী আমল",
-                    icon = Icons.Default.AutoAwesome,
-                    iconTint = IslamicGold,
-                    badge = "কুরআনী আমল • লাইভ অরোরা",
+                    title = "★যদি রাত্রে ঘুম ভেঙ্গে যায় অতঃপর নিচের বাক্যগুলো পাঠ করবেন★",
+                    subtitle = "রাতে ঘুম ভাঙলে ও সেহরীর সময়ে দোয়া কবুল, ক্ষমা প্রার্থনা ও তাহাজ্জুদ সালাতের মুজাররব আমল",
+                    icon = Icons.Default.NightsStay,
+                    iconTint = Color(0xFF8B5CF6),
+                    badge = "বিশেষ আমল • নতুন",
                     onClick = {
-                        (viewModel.getIslamicLifeSection("surah_ali_imran_26_27") ?: IslamicLifeData.sections.find { it.id == "surah_ali_imran_26_27" })?.let {
+                        (viewModel.getIslamicLifeSection("night_awaken") ?: IslamicLifeData.sections.find { it.id == "night_awaken" })?.let {
                             viewModel.openIslamicLifeSection(it)
                         }
                     }
@@ -228,33 +232,16 @@ fun MoreScreen(
                 Spacer(modifier = Modifier.height(10.dp))
             }
 
-            // Featured: Salatul Hajat / Proyojon Puron er Namaz (New)
+            // Featured: Fajr Between & After Amols (★★★ফযর নামাজের মাঝে ও পরের আমল সমুহ★★★)
             item {
                 MoreFeatureItem(
-                    title = "সালাতুল হাজত / প্রয়োজন পূরনের নামাজ",
-                    subtitle = "হালাল চাহিদা পূরণ, রোগমুক্তি, সংকট থেকে উত্তরণ ও মনের আশা পূরণের বিশেষ নফল নামাজ ও দোয়া",
-                    icon = Icons.Default.Mosque,
-                    iconTint = Color(0xFF6366F1),
-                    badge = "প্রয়োজনের নামাজ • নতুন",
+                    title = "★★★ফযর নামাজের মাঝে ও পরের আমল সমুহ★★★",
+                    subtitle = "সুন্নত ও ফরজের মাঝে ~৪০ বার বিশেষ দোয়া এবং ফজর পরবর্তী মাসনূন যিকির ও ওজিফা",
+                    icon = Icons.Default.WbSunny,
+                    iconTint = Color(0xFFD97706),
+                    badge = "ফজরের আমল • নতুন",
                     onClick = {
-                        (viewModel.getIslamicLifeSection("salatul_hajat") ?: IslamicLifeData.sections.find { it.id == "salatul_hajat" })?.let {
-                            viewModel.openIslamicLifeSection(it)
-                        }
-                    }
-                )
-                Spacer(modifier = Modifier.height(10.dp))
-            }
-
-            // Featured: Physical Health Dua & Healing Amol (New)
-            item {
-                MoreFeatureItem(
-                    title = "★শারীরিক সুস্থ্যতার জন্য দোয়া★",
-                    subtitle = "দেহের প্রত্যেক অঙ্গ সুস্থ রাখা, আইয়ূব (আঃ)-এর আরোগ্য আমল, মাথা ব্যথা নিরাময়, শিফার আসমাউল হুসনা ও রোগী দেখার দোয়া",
-                    icon = Icons.Default.Healing,
-                    iconTint = Color(0xFF0D9488),
-                    badge = "সুস্থতার আমল • নতুন",
-                    onClick = {
-                        (viewModel.getIslamicLifeSection("physical_health_dua") ?: IslamicLifeData.sections.find { it.id == "physical_health_dua" })?.let {
+                        (viewModel.getIslamicLifeSection("fajr_between_and_after") ?: IslamicLifeData.sections.find { it.id == "fajr_between_and_after" })?.let {
                             viewModel.openIslamicLifeSection(it)
                         }
                     }
@@ -275,24 +262,6 @@ fun MoreScreen(
                 Spacer(modifier = Modifier.height(10.dp))
             }
 
-            // Featured: Daily Dhikr, Tasbih Tahlil
-            item {
-                val countBn = CalendarHelper.toBanglaNumber(dhikrSec?.items?.size ?: 45)
-                MoreFeatureItem(
-                    title = "সারাদিনের যিকির, তাসবিহ তাহলিল - আরবি - বাংলা অর্থ",
-                    subtitle = "দৈনন্দিন ${countBn}টি মোবারক যিকির, তাসবিহ ও তাহলিল আরবি উচ্চারণ ও বাংলা অর্থসহ",
-                    icon = Icons.Default.AutoAwesome,
-                    iconTint = IslamicGold,
-                    badge = "${countBn}টি যিকির • নতুন",
-                    onClick = {
-                        (viewModel.getIslamicLifeSection("daily_dhikr_tasbih_tahlil") ?: IslamicLifeData.sections.find { it.id == "daily_dhikr_tasbih_tahlil" })?.let {
-                            viewModel.openIslamicLifeSection(it)
-                        }
-                    }
-                )
-                Spacer(modifier = Modifier.height(10.dp))
-            }
-
             // Highlight 1: Asmaul Husna with Virtues & Individual Hyperlinked Cards
             item {
                 MoreFeatureItem(
@@ -302,32 +271,6 @@ fun MoreScreen(
                     iconTint = IslamicGold,
                     badge = "৯৯টি পবিত্র নাম",
                     onClick = { viewModel.navigateToMoreSubScreen(MoreSubScreen.NAMES_OF_ALLAH) }
-                )
-                Spacer(modifier = Modifier.height(10.dp))
-            }
-
-            // Highlight 2: Digital Tasbih
-            item {
-                MoreFeatureItem(
-                    title = "ডিজিটাল তাসবীহ ও জিকির",
-                    subtitle = "২৭টি নির্বাচিত বরকতময় তাসবিহ, বাংলা অর্থ, ফজিলত, হ্যাপটিক ভাইব্রেশন ও স্মার্ট কাউন্টার",
-                    icon = Icons.Default.TouchApp,
-                    iconTint = MaterialTheme.colorScheme.primary,
-                    badge = "২৭টি তাসবিহ • স্মার্ট কাউন্টার",
-                    onClick = { viewModel.navigateToMoreSubScreen(MoreSubScreen.TASBIH) }
-                )
-                Spacer(modifier = Modifier.height(10.dp))
-            }
-
-            // Highlight 3: Health Duas
-            item {
-                MoreFeatureItem(
-                    title = "শারীরিক ও মানসিক রোগের দোয়া (শিফা)",
-                    subtitle = "উদ্বেগ, বিষণ্নতা, ঋণমুক্তি, বদনজর ও সুরক্ষার রুকইয়াহ",
-                    icon = Icons.Default.Healing,
-                    iconTint = Color(0xFF059669),
-                    badge = "রুকইয়াহ ও শিফা",
-                    onClick = { viewModel.navigateToMoreSubScreen(MoreSubScreen.HEALTH_DUAS) }
                 )
                 Spacer(modifier = Modifier.height(10.dp))
             }
@@ -380,7 +323,7 @@ fun MoreScreen(
             }
 
             // Sections List: On tapping Heading opens content on full screen
-            items(dynamicSections, key = { it.id }) { section ->
+            items(visibleSections, key = { it.id }) { section ->
                 IslamicLifeSectionNavCard(
                     section = section,
                     onClick = {

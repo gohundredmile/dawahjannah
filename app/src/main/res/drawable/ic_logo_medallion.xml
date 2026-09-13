@@ -1,0 +1,119 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="120dp"
+    android:height="120dp"
+    android:viewportWidth="120"
+    android:viewportHeight="120">
+
+    <!-- Outer Decorative Shadow Ring -->
+    <path
+        android:fillColor="#040D1A"
+        android:pathData="M60,4 C29.1,4 4,29.1 4,60 C4,90.9 29.1,116 60,116 C90.9,116 116,90.9 116,60 C116,29.1 90.9,4 60,4 Z" />
+
+    <!-- Outer Rich Gold Border -->
+    <path
+        android:fillColor="#D4AF37"
+        android:pathData="M60,6 C30.2,6 6,30.2 6,60 C6,89.8 30.2,114 60,114 C89.8,114 114,89.8 114,60 C114,30.2 89.8,6 60,6 Z" />
+
+    <!-- Royal Deep Midnight Emerald Inner Disc -->
+    <path
+        android:fillColor="#06281E"
+        android:pathData="M60,10 C32.4,10 10,32.4 10,60 C10,87.6 32.4,110 60,110 C87.6,110 110,87.6 110,60 C110,32.4 87.6,10 60,10 Z" />
+
+    <!-- Inner Concentric Golden Filigree Ring -->
+    <path
+        android:strokeColor="#ECC25A"
+        android:strokeWidth="1.5"
+        android:pathData="M60,14 C34.6,14 14,34.6 14,60 C14,85.4 34.6,106 60,106 C85.4,106 106,85.4 106,60 C106,34.6 85.4,14 60,14 Z" />
+
+    <!-- Starburst Octagram Glow Rays (8-point Islamic Star subtle background) -->
+    <path
+        android:fillColor="#154B38"
+        android:pathData="M60,18 L72,48 L102,60 L72,72 L60,102 L48,72 L18,60 L48,48 Z" />
+    <path
+        android:fillColor="#1F634A"
+        android:pathData="M60,22 L69,45 L92,54 L69,63 L60,86 L51,63 L28,54 L51,45 Z" />
+
+    <!-- Grand Mosque Minarets and Dome Silhouette Base -->
+    <!-- Center Grand Dome -->
+    <path
+        android:fillColor="#FFD700"
+        android:pathData="M60,32 C54,42 46,50 46,62 L74,62 C74,50 66,42 60,32 Z" />
+    <!-- Center Dome Finial (Spire & Crescent tip) -->
+    <path
+        android:fillColor="#FFF2A0"
+        android:pathData="M59.5,24 L60.5,24 L60.5,33 L59.5,33 Z" />
+    <path
+        android:fillColor="#FFF2A0"
+        android:pathData="M60,24 C61.5,24 62.5,22.8 62,21.5 C61,22.2 59,22.2 58,21.5 C57.5,22.8 58.5,24 60,24 Z" />
+
+    <!-- Left Minaret -->
+    <path
+        android:fillColor="#E5B842"
+        android:pathData="M38,36 L41,40 L41,68 L38,68 Z" />
+    <path
+        android:fillColor="#FFF2A0"
+        android:pathData="M39.5,30 L40.5,30 L40.5,36 L39.5,36 Z" />
+    <path
+        android:fillColor="#D4AF37"
+        android:pathData="M37,48 L42,48 L42,50 L37,50 Z" />
+
+    <!-- Right Minaret -->
+    <path
+        android:fillColor="#E5B842"
+        android:pathData="M79,36 L82,40 L82,68 L79,68 Z" />
+    <path
+        android:fillColor="#FFF2A0"
+        android:pathData="M80.5,30 L81.5,30 L81.5,36 L80.5,36 Z" />
+    <path
+        android:fillColor="#D4AF37"
+        android:pathData="M78,48 L83,48 L83,50 L78,50 Z" />
+
+    <!-- Mosque Wall & Arches Base -->
+    <path
+        android:fillColor="#ECC25A"
+        android:pathData="M34,68 L86,68 L86,84 C86,85 85,86 84,86 L36,86 C35,86 34,85 34,84 Z" />
+
+    <!-- Central Grand Mihrab Arch (Cutout / Shadow) -->
+    <path
+        android:fillColor="#06281E"
+        android:pathData="M54,86 L54,74 C54,70 57,67 60,67 C63,67 66,70 66,74 L66,86 Z" />
+
+    <!-- Left Arch Window -->
+    <path
+        android:fillColor="#06281E"
+        android:pathData="M40,84 L40,76 C40,73 42,71 44,71 C46,71 48,73 48,76 L48,84 Z" />
+
+    <!-- Right Arch Window -->
+    <path
+        android:fillColor="#06281E"
+        android:pathData="M72,84 L72,76 C72,73 74,71 76,71 C78,71 80,73 80,76 L80,84 Z" />
+
+    <!-- Prominent Majestic Golden Crescent Moon -->
+    <path
+        android:fillColor="#FFF3B0"
+        android:pathData="M60,40 C52,40 45,46 45,54 C45,62 52,68 60,68 C55,67 50,62 50,54 C50,46 55,41 60,40 Z" />
+
+    <!-- 5-Point Radiant Star -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M60,48 L61.5,52 L65.5,52 L62.2,54.5 L63.5,58.5 L60,56 L56.5,58.5 L57.8,54.5 L54.5,52 L58.5,52 Z" />
+
+    <!-- Ribbon Base with Islamic Gold Trim -->
+    <path
+        android:fillColor="#0A3A2C"
+        android:pathData="M30,90 L90,90 L85,99 L35,99 Z" />
+    <path
+        android:fillColor="#D4AF37"
+        android:pathData="M30,90 L90,90 L90,92 L30,92 Z" />
+    <path
+        android:fillColor="#D4AF37"
+        android:pathData="M35,97 L85,97 L85,99 L35,99 Z" />
+
+    <!-- Subtle Golden Sparkles / Accent Jewels -->
+    <path
+        android:fillColor="#FFF2A0"
+        android:pathData="M24,40 L25,37 L28,36 L25,35 L24,32 L23,35 L20,36 L23,37 Z" />
+    <path
+        android:fillColor="#FFF2A0"
+        android:pathData="M96,40 L97,37 L100,36 L97,35 L96,32 L95,35 L92,36 L95,37 Z" />
+</vector>

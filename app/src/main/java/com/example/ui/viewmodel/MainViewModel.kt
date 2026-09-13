@@ -27,6 +27,8 @@ import com.example.data.remote.RemoteContentBundle
 import com.example.data.local.entity.ChecklistRecord
 import com.example.data.local.entity.ScratchpadNote
 import com.example.data.model.AllahNameItem
+import com.example.data.model.AuroraWallpaperConfig
+import com.example.data.model.AuroraWavePreset
 import com.example.data.model.BanglaFont
 import com.example.data.model.BanglaFontWeight
 import com.example.data.model.DailyInspiration
@@ -48,6 +50,7 @@ import com.example.data.model.ThemeMode
 import com.example.data.model.ThemeStyle
 import com.example.data.repository.AppRepository
 import com.example.util.CalendarHelper
+import com.example.util.ExcludedIslamicLifeTopics
 import com.example.util.PrayerCalculator
 import com.example.util.VibrationHelper
 import kotlinx.coroutines.Dispatchers
@@ -73,10 +76,10 @@ data class AnnouncementData(
 
 enum class AppTab(val index: Int, val titleBn: String) {
     HOME(0, "হোম"),
-    DUA(1, "মাসনুন দোয়া"),
-    ROUTINE(2, "২৪ঘণ্টা আমল"),
-    CHECKLIST(3, "চেকলিস্ট"),
-    MORE(4, "ইসলামী জীবন")
+    DUA(1, "মাসনুন\u00A0দোয়া"),
+    ROUTINE(2, "২৪ঘণ্টা\u00A0আমল"),
+    TASBIH(3, "তাসবিহ"),
+    MORE(4, "ইসলামী\u00A0জীবন")
 }
 
 enum class MoreSubScreen(val titleBn: String) {
@@ -128,6 +131,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun openIslamicLifeSection(section: IslamicLifeSection) {
+        if (ExcludedIslamicLifeTopics.isExcluded(section.titleBn)) return
         _selectedIslamicSection.value = section
         _moreSubScreen.value = MoreSubScreen.ISLAMIC_LIFE_SECTION_DETAIL
     }
@@ -371,11 +375,14 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val _dynamicCategories = MutableStateFlow<List<DuaVaultData.Category>>(DuaVaultData.categories)
     val allDuaCategories = _dynamicCategories.asStateFlow()
 
-    private val _islamicLifeSections = MutableStateFlow<List<IslamicLifeSection>>(IslamicLifeData.sections)
+    private val _islamicLifeSections = MutableStateFlow<List<IslamicLifeSection>>(
+        IslamicLifeData.sections.filterNot { ExcludedIslamicLifeTopics.isExcluded(it.titleBn) }
+    )
     val islamicLifeSections: StateFlow<List<IslamicLifeSection>> = _islamicLifeSections.asStateFlow()
 
     fun getIslamicLifeSection(id: String): IslamicLifeSection? {
-        return _islamicLifeSections.value.find { it.id == id } ?: IslamicLifeData.sections.find { it.id == id }
+        val found = _islamicLifeSections.value.find { it.id == id } ?: IslamicLifeData.sections.find { it.id == id }
+        return if (found != null && !ExcludedIslamicLifeTopics.isExcluded(found.titleBn)) found else null
     }
 
     val filteredDuas = combine(
@@ -691,6 +698,37 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         setThemeStyle(random)
     }
 
+    // LIVE AURORA WALLPAPER STATE & ACTIONS
+    val auroraConfig = repository.auroraConfigFlow.stateIn(
+        viewModelScope,
+        SharingStarted.WhileSubscribed(5000),
+        AuroraWallpaperConfig()
+    )
+
+    fun updateAuroraConfig(config: AuroraWallpaperConfig) {
+        viewModelScope.launch { repository.updateAuroraConfig(config) }
+    }
+
+    fun setAuroraEnabled(enabled: Boolean) {
+        viewModelScope.launch { repository.setAuroraEnabled(enabled) }
+    }
+
+    fun setAuroraPreset(preset: AuroraWavePreset) {
+        viewModelScope.launch { repository.setAuroraPreset(preset) }
+    }
+
+    fun setAuroraIntensity(intensity: Float) {
+        viewModelScope.launch { repository.setAuroraIntensity(intensity) }
+    }
+
+    fun setAuroraSpeed(speed: Float) {
+        viewModelScope.launch { repository.setAuroraSpeed(speed) }
+    }
+
+    fun setAuroraParticles(show: Boolean) {
+        viewModelScope.launch { repository.setAuroraParticles(show) }
+    }
+
     // IN-APP PUSH UPDATE & GITHUB RELEASES ENGINE
     private val _updateAlertMessage = MutableStateFlow<String?>(null)
     val updateAlertMessage = _updateAlertMessage.asStateFlow()
@@ -843,6 +881,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         val unassignedCategoryItems = mutableMapOf<String, MutableList<IslamicLifeCardItem>>()
 
         for (remote in bundle.extraDuas) {
+            if (ExcludedIslamicLifeTopics.isExcluded(remote.category) || ExcludedIslamicLifeTopics.isExcluded(remote.titleBn)) {
+                continue
+            }
             val cardItem = IslamicLifeCardItem(
                 id = remote.id,
                 serialNumberBn = if (remote.serialNumberBn.isNotBlank()) remote.serialNumberBn else "",
@@ -866,7 +907,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 remote.category.contains("তাসবীহ", ignoreCase = true) || remote.category.contains("তাহলীল", ignoreCase = true) || remote.category.contains("জিকির", ignoreCase = true) -> "daily_dhikr_tasbih_tahlil"
                 remote.category.contains("ইমরান", ignoreCase = true) -> "surah_ali_imran_26_27"
                 remote.category.contains("বাকারা", ignoreCase = true) -> "surah_baqarah_last_2"
-                remote.category.contains("ফজর", ignoreCase = true) || remote.category.contains("মাগরিব", ignoreCase = true) -> "fajr_maghrib"
+                remote.category.contains("ফজর", ignoreCase = true) || remote.category.contains("মাগরিব", ignoreCase = true) || remote.category.contains("fajr", ignoreCase = true) -> "fajr_between_and_after"
                 else -> ""
             }
 
@@ -874,7 +915,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 extraItemsByTargetSection.getOrPut(targetSecId) { mutableListOf() }.add(cardItem)
             } else {
                 val catName = if (remote.category.isNotBlank()) remote.category else "নতুন কনটেন্ট আমল"
-                unassignedCategoryItems.getOrPut(catName) { mutableListOf() }.add(cardItem)
+                if (!ExcludedIslamicLifeTopics.isExcluded(catName)) {
+                    unassignedCategoryItems.getOrPut(catName) { mutableListOf() }.add(cardItem)
+                }
             }
         }
 
@@ -899,6 +942,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
         // For unassigned categories, create dynamic sections so they are accessible in MoreScreen
         for ((catName, itemsList) in unassignedCategoryItems) {
+            if (ExcludedIslamicLifeTopics.isExcluded(catName)) continue
             val dynamicSecId = "sec_ota_" + kotlin.math.abs(catName.hashCode())
             val existingSecIndex = updatedSections.indexOfFirst { it.id == dynamicSecId }
             if (existingSecIndex >= 0) {
@@ -914,6 +958,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 )
             }
         }
+
+        // Strictly remove any section matching excluded titles
+        updatedSections.removeAll { ExcludedIslamicLifeTopics.isExcluded(it.titleBn) }
 
         _islamicLifeSections.value = updatedSections
 

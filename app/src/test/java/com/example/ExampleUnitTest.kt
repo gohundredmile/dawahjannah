@@ -83,11 +83,22 @@ class ExampleUnitTest {
     assertEquals("dua_acceptance_times", section.id)
     assertEquals("★দোয়া কবুল হওয়ার সময় ও দোয়া★", section.titleBn)
     assertTrue(section.items.size >= 30)
-    assertTrue(section.items.any { it.titleBn.contains("গোপনে ভালো কাজের উসিলা") })
     assertTrue(section.items.any { it.titleBn.contains("২৯টি স্থান, ক্ষেত্র ও সময়") })
-    assertTrue(section.items.any { it.titleBn.contains("ইসমে আযম") })
-    assertTrue(section.items.any { it.titleBn.contains("হাঁচি দেওয়ার সুন্নাহ নিয়ম") })
-    assertTrue(section.items.any { it.titleBn.contains("সালামের সম্ভাষণ") })
+    assertTrue(section.items.any { it.titleBn.contains("সূরা ফাতিহা ও সূরা বাকারার শেষ দুই আয়াত") })
+  }
+
+  @Test
+  fun fajrAmolData_configuredCorrectly() {
+    val section = com.example.data.datasource.FajrAmolData.section
+    assertEquals("fajr_between_and_after", section.id)
+    assertEquals("★★★ফযর নামাজের মাঝে ও পরের আমল সমুহ★★★", section.titleBn)
+    assertEquals(17, section.items.size)
+    assertTrue(section.items.any { it.titleBn.contains("ফজরের সুন্নত ও ফরজের") })
+    assertTrue(section.items.any { it.titleBn.contains("সূরা আল ইমরান ২৬-২৭") })
+    assertTrue(section.items.any { it.titleBn.contains("ধনী হওয়ার আমল") })
+    assertTrue(section.items.any { it.titleBn.contains("সূরা হাশরের শেষ তিন আয়াত") })
+    assertTrue(section.items.any { it.titleBn.contains("উপকারী জ্ঞান") })
+    assertTrue(section.items.any { it.titleBn.contains("রিজিক বৃদ্ধির পরীক্ষিত আমল") })
   }
 }
 

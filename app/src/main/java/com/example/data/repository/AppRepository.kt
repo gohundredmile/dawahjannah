@@ -12,6 +12,8 @@ import com.example.data.local.entity.BookmarkEntity
 import com.example.data.local.entity.ChecklistRecord
 import com.example.data.local.entity.ScratchpadNote
 import com.example.data.model.BanglaFont
+import com.example.data.model.AuroraWallpaperConfig
+import com.example.data.model.AuroraWavePreset
 import com.example.data.model.BanglaFontWeight
 import com.example.data.model.EnglishFont
 import com.example.data.model.FontSizeScale
@@ -52,6 +54,13 @@ class AppRepository(private val context: Context) {
         val KEY_SALAT_LNG = floatPreferencesKey("salat_lng")
         val KEY_SALAT_IS_GPS = booleanPreferencesKey("salat_is_gps")
         val KEY_SALAT_OFFSET_MINS = intPreferencesKey("salat_offset_mins")
+        val KEY_AURORA_ENABLED = booleanPreferencesKey("aurora_enabled")
+        val KEY_AURORA_PRESET = stringPreferencesKey("aurora_preset")
+        val KEY_AURORA_INTENSITY = floatPreferencesKey("aurora_intensity")
+        val KEY_AURORA_SPEED = floatPreferencesKey("aurora_speed")
+        val KEY_AURORA_PARTICLES = booleanPreferencesKey("aurora_particles")
+        val KEY_AURORA_CONTOURS = booleanPreferencesKey("aurora_contours")
+        val KEY_AURORA_RAYS = booleanPreferencesKey("aurora_rays")
     }
 
     fun getTodayDateString(): String {
@@ -301,6 +310,68 @@ class AppRepository(private val context: Context) {
     suspend fun setSalatOffsetMinutes(offsetMinutes: Int) {
         context.dataStore.edit { prefs ->
             prefs[KEY_SALAT_OFFSET_MINS] = offsetMinutes
+        }
+    }
+
+    // LIVE AURORA WAVE WALLPAPER CONFIGURATION
+    val auroraConfigFlow: Flow<AuroraWallpaperConfig> = context.dataStore.data.map { prefs ->
+        val enabled = prefs[KEY_AURORA_ENABLED] ?: true
+        val presetId = prefs[KEY_AURORA_PRESET] ?: AuroraWavePreset.THEME_DYNAMIC.id
+        val intensity = prefs[KEY_AURORA_INTENSITY] ?: 0.72f
+        val speed = prefs[KEY_AURORA_SPEED] ?: 1.0f
+        val particles = prefs[KEY_AURORA_PARTICLES] ?: true
+        val contours = prefs[KEY_AURORA_CONTOURS] ?: true
+        val rays = prefs[KEY_AURORA_RAYS] ?: true
+        AuroraWallpaperConfig(
+            isEnabled = enabled,
+            preset = AuroraWavePreset.fromId(presetId),
+            intensity = intensity,
+            speed = speed,
+            showParticles = particles,
+            showWaveContours = contours,
+            showAuroraRays = rays
+        )
+    }
+
+    suspend fun updateAuroraConfig(config: AuroraWallpaperConfig) {
+        context.dataStore.edit { prefs ->
+            prefs[KEY_AURORA_ENABLED] = config.isEnabled
+            prefs[KEY_AURORA_PRESET] = config.preset.id
+            prefs[KEY_AURORA_INTENSITY] = config.intensity
+            prefs[KEY_AURORA_SPEED] = config.speed
+            prefs[KEY_AURORA_PARTICLES] = config.showParticles
+            prefs[KEY_AURORA_CONTOURS] = config.showWaveContours
+            prefs[KEY_AURORA_RAYS] = config.showAuroraRays
+        }
+    }
+
+    suspend fun setAuroraEnabled(enabled: Boolean) {
+        context.dataStore.edit { prefs ->
+            prefs[KEY_AURORA_ENABLED] = enabled
+        }
+    }
+
+    suspend fun setAuroraPreset(preset: AuroraWavePreset) {
+        context.dataStore.edit { prefs ->
+            prefs[KEY_AURORA_PRESET] = preset.id
+        }
+    }
+
+    suspend fun setAuroraIntensity(intensity: Float) {
+        context.dataStore.edit { prefs ->
+            prefs[KEY_AURORA_INTENSITY] = intensity
+        }
+    }
+
+    suspend fun setAuroraSpeed(speed: Float) {
+        context.dataStore.edit { prefs ->
+            prefs[KEY_AURORA_SPEED] = speed
+        }
+    }
+
+    suspend fun setAuroraParticles(show: Boolean) {
+        context.dataStore.edit { prefs ->
+            prefs[KEY_AURORA_PARTICLES] = show
         }
     }
 }

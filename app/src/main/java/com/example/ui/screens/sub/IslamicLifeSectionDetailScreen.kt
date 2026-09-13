@@ -86,7 +86,7 @@ fun IslamicLifeSectionDetailScreen(
         "dua_acceptance_times" -> Icons.Default.AutoAwesome
         "daily_dhikr_tasbih_tahlil" -> Icons.Default.AutoAwesome
         "salat_matters", "salam_before", "farz_after" -> Icons.Default.Mosque
-        "fajr_maghrib", "fajr_maghrib_amols" -> Icons.Default.WbSunny
+        "fajr_maghrib", "fajr_maghrib_amols", "fajr_between_and_after" -> Icons.Default.WbSunny
         "baqarah_last_two", "tawbah_last_two", "surah_baqarah_last_2" -> Icons.Default.MenuBook
         "sleep_duas", "night_awaken" -> Icons.Default.NightsStay
         "tahajjud_guide", "tahajjud_nafl" -> Icons.Default.NightsStay
@@ -100,7 +100,7 @@ fun IslamicLifeSectionDetailScreen(
         "daily_dhikr_tasbih_tahlil" -> IslamicGold
         "tahajjud_guide" -> Color(0xFF2563EB)
         "baqarah_last_two", "surah_baqarah_last_2" -> IslamicGold
-        "fajr_maghrib" -> Color(0xFFD97706)
+        "fajr_maghrib", "fajr_between_and_after" -> Color(0xFFD97706)
         "tawbah_last_two" -> Color(0xFF059669)
         "prophet_panah_duas" -> Color(0xFF7C3AED)
         "tawbah_istighfar" -> Color(0xFF0D9488)
@@ -109,15 +109,16 @@ fun IslamicLifeSectionDetailScreen(
 
     val isSalamBefore = section.id == "salam_before"
     val isFarzAfter = section.id == "farz_after"
-    val isSurahAliImran = section.id == "surah_ali_imran_26_27"
-    val isDuaRichSection = isSalamBefore || isFarzAfter || isSurahAliImran
+    val isNightAwaken = section.id == "night_awaken"
+    val isFajrBetweenAfter = section.id == "fajr_between_and_after"
+    val isDuaRichSection = isSalamBefore || isFarzAfter || isNightAwaken || isFajrBetweenAfter
 
     var searchQuery by remember { mutableStateOf("") }
     var selectedCategoryFilter by remember(section.id) {
         mutableStateOf(
             when (section.id) {
-                "surah_ali_imran_26_27" -> "সকল বিষয়"
                 "salam_before", "farz_after" -> "সকল দো'আ"
+                "night_awaken" -> "সকল বাক্য ও আমল"
                 else -> "সকল"
             }
         )
@@ -127,7 +128,7 @@ fun IslamicLifeSectionDetailScreen(
 
     val categoryFilters = remember(section.id) {
         when (section.id) {
-            "surah_ali_imran_26_27" -> listOf("সকল বিষয়", "আয়াত ও অর্থ", "ঋণমুক্তি ও বরকত", "আমলের নিয়ম ও তাৎপর্য")
+            "night_awaken" -> listOf("সকল বাক্য ও আমল", "মূল দো'আ ও হাদিস", "একই সাথে পঠিতব্য দো'আ")
             "salam_before" -> listOf("সকল দো'আ", "সালাতে সালামের পূর্বে", "কোরআনের দো'আ", "সহীহ হাদিসের দো'আ")
             "farz_after" -> listOf("সকল দো'আ", "সালামের পর প্রাথমিক", "হিদায়াত ও দ্বীন", "পানাহ ও নিরাপত্তা", "রিযিক ও বরকত", "বিশেষ আমল ও ইস্তেগফার", "শেষ পরিণতি ও জান্নাত")
             "tawbah_istighfar" -> listOf("সকল", "মৌলিক ইস্তিগফার", "৫০টি ইস্তেগফার ও দু'আ", "১৬টি গুনাহ মোচনকারী আমল")
@@ -137,9 +138,8 @@ fun IslamicLifeSectionDetailScreen(
 
     val filteredItems = remember(section.items, searchQuery, selectedCategoryFilter) {
         val baseList = when (selectedCategoryFilter) {
-            "আয়াত ও অর্থ" -> section.items.filter { it.id.startsWith("sai_quran_") }
-            "ঋণমুক্তি ও বরকত" -> section.items.filter { it.id.startsWith("sai_debt_") }
-            "আমলের নিয়ম ও তাৎপর্য" -> section.items.filter { it.id.startsWith("sai_rules_") }
+            "মূল দো'আ ও হাদিস" -> section.items.filter { it.id == "na_1" }
+            "একই সাথে পঠিতব্য দো'আ" -> section.items.filter { it.id != "na_1" }
             "সালাতে সালামের পূর্বে" -> section.items.filter { it.id.startsWith("sb_salam_") }
             "কোরআনের দো'আ" -> section.items.filter { it.id.startsWith("sb_quran_") }
             "সহীহ হাদিসের দো'আ" -> section.items.filter { it.id.startsWith("sb_hadith_") }
@@ -477,9 +477,6 @@ fun IslamicLifeSectionDetailScreen(
                             val isSelected = selectedCategoryFilter == cat
                             val count = when (cat) {
                                 "সকল বিষয়" -> section.items.size
-                                "আয়াত ও অর্থ" -> section.items.count { it.id.startsWith("sai_quran_") }
-                                "ঋণমুক্তি ও বরকত" -> section.items.count { it.id.startsWith("sai_debt_") }
-                                "আমলের নিয়ম ও তাৎপর্য" -> section.items.count { it.id.startsWith("sai_rules_") }
                                 "সকল দো'আ" -> section.items.size
                                 "সালাতে সালামের পূর্বে" -> section.items.count { it.id.startsWith("sb_salam_") }
                                 "কোরআনের দো'আ" -> section.items.count { it.id.startsWith("sb_quran_") }

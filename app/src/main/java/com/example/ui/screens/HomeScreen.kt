@@ -201,7 +201,7 @@ fun HomeScreen(
                     icon = Icons.Default.LocalFireDepartment,
                     iconTint = Color(0xFFEA580C),
                     modifier = Modifier.weight(1f),
-                    onClick = { viewModel.selectTab(AppTab.CHECKLIST) }
+                    onClick = { viewModel.selectTab(AppTab.ROUTINE) }
                 )
 
                 val completedCount = todayRecord?.completedCount ?: 0
@@ -212,7 +212,7 @@ fun HomeScreen(
                     icon = Icons.Default.CheckCircle,
                     iconTint = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.weight(1f),
-                    onClick = { viewModel.selectTab(AppTab.CHECKLIST) }
+                    onClick = { viewModel.selectTab(AppTab.ROUTINE) }
                 )
 
                 QuickActionCard(
@@ -222,8 +222,7 @@ fun HomeScreen(
                     iconTint = IslamicGold,
                     modifier = Modifier.weight(1f),
                     onClick = {
-                        viewModel.selectTab(AppTab.MORE)
-                        viewModel.navigateToMoreSubScreen(MoreSubScreen.TASBIH)
+                        viewModel.selectTab(AppTab.TASBIH)
                     }
                 )
             }

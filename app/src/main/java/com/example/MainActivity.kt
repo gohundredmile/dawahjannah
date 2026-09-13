@@ -108,7 +108,7 @@ class MainActivity : ComponentActivity() {
                             } else if (!(currentTab == AppTab.MORE && currentMoreSub != MoreSubScreen.MAIN)) {
                                 DawahTopAppBar(
                                     title = when (currentTab) {
-                                        AppTab.DUA -> "মাসনুন দোয়া ভল্ট"
+                                        AppTab.DUA -> "মাসনুন দোয়া"
                                         AppTab.ROUTINE -> "২৪ ঘণ্টার সুন্নাত আমল"
                                         AppTab.TASBIH -> "ডিজিটাল তাসবিহ ও জিকির"
                                         AppTab.MORE -> "ইসলামী জীবন"

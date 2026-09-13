@@ -65,9 +65,9 @@ fun MasnunDuaScreen(
         Surface(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 6.dp)
-                .height(42.dp),
-            shape = RoundedCornerShape(21.dp),
+                .padding(horizontal = 8.dp, vertical = 5.dp)
+                .height(40.dp),
+            shape = RoundedCornerShape(20.dp),
             color = MaterialTheme.colorScheme.surface,
             border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.25f)),
             shadowElevation = 1.dp
@@ -75,7 +75,7 @@ fun MasnunDuaScreen(
             Row(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(horizontal = 14.dp),
+                    .padding(horizontal = 12.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Icon(
@@ -94,7 +94,7 @@ fun MasnunDuaScreen(
                 ) {
                     if (searchQuery.isEmpty()) {
                         Text(
-                            text = "দোয়া খুঁজুন (নাম, উচ্চারণ, অর্থ বা হাদিস)...",
+                            text = "দোয়া খুঁজুন (নাম, উচ্চারণ, অর্থ বা বিষয়)...",
                             style = MaterialTheme.typography.bodyMedium.copy(fontSize = 13.5.sp),
                             color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.70f),
                             maxLines = 1
@@ -135,8 +135,8 @@ fun MasnunDuaScreen(
             modifier = Modifier
                 .fillMaxWidth()
                 .horizontalScroll(rememberScrollState())
-                .padding(horizontal = 16.dp, vertical = 4.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                .padding(horizontal = 8.dp, vertical = 3.dp),
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             // All Duas Chip
@@ -233,14 +233,14 @@ fun MasnunDuaScreen(
         Surface(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 4.dp),
+                .padding(horizontal = 8.dp, vertical = 3.dp),
             shape = RoundedCornerShape(10.dp),
             color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f)
         ) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 12.dp, vertical = 6.dp),
+                    .padding(horizontal = 10.dp, vertical = 5.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -251,7 +251,7 @@ fun MasnunDuaScreen(
                     fontWeight = FontWeight.Bold
                 )
                 Text(
-                    text = "সহীহ হিসনুল মুসলিম ও নির্ভরযোগ্য হাদিস",
+                    text = "বিশুদ্ধ ও প্রামাণ্য হাদিস সংকলন",
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.primary,
                     fontWeight = FontWeight.SemiBold

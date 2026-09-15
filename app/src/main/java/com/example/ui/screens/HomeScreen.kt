@@ -16,9 +16,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Campaign
 import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.LocalFireDepartment
 import androidx.compose.material.icons.filled.TouchApp
 import androidx.compose.material3.Card
@@ -66,7 +64,7 @@ fun HomeScreen(
     val todayRecord by viewModel.todayChecklistRecord.collectAsState()
     val salatConfig by viewModel.salatConfig.collectAsState()
     val gpsStatusMessage by viewModel.gpsStatusMessage.collectAsState()
-    val announcement by viewModel.activeAnnouncement.collectAsState()
+    // val announcement by viewModel.activeAnnouncement.collectAsState()
 
     var showSehriIftarFullScreen by remember { mutableStateOf(false) }
 
@@ -88,104 +86,7 @@ fun HomeScreen(
             )
         }
 
-        // 1.1 In-App Active Content & Release Announcement Banner
-        if (announcement != null && announcement?.active == true) {
-            item {
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 6.dp),
-                    shape = RoundedCornerShape(16.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.primaryContainer
-                    ),
-                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.35f))
-                ) {
-                    Column(modifier = Modifier.padding(14.dp)) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                modifier = Modifier.weight(1f)
-                            ) {
-                                Surface(
-                                    shape = CircleShape,
-                                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
-                                    modifier = Modifier.size(32.dp)
-                                ) {
-                                    Box(contentAlignment = Alignment.Center) {
-                                        Icon(
-                                            imageVector = Icons.Default.Campaign,
-                                            contentDescription = null,
-                                            tint = MaterialTheme.colorScheme.primary,
-                                            modifier = Modifier.size(18.dp)
-                                        )
-                                    }
-                                }
-                                Text(
-                                    text = announcement?.title ?: "হালনাগাদ",
-                                    style = MaterialTheme.typography.titleSmall,
-                                    fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.onPrimaryContainer
-                                )
-                            }
-                            IconButton(
-                                onClick = { viewModel.dismissAnnouncement() },
-                                modifier = Modifier.size(28.dp)
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.Close,
-                                    contentDescription = "বন্ধ করুন",
-                                    tint = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.75f),
-                                    modifier = Modifier.size(16.dp)
-                                )
-                            }
-                        }
-                        if (!announcement?.message.isNullOrBlank()) {
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Text(
-                                text = announcement!!.message,
-                                style = MaterialTheme.typography.bodySmall,
-                                fontWeight = FontWeight.Normal,
-                                color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.90f),
-                                lineHeight = 19.sp
-                            )
-                        }
-                        Spacer(modifier = Modifier.height(10.dp))
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.End,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Surface(
-                                shape = RoundedCornerShape(10.dp),
-                                color = MaterialTheme.colorScheme.primary,
-                                onClick = {
-                                    viewModel.selectTab(AppTab.MORE)
-                                    viewModel.openIslamicLifeSection(com.example.data.datasource.DuaAcceptanceTimesData.section)
-                                }
-                            ) {
-                                Row(
-                                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Text(
-                                        "ইসলামী জীবন দেখুন →",
-                                        style = MaterialTheme.typography.labelSmall,
-                                        fontWeight = FontWeight.Bold,
-                                        color = MaterialTheme.colorScheme.onPrimary
-                                    )
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
+        // 1.1 In-App Active Content & Release Announcement Banner (Hidden for optimized clean UI)
 
         // 2. Quick Action & Streak Highlights
         item {

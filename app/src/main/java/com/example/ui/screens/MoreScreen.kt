@@ -162,6 +162,44 @@ fun MoreScreen(
                 Spacer(modifier = Modifier.height(16.dp))
             }
 
+            // Featured: Surah Ali Imran 26-27 Special (★★★সূরা আল ইমরান ২৬-২৭ নং আয়াত পাঠের ফজিলত: রিজিক, সম্মান, ক্ষমতা ইজ্জত আল্লাহ দিতে পারেন★★★)
+            val aliImranSec = viewModel.getIslamicLifeSection("ali_imran_rizq_honor")
+            item {
+                val countBn = CalendarHelper.toBanglaNumber(aliImranSec?.items?.size ?: 14)
+                MoreFeatureItem(
+                    title = "★★★সূরা আল ইমরান ২৬-২৭ নং আয়াত পাঠের ফজিলত: রিজিক, সম্মান, ক্ষমতা ইজ্জত আল্লাহ দিতে পারেন★★★",
+                    subtitle = "রিজিক, সম্মান, ক্ষমতা লাভ ও পর্বতপ্রমাণ ঋণমুক্তি • সূরা আল ইমরান ২৬-২৭, সূরা হাশরের শেষ ৩ আয়াত ও সহীহ দো'আ",
+                    icon = Icons.Default.MenuBook,
+                    iconTint = IslamicGold,
+                    badge = "${countBn}টি বিশেষ আয়াত ও দো'আ • নতুন",
+                    onClick = {
+                        (viewModel.getIslamicLifeSection("ali_imran_rizq_honor") ?: IslamicLifeData.sections.find { it.id == "ali_imran_rizq_honor" })?.let {
+                            viewModel.openIslamicLifeSection(it)
+                        }
+                    }
+                )
+                Spacer(modifier = Modifier.height(10.dp))
+            }
+
+            // Featured: Morning-Evening Special Duas (★★★সকাল-সন্ধ্যার দোয়া★★★)
+            val morningEveningSec = viewModel.getIslamicLifeSection("morning_evening_special")
+            item {
+                val countBn = CalendarHelper.toBanglaNumber(morningEveningSec?.items?.size ?: 24)
+                MoreFeatureItem(
+                    title = "★★★সকাল-সন্ধ্যার দোয়া★★★",
+                    subtitle = "সকাল-সন্ধ্যায় (ফজর ও মাগরিবের পর) পড়ার শ্রেষ্ঠ সহীহ যিকর ও দু'আ • মূল আরবী, বাংলা উচ্চারণ, অর্থ ও প্রামাণ্য ফজিলত",
+                    icon = Icons.Default.WbSunny,
+                    iconTint = Color(0xFFD97706),
+                    badge = "${countBn}টি দু'আ ও আমল • নতুন",
+                    onClick = {
+                        (viewModel.getIslamicLifeSection("morning_evening_special") ?: IslamicLifeData.sections.find { it.id == "morning_evening_special" })?.let {
+                            viewModel.openIslamicLifeSection(it)
+                        }
+                    }
+                )
+                Spacer(modifier = Modifier.height(10.dp))
+            }
+
             // Featured: Sayyidul Istighfar (★★★সাইয়েদুল ইস্তেগফার আরবি★★★)
             val sayyidulSec = viewModel.getIslamicLifeSection("sayyidul_istighfar_special")
             item {

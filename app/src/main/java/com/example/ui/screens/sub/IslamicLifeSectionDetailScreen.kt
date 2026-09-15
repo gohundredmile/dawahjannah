@@ -87,6 +87,7 @@ fun IslamicLifeSectionDetailScreen(
     val context = LocalContext.current
 
     val sectionIcon = when (section.id) {
+        "morning_evening_special" -> Icons.Default.WbSunny
         "sayyidul_istighfar_special" -> Icons.Default.Star
         "asmaul_husna_special" -> Icons.Default.Star
         "five_waqt_after_salat", "friday_special_duas" -> Icons.Default.Mosque
@@ -103,6 +104,8 @@ fun IslamicLifeSectionDetailScreen(
     }
 
     val iconTint = when (section.id) {
+        "ali_imran_rizq_honor" -> IslamicGold
+        "morning_evening_special" -> Color(0xFFD97706)
         "sayyidul_istighfar_special" -> IslamicGold
         "asmaul_husna_special" -> IslamicGold
         "five_waqt_after_salat", "friday_special_duas" -> Color(0xFF0D9488)
@@ -117,6 +120,7 @@ fun IslamicLifeSectionDetailScreen(
         else -> MaterialTheme.colorScheme.primary
     }
 
+    val isAliImranRizq = section.id == "ali_imran_rizq_honor"
     val isSalamBefore = section.id == "salam_before"
     val isFarzAfter = section.id == "farz_after"
     val isNightAwaken = section.id == "night_awaken"
@@ -125,12 +129,15 @@ fun IslamicLifeSectionDetailScreen(
     val isFridaySpecial = section.id == "friday_special_duas"
     val isAsmaulHusna = section.id == "asmaul_husna_special"
     val isSayyidulIstighfar = section.id == "sayyidul_istighfar_special"
-    val isDuaRichSection = isSalamBefore || isFarzAfter || isNightAwaken || isFajrBetweenAfter || isFiveWaqtAfter || isFridaySpecial || isAsmaulHusna || isSayyidulIstighfar
+    val isMorningEvening = section.id == "morning_evening_special"
+    val isDuaRichSection = isAliImranRizq || isSalamBefore || isFarzAfter || isNightAwaken || isFajrBetweenAfter || isFiveWaqtAfter || isFridaySpecial || isAsmaulHusna || isSayyidulIstighfar || isMorningEvening
 
     var searchQuery by remember { mutableStateOf("") }
     var selectedCategoryFilter by remember(section.id) {
         mutableStateOf(
             when (section.id) {
+                "ali_imran_rizq_honor" -> "সকল বিষয় ও দো'আ"
+                "morning_evening_special" -> "সকল দো'আ ও আমল"
                 "sayyidul_istighfar_special" -> "সকল অধ্যায়"
                 "asmaul_husna_special" -> "সকল আমল ও নাম"
                 "salam_before", "farz_after", "five_waqt_after_salat" -> "সকল দো'আ"
@@ -145,6 +152,8 @@ fun IslamicLifeSectionDetailScreen(
 
     val categoryFilters = remember(section.id) {
         when (section.id) {
+            "ali_imran_rizq_honor" -> listOf("সকল বিষয় ও দো'আ", "সূরা আল ইমরান ও ঋণমুক্তি", "সূরা হাশরের শেষ ৩ আয়াত", "রিযিক ও ঋণমুক্তির সহীহ দো'আ", "তাহকীক ও তাওয়াক্কুল গাইড")
+            "morning_evening_special" -> listOf("সকল দো'আ ও আমল", "ফরজ সালাত পরবর্তী", "হেফাজত ও নিরাপত্তা", "ক্ষমা ও জান্নাত লাভ", "তাওহীদ ও তাসবীহাত", "ফিকহ ও আদব গাইড")
             "sayyidul_istighfar_special" -> listOf("সকল অধ্যায়", "মূল দো'আ ও সনদ", "শ্রেষ্ঠত্ব ও শব্দার্থ", "কুরআন ও হাদিস", "আমলের নিয়ম ও রুটিন", "তুলনামূলক তালিকা ও FAQ")
             "asmaul_husna_special" -> listOf("সকল আমল ও নাম", "কুরআন, হাদিস ও গাইড", "প্রয়োজনভিত্তিক দো'আ", "নাম ১–২০", "নাম ২১–৫০", "নাম ৫১–৯৯", "রুটিন ও FAQ")
             "friday_special_duas" -> listOf("সকল আমল ও দো'আ", "মর্যাদা ও আদব", "নফল ও সুন্নাত সালাত", "কুরআনী সূরা ও দরূদ", "যিকির ও তাসবীহাত", "দো'আ কবুল ও খাস দো'আ", "তাহকীক, রুটিন ও FAQ")
@@ -160,6 +169,15 @@ fun IslamicLifeSectionDetailScreen(
 
     val filteredItems = remember(section.items, searchQuery, selectedCategoryFilter) {
         val baseList = when (selectedCategoryFilter) {
+            "সূরা আল ইমরান ও ঋণমুক্তি" -> section.items.filter { it.id in listOf("ai_guideline_tawakkul", "ai_main_verses_26_27", "ai_muadh_hadith_debt_dua", "ai_amal_rules_and_virtues") }
+            "সূরা হাশরের শেষ ৩ আয়াত" -> section.items.filter { it.id in listOf("ai_hashr_taawwudh", "ai_hashr_ayah_22", "ai_hashr_ayah_23", "ai_hashr_ayah_24") }
+            "রিযিক ও ঋণমুক্তির সহীহ দো'আ" -> section.items.filter { it.id in listOf("ai_ali_hadith_debt_dua", "ai_anxiety_debt_bukhari", "ai_durood_ibrahim_bridge", "ai_istighfar_surah_nuh", "ai_fajr_morning_rizq") }
+            "তাহকীক ও তাওয়াক্কুল গাইড" -> section.items.filter { it.id in listOf("ai_guideline_tawakkul", "ai_amal_rules_and_virtues", "ai_tahqeeq_faq_guide") }
+            "ফরজ সালাত পরবর্তী" -> section.items.filter { it.id in listOf("me_ayatul_kursi", "me_ajirni_minan_nar", "me_three_quls", "me_durood_sharif", "me_hasbiyallah", "me_subhanallahi_adada_khalqihi", "me_ilman_nafian") }
+            "হেফাজত ও নিরাপত্তা" -> section.items.filter { it.id in listOf("me_ayatul_kursi", "me_three_quls", "me_bismillahilladhi", "me_audhu_bikalimatillah", "me_allahumma_afini_fi_badani", "me_allahumma_inni_as_alukal_afwa", "me_alimul_ghaybi", "me_shirk_protection", "me_hammi_wal_hazan") }
+            "ক্ষমা ও জান্নাত লাভ" -> section.items.filter { it.id in listOf("me_ajirni_minan_nar", "me_durood_sharif", "me_radeetu_billah", "me_sayyidul_istighfar", "me_nasalukal_jannah", "me_allahumma_ushhiduka", "me_subhanallahi_wa_bihamdihi_hundred", "me_astaghfirullah_hundred") }
+            "তাওহীদ ও তাসবীহাত" -> section.items.filter { it.id in listOf("me_hasbiyallah", "me_ya_hayyu_ya_qayyum", "me_subhanallahi_adada_khalqihi", "me_asbahna_wa_asbahal_mulk", "me_allahumma_bika_asbahna", "me_allahumma_ma_asbaha_bi", "me_la_ilaha_illallah_ten", "me_la_ilaha_illallah_hundred", "me_subhanallahi_wa_bihamdihi_hundred", "me_fitratil_islam", "me_khayra_hadhal_yawm") }
+            "ফিকহ ও আদব গাইড" -> section.items.filter { it.id in listOf("me_fiqh_routine_guide") }
             "মূল দো'আ ও সনদ" -> section.items.filter { it.id in listOf("si_concept", "si_which_surah_clarification", "si_hadith_sanad", "si_full_dua_text", "si_virtues_jannah") }
             "শ্রেষ্ঠত্ব ও শব্দার্থ", "শব্দার্থ ও তাওবার রোকন" -> section.items.filter { it.id in listOf("si_why_sayyid", "si_word_by_word_analysis", "si_tawbah_pillars", "si_ahad_wad_tafseer") }
             "কুরআন ও হাদিস", "কুরআন ও হাদিসের ফযিলত" -> section.items.filter { it.id in listOf("si_quran_verses", "si_hadiths_forgiveness", "si_sahabi_profile") }
@@ -524,8 +542,16 @@ fun IslamicLifeSectionDetailScreen(
                         items(categoryFilters) { cat ->
                             val isSelected = selectedCategoryFilter == cat
                             val count = when (cat) {
-                                "সকল বিষয়" -> section.items.size
-                                "সকল দো'আ" -> section.items.size
+                                "সকল বিষয়", "সকল দো'আ", "সকল আমল ও দো'আ", "সকল দো'আ ও আমল", "সকল অধ্যায়", "সকল আমল ও নাম", "সকল বাক্য ও আমল", "সকল বিষয় ও দো'আ" -> section.items.size
+                                "সূরা আল ইমরান ও ঋণমুক্তি" -> section.items.count { it.id in listOf("ai_guideline_tawakkul", "ai_main_verses_26_27", "ai_muadh_hadith_debt_dua", "ai_amal_rules_and_virtues") }
+                                "সূরা হাশরের শেষ ৩ আয়াত" -> section.items.count { it.id in listOf("ai_hashr_taawwudh", "ai_hashr_ayah_22", "ai_hashr_ayah_23", "ai_hashr_ayah_24") }
+                                "রিযিক ও ঋণমুক্তির সহীহ দো'আ" -> section.items.count { it.id in listOf("ai_ali_hadith_debt_dua", "ai_anxiety_debt_bukhari", "ai_durood_ibrahim_bridge", "ai_istighfar_surah_nuh", "ai_fajr_morning_rizq") }
+                                "তাহকীক ও তাওয়াক্কুল গাইড" -> section.items.count { it.id in listOf("ai_guideline_tawakkul", "ai_amal_rules_and_virtues", "ai_tahqeeq_faq_guide") }
+                                "ফরজ সালাত পরবর্তী" -> section.items.count { it.id in listOf("me_ayatul_kursi", "me_ajirni_minan_nar", "me_three_quls", "me_durood_sharif", "me_hasbiyallah", "me_subhanallahi_adada_khalqihi", "me_ilman_nafian") }
+                                "হেফাজত ও নিরাপত্তা" -> section.items.count { it.id in listOf("me_ayatul_kursi", "me_three_quls", "me_bismillahilladhi", "me_audhu_bikalimatillah", "me_allahumma_afini_fi_badani", "me_allahumma_inni_as_alukal_afwa", "me_alimul_ghaybi", "me_shirk_protection", "me_hammi_wal_hazan") }
+                                "ক্ষমা ও জান্নাত লাভ" -> section.items.count { it.id in listOf("me_ajirni_minan_nar", "me_durood_sharif", "me_radeetu_billah", "me_sayyidul_istighfar", "me_nasalukal_jannah", "me_allahumma_ushhiduka", "me_subhanallahi_wa_bihamdihi_hundred", "me_astaghfirullah_hundred") }
+                                "তাওহীদ ও তাসবীহাত" -> section.items.count { it.id in listOf("me_hasbiyallah", "me_ya_hayyu_ya_qayyum", "me_subhanallahi_adada_khalqihi", "me_asbahna_wa_asbahal_mulk", "me_allahumma_bika_asbahna", "me_allahumma_ma_asbaha_bi", "me_la_ilaha_illallah_ten", "me_la_ilaha_illallah_hundred", "me_subhanallahi_wa_bihamdihi_hundred", "me_fitratil_islam", "me_khayra_hadhal_yawm") }
+                                "ফিকহ ও আদব গাইড" -> section.items.count { it.id in listOf("me_fiqh_routine_guide") }
                                 "সালাতে সালামের পূর্বে" -> section.items.count { it.id.startsWith("sb_salam_") }
                                 "কোরআনের দো'আ" -> section.items.count { it.id.startsWith("sb_quran_") }
                                 "সহীহ হাদিসের দো'আ" -> section.items.count { it.id.startsWith("sb_hadith_") }
@@ -538,7 +564,6 @@ fun IslamicLifeSectionDetailScreen(
                                 "মৌলিক ইস্তিগফার" -> section.items.count { it.id.startsWith("ti_") && !it.id.startsWith("ti_dua_") && !it.id.startsWith("ti_deed_") }
                                 "৫০টি ইস্তেগফার ও দু'আ" -> section.items.count { it.id.startsWith("ti_dua_") }
                                 "১৬টি গুনাহ মোচনকারী আমল" -> section.items.count { it.id.startsWith("ti_deed_") }
-                                "সকল আমল ও দো'আ" -> section.items.size
                                 "মর্যাদা ও আদব", "মর্যাদা ও সুন্নাত" -> section.items.count { it.id in listOf("fa_quran_jumuah", "fa_virtue_concept", "fa_ghusl_miswak", "fa_early_to_masjid", "fa_sunnah_adab", "fa_walk_to_masjid", "fa_khutbah_adab", "fa_jumuah_death_virtue", "fa_adab_ihtiba_forbidden", "fa_adab_shift_place_drowsy", "fa_warning_fasting_friday_alone") }
                                 "নফল ও সুন্নাত সালাত" -> section.items.count { it.id in listOf("fa_tahiyyatul_masjid_khutbah", "fa_salat_before_jumuah", "fa_salat_after_jumuah", "fa_salatut_tasbeeh") }
                                 "কুরআনী সূরা ও দরূদ" -> section.items.count { it.id in listOf("fa_surah_kahaf", "fa_surah_fajr_jumuah", "fa_durood_sharif", "fa_surah_jumuah_reflection", "fa_surah_munafiqun_warning", "fa_surah_ala_ghashiyah", "fa_surah_three_quls") }

@@ -6,6 +6,9 @@ import com.example.data.model.IslamicLifeSection
 object IslamicLifeData {
 
     val sections: List<IslamicLifeSection> = listOf(
+        // ★★★সালাত ও দোয়া★★★
+        SalatAndDuaData.section,
+
         // ★★★সূরা আল ইমরান ২৬-২৭ নং আয়াত পাঠের ফজিলত: রিজিক, সম্মান, ক্ষমতা ইজ্জত আল্লাহ দিতে পারেন★★★
         SurahAliImranRizqData.section,
 

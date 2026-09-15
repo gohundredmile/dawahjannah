@@ -162,6 +162,25 @@ fun MoreScreen(
                 Spacer(modifier = Modifier.height(16.dp))
             }
 
+            // Featured: Salat and Dua Special (★★★সালাত ও দোয়া★★★)
+            val salatDuaSec = viewModel.getIslamicLifeSection("salat_and_dua_special")
+            item {
+                val countBn = CalendarHelper.toBanglaNumber(salatDuaSec?.items?.size ?: 28)
+                MoreFeatureItem(
+                    title = "★★★সালাত ও দোয়া★★★",
+                    subtitle = "সিজদায় দো'আ • বিত্রের কুনূত ও যিকির • জামা'আত ওয়াজিব ও কাযা বিধান • কিয়ামতে প্রথম হিসাব ও ফজরের ৭টি ফজিলত",
+                    icon = Icons.Default.Mosque,
+                    iconTint = Color(0xFF0D9488),
+                    badge = "${countBn}টি প্রামাণ্য আমল • নতুন",
+                    onClick = {
+                        (viewModel.getIslamicLifeSection("salat_and_dua_special") ?: IslamicLifeData.sections.find { it.id == "salat_and_dua_special" })?.let {
+                            viewModel.openIslamicLifeSection(it)
+                        }
+                    }
+                )
+                Spacer(modifier = Modifier.height(10.dp))
+            }
+
             // Featured: Surah Ali Imran 26-27 Special (★★★সূরা আল ইমরান ২৬-২৭ নং আয়াত পাঠের ফজিলত: রিজিক, সম্মান, ক্ষমতা ইজ্জত আল্লাহ দিতে পারেন★★★)
             val aliImranSec = viewModel.getIslamicLifeSection("ali_imran_rizq_honor")
             item {

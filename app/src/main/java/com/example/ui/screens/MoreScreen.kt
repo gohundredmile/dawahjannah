@@ -162,6 +162,44 @@ fun MoreScreen(
                 Spacer(modifier = Modifier.height(16.dp))
             }
 
+            // Featured: Sayyidul Istighfar (★★★সাইয়েদুল ইস্তেগফার আরবি★★★)
+            val sayyidulSec = viewModel.getIslamicLifeSection("sayyidul_istighfar_special")
+            item {
+                val countBn = CalendarHelper.toBanglaNumber(sayyidulSec?.items?.size ?: 19)
+                MoreFeatureItem(
+                    title = "★★★সাইয়েদুল ইস্তেগফার আরবি★★★",
+                    subtitle = "সাইয়েদুল ইস্তেগফার আরবি, বাংলা উচ্চারণ, অর্থ, ফজিলত ও আমল • সহীহ বুখারী ও সিহাহ সিত্তাহ ভিত্তিক বিশ্লেষণ",
+                    icon = Icons.Default.Star,
+                    iconTint = IslamicGold,
+                    badge = "${countBn}টি পূর্ণ অধ্যায় • নতুন",
+                    onClick = {
+                        (viewModel.getIslamicLifeSection("sayyidul_istighfar_special") ?: IslamicLifeData.sections.find { it.id == "sayyidul_istighfar_special" })?.let {
+                            viewModel.openIslamicLifeSection(it)
+                        }
+                    }
+                )
+                Spacer(modifier = Modifier.height(10.dp))
+            }
+
+            // Featured: Asmaul Husna Special (★★★আসমাউল হুসনা (আল্লাহর ৯৯টি পবিত্র নাম) বাংলা অর্থ সহ ফজিলত★★★)
+            val asmaSec = viewModel.getIslamicLifeSection("asmaul_husna_special")
+            item {
+                val countBn = CalendarHelper.toBanglaNumber(asmaSec?.items?.size ?: 16)
+                MoreFeatureItem(
+                    title = "★★★আসমাউল হুসনা (আল্লাহর ৯৯টি পবিত্র নাম) বাংলা অর্থ সহ ফজিলত★★★",
+                    subtitle = "পবিত্র কুরআন ও সিহাহ সিত্তাহ সহীহ হাদীস ভিত্তিক ৯৯টি পবিত্র নাম, অর্থ, বিশুদ্ধ ফজিলত ও প্রয়োজনভিত্তিক দো'আ",
+                    icon = Icons.Default.Star,
+                    iconTint = IslamicGold,
+                    badge = "${countBn}টি প্রামাণ্য পাঠ • নতুন",
+                    onClick = {
+                        (viewModel.getIslamicLifeSection("asmaul_husna_special") ?: IslamicLifeData.sections.find { it.id == "asmaul_husna_special" })?.let {
+                            viewModel.openIslamicLifeSection(it)
+                        } ?: viewModel.navigateToMoreSubScreen(MoreSubScreen.NAMES_OF_ALLAH)
+                    }
+                )
+                Spacer(modifier = Modifier.height(10.dp))
+            }
+
             // Featured: Friday Special Duas & Amols (★★★শুক্রবারের বিশেষ দোয়া ও আমল★★★)
             val fridaySec = viewModel.getIslamicLifeSection("friday_special_duas")
             item {
@@ -492,6 +530,8 @@ private fun IslamicLifeSectionNavCard(
     onClick: () -> Unit
 ) {
     val sectionIcon = when (section.id) {
+        "sayyidul_istighfar_special" -> Icons.Default.Star
+        "asmaul_husna_special" -> Icons.Default.Star
         "five_waqt_after_salat" -> Icons.Default.Mosque
         "daily_dhikr_tasbih_tahlil" -> Icons.Default.AutoAwesome
         "salat_matters", "salam_before", "farz_after" -> Icons.Default.Mosque
@@ -505,6 +545,7 @@ private fun IslamicLifeSectionNavCard(
     }
 
     val iconTint = when (section.id) {
+        "sayyidul_istighfar_special", "asmaul_husna_special" -> IslamicGold
         "five_waqt_after_salat" -> Color(0xFF0D9488)
         "daily_dhikr_tasbih_tahlil" -> IslamicGold
         "tahajjud_guide" -> Color(0xFF2563EB)

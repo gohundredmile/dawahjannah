@@ -6,6 +6,12 @@ import com.example.data.model.IslamicLifeSection
 object IslamicLifeData {
 
     val sections: List<IslamicLifeSection> = listOf(
+        // ★★★সাইয়েদুল ইস্তেগফার আরবি★★★
+        SayyidulIstighfarData.section,
+
+        // ★★★আসমাউল হুসনা (আল্লাহর ৯৯টি পবিত্র নাম) বাংলা অর্থ সহ ফজিলত★★★
+        AsmaulHusnaSpecialData.section,
+
         // ★★★শুক্রবারের বিশেষ দোয়া ও আমল★★★
         FridaySpecialDuaAmolData.section,
 

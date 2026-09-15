@@ -135,7 +135,7 @@ class ExampleUnitTest {
     val section = com.example.data.datasource.FridaySpecialDuaAmolData.section
     assertEquals("friday_special_duas", section.id)
     assertEquals("★★★শুক্রবারের বিশেষ দোয়া ও আমল★★★", section.titleBn)
-    assertEquals(25, section.items.size)
+    assertEquals(45, section.items.size)
     assertTrue(section.items.any { it.titleBn.contains("কুরআনে জুম্মার দিনের নির্দেশনা") })
     assertTrue(section.items.any { it.titleBn.contains("জুমার দিনের অপরিসীম মর্যাদা") })
     assertTrue(section.items.any { it.titleBn.contains("গোসল") })
@@ -154,11 +154,48 @@ class ExampleUnitTest {
     assertTrue(section.items.any { it.titleBn.contains("ভিত্তিহীন") || it.titleBn.contains("সতর্কতা") })
     assertTrue(section.items.any { it.titleBn.contains("চেকলিস্ট") })
     assertTrue(section.items.any { it.titleBn.contains("FAQ") })
+    // New additions (items 26-45)
+    assertTrue(section.items.any { it.titleBn.contains("তাহিয়্যাতুল মসজিদ") })
+    assertTrue(section.items.any { it.titleBn.contains("সালাতুত তাসবীহ") })
+    assertTrue(section.items.any { it.titleBn.contains("সূরা আল-জুমু'আ") || it.titleBn.contains("সূরা আল-জুমু‘আ") })
+    assertTrue(section.items.any { it.titleBn.contains("কালেমাতানে হাবিবাতানে") || it.titleBn.contains("মীযানের পাল্লায়") })
+    assertTrue(section.items.any { it.titleBn.contains("লা হাওলা") || it.titleBn.contains("রত্নভাণ্ডার") })
+    assertTrue(section.items.any { it.titleBn.contains("পিতা-মাতার") })
+    assertTrue(section.items.any { it.titleBn.contains("শিরক") })
 
     // Verify presence in IslamicLifeData
     val registered = com.example.data.datasource.IslamicLifeData.sections.find { it.id == "friday_special_duas" }
     assertNotNull(registered)
-    assertEquals(25, registered?.items?.size)
+    assertEquals(45, registered?.items?.size)
+  }
+
+  @Test
+  fun asmaulHusnaSpecialData_configuredCorrectly() {
+    val section = com.example.data.datasource.AsmaulHusnaSpecialData.section
+    assertEquals("asmaul_husna_special", section.id)
+    assertEquals("★★★আসমাউল হুসনা (আল্লাহর ৯৯টি পবিত্র নাম) বাংলা অর্থ সহ ফজিলত★★★", section.titleBn)
+    assertEquals(16, section.items.size)
+    assertTrue(section.items.any { it.titleBn.contains("কুরআনের সুস্পষ্ট নির্দেশ") })
+    assertTrue(section.items.any { it.titleBn.contains("জান্নাতী সুসংবাদ") })
+    assertTrue(section.items.any { it.titleBn.contains("৪টি অনন্য বিশুদ্ধ ফজিলত") })
+    assertTrue(section.items.any { it.titleBn.contains("গুনাহ মাফ ও তওবা") })
+    assertTrue(section.items.any { it.titleBn.contains("রিযিক") })
+    assertTrue(section.items.any { it.titleBn.contains("রোগব্যাধি") || it.titleBn.contains("আরোগ্য") })
+    assertTrue(section.items.any { it.titleBn.contains("জ্ঞান") || it.titleBn.contains("প্রজ্ঞা") })
+    assertTrue(section.items.any { it.titleBn.contains("বিপদ") || it.titleBn.contains("নিরাপত্তা") })
+    assertTrue(section.items.any { it.titleBn.contains("মুখস্থ") })
+    assertTrue(section.items.any { it.titleBn.contains("FAQ") })
+    assertTrue(section.items.any { it.titleBn.contains("১–১০") })
+    assertTrue(section.items.any { it.titleBn.contains("১১–২০") })
+    assertTrue(section.items.any { it.titleBn.contains("২১–৩৫") })
+    assertTrue(section.items.any { it.titleBn.contains("৩৬–৫০") })
+    assertTrue(section.items.any { it.titleBn.contains("৫১–৭০") })
+    assertTrue(section.items.any { it.titleBn.contains("৭১–৯৯") })
+
+    // Verify registration in IslamicLifeData
+    val registered = com.example.data.datasource.IslamicLifeData.sections.find { it.id == "asmaul_husna_special" }
+    assertNotNull(registered)
+    assertEquals(16, registered?.items?.size)
   }
 }
 

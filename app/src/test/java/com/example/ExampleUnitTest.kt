@@ -81,9 +81,9 @@ class ExampleUnitTest {
   fun duaAcceptanceTimes_dataConfiguredCorrectly() {
     val section = com.example.data.datasource.DuaAcceptanceTimesData.section
     assertEquals("dua_acceptance_times", section.id)
-    assertEquals("★দোয়া কবুল হওয়ার সময় ও দোয়া★", section.titleBn)
+    assertEquals("★★★দোয়া কবুল হওয়ার সময় ও দোয়া★★★", section.titleBn)
     assertTrue(section.items.size >= 30)
-    assertTrue(section.items.any { it.titleBn.contains("২৯টি স্থান, ক্ষেত্র ও সময়") })
+    assertTrue(section.items.any { it.titleBn.contains("স্থান, ক্ষেত্র ও বরকতময় সময়") })
     assertTrue(section.items.any { it.titleBn.contains("সূরা ফাতিহা ও সূরা বাকারার শেষ দুই আয়াত") })
   }
 
@@ -99,6 +99,66 @@ class ExampleUnitTest {
     assertTrue(section.items.any { it.titleBn.contains("সূরা হাশরের শেষ তিন আয়াত") })
     assertTrue(section.items.any { it.titleBn.contains("উপকারী জ্ঞান") })
     assertTrue(section.items.any { it.titleBn.contains("রিজিক বৃদ্ধির পরীক্ষিত আমল") })
+  }
+
+  @Test
+  fun nightAmolSleepDuaData_configuredCorrectly() {
+    val section = com.example.data.datasource.NightAmolSleepDuaData.section
+    assertEquals("sleep_duas", section.id)
+    assertEquals("★★★রাতের আমলঃ ঘুমানোর দোয়া সমুহ★★★", section.titleBn)
+    assertEquals(33, section.items.size)
+    assertTrue(section.items.any { it.titleBn.contains("সূরা আল-মুলক") })
+    assertTrue(section.items.any { it.titleBn.contains("সূরা আস-সাজদা") })
+    assertTrue(section.items.any { it.titleBn.contains("আয়াতুল কুরসী") })
+    assertTrue(section.items.any { it.titleBn.contains("সূরা আল-বাকারার শেষ দুই আয়াত") })
+    assertTrue(section.items.any { it.titleBn.contains("সূরা আল-ইখলাস") })
+    assertTrue(section.items.any { it.titleBn.contains("সূরা আল-কাফিরুন") })
+    assertTrue(section.items.any { it.titleBn.contains("সূরা আল-ইসরা-র শেষ আয়াত ও সূরা আয-যুমার") })
+    assertTrue(section.items.any { it.titleBn.contains("ঘুমানোর মূল দোয়া — ১") })
+    assertTrue(section.items.any { it.titleBn.contains("ঘুমানোর মূল দোয়া — ২") })
+    assertTrue(section.items.any { it.titleBn.contains("ঘুমানোর ব্যাপক দোয়া — ৪") })
+    assertTrue(section.items.any { it.titleBn.contains("ঘুমানোর দোয়া — ৬") })
+    assertTrue(section.items.any { it.titleBn.contains("তাসবীহ") })
+    assertTrue(section.items.any { it.titleBn.contains("শরীরের সুরক্ষার পূর্ণাঙ্গ দোয়া ও বিছানা ঝাড়া") })
+    assertTrue(section.items.any { it.titleBn.contains("ঘুম আসার দোয়া বা রাতে ঘুম না আসলে") })
+    assertTrue(section.items.any { it.titleBn.contains("দুঃস্বপ্ন দেখলে করণীয় ৫টি মাসনূন সুন্নাত আমল") })
+    assertTrue(section.items.any { it.titleBn.contains("১০টি গুরুত্বপূর্ণ সুন্নাত আমল ও আদব") })
+    assertTrue(section.items.any { it.titleBn.contains("১৩টি ধাপের পূর্ণাঙ্গ রুটিন") })
+    assertTrue(section.items.any { it.titleBn.contains("ঘুম থেকে ওঠার দোয়া — ১") })
+    assertTrue(section.items.any { it.titleBn.contains("ঘুম থেকে ওঠার দোয়া — ২") })
+    assertTrue(section.items.any { it.titleBn.contains("ছোট বাচ্চাদের ঘুমানোর দোয়া") })
+    assertTrue(section.items.any { it.titleBn.contains("সর্বাধিক জিজ্ঞাসিত প্রশ্ন (FAQ)") })
+  }
+
+  @Test
+  fun fridaySpecialDuaAmolData_configuredCorrectly() {
+    val section = com.example.data.datasource.FridaySpecialDuaAmolData.section
+    assertEquals("friday_special_duas", section.id)
+    assertEquals("★★★শুক্রবারের বিশেষ দোয়া ও আমল★★★", section.titleBn)
+    assertEquals(25, section.items.size)
+    assertTrue(section.items.any { it.titleBn.contains("কুরআনে জুম্মার দিনের নির্দেশনা") })
+    assertTrue(section.items.any { it.titleBn.contains("জুমার দিনের অপরিসীম মর্যাদা") })
+    assertTrue(section.items.any { it.titleBn.contains("গোসল") })
+    assertTrue(section.items.any { it.titleBn.contains("মসজিদে যাওয়া") || it.titleBn.contains("মসজিদে যাওয়ার") })
+    assertTrue(section.items.any { it.titleBn.contains("সুগন্ধি") || it.titleBn.contains("পোশাক") })
+    assertTrue(section.items.any { it.titleBn.contains("খুতবা চলাকালীন কঠোর আদব") })
+    assertTrue(section.items.any { it.titleBn.contains("সূরা আল-কাহাফ") })
+    assertTrue(section.items.any { it.titleBn.contains("দরূদ") })
+    assertTrue(section.items.any { it.titleBn.contains("সা'আতুল ইজাবাহ") || it.titleBn.contains("দো'আ কবুল") })
+    assertTrue(section.items.any { it.titleBn.contains("সাইয়্যিদুল ইস্তিগফার") || it.titleBn.contains("সাইয়্যিদুল ইস্তিগফার") })
+    assertTrue(section.items.any { it.titleBn.contains("সার্বিক কল্যাণ ও জাহান্নাম মুক্তির দো'আ") })
+    assertTrue(section.items.any { it.titleBn.contains("জান্নাত") })
+    assertTrue(section.items.any { it.titleBn.contains("হেদায়াত") || it.titleBn.contains("তাকওয়া") })
+    assertTrue(section.items.any { it.titleBn.contains("উপকারী ইলম") || it.titleBn.contains("উপকারী জ্ঞান") })
+    assertTrue(section.items.any { it.titleBn.contains("দুশ্চিন্তা") })
+    assertTrue(section.items.any { it.titleBn.contains("ভিত্তিহীন") || it.titleBn.contains("সতর্কতা") })
+    assertTrue(section.items.any { it.titleBn.contains("চেকলিস্ট") })
+    assertTrue(section.items.any { it.titleBn.contains("FAQ") })
+
+    // Verify presence in IslamicLifeData
+    val registered = com.example.data.datasource.IslamicLifeData.sections.find { it.id == "friday_special_duas" }
+    assertNotNull(registered)
+    assertEquals(25, registered?.items?.size)
   }
 }
 

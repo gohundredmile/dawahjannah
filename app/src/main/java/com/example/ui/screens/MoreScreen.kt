@@ -162,6 +162,25 @@ fun MoreScreen(
                 Spacer(modifier = Modifier.height(16.dp))
             }
 
+            // Featured: Friday Special Duas & Amols (★★★শুক্রবারের বিশেষ দোয়া ও আমল★★★)
+            val fridaySec = viewModel.getIslamicLifeSection("friday_special_duas")
+            item {
+                val countBn = CalendarHelper.toBanglaNumber(fridaySec?.items?.size ?: 16)
+                MoreFeatureItem(
+                    title = "★★★শুক্রবারের বিশেষ দোয়া ও আমল★★★",
+                    subtitle = "জুমার দিনের মর্যাদা, প্রধান ৫ সুন্নাত, অকল্পনীয় সওয়াব, সূরা কাহাফ, সা'আতুল ইজাবাহ ও বিশেষ সহীহ দো'আ",
+                    icon = Icons.Default.Mosque,
+                    iconTint = Color(0xFF0D9488),
+                    badge = "${countBn}টি আমল • নতুন",
+                    onClick = {
+                        (viewModel.getIslamicLifeSection("friday_special_duas") ?: IslamicLifeData.sections.find { it.id == "friday_special_duas" })?.let {
+                            viewModel.openIslamicLifeSection(it)
+                        }
+                    }
+                )
+                Spacer(modifier = Modifier.height(10.dp))
+            }
+
             // Featured: Salam Before Duas (New - 56 Duas with Live Aurora & Tabs)
             item {
                 val countBn = CalendarHelper.toBanglaNumber(salamSec?.items?.size ?: 56)
@@ -173,6 +192,25 @@ fun MoreScreen(
                     badge = "${countBn}টি দো'আ • লাইভ অরোরা",
                     onClick = {
                         (viewModel.getIslamicLifeSection("salam_before") ?: IslamicLifeData.sections.find { it.id == "salam_before" })?.let {
+                            viewModel.openIslamicLifeSection(it)
+                        }
+                    }
+                )
+                Spacer(modifier = Modifier.height(10.dp))
+            }
+
+            // Featured: 5 Waqt Salat Shesh e Duas (New)
+            val fiveWaqtSec = viewModel.getIslamicLifeSection("five_waqt_after_salat")
+            item {
+                val countBn = CalendarHelper.toBanglaNumber(fiveWaqtSec?.items?.size ?: 7)
+                MoreFeatureItem(
+                    title = "★★★৫ ওয়াক্ত সালাত শেষে দো‘আ সমুহ★★★",
+                    subtitle = "৫ ওয়াক্ত সালাতের পর সংকট মুক্তি, দো'আ কবুল, রিযিক বৃদ্ধি ও সাহায্য লাভের ${countBn}টি বিশেষ দো'আ ও আমল",
+                    icon = Icons.Default.Mosque,
+                    iconTint = Color(0xFF0D9488),
+                    badge = "${countBn}টি দো'আ • নতুন",
+                    onClick = {
+                        (viewModel.getIslamicLifeSection("five_waqt_after_salat") ?: IslamicLifeData.sections.find { it.id == "five_waqt_after_salat" })?.let {
                             viewModel.openIslamicLifeSection(it)
                         }
                     }
@@ -215,11 +253,28 @@ fun MoreScreen(
                 Spacer(modifier = Modifier.height(10.dp))
             }
 
+            // Featured: Isme Azam (★★★ইসমে আজম★★★)
+            item {
+                MoreFeatureItem(
+                    title = "★★★ইসমে আজম★★★",
+                    subtitle = "ইসমে আজম কি? হাদিসে বর্ণিত সঠিক ইসমে আজম ও ইসমে আজমের ফজিলত",
+                    icon = Icons.Default.Star,
+                    iconTint = IslamicGold,
+                    badge = "শ্রেষ্ঠ দোয়া • নতুন",
+                    onClick = {
+                        (viewModel.getIslamicLifeSection("isme_azam") ?: IslamicLifeData.sections.find { it.id == "isme_azam" })?.let {
+                            viewModel.openIslamicLifeSection(it)
+                        }
+                    }
+                )
+                Spacer(modifier = Modifier.height(10.dp))
+            }
+
             // Featured: Dua Acceptance Times & Duas (New)
             item {
                 MoreFeatureItem(
-                    title = "★দোয়া কবুল হওয়ার সময় ও দোয়া★",
-                    subtitle = "যে উপায়ে দোয়া অতি দ্রুত কবুল হয়, আযান-ইকামতের বিশেষ আমল ও সিজদায় পাঠযোগ্য মাসনূন দোয়া",
+                    title = "★★★দোয়া কবুল হওয়ার সময় ও দোয়া★★★",
+                    subtitle = "সহীহ হাদীস বর্ণিত বরকতময় সময়, স্থান, ইসমে আযম ও কবুলযোগ্য দো‘আ",
                     icon = Icons.Default.AutoAwesome,
                     iconTint = IslamicGold,
                     badge = "বিশেষ আমল • নতুন",
@@ -437,6 +492,7 @@ private fun IslamicLifeSectionNavCard(
     onClick: () -> Unit
 ) {
     val sectionIcon = when (section.id) {
+        "five_waqt_after_salat" -> Icons.Default.Mosque
         "daily_dhikr_tasbih_tahlil" -> Icons.Default.AutoAwesome
         "salat_matters", "salam_before", "farz_after" -> Icons.Default.Mosque
         "fajr_maghrib", "fajr_maghrib_amols" -> Icons.Default.WbSunny
@@ -449,6 +505,7 @@ private fun IslamicLifeSectionNavCard(
     }
 
     val iconTint = when (section.id) {
+        "five_waqt_after_salat" -> Color(0xFF0D9488)
         "daily_dhikr_tasbih_tahlil" -> IslamicGold
         "tahajjud_guide" -> Color(0xFF2563EB)
         "baqarah_last_two", "surah_baqarah_last_2" -> IslamicGold

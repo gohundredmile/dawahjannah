@@ -899,6 +899,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
             val targetSecId = when {
                 remote.targetSectionId.isNotBlank() -> remote.targetSectionId
+                remote.category.contains("৫ ওয়াক্ত", ignoreCase = true) || remote.category.contains("পাঁচ ওয়াক্ত", ignoreCase = true) || remote.category.contains("সালাত শেষে", ignoreCase = true) -> "five_waqt_after_salat"
                 remote.category.contains("সালাম", ignoreCase = true) || remote.category.contains("salam", ignoreCase = true) -> "salam_before"
                 remote.category.contains("ফরজ", ignoreCase = true) || remote.category.contains("farz", ignoreCase = true) || remote.category.contains("ফরয", ignoreCase = true) -> "farz_after"
                 remote.category.contains("হাজত", ignoreCase = true) || remote.category.contains("hajat", ignoreCase = true) -> "salatul_hajat"

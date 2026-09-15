@@ -6,8 +6,10 @@ import android.content.Context
 import android.content.Intent
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -32,6 +34,8 @@ import androidx.compose.material.icons.filled.BookmarkBorder
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.ContentCopy
+import androidx.compose.material.icons.filled.ExpandLess
+import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.Healing
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.MenuBook
@@ -83,6 +87,7 @@ fun IslamicLifeSectionDetailScreen(
     val context = LocalContext.current
 
     val sectionIcon = when (section.id) {
+        "five_waqt_after_salat", "friday_special_duas" -> Icons.Default.Mosque
         "dua_acceptance_times" -> Icons.Default.AutoAwesome
         "daily_dhikr_tasbih_tahlil" -> Icons.Default.AutoAwesome
         "salat_matters", "salam_before", "farz_after" -> Icons.Default.Mosque
@@ -96,6 +101,7 @@ fun IslamicLifeSectionDetailScreen(
     }
 
     val iconTint = when (section.id) {
+        "five_waqt_after_salat", "friday_special_duas" -> Color(0xFF0D9488)
         "dua_acceptance_times" -> IslamicGold
         "daily_dhikr_tasbih_tahlil" -> IslamicGold
         "tahajjud_guide" -> Color(0xFF2563EB)
@@ -111,13 +117,16 @@ fun IslamicLifeSectionDetailScreen(
     val isFarzAfter = section.id == "farz_after"
     val isNightAwaken = section.id == "night_awaken"
     val isFajrBetweenAfter = section.id == "fajr_between_and_after"
-    val isDuaRichSection = isSalamBefore || isFarzAfter || isNightAwaken || isFajrBetweenAfter
+    val isFiveWaqtAfter = section.id == "five_waqt_after_salat"
+    val isFridaySpecial = section.id == "friday_special_duas"
+    val isDuaRichSection = isSalamBefore || isFarzAfter || isNightAwaken || isFajrBetweenAfter || isFiveWaqtAfter || isFridaySpecial
 
     var searchQuery by remember { mutableStateOf("") }
     var selectedCategoryFilter by remember(section.id) {
         mutableStateOf(
             when (section.id) {
-                "salam_before", "farz_after" -> "সকল দো'আ"
+                "salam_before", "farz_after", "five_waqt_after_salat" -> "সকল দো'আ"
+                "friday_special_duas" -> "সকল আমল ও দো'আ"
                 "night_awaken" -> "সকল বাক্য ও আমল"
                 else -> "সকল"
             }
@@ -128,16 +137,27 @@ fun IslamicLifeSectionDetailScreen(
 
     val categoryFilters = remember(section.id) {
         when (section.id) {
+            "friday_special_duas" -> listOf("সকল আমল ও দো'আ", "মর্যাদা ও সুন্নাত", "কুরআনী সূরা ও দরূদ", "দো'আ কবুল ও খাস দো'আ", "সতর্কতা, রুটিন ও FAQ")
+            "five_waqt_after_salat" -> listOf("সকল দো'আ", "সংকট মুক্তি ও আশ্রয়", "দো'আ কবুল ও আসমান", "রিযিক বৃদ্ধি ও প্রাচুর্য", "হাসবুনাল্লাহ আমল")
             "night_awaken" -> listOf("সকল বাক্য ও আমল", "মূল দো'আ ও হাদিস", "একই সাথে পঠিতব্য দো'আ")
             "salam_before" -> listOf("সকল দো'আ", "সালাতে সালামের পূর্বে", "কোরআনের দো'আ", "সহীহ হাদিসের দো'আ")
             "farz_after" -> listOf("সকল দো'আ", "সালামের পর প্রাথমিক", "হিদায়াত ও দ্বীন", "পানাহ ও নিরাপত্তা", "রিযিক ও বরকত", "বিশেষ আমল ও ইস্তেগফার", "শেষ পরিণতি ও জান্নাত")
             "tawbah_istighfar" -> listOf("সকল", "মৌলিক ইস্তিগফার", "৫০টি ইস্তেগফার ও দু'আ", "১৬টি গুনাহ মোচনকারী আমল")
+            "sleep_duas" -> listOf("সকল", "কুরআনী সূরা ও আয়াত", "মাসনূন ঘুমানোর দো'আ", "ঘুম ভাঙলে ও দুঃস্বপ্ন", "জাগ্রত হওয়ার দো'আ", "সুন্নাত রুটিন ও FAQ")
             else -> emptyList()
         }
     }
 
     val filteredItems = remember(section.items, searchQuery, selectedCategoryFilter) {
         val baseList = when (selectedCategoryFilter) {
+            "মর্যাদা ও সুন্নাত" -> section.items.filter { it.id in listOf("fa_quran_jumuah", "fa_virtue_concept", "fa_ghusl_miswak", "fa_early_to_masjid", "fa_sunnah_adab", "fa_walk_to_masjid", "fa_khutbah_adab", "fa_jumuah_death_virtue") }
+            "কুরআনী সূরা ও দরূদ" -> section.items.filter { it.id in listOf("fa_surah_kahaf", "fa_surah_fajr_jumuah", "fa_durood_sharif") }
+            "দো'আ কবুল ও খাস দো'আ" -> section.items.filter { it.id.startsWith("fa_dua_") || it.id == "fa_saatul_ijabah" }
+            "সতর্কতা, রুটিন ও FAQ" -> section.items.filter { it.id in listOf("fa_warning_bidah_fabricated", "fa_checklist_sunnah_routine", "fa_faq_jumuah") }
+            "সংকট মুক্তি ও আশ্রয়" -> section.items.filter { it.id in listOf("fwas_1", "fwas_3") }
+            "দো'আ কবুল ও আসমান" -> section.items.filter { it.id in listOf("fwas_2") }
+            "রিযিক বৃদ্ধি ও প্রাচুর্য" -> section.items.filter { it.id in listOf("fwas_4", "fwas_5", "fwas_6") }
+            "হাসবুনাল্লাহ আমল" -> section.items.filter { it.id in listOf("fwas_7") }
             "মূল দো'আ ও হাদিস" -> section.items.filter { it.id == "na_1" }
             "একই সাথে পঠিতব্য দো'আ" -> section.items.filter { it.id != "na_1" }
             "সালাতে সালামের পূর্বে" -> section.items.filter { it.id.startsWith("sb_salam_") }
@@ -152,6 +172,11 @@ fun IslamicLifeSectionDetailScreen(
             "মৌলিক ইস্তিগফার" -> section.items.filter { it.id.startsWith("ti_") && !it.id.startsWith("ti_dua_") && !it.id.startsWith("ti_deed_") }
             "৫০টি ইস্তেগফার ও দু'আ" -> section.items.filter { it.id.startsWith("ti_dua_") }
             "১৬টি গুনাহ মোচনকারী আমল" -> section.items.filter { it.id.startsWith("ti_deed_") }
+            "কুরআনী সূরা ও আয়াত" -> section.items.filter { it.id.startsWith("sd_quran_") }
+            "মাসনূন ঘুমানোর দো'আ", "প্রধান মাসনূন দো'আ" -> section.items.filter { it.id.startsWith("sd_dua_") || it.id in listOf("sd_main_bukhari", "sd_body_protection_bukhari", "sd_qiyamah_azab_panah") }
+            "ঘুম ভাঙলে ও দুঃস্বপ্ন", "অনিদ্রা ও দুঃস্বপ্ন" -> section.items.filter { it.id.startsWith("sd_night_") || it.id in listOf("sd_insomnia_sleeplessness", "sd_nightmare_actions", "sd_nightmare_and_fear") }
+            "জাগ্রত হওয়ার দো'আ" -> section.items.filter { it.id.startsWith("sd_waking_up_") || it.id == "sd_waking_up_dua" }
+            "সুন্নাত রুটিন ও FAQ" -> section.items.filter { it.id in listOf("sd_sunnah_deeds_10", "sd_summary_routine_13", "sd_children_sleep_protection", "sd_sleep_faq", "sd_nine_sunnah_routine") }
             else -> section.items
         }
 
@@ -490,6 +515,11 @@ fun IslamicLifeSectionDetailScreen(
                                 "মৌলিক ইস্তিগফার" -> section.items.count { it.id.startsWith("ti_") && !it.id.startsWith("ti_dua_") && !it.id.startsWith("ti_deed_") }
                                 "৫০টি ইস্তেগফার ও দু'আ" -> section.items.count { it.id.startsWith("ti_dua_") }
                                 "১৬টি গুনাহ মোচনকারী আমল" -> section.items.count { it.id.startsWith("ti_deed_") }
+                                "সকল আমল ও দো'আ" -> section.items.size
+                                "মর্যাদা ও সুন্নাত" -> section.items.count { it.id in listOf("fa_quran_jumuah", "fa_virtue_concept", "fa_ghusl_miswak", "fa_early_to_masjid", "fa_sunnah_adab", "fa_walk_to_masjid", "fa_khutbah_adab", "fa_jumuah_death_virtue") }
+                                "কুরআনী সূরা ও দরূদ" -> section.items.count { it.id in listOf("fa_surah_kahaf", "fa_surah_fajr_jumuah", "fa_durood_sharif") }
+                                "দো'আ কবুল ও খাস দো'আ" -> section.items.count { it.id.startsWith("fa_dua_") || it.id == "fa_saatul_ijabah" }
+                                "সতর্কতা, রুটিন ও FAQ" -> section.items.count { it.id in listOf("fa_warning_bidah_fabricated", "fa_checklist_sunnah_routine", "fa_faq_jumuah") }
                                 "সকল" -> section.items.size
                                 else -> 0
                             }
@@ -583,7 +613,10 @@ private fun IslamicLifeDetailCard(
 ) {
     val context = LocalContext.current
     val itemSubtitle = item.subtitleBn.ifBlank { item.repetitionOrTimeBn }
-    val detailsText = item.detailsBn.ifBlank { item.fojilotBn }
+    val fojilotText = item.fojilotBn
+    val detailsText = item.detailsBn
+    val hasDistinctDetails = detailsText.isNotBlank() && detailsText != fojilotText
+    var isDetailsExpanded by remember(item.id) { mutableStateOf(true) }
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -655,7 +688,9 @@ private fun IslamicLifeDetailCard(
                                     val label = if (item.detailsBn.isBlank() && item.fojilotBn.isBlank()) "বাংলা অর্থ" else "অর্থ"
                                     appendLine("\n$label: ${item.meaningBn}")
                                 }
-                                if (detailsText.isNotBlank()) appendLine("\nফজিলত ও আমলের রূপরেখা:\n$detailsText")
+                                if (fojilotText.isNotBlank()) appendLine("\nআমল ও ফজিলতের রূপরেখা:\n$fojilotText")
+                                if (hasDistinctDetails) appendLine("\n$detailsText")
+                                else if (fojilotText.isBlank() && detailsText.isNotBlank()) appendLine("\nফজিলত ও আমলের রূপরেখা:\n$detailsText")
                                 if (item.referenceBn.isNotBlank()) appendLine("\nসূত্র: ${item.referenceBn}")
                                 appendLine("\n— দাওয়াহ টু জান্নাহ অ্যাপ")
                             }
@@ -685,7 +720,9 @@ private fun IslamicLifeDetailCard(
                                     val label = if (item.detailsBn.isBlank() && item.fojilotBn.isBlank()) "বাংলা অর্থ" else "অর্থ"
                                     appendLine("\n$label: ${item.meaningBn}")
                                 }
-                                if (detailsText.isNotBlank()) appendLine("\nবিস্তারিত ও ফজিলত:\n$detailsText")
+                                if (fojilotText.isNotBlank()) appendLine("\nআমল ও ফজিলত:\n$fojilotText")
+                                if (hasDistinctDetails) appendLine("\n$detailsText")
+                                else if (fojilotText.isBlank() && detailsText.isNotBlank()) appendLine("\nবিস্তারিত ও ফজিলত:\n$detailsText")
                                 if (item.referenceBn.isNotBlank()) appendLine("\nরেফারেন্স: ${item.referenceBn}")
                                 appendLine("\n— দাওয়াহ টু জান্নাহ অ্যাপ")
                             }
@@ -802,12 +839,13 @@ private fun IslamicLifeDetailCard(
                 )
             }
 
-            // Fojilot / Details Section
-            if (detailsText.isNotBlank()) {
+            // Fojilot / Amol Section
+            val primaryVirtueText = if (fojilotText.isNotBlank()) fojilotText else detailsText
+            if (primaryVirtueText.isNotBlank()) {
                 Spacer(modifier = Modifier.height(10.dp))
-                if (detailsText.startsWith("📌") || detailsText.contains("ফুটনোটঃ") || detailsText.contains("• (১)")) {
+                if (primaryVirtueText.startsWith("📌") || primaryVirtueText.contains("ফুটনোটঃ") || primaryVirtueText.contains("• (১)")) {
                     RichIslamicTextLayout(
-                        text = detailsText,
+                        text = primaryVirtueText,
                         defaultHeader = "ফজিলত ও আমলের রূপরেখা:",
                         fontScale = fontScale
                     )
@@ -835,17 +873,86 @@ private fun IslamicLifeDetailCard(
                             Spacer(modifier = Modifier.width(8.dp))
                             Column {
                                 Text(
-                                    text = "ফজিলত ও আমলের রূপরেখা:",
+                                    text = "আমল ও ফজিলতের রূপরেখা:",
                                     style = MaterialTheme.typography.labelSmall.copy(fontSize = (12 * fontScale).sp),
                                     fontWeight = FontWeight.Bold,
                                     color = MaterialTheme.colorScheme.primary
                                 )
                                 Spacer(modifier = Modifier.height(2.dp))
                                 Text(
-                                    text = detailsText,
+                                    text = primaryVirtueText,
                                     style = MaterialTheme.typography.bodySmall.copy(
                                         fontSize = (13.5f * fontScale).sp,
                                         lineHeight = (20 * fontScale).sp
+                                    ),
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Dedicated Detailed Discussion / Article (when both fojilot and details are provided and distinct)
+            if (hasDistinctDetails && detailsText.length > 50 && !fojilotText.contains(detailsText)) {
+                Spacer(modifier = Modifier.height(12.dp))
+                val detailsHeaderTitle = when {
+                    detailsText.contains("ড. ইয়াসির কাদি") -> "বিস্তারিত তাৎপর্য ও ঘটনা (ড. ইয়াসির কাদি)"
+                    detailsText.contains("হাদিস") || detailsText.contains("আমল") -> "বিস্তারিত আলোচনা ও আমলের নিয়ম"
+                    else -> "বিস্তারিত তাৎপর্য ও বিবরণ"
+                }
+                Surface(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp),
+                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.25f))
+                ) {
+                    Column(modifier = Modifier.padding(12.dp)) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { isDetailsExpanded = !isDetailsExpanded },
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.MenuBook,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    text = detailsHeaderTitle,
+                                    style = MaterialTheme.typography.labelMedium.copy(fontSize = (13 * fontScale).sp),
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                            }
+                            Icon(
+                                imageVector = if (isDetailsExpanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
+                                contentDescription = if (isDetailsExpanded) "সংক্ষেপ করুন" else "বিস্তারিত দেখুন",
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
+
+                        AnimatedVisibility(visible = isDetailsExpanded) {
+                            Column(modifier = Modifier.padding(top = 10.dp)) {
+                                HorizontalDivider(
+                                    color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f),
+                                    thickness = 0.8.dp
+                                )
+                                Spacer(modifier = Modifier.height(10.dp))
+                                Text(
+                                    text = detailsText,
+                                    style = MaterialTheme.typography.bodyMedium.copy(
+                                        fontSize = (14 * fontScale).sp,
+                                        lineHeight = (22 * fontScale).sp
                                     ),
                                     color = MaterialTheme.colorScheme.onSurface
                                 )

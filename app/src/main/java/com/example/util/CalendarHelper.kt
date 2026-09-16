@@ -21,6 +21,14 @@ object CalendarHelper {
         }.joinToString("")
     }
 
+    fun toEnglishNumber(str: String): String {
+        val bnToEnMap = mapOf(
+            '০' to '0', '১' to '1', '২' to '2', '৩' to '3', '৪' to '4',
+            '৫' to '5', '৬' to '6', '৭' to '7', '৮' to '8', '৯' to '9'
+        )
+        return str.map { bnToEnMap[it] ?: it }.joinToString("")
+    }
+
     data class TripleCalendarInfo(
         val englishDateFormatted: String, // e.g., "Friday, 04 September 2026"
         val englishDay: String,

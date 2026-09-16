@@ -93,8 +93,8 @@ fun HomeScreen(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 6.dp),
-                horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    .padding(horizontal = 12.dp, vertical = 3.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 QuickActionCard(
                     title = "ধারাবাহিকতা",

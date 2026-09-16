@@ -148,10 +148,10 @@ fun DateTimeMasterCard(
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 8.dp, vertical = 6.dp)
+            .padding(horizontal = 12.dp, vertical = 3.dp)
             .animateContentSize()
             .testTag("date_time_master_card"),
-        shape = RoundedCornerShape(22.dp),
+        shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(containerColor = liteEyeSoothingBg),
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
         border = BorderStroke(1.dp, soothingBorder)
@@ -159,12 +159,12 @@ fun DateTimeMasterCard(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 12.dp, vertical = 12.dp),
+                .padding(start = 12.dp, end = 12.dp, top = 4.dp, bottom = 8.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             // 1. BIG DIGITAL CLOCK DISPLAY (Replicating screenshot)
             Row(
-                modifier = Modifier.padding(top = 6.dp, bottom = 10.dp),
+                modifier = Modifier.padding(top = 2.dp, bottom = 6.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.Center
             ) {

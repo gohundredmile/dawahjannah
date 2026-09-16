@@ -11,6 +11,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -90,8 +91,8 @@ fun IslamicHeaderCover(
     Card(
         modifier = Modifier
             .fillMaxWidth(),
-        shape = RoundedCornerShape(bottomStart = 32.dp, bottomEnd = 32.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
+        shape = RoundedCornerShape(bottomStart = 24.dp, bottomEnd = 24.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.primary
         )
@@ -114,7 +115,7 @@ fun IslamicHeaderCover(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 20.dp, vertical = 20.dp)
+                    .padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 8.dp)
             ) {
             // Header Top Bar
             Row(
@@ -125,10 +126,10 @@ fun IslamicHeaderCover(
                 Column {
                     Text(
                         text = "আস-সালামু আলাইকুম",
-                        style = MaterialTheme.typography.titleLarge.copy(fontSize = 21.sp),
+                        style = MaterialTheme.typography.titleLarge.copy(fontSize = 20.sp),
                         fontFamily = LocalBanglaFontFamily.current,
                         fontWeight = FontWeight.Bold,
-                        letterSpacing = 0.5.sp,
+                        letterSpacing = 0.3.sp,
                         color = Color.White
                     )
                 }
@@ -137,23 +138,23 @@ fun IslamicHeaderCover(
                 Surface(
                     onClick = onOpenSettings,
                     color = Color.White.copy(alpha = 0.2f),
-                    shape = RoundedCornerShape(16.dp),
+                    shape = RoundedCornerShape(14.dp),
                     modifier = Modifier.testTag("header_settings_button")
                 ) {
                     Row(
-                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Icon(
                             imageVector = Icons.Default.Settings,
                             contentDescription = "Settings",
                             tint = Color.White,
-                            modifier = Modifier.size(16.dp)
+                            modifier = Modifier.size(15.dp)
                         )
-                        Spacer(modifier = Modifier.width(6.dp))
+                        Spacer(modifier = Modifier.width(5.dp))
                         Text(
                             text = "সেটিংস",
-                            style = MaterialTheme.typography.labelMedium,
+                            style = MaterialTheme.typography.labelMedium.copy(fontSize = 12.sp),
                             fontWeight = FontWeight.Bold,
                             color = Color.White
                         )
@@ -161,19 +162,19 @@ fun IslamicHeaderCover(
                 }
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(8.dp))
 
             // Natural Tones Next Prayer Card (Cream & Gold Container)
             Surface(
                 color = IslamicIvory,
-                shape = RoundedCornerShape(20.dp),
+                shape = RoundedCornerShape(16.dp),
                 shadowElevation = 2.dp,
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 18.dp, vertical = 14.dp),
+                        .padding(horizontal = 16.dp, vertical = 9.dp),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
@@ -301,51 +302,91 @@ fun QuickActionCard(
     modifier: Modifier = Modifier,
     onClick: () -> Unit
 ) {
+    val isDark = isSystemInDarkTheme()
     Card(
         modifier = modifier.clickable { onClick() },
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        shape = RoundedCornerShape(14.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = if (isDark) Color(0xFF1E293B) else Color.White
+        ),
+        border = BorderStroke(1.dp, iconTint.copy(alpha = if (isDark) 0.35f else 0.22f)),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.5.dp)
     ) {
-        Column(
+        Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(vertical = 12.dp, horizontal = 6.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+                .background(
+                    Brush.verticalGradient(
+                        listOf(
+                            iconTint.copy(alpha = if (isDark) 0.16f else 0.08f),
+                            if (isDark) Color(0xFF161F2C) else Color(0xFFFCFCFD)
+                        )
+                    )
+                )
+                .padding(horizontal = 4.dp, vertical = 7.dp)
         ) {
-            Surface(
-                shape = CircleShape,
-                color = iconTint.copy(alpha = 0.12f),
-                modifier = Modifier.size(36.dp)
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
             ) {
-                Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+                // Compact eye-catchy squircle icon badge
+                Box(
+                    modifier = Modifier
+                        .size(28.dp)
+                        .background(
+                            Brush.radialGradient(
+                                listOf(
+                                    iconTint.copy(alpha = 0.25f),
+                                    iconTint.copy(alpha = 0.12f)
+                                )
+                            ),
+                            shape = RoundedCornerShape(8.dp)
+                        )
+                        .border(
+                            width = 0.8.dp,
+                            color = iconTint.copy(alpha = 0.35f),
+                            shape = RoundedCornerShape(8.dp)
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
                     Icon(
                         imageVector = icon,
                         contentDescription = null,
                         tint = iconTint,
-                        modifier = Modifier.size(20.dp)
+                        modifier = Modifier.size(16.dp)
                     )
                 }
+
+                Spacer(modifier = Modifier.height(4.dp))
+
+                Text(
+                    text = value,
+                    style = MaterialTheme.typography.labelMedium.copy(
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold,
+                        letterSpacing = (-0.1).sp
+                    ),
+                    fontFamily = LocalBanglaFontFamily.current,
+                    color = if (isDark) Color.White else Color(0xFF1E293B),
+                    maxLines = 1,
+                    textAlign = TextAlign.Center
+                )
+
+                Spacer(modifier = Modifier.height(1.dp))
+
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.labelSmall.copy(
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.Medium
+                    ),
+                    fontFamily = LocalBanglaFontFamily.current,
+                    color = if (isDark) Color(0xFF94A3B8) else Color(0xFF64748B),
+                    maxLines = 1,
+                    textAlign = TextAlign.Center
+                )
             }
-            Spacer(modifier = Modifier.height(6.dp))
-            Text(
-                text = value,
-                style = MaterialTheme.typography.labelMedium,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurface,
-                maxLines = 1,
-                textAlign = TextAlign.Center
-            )
-            Spacer(modifier = Modifier.height(2.dp))
-            Text(
-                text = title,
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                maxLines = 1,
-                textAlign = TextAlign.Center
-            )
         }
     }
 }

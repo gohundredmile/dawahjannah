@@ -24,6 +24,9 @@ jobs:
   build-and-release:
     name: Build APK and Publish to GitHub Releases
     runs-on: ubuntu-latest
+    env:
+      ANDROID_HOME: /usr/local/lib/android/sdk
+      ANDROID_SDK_ROOT: /usr/local/lib/android/sdk
 
     steps:
       - name: Checkout Repository
@@ -32,24 +35,27 @@ jobs:
           fetch-depth: 0
 
       - name: Set up Java JDK 21
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: 'temurin'
           java-version: '21'
+          cache: 'gradle'
 
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
-
-      - name: Accept Android SDK Licenses & Install Platform 36
+      - name: Configure Android SDK & Accept Licenses
         run: |
-          yes | sdkmanager --licenses || true
-          sdkmanager "platforms;android-36" "build-tools;36.0.0" "platform-tools" || true
+          echo "Setting up Android SDK environment..."
+          export ANDROID_HOME=/usr/local/lib/android/sdk
+          export PATH="$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$PATH"
+          mkdir -p "$ANDROID_HOME/licenses" || true
+          printf "\n8933bad161af4b78b1149d4f0237c49b11fb1113\nd56f5187479451eabf01fb78ba6ed6ee79dd4335\n24333f8a63b1d99d69ac822aab864e9e37635897\n84831b9409646a7f841b3a7c804e447fb32404b5\n" > "$ANDROID_HOME/licenses/android-sdk-license" || true
+          printf "\n84831b9409646a7f841b3a7c804e447fb32404b5\n" > "$ANDROID_HOME/licenses/android-sdk-preview-license" || true
+          if command -v sdkmanager &> /dev/null; then
+            yes | sdkmanager --licenses || true
+          fi
 
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v3
-
-      - name: Prepare Signing Keystore
+      - name: Prepare Signing Keystore & Build Environment
         run: |
+          touch .env || true
           if [ -f "debug.keystore.base64" ]; then
             echo "Decoding debug.keystore from base64..."
             base64 -d debug.keystore.base64 > debug.keystore
@@ -143,4 +149,3 @@ jobs:
               --target "${{ github.sha }}" || true
 
           echo "GitHub Release pipeline complete!"
-

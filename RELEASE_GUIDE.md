@@ -6,10 +6,20 @@
 `.github/workflows/release-apk.yml`
 
 ### ১. স্বয়ংক্রিয় বিল্ড ও রিলিজ (Automatic Workflow)
-- যখনই আপনি Google AI Studio থেকে গিটহাবে কোড পুশ করবেন (বা `git push` করবেন `main` / `master` ব্রাঞ্চে), সাথে সাথে GitHub Actions স্বয়ংক্রিয়ভাবে রান করবে:
-  1. সোর্স কোড থেকে অ্যান্ড্রয়েড APK (`app-release.apk`) বিল্ড করবে।
-  2. GitHub Releases-এ `latest` ট্যাগ এবং বর্তমান ভার্সন ট্যাগে (`v1.3.7`) নতুন APK আপলোড করবে।
-  3. **স্বয়ংক্রিয় প্রতিস্থাপন (Auto-Replace):** নতুন রিলিজ হলে পুরনো APK স্বয়ংক্রিয়ভাবে নতুন APK ফাইল দ্বারা রিপ্লেস (Replace/Overwrite with `--clobber`) হয়ে যাবে।
+- যখনই আপনি Google AI Studio থেকে গিটহাবে কোড পুশ করবেন, সাথে সাথে GitHub Actions স্বয়ংক্রিয়ভাবে রান করবে:
+  1. সোর্স কোড থেকে অ্যান্ড্রয়েড APK (`app-release.apk`) বিল্ড করবে (Java 21 ও Android SDK 36 সহ)।
+  2. GitHub Actions Artifacts-এ ফাইল ব্যাকআপ রাখবে।
+  3. GitHub Releases-এ নতুন রিলিজ হিসেবে `v1.4.0` ও `latest` ট্যাগ সহ APK ফাইল আপলোড করবে।
+  4. **স্বয়ংক্রিয় প্রতিস্থাপন (Auto-Replace):** নতুন রিলিজ হলে পুরনো APK স্বয়ংক্রিয়ভাবে নতুন APK ফাইল দ্বারা রিপ্লেস হয়ে যাবে।
+
+> ⚠️ **গুরুত্বপূর্ণ সেটিংস (GitHub Repository Settings - একবারই করতে হয়):**
+> গিটহাবের ডিফল্ট সিকিউরিটির কারণে Actions-কে রিলিজ তৈরির অনুমতি দিতে হয়:
+> 1. আপনার রিপোজিটরিতে যান: `github.com/gohundredmile/dawahjannah`
+> 2. উপরের মেনু থেকে **Settings** ট্যাবে যান।
+> 3. বাঁ পাশের তালিকা থেকে **Actions** > **General**-এ ক্লিক করুন।
+> 4. স্ক্রল করে নিচে **Workflow permissions** সেকশনে যান।
+> 5. **"Read and write permissions"** অপশনটি সিলেক্ট করে **Save** বাটনে চাপ দিন।
+> 6. ব্যস! এখন থেকে প্রতিটি পুশে স্বয়ংক্রিয়ভাবে রিলিজ পেজে APK আপলোড হবে।
 
 ### ২. ম্যানুয়াল ট্রিগার (GitHub Actions থেকে এক ক্লিকে রিলিজ)
 1. গিটহাব রিপোজিটোরিতে যান: `https://github.com/gohundredmile/dawahjannah`

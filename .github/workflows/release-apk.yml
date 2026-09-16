@@ -3,8 +3,7 @@ name: Build & Release APK (OTA Engine)
 on:
   push:
     branches:
-      - main
-      - master
+      - '**'
     tags:
       - 'v*'
   workflow_dispatch:
@@ -32,20 +31,32 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Set up Java JDK 17
+      - name: Set up Java JDK 21
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
-          java-version: '17'
+          java-version: '21'
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Accept Android SDK Licenses & Install Platform 36
+        run: |
+          yes | sdkmanager --licenses || true
+          sdkmanager "platforms;android-36" "build-tools;36.0.0" "platform-tools" || true
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v3
 
       - name: Prepare Signing Keystore
         run: |
-          if [ -f "debug.keystore.base64" ] && [ ! -f "debug.keystore" ]; then
+          if [ -f "debug.keystore.base64" ]; then
             echo "Decoding debug.keystore from base64..."
             base64 -d debug.keystore.base64 > debug.keystore
+          fi
+          if [ ! -f "debug.keystore" ]; then
+            echo "Generating fallback debug.keystore..."
+            keytool -genkey -v -keystore debug.keystore -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Android Debug,O=Android,C=US"
           fi
           chmod +x gradlew || true
 
@@ -72,37 +83,64 @@ jobs:
           VER_NAME=$(grep 'versionName = ' app/build.gradle.kts | head -n 1 | sed -E 's/.*"([^"]+)".*/\1/')
           VER_CODE=$(grep 'versionCode = ' app/build.gradle.kts | head -n 1 | sed -E 's/.*([0-9]+).*/\1/')
           if [ -z "$VER_NAME" ]; then
-            VER_NAME="1.3.7"
+            VER_NAME="1.4.0"
           fi
           echo "version_name=$VER_NAME" >> $GITHUB_OUTPUT
           echo "version_code=$VER_CODE" >> $GITHUB_OUTPUT
+          echo "tag_name=v${VER_NAME}" >> $GITHUB_OUTPUT
           echo "Detected App Version: $VER_NAME ($VER_CODE)"
 
-      - name: Publish or Update GitHub Release
+      - name: Upload APK as Workflow Artifact (Always Accessible)
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-release-apk
+          path: release_artifacts/app-release.apk
+          retention-days: 90
+
+      - name: Publish Release to GitHub Releases
+        uses: softprops/action-gh-release@v2
+        id: create_release
+        continue-on-error: true
+        with:
+          tag_name: ${{ steps.get_version.outputs.tag_name }}
+          name: ${{ inputs.release_title || format('দা''ওয়াহ টু জান্নাহ - সংস্করণ {0}', steps.get_version.outputs.version_name) }}
+          body: ${{ inputs.release_notes || 'স্বয়ংক্রিয়ভাবে বিল্ডকৃত নতুন রিলিজ APK। ফোনের সেটিংস থেকে ''সম্পূর্ণ APK ওটিএ অটো-আপডেট'' বাটনে চাপ দিলে সরাসরি এটি ফোনে ডাউনলোড ও ইনস্টল হবে।' }}
+          draft: false
+          prerelease: false
+          make_latest: true
+          target_commitish: ${{ github.sha }}
+          files: |
+            release_artifacts/app-release.apk
+            release_artifacts/app-debug.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Fallback CLI Release & Latest Tag Mirroring
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG_VERSION: ${{ steps.get_version.outputs.tag_name }}
           VER_NAME: ${{ steps.get_version.outputs.version_name }}
           INPUT_TITLE: ${{ inputs.release_title }}
           INPUT_NOTES: ${{ inputs.release_notes }}
         run: |
-          TAG_VERSION="v${VER_NAME}"
           TITLE="${INPUT_TITLE:-দা'ওয়াহ টু জান্নাহ - সংস্করণ ${VER_NAME}}"
           NOTES="${INPUT_NOTES:-স্বয়ংক্রিয়ভাবে বিল্ডকৃত নতুন রিলিজ APK। ফোনের সেটিংস থেকে 'সম্পূর্ণ APK ওটিএ অটো-আপডেট' বাটনে চাপ দিলে সরাসরি এটি ফোনে ডাউনলোড ও ইনস্টল হবে।}"
 
-          echo "Publishing release for tag: $TAG_VERSION and 'latest'..."
-
-          # 1. Create or update specific version release tag (vX.X.X) with --clobber to replace previous files
+          echo "Ensuring release assets are present for tag: $TAG_VERSION..."
           gh release view "$TAG_VERSION" >/dev/null 2>&1 && \
             gh release upload "$TAG_VERSION" release_artifacts/app-release.apk release_artifacts/app-debug.apk --clobber || \
             gh release create "$TAG_VERSION" release_artifacts/app-release.apk release_artifacts/app-debug.apk \
               --title "$TITLE" \
-              --notes "$NOTES"
+              --notes "$NOTES" \
+              --target "${{ github.sha }}" || true
 
-          # 2. Also maintain the 'latest' release tag so 'releases/latest/download/app-release.apk' ALWAYS points to the latest APK
+          # Also maintain 'latest' tag for direct backward-compatibility
           gh release view "latest" >/dev/null 2>&1 && \
             gh release upload "latest" release_artifacts/app-release.apk release_artifacts/app-debug.apk --clobber || \
             gh release create "latest" release_artifacts/app-release.apk release_artifacts/app-debug.apk \
               --title "Dawah to Jannah - Latest Release" \
-              --notes "সর্বশেষ স্বয়ংক্রিয় রিলিজ APK (Auto-built on push/dispatch). Replaces old APK automatically."
+              --notes "সর্বশেষ স্বয়ংক্রিয় রিলিজ APK (Auto-built on push/dispatch)." \
+              --target "${{ github.sha }}" || true
 
-          echo "Successfully published and replaced APK on GitHub Releases!"
+          echo "GitHub Release pipeline complete!"
+

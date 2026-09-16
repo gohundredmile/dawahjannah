@@ -3,12 +3,17 @@ package com.example.data.remote
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.os.Build
+import android.provider.Settings
+import androidx.core.content.FileProvider
 import com.squareup.moshi.JsonClass
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.json.JSONObject
+import java.io.File
+import java.io.FileOutputStream
 import java.util.concurrent.TimeUnit
 import com.example.util.ExcludedIslamicLifeTopics
 
@@ -93,6 +98,27 @@ class GitHubUpdateManager(private val context: Context) {
             .putString("repo_name", repo.trim())
             .apply()
     }
+
+    val installedAppVersionName: String
+        get() = try {
+            val pInfo = context.packageManager.getPackageInfo(context.packageName, 0)
+            pInfo.versionName ?: "1.3.7"
+        } catch (_: Exception) {
+            "1.3.7"
+        }
+
+    val installedAppVersionCode: Long
+        get() = try {
+            val pInfo = context.packageManager.getPackageInfo(context.packageName, 0)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                pInfo.longVersionCode
+            } else {
+                @Suppress("DEPRECATION")
+                pInfo.versionCode.toLong()
+            }
+        } catch (_: Exception) {
+            137L
+        }
 
     val bundledVersionName: String by lazy {
         try {
@@ -688,6 +714,134 @@ class GitHubUpdateManager(private val context: Context) {
             )
         } catch (_: Exception) {
             null
+        }
+    }
+
+    /**
+     * Resolves direct APK download URL from GitHub Release or raw assets
+     */
+    fun resolveDirectApkUrl(inputUrl: String?): String {
+        val rawUrl = inputUrl?.trim() ?: ""
+        if (rawUrl.endsWith(".apk", ignoreCase = true) || rawUrl.contains(".apk?", ignoreCase = true)) {
+            return rawUrl
+        }
+
+        val owner = repoOwner
+        val repo = repoName
+        return when {
+            rawUrl.contains("releases/download/") -> rawUrl
+            rawUrl.isNotBlank() && !rawUrl.contains("releases/latest") -> rawUrl
+            else -> "https://github.com/$owner/$repo/releases/latest/download/app-release.apk"
+        }
+    }
+
+    /**
+     * Downloads the full APK file with real-time progress callbacks for OTA installation.
+     */
+    suspend fun downloadApkWithProgress(
+        url: String,
+        onProgress: (progress: Float, downloadedBytes: Long, totalBytes: Long) -> Unit
+    ): Result<File> = withContext(Dispatchers.IO) {
+        try {
+            val targetUrl = resolveDirectApkUrl(url)
+            val request = Request.Builder()
+                .url(targetUrl)
+                .header("User-Agent", "DawahToJannah-Android-App")
+                .header("Accept", "application/vnd.android.package-archive, application/octet-stream, */*")
+                .build()
+
+            val response = client.newCall(request).execute()
+            if (!response.isSuccessful) {
+                return@withContext Result.failure(
+                    Exception("APK সার্ভার থেকে ডাউনলোড করা সম্ভব হয়নি (HTTP ${response.code})। লিঙ্ক: $targetUrl")
+                )
+            }
+
+            val body = response.body ?: return@withContext Result.failure(Exception("ডাউনলোড রেসপন্স খালি এসেছে।"))
+            val contentLength = body.contentLength()
+
+            val contentType = response.header("Content-Type", "") ?: ""
+            if (contentType.contains("text/html", ignoreCase = true) && contentLength in 1..200000) {
+                return@withContext Result.failure(
+                    Exception("সরাসরি APK ফাইল পাওয়া যায়নি। গিটহাব রিলিজ পেজে এখনও .apk ফাইল আপলোড করা হয়নি। ব্রাউজার থেকে রিলিজ পেজে গিয়ে ডাউনলোড করুন।")
+                )
+            }
+
+            val apkDir = File(context.cacheDir, "apk_updates").apply { mkdirs() }
+            val apkFile = File(apkDir, "dawah_to_jannah_update.apk")
+            if (apkFile.exists()) {
+                apkFile.delete()
+            }
+
+            val inputStream = body.byteStream()
+            val outputStream = FileOutputStream(apkFile)
+
+            val buffer = ByteArray(16384)
+            var bytesRead: Int
+            var totalRead: Long = 0
+
+            while (inputStream.read(buffer).also { bytesRead = it } != -1) {
+                outputStream.write(buffer, 0, bytesRead)
+                totalRead += bytesRead
+                val progress = if (contentLength > 0) (totalRead.toFloat() / contentLength.toFloat()).coerceIn(0f, 1f) else -1f
+                onProgress(progress, totalRead, contentLength)
+            }
+
+            outputStream.flush()
+            outputStream.close()
+            inputStream.close()
+
+            if (apkFile.length() < 100_000) {
+                val size = apkFile.length()
+                apkFile.delete()
+                return@withContext Result.failure(
+                    Exception("ডাউনলোডকৃত APK ফাইলটি অসম্পূর্ণ বা ক্ষতিগ্রস্ত (সাইজ: $size বাইট)। পুনরায় ডাউনলোড করুন।")
+                )
+            }
+
+            Result.success(apkFile)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    /**
+     * Triggers the Android package installer for a downloaded APK.
+     * Returns true if installer intent was launched, false if permission setting is required.
+     */
+    fun installApk(apkFile: File): Result<Boolean> {
+        return try {
+            if (!apkFile.exists() || apkFile.length() == 0L) {
+                return Result.failure(Exception("ইনস্টল করার জন্য কোনো APK ফাইল পাওয়া যায়নি।"))
+            }
+
+            // Android 8.0+ Unknown App Sources check
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                if (!context.packageManager.canRequestPackageInstalls()) {
+                    val intent = Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES).apply {
+                        data = Uri.parse("package:${context.packageName}")
+                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    }
+                    context.startActivity(intent)
+                    return Result.success(false)
+                }
+            }
+
+            val apkUri = FileProvider.getUriForFile(
+                context,
+                "${context.packageName}.fileprovider",
+                apkFile
+            )
+
+            val installIntent = Intent(Intent.ACTION_VIEW).apply {
+                setDataAndType(apkUri, "application/vnd.android.package-archive")
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+            context.startActivity(installIntent)
+            Result.success(true)
+        } catch (e: Exception) {
+            Result.failure(e)
         }
     }
 

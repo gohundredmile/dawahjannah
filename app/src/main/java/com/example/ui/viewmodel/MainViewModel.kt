@@ -739,11 +739,31 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val _isDownloadingUpdate = MutableStateFlow(false)
     val isDownloadingUpdate = _isDownloadingUpdate.asStateFlow()
 
+    data class ApkDownloadProgress(
+        val isDownloading: Boolean = false,
+        val progress: Float = 0f,
+        val downloadedMb: Float = 0f,
+        val totalMb: Float = 0f,
+        val downloadedFile: java.io.File? = null,
+        val error: String? = null,
+        val waitingForInstallPermission: Boolean = false,
+        val installCompleted: Boolean = false
+    )
+
+    private val _apkDownloadState = MutableStateFlow(ApkDownloadProgress())
+    val apkDownloadState = _apkDownloadState.asStateFlow()
+
     private val _activeAnnouncement = MutableStateFlow<AnnouncementData?>(null)
     val activeAnnouncement = _activeAnnouncement.asStateFlow()
 
     val appliedContentVersion: String
         get() = gitHubUpdateManager.appliedContentVersion
+
+    val installedAppVersionName: String
+        get() = gitHubUpdateManager.installedAppVersionName
+
+    val installedAppVersionCode: Long
+        get() = gitHubUpdateManager.installedAppVersionCode
 
     fun checkForAppUpdates() {
         viewModelScope.launch {
@@ -755,13 +775,13 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 if (release != null && release.hasNewerVersion) {
                     val ann = if (!release.announcement.isNullOrBlank()) "\n\nঘোষণা: ${release.announcement}" else ""
                     val source = if (release.isFromAppUpdatesJson) " (app-updates.json থেকে)" else " (GitHub Releases থেকে)"
-                    _updateAlertMessage.value = "গিটহাবে নতুন সংস্করণ পাওয়া গেছে (${release.tagName})$source!\n${release.versionName}\n\nনতুন পরিবর্তন:\n${release.releaseNotes.take(300)}$ann\n\n'অনলাইন কনটেন্ট সিঙ্ক' বাটনে চাপলে সমস্ত নতুন দো'আ ও আমল সরাসরি অ্যাপে আপডেট হবে।"
+                    _updateAlertMessage.value = "গিটহাবে নতুন সংস্করণ পাওয়া গেছে (${release.tagName})$source!\n${release.versionName}\n\nনতুন পরিবর্তন:\n${release.releaseNotes.take(300)}$ann\n\n'সম্পূর্ণ APK ওটিএ আপডেট' বাটনে চাপলে সরাসরি নতুন APK ডাউনলোড ও ইনস্টল হবে।"
                 } else if (release != null) {
                     val ann = if (!release.announcement.isNullOrBlank()) "\n\nঘোষণা/বার্তা:\n${release.announcement}" else ""
                     val source = if (release.isFromAppUpdatesJson) "app-updates.json" else "GitHub Releases"
-                    _updateAlertMessage.value = "গিটহাব সিঙ্ক স্ট্যাটাস ($source):\nআপনার অ্যাপ ও কনটেন্ট সম্পূর্ণ হালনাগাদ রয়েছে (v${gitHubUpdateManager.appliedContentVersion} - কোড: ${gitHubUpdateManager.appliedVersionCode})। কোনো নতুন আপডেট বাকি নেই।$ann"
+                    _updateAlertMessage.value = "গিটহাব সিঙ্ক স্ট্যাটাস ($source):\nআপনার অ্যাপ ও কনটেন্ট সম্পূর্ণ হালনাগাদ রয়েছে (ইনস্টলড: v$installedAppVersionName - কনটেন্ট: v$appliedContentVersion)। কোনো নতুন আপডেট বাকি নেই।$ann"
                 } else {
-                    _updateAlertMessage.value = "আপনার অ্যাপটি সর্বশেষ সংস্করণে (v${gitHubUpdateManager.appliedContentVersion}) আপডেট করা আছে।"
+                    _updateAlertMessage.value = "আপনার অ্যাপটি সর্বশেষ সংস্করণে (v$installedAppVersionName) আপডেট করা আছে।"
                 }
             } else {
                 val errorMsg = result.exceptionOrNull()?.message ?: "অজ্ঞাত ত্রুটি"
@@ -770,6 +790,98 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 _updateAlertMessage.value = "গিটহাব সিঙ্ক স্ট্যাটাস ($owner/$repo):\n$errorMsg\n\nপ্রজেক্টের রুট ডিরেক্টরিতে 'app-updates.json' প্রস্তুত রয়েছে। এটি গিটহাবে পুশ করলেই ওভার-দ্য-এয়ার সিঙ্ক স্বয়ংক্রিয়ভাবে সক্রিয় হবে।"
             }
         }
+    }
+
+    /**
+     * Starts the full OTA APK update process:
+     * 1. Downloads the APK in-app with streaming byte & percentage progress
+     * 2. Automatically launches Android package installer (prompts "Do you want to install an update?")
+     * 3. Handles Unknown Sources permission if needed
+     */
+    fun startFullOtaApkUpdate() {
+        viewModelScope.launch {
+            _apkDownloadState.value = ApkDownloadProgress(isDownloading = true, progress = 0.05f)
+
+            var release = _latestReleaseInfo.value
+            if (release == null) {
+                val checkResult = gitHubUpdateManager.checkLatestRelease()
+                if (checkResult.isSuccess) {
+                    release = checkResult.getOrNull()
+                    _latestReleaseInfo.value = release
+                }
+            }
+
+            val targetUrl = release?.downloadUrl
+                ?: "https://github.com/${gitHubUpdateManager.repoOwner}/${gitHubUpdateManager.repoName}/releases/latest/download/app-release.apk"
+
+            val downloadResult = gitHubUpdateManager.downloadApkWithProgress(targetUrl) { progress, downloadedBytes, totalBytes ->
+                val dlMb = downloadedBytes.toFloat() / (1024f * 1024f)
+                val totMb = if (totalBytes > 0) totalBytes.toFloat() / (1024f * 1024f) else 0f
+                _apkDownloadState.value = ApkDownloadProgress(
+                    isDownloading = true,
+                    progress = if (progress >= 0f) progress else 0.5f,
+                    downloadedMb = dlMb,
+                    totalMb = totMb
+                )
+            }
+
+            if (downloadResult.isSuccess) {
+                val file = downloadResult.getOrThrow()
+                val sizeMb = file.length().toFloat() / (1024f * 1024f)
+                _apkDownloadState.value = ApkDownloadProgress(
+                    isDownloading = false,
+                    progress = 1f,
+                    downloadedMb = sizeMb,
+                    totalMb = sizeMb,
+                    downloadedFile = file
+                )
+
+                // Trigger package installation
+                val installResult = gitHubUpdateManager.installApk(file)
+                if (installResult.isSuccess) {
+                    val launched = installResult.getOrThrow()
+                    if (launched) {
+                        _apkDownloadState.value = _apkDownloadState.value.copy(installCompleted = true)
+                    } else {
+                        _apkDownloadState.value = _apkDownloadState.value.copy(waitingForInstallPermission = true)
+                    }
+                } else {
+                    _apkDownloadState.value = _apkDownloadState.value.copy(
+                        error = "ইনস্টলেশন শুরু করতে সমস্যা: ${installResult.exceptionOrNull()?.message}"
+                    )
+                }
+            } else {
+                val err = downloadResult.exceptionOrNull()?.message ?: "APK ডাউনলোড ব্যর্থ হয়েছে।"
+                _apkDownloadState.value = ApkDownloadProgress(
+                    isDownloading = false,
+                    error = err
+                )
+            }
+        }
+    }
+
+    fun retryInstallDownloadedApk() {
+        val file = _apkDownloadState.value.downloadedFile ?: return
+        val installResult = gitHubUpdateManager.installApk(file)
+        if (installResult.isSuccess) {
+            val launched = installResult.getOrThrow()
+            if (launched) {
+                _apkDownloadState.value = _apkDownloadState.value.copy(
+                    waitingForInstallPermission = false,
+                    installCompleted = true
+                )
+            } else {
+                _apkDownloadState.value = _apkDownloadState.value.copy(waitingForInstallPermission = true)
+            }
+        } else {
+            _apkDownloadState.value = _apkDownloadState.value.copy(
+                error = "ইনস্টলেশন শুরু করতে সমস্যা: ${installResult.exceptionOrNull()?.message}"
+            )
+        }
+    }
+
+    fun dismissApkDownloadDialog() {
+        _apkDownloadState.value = ApkDownloadProgress()
     }
 
     /**

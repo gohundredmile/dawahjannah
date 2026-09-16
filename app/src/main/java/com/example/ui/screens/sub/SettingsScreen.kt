@@ -30,8 +30,11 @@ import androidx.compose.material.icons.filled.FormatSize
 import androidx.compose.material.icons.filled.HelpOutline
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Palette
+import androidx.compose.material.icons.filled.PhoneAndroid
 import androidx.compose.material.icons.filled.Schedule
+import androidx.compose.material.icons.filled.Sync
 import androidx.compose.material.icons.filled.SystemUpdate
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -42,6 +45,7 @@ import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
@@ -63,6 +67,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import java.util.Locale
 import com.example.data.model.BanglaFont
 import com.example.data.model.BanglaFontWeight
 import com.example.data.model.EnglishFont
@@ -91,9 +96,11 @@ fun SettingsScreen(viewModel: MainViewModel) {
     val updateMessage by viewModel.updateAlertMessage.collectAsState()
     val latestReleaseInfo by viewModel.latestReleaseInfo.collectAsState()
     val isDownloadingUpdate by viewModel.isDownloadingUpdate.collectAsState()
+    val apkDownloadState by viewModel.apkDownloadState.collectAsState()
 
     var showRepoConfigDialog by remember { mutableStateOf(false) }
     var showSyncHelpDialog by remember { mutableStateOf(false) }
+    var showUsbGuideDialog by remember { mutableStateOf(false) }
     var inputOwner by remember { mutableStateOf(viewModel.gitHubUpdateManager.repoOwner) }
     var inputRepo by remember { mutableStateOf(viewModel.gitHubUpdateManager.repoName) }
 
@@ -490,7 +497,7 @@ fun SettingsScreen(viewModel: MainViewModel) {
 
                     Spacer(modifier = Modifier.height(8.dp))
 
-                    // Current Repo Target Badge
+                    // Current Repo Target & Real Installed Version Badge
                     Surface(
                         shape = RoundedCornerShape(8.dp),
                         color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
@@ -501,13 +508,13 @@ fun SettingsScreen(viewModel: MainViewModel) {
                             modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
                         ) {
                             Text(
-                                text = "কনটেন্ট ভার্সন: v${viewModel.appliedContentVersion} • ইনস্টলড ভার্সন: 1.0",
+                                text = "ইনস্টলড অ্যাপ ভার্সন: v${viewModel.installedAppVersionName} (কোড: ${viewModel.installedAppVersionCode})",
                                 style = MaterialTheme.typography.labelSmall,
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.primary
                             )
                             Text(
-                                text = "টার্গেট রিপো: github.com/${viewModel.gitHubUpdateManager.repoOwner}/${viewModel.gitHubUpdateManager.repoName}",
+                                text = "কনটেন্ট ভার্সন: v${viewModel.appliedContentVersion} • রিপো: github.com/${viewModel.gitHubUpdateManager.repoOwner}/${viewModel.gitHubUpdateManager.repoName}",
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -516,10 +523,10 @@ fun SettingsScreen(viewModel: MainViewModel) {
 
                     Spacer(modifier = Modifier.height(8.dp))
 
-                    // Action buttons: Configure & Help
+                    // Action buttons: Configure, USB Guide & Help
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
                         OutlinedButton(
                             onClick = {
@@ -530,9 +537,19 @@ fun SettingsScreen(viewModel: MainViewModel) {
                             shape = RoundedCornerShape(10.dp),
                             modifier = Modifier.weight(1f)
                         ) {
-                            Icon(Icons.Default.Edit, contentDescription = null, modifier = Modifier.size(14.dp))
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text("রিপোজিটরি পরিবর্তন", fontSize = 12.sp)
+                            Icon(Icons.Default.Edit, contentDescription = null, modifier = Modifier.size(13.dp))
+                            Spacer(modifier = Modifier.width(3.dp))
+                            Text("রিপো", fontSize = 11.sp)
+                        }
+
+                        OutlinedButton(
+                            onClick = { showUsbGuideDialog = true },
+                            shape = RoundedCornerShape(10.dp),
+                            modifier = Modifier.weight(1.3f)
+                        ) {
+                            Icon(Icons.Default.PhoneAndroid, contentDescription = null, modifier = Modifier.size(13.dp))
+                            Spacer(modifier = Modifier.width(3.dp))
+                            Text("USB ইনস্টল গাইড", fontSize = 11.sp)
                         }
 
                         OutlinedButton(
@@ -540,9 +557,9 @@ fun SettingsScreen(viewModel: MainViewModel) {
                             shape = RoundedCornerShape(10.dp),
                             modifier = Modifier.weight(1f)
                         ) {
-                            Icon(Icons.Default.HelpOutline, contentDescription = null, modifier = Modifier.size(14.dp))
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text("সিঙ্ক কিভাবে কাজ করে?", fontSize = 12.sp)
+                            Icon(Icons.Default.HelpOutline, contentDescription = null, modifier = Modifier.size(13.dp))
+                            Spacer(modifier = Modifier.width(3.dp))
+                            Text("সাহায্য", fontSize = 11.sp)
                         }
                     }
 
@@ -562,25 +579,40 @@ fun SettingsScreen(viewModel: MainViewModel) {
                         Text("গিটহাব আপডেট ও সিঙ্ক চেক করুন")
                     }
 
-                    Spacer(modifier = Modifier.height(6.dp))
+                    Spacer(modifier = Modifier.height(10.dp))
 
-                    OutlinedButton(
-                        onClick = { viewModel.testLocalAppUpdatesSync() },
+                    // 1. Full APK OTA Auto-Update (Primary)
+                    Button(
+                        onClick = { viewModel.startFullOtaApkUpdate() },
                         shape = RoundedCornerShape(10.dp),
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.primary
+                        )
                     ) {
                         Icon(
-                            imageVector = Icons.Default.Check,
+                            imageVector = Icons.Default.CloudDownload,
                             contentDescription = null,
-                            modifier = Modifier.size(15.dp),
-                            tint = MaterialTheme.colorScheme.primary
+                            modifier = Modifier.size(18.dp)
                         )
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Text("app-updates.json লোকাল টেস্ট", fontSize = 12.sp)
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Column(horizontalAlignment = Alignment.Start) {
+                            Text(
+                                text = "সম্পূর্ণ APK ওটিএ অটো-আপডেট (ফোনে সরাসরি)",
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 13.sp
+                            )
+                            Text(
+                                text = "পিসি/USB ক্যাবল ছাড়াই সরাসরি নতুন সংস্করণ ইনস্টল করুন",
+                                fontSize = 10.sp,
+                                color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.85f)
+                            )
+                        }
                     }
 
                     Spacer(modifier = Modifier.height(8.dp))
 
+                    // 2. Quick OTA Content Sync
                     if (isDownloadingUpdate) {
                         Button(
                             onClick = { },
@@ -597,37 +629,66 @@ fun SettingsScreen(viewModel: MainViewModel) {
                             Text("কনটেন্ট ডাউনলোড ও সিঙ্ক হচ্ছে...")
                         }
                     } else {
-                        Button(
-                            onClick = { viewModel.downloadNewApkVersion() },
-                            shape = RoundedCornerShape(10.dp),
-                            modifier = Modifier.fillMaxWidth(),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = if (latestReleaseInfo?.hasNewerVersion == true) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.primary.copy(alpha = 0.9f)
-                            )
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Download,
-                                contentDescription = null,
-                                modifier = Modifier.size(16.dp)
-                            )
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Text(if (latestReleaseInfo?.hasNewerVersion == true) "নতুন সংস্করণ APK ডাউনলোড করুন" else "নতুন সংস্করণ APK ডাউনলোড (GitHub Releases)")
-                        }
-
-                        Spacer(modifier = Modifier.height(6.dp))
-
                         OutlinedButton(
                             onClick = { viewModel.downloadAndApplyInAppUpdate(isLocalPreview = false) },
                             shape = RoundedCornerShape(10.dp),
                             modifier = Modifier.fillMaxWidth()
                         ) {
                             Icon(
-                                imageVector = Icons.Default.CloudDownload,
+                                imageVector = Icons.Default.Sync,
                                 contentDescription = null,
                                 modifier = Modifier.size(16.dp)
                             )
                             Spacer(modifier = Modifier.width(6.dp))
-                            Text("অনলাইন কনটেন্ট সিঙ্ক করুন (OTA)", fontSize = 13.sp)
+                            Column(horizontalAlignment = Alignment.Start) {
+                                Text(
+                                    text = "অনলাইন কনটেন্ট দ্রুত সিঙ্ক (Quick OTA Sync)",
+                                    fontSize = 12.sp,
+                                    fontWeight = FontWeight.SemiBold
+                                )
+                                Text(
+                                    text = "অ্যাপ রি-ইনস্টল ছাড়া শুধু নতুন দো'আ ও টেক্সট আপডেট",
+                                    fontSize = 10.sp,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    // 3. Fallbacks: Browser Download & Local JSON Test
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        OutlinedButton(
+                            onClick = { viewModel.downloadNewApkVersion() },
+                            shape = RoundedCornerShape(10.dp),
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Download,
+                                contentDescription = null,
+                                modifier = Modifier.size(13.dp)
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text("ব্রাউজার ডাউনলোড", fontSize = 11.sp)
+                        }
+
+                        OutlinedButton(
+                            onClick = { viewModel.testLocalAppUpdatesSync() },
+                            shape = RoundedCornerShape(10.dp),
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Check,
+                                contentDescription = null,
+                                modifier = Modifier.size(13.dp),
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text("লোকাল টেস্ট", fontSize = 11.sp)
                         }
                     }
                 }
@@ -720,6 +781,214 @@ fun SettingsScreen(viewModel: MainViewModel) {
                     confirmButton = {
                         Button(onClick = { showSyncHelpDialog = false }) {
                             Text("বুঝেছি")
+                        }
+                    }
+                )
+            }
+
+            // USB Installation Guide Dialog (Matching AI Studio WebUSB Screen)
+            if (showUsbGuideDialog) {
+                AlertDialog(
+                    onDismissRequest = { showUsbGuideDialog = false },
+                    title = {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = Icons.Default.PhoneAndroid,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(20.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text("ইউএসবি (USB) দিয়ে ইনস্টল গাইড", fontSize = 16.sp)
+                        }
+                    },
+                    text = {
+                        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                            Text(
+                                "গুগল এআই স্টুডিও (AI Studio) থেকে কম্পিউটারে USB ক্যাবল দিয়ে সরাসরি ফোনে ইনস্টল করার ৪টি সহজ ধাপ:",
+                                style = MaterialTheme.typography.bodySmall,
+                                fontWeight = FontWeight.Bold
+                            )
+
+                            Surface(
+                                shape = RoundedCornerShape(8.dp),
+                                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Column(
+                                    modifier = Modifier.padding(10.dp),
+                                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
+                                    Text(
+                                        "১. ডেভেলপার মোড চালু করুন:\nফোনের Settings > About phone > 'Build number'-এ একটানা ৭ বার ট্যাপ করুন।",
+                                        style = MaterialTheme.typography.bodySmall
+                                    )
+                                    Text(
+                                        "২. USB Debugging সক্রিয় করুন:\nSettings > System > Developer options-এ গিয়ে 'USB debugging' অন করুন।",
+                                        style = MaterialTheme.typography.bodySmall
+                                    )
+                                    Text(
+                                        "৩. ইউএসবি ক্যাবল দিয়ে যুক্ত করুন:\nফোনটিকে ইউএসবি ক্যাবল দিয়ে কম্পিউটারে কানেক্ট করুন এবং ফোনে 'Allow USB debugging' আসলে টিক দিয়ে OK দিন।",
+                                        style = MaterialTheme.typography.bodySmall
+                                    )
+                                    Text(
+                                        "৪. 'Install via USB' চাপুন:\nএআই স্টুডিও ব্রাউজারে 'Install via USB' বাটনে ক্লিক করলেই সরাসরি ফোনে ইনস্টল হয়ে যাবে।",
+                                        style = MaterialTheme.typography.bodySmall
+                                    )
+                                }
+                            }
+
+                            Surface(
+                                shape = RoundedCornerShape(8.dp),
+                                color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.35f),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Column(modifier = Modifier.padding(10.dp)) {
+                                    Text(
+                                        "★ ক্যাবল ছাড়া সরাসরি ফোনেই আপডেট চান?",
+                                        style = MaterialTheme.typography.labelMedium,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.primary
+                                    )
+                                    Spacer(modifier = Modifier.height(2.dp))
+                                    Text(
+                                        "সেটিংসের 'সম্পূর্ণ APK ওটিএ অটো-আপডেট' বাটনে চাপ দিন। কোনো পিসি বা ক্যাবল ছাড়াই সরাসরি ইন্টারনেট দিয়ে ফোনেই সম্পূর্ণ অ্যাপটি আপডেট ও ইনস্টল হয়ে যাবে!",
+                                        style = MaterialTheme.typography.bodySmall
+                                    )
+                                }
+                            }
+                        }
+                    },
+                    confirmButton = {
+                        Button(onClick = { showUsbGuideDialog = false }) {
+                            Text("বুঝেছি")
+                        }
+                    }
+                )
+            }
+
+            // Real-time In-App APK Download and Install Progress Dialog
+            if (apkDownloadState.isDownloading || apkDownloadState.error != null || apkDownloadState.waitingForInstallPermission || apkDownloadState.installCompleted) {
+                AlertDialog(
+                    onDismissRequest = {
+                        if (!apkDownloadState.isDownloading) {
+                            viewModel.dismissApkDownloadDialog()
+                        }
+                    },
+                    title = {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            val icon = when {
+                                apkDownloadState.error != null -> Icons.Default.Warning
+                                apkDownloadState.waitingForInstallPermission -> Icons.Default.Warning
+                                apkDownloadState.installCompleted -> Icons.Default.Check
+                                else -> Icons.Default.CloudDownload
+                            }
+                            val tint = when {
+                                apkDownloadState.error != null -> MaterialTheme.colorScheme.error
+                                apkDownloadState.waitingForInstallPermission -> MaterialTheme.colorScheme.tertiary
+                                else -> MaterialTheme.colorScheme.primary
+                            }
+                            Icon(icon, contentDescription = null, tint = tint, modifier = Modifier.size(22.dp))
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = when {
+                                    apkDownloadState.isDownloading -> "APK ওটিএ ডাউনলোড হচ্ছে..."
+                                    apkDownloadState.waitingForInstallPermission -> "অ্যাপ ইনস্টল পারমিশন প্রয়োজন"
+                                    apkDownloadState.installCompleted -> "ইনস্টলার শুরু হয়েছে"
+                                    apkDownloadState.error != null -> "আপডেট সমস্যা"
+                                    else -> "অ্যাপ আপডেট"
+                                },
+                                fontSize = 16.sp
+                            )
+                        }
+                    },
+                    text = {
+                        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                            when {
+                                apkDownloadState.isDownloading -> {
+                                    Text(
+                                        "গিটহাব থেকে সর্বশেষ সংস্করণের সম্পূর্ণ APK ফাইল ডাউনলোড হচ্ছে...",
+                                        style = MaterialTheme.typography.bodySmall
+                                    )
+                                    LinearProgressIndicator(
+                                        progress = { apkDownloadState.progress.coerceIn(0f, 1f) },
+                                        modifier = Modifier.fillMaxWidth()
+                                    )
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.SpaceBetween
+                                    ) {
+                                        Text(
+                                            text = "${String.format(Locale.US, "%.1f", apkDownloadState.downloadedMb)} MB / ${if (apkDownloadState.totalMb > 0f) String.format(Locale.US, "%.1f MB", apkDownloadState.totalMb) else "..."}",
+                                            style = MaterialTheme.typography.labelSmall
+                                        )
+                                        Text(
+                                            text = "${(apkDownloadState.progress * 100).toInt()}%",
+                                            style = MaterialTheme.typography.labelSmall,
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                    }
+                                    Text(
+                                        "ডাউনলোড শেষ হলেই স্বয়ংক্রিয়ভাবে প্যাকেজ ইনস্টলার ওপেন হবে।",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                                apkDownloadState.waitingForInstallPermission -> {
+                                    Text(
+                                        "অ্যান্ড্রয়েড ৮.০+ সিকিউরিটির জন্য অজ্ঞাত উৎস (Unknown Sources) থেকে অ্যাপ ইনস্টলের অনুমতি প্রয়োজন।\n\nসেটিংসে 'Allow from this source' চালু করে নিচের বাটনে চাপ দিন।",
+                                        style = MaterialTheme.typography.bodySmall
+                                    )
+                                }
+                                apkDownloadState.installCompleted -> {
+                                    Text(
+                                        "আপনার ফোনের সিস্টেম প্যাকেজ ইনস্টলার উইন্ডো খোলা হয়েছে!\n\nস্ক্রিনে আসা প্রম্পটে 'Update' অথবা 'ইনস্টল' বাটনে চাপ দিয়ে সম্পূর্ণ আপডেট সম্পন্ন করুন। আপনার আগের কোনো ডেটা বা আমল মুছে যাবে না।",
+                                        style = MaterialTheme.typography.bodySmall
+                                    )
+                                }
+                                apkDownloadState.error != null -> {
+                                    Text(
+                                        "ডাউনলোড বা ইনস্টলেশনে ত্রুটি ঘটেছে:\n\n${apkDownloadState.error}\n\nআপনি চাইলে ব্রাউজার থেকে সরাসরি রিলিজ পেজে গিয়ে APK নামিয়ে নিতে পারেন, অথবা ইউএসবি দিয়ে ইনস্টল করতে পারেন।",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.error
+                                    )
+                                }
+                            }
+                        }
+                    },
+                    confirmButton = {
+                        when {
+                            apkDownloadState.waitingForInstallPermission -> {
+                                Button(onClick = { viewModel.retryInstallDownloadedApk() }) {
+                                    Text("এখনই ইনস্টল করুন")
+                                }
+                            }
+                            apkDownloadState.error != null -> {
+                                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                    OutlinedButton(onClick = {
+                                        viewModel.dismissApkDownloadDialog()
+                                        viewModel.downloadNewApkVersion()
+                                    }) {
+                                        Text("ব্রাউজারে খুলুন")
+                                    }
+                                    Button(onClick = { viewModel.startFullOtaApkUpdate() }) {
+                                        Text("পুনরায় চেষ্টা")
+                                    }
+                                }
+                            }
+                            apkDownloadState.installCompleted -> {
+                                Button(onClick = { viewModel.dismissApkDownloadDialog() }) {
+                                    Text("ঠিক আছে")
+                                }
+                            }
+                            else -> {}
+                        }
+                    },
+                    dismissButton = {
+                        if (!apkDownloadState.isDownloading) {
+                            TextButton(onClick = { viewModel.dismissApkDownloadDialog() }) {
+                                Text("বাতিল")
+                            }
                         }
                     }
                 )

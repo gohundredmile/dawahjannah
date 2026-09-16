@@ -811,6 +811,17 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 }
             }
 
+            // Check if device is already running this or a newer version
+            val currentCode = gitHubUpdateManager.installedVersionCode
+            val remoteCode = release?.remoteVersionCode ?: 0
+            if (remoteCode > 0 && currentCode >= remoteCode && release?.hasNewerVersion == false) {
+                _apkDownloadState.value = ApkDownloadProgress(
+                    isDownloading = false,
+                    error = "আপনার অ্যাপটি ইতিমধ্যে সর্বশেষ সংস্করণ (${gitHubUpdateManager.installedVersionName}) এ আপডেট রয়েছে। আপনি ইতিমধ্যে আপ-টু-ডেট আছেন।"
+                )
+                return@launch
+            }
+
             val targetUrl = release?.downloadUrl
                 ?: "https://github.com/${gitHubUpdateManager.repoOwner}/${gitHubUpdateManager.repoName}/releases/latest/download/app-release.apk"
 

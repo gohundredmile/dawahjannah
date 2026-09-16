@@ -70,19 +70,26 @@ jobs:
 
       - name: Build Android APK with Gradle
         run: |
-          ./gradlew assembleDebug --no-daemon --stacktrace
+          ./gradlew assembleRelease assembleDebug --no-daemon --stacktrace
 
       - name: Verify and Stage APK Artifacts
         run: |
           mkdir -p release_artifacts
-          APK_SRC=$(find app/build/outputs/apk -name "*.apk" | head -n 1)
-          if [ -z "$APK_SRC" ]; then
-            echo "Error: No APK found after build!"
-            exit 1
+          RELEASE_APK=$(find app/build/outputs/apk/release -name "*.apk" | head -n 1)
+          DEBUG_APK=$(find app/build/outputs/apk/debug -name "*.apk" | head -n 1)
+          if [ -n "$RELEASE_APK" ]; then
+            echo "Found release APK: $RELEASE_APK"
+            cp "$RELEASE_APK" release_artifacts/app-release.apk
+          else
+            FALLBACK_APK=$(find app/build/outputs/apk -name "*.apk" | head -n 1)
+            cp "$FALLBACK_APK" release_artifacts/app-release.apk
           fi
-          echo "Found built APK at: $APK_SRC"
-          cp "$APK_SRC" release_artifacts/app-release.apk
-          cp "$APK_SRC" release_artifacts/app-debug.apk
+          if [ -n "$DEBUG_APK" ]; then
+            echo "Found debug APK: $DEBUG_APK"
+            cp "$DEBUG_APK" release_artifacts/app-debug.apk
+          else
+            cp release_artifacts/app-release.apk release_artifacts/app-debug.apk
+          fi
           ls -lh release_artifacts/
 
       - name: Extract Version Info

@@ -2,8 +2,10 @@ package com.example.data.remote
 
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
+import android.os.Environment
 import android.provider.Settings
 import androidx.core.content.FileProvider
 import com.squareup.moshi.JsonClass
@@ -177,6 +179,39 @@ class GitHubUpdateManager(private val context: Context) {
 
     val currentAppVersion: String
         get() = appliedContentVersion
+
+    val installedVersionCode: Long by lazy {
+        try {
+            val pInfo = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                context.packageManager.getPackageInfo(context.packageName, PackageManager.PackageInfoFlags.of(0))
+            } else {
+                @Suppress("DEPRECATION")
+                context.packageManager.getPackageInfo(context.packageName, 0)
+            }
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                pInfo.longVersionCode
+            } else {
+                @Suppress("DEPRECATION")
+                pInfo.versionCode.toLong()
+            }
+        } catch (_: Exception) {
+            140L
+        }
+    }
+
+    val installedVersionName: String by lazy {
+        try {
+            val pInfo = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                context.packageManager.getPackageInfo(context.packageName, PackageManager.PackageInfoFlags.of(0))
+            } else {
+                @Suppress("DEPRECATION")
+                context.packageManager.getPackageInfo(context.packageName, 0)
+            }
+            pInfo.versionName ?: "1.4.0"
+        } catch (_: Exception) {
+            "1.4.0"
+        }
+    }
 
     fun calculateHash(content: String): String {
         return try {
@@ -844,7 +879,10 @@ class GitHubUpdateManager(private val context: Context) {
         }
 
         var lastError: Exception? = null
-        val apkDir = File(context.cacheDir, "apk_updates").apply { mkdirs() }
+        val baseDir = context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS)
+            ?: context.externalCacheDir
+            ?: context.cacheDir
+        val apkDir = File(baseDir, "apk_updates").apply { mkdirs() }
         val apkFile = File(apkDir, "dawah_to_jannah_update.apk")
 
         for (candidateUrl in candidates) {
@@ -890,6 +928,8 @@ class GitHubUpdateManager(private val context: Context) {
                 outputStream.flush()
                 outputStream.close()
                 inputStream.close()
+
+                apkFile.setReadable(true, false)
 
                 if (apkFile.length() < 100_000) {
                     val size = apkFile.length()
@@ -940,6 +980,8 @@ class GitHubUpdateManager(private val context: Context) {
                 }
             }
 
+            apkFile.setReadable(true, false)
+
             val apkUri = FileProvider.getUriForFile(
                 context,
                 "${context.packageName}.fileprovider",
@@ -949,8 +991,33 @@ class GitHubUpdateManager(private val context: Context) {
             val installIntent = Intent(Intent.ACTION_VIEW).apply {
                 setDataAndType(apkUri, "application/vnd.android.package-archive")
                 addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                addFlags(Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION)
                 addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
+                putExtra(Intent.EXTRA_NOT_UNKNOWN_SOURCE, true)
             }
+
+            // Explicitly grant URI permission to any package installer component
+            try {
+                val resolvedActivities = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    context.packageManager.queryIntentActivities(
+                        installIntent,
+                        PackageManager.ResolveInfoFlags.of(PackageManager.MATCH_DEFAULT_ONLY.toLong())
+                    )
+                } else {
+                    @Suppress("DEPRECATION")
+                    context.packageManager.queryIntentActivities(installIntent, PackageManager.MATCH_DEFAULT_ONLY)
+                }
+                for (resolveInfo in resolvedActivities) {
+                    val targetPackage = resolveInfo.activityInfo.packageName
+                    context.grantUriPermission(
+                        targetPackage,
+                        apkUri,
+                        Intent.FLAG_GRANT_READ_URI_PERMISSION
+                    )
+                }
+            } catch (_: Exception) {}
+
             context.startActivity(installIntent)
             Result.success(true)
         } catch (e: Exception) {

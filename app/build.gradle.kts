@@ -25,19 +25,20 @@ android {
 
   signingConfigs {
     create("release") {
-      val keystorePath = System.getenv("KEYSTORE_PATH") ?: "${rootDir}/debug.keystore"
+      val keystorePath = System.getenv("KEYSTORE_PATH") ?: if (file("${rootDir}/release.keystore").exists()) "${rootDir}/release.keystore" else "${rootDir}/debug.keystore"
       storeFile = file(keystorePath)
-      storePassword = System.getenv("STORE_PASSWORD") ?: "android"
-      keyAlias = System.getenv("KEY_ALIAS") ?: "androiddebugkey"
-      keyPassword = System.getenv("KEY_PASSWORD") ?: "android"
+      storePassword = System.getenv("STORE_PASSWORD") ?: if (file("${rootDir}/release.keystore").exists()) "dawahtojannah" else "android"
+      keyAlias = System.getenv("KEY_ALIAS") ?: if (file("${rootDir}/release.keystore").exists()) "dawahkey" else "androiddebugkey"
+      keyPassword = System.getenv("KEY_PASSWORD") ?: if (file("${rootDir}/release.keystore").exists()) "dawahtojannah" else "android"
       enableV1Signing = true
       enableV2Signing = true
     }
     create("debugConfig") {
-      storeFile = file("${rootDir}/debug.keystore")
-      storePassword = "android"
-      keyAlias = "androiddebugkey"
-      keyPassword = "android"
+      val keystorePath = if (file("${rootDir}/release.keystore").exists()) "${rootDir}/release.keystore" else "${rootDir}/debug.keystore"
+      storeFile = file(keystorePath)
+      storePassword = if (file("${rootDir}/release.keystore").exists()) "dawahtojannah" else "android"
+      keyAlias = if (file("${rootDir}/release.keystore").exists()) "dawahkey" else "androiddebugkey"
+      keyPassword = if (file("${rootDir}/release.keystore").exists()) "dawahtojannah" else "android"
       enableV1Signing = true
       enableV2Signing = true
     }

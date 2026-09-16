@@ -56,13 +56,15 @@ jobs:
       - name: Prepare Signing Keystore & Build Environment
         run: |
           touch .env || true
-          if [ -f "debug.keystore.base64" ]; then
-            echo "Decoding debug.keystore from base64..."
-            base64 -d debug.keystore.base64 > debug.keystore
+          echo "Setting up permanent Dawah To Jannah signing keystore..."
+          if [ -f "release.keystore.b64" ]; then
+            base64 -d release.keystore.b64 > release.keystore
           fi
-          if [ ! -f "debug.keystore" ]; then
-            echo "Generating fallback debug.keystore..."
-            keytool -genkey -v -keystore debug.keystore -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Android Debug,O=Android,C=US"
+          if [ -f "release.keystore" ]; then
+            cp release.keystore debug.keystore
+          elif [ -f "debug.keystore.base64" ]; then
+            base64 -d debug.keystore.base64 > debug.keystore
+            cp debug.keystore release.keystore
           fi
           chmod +x gradlew || true
 

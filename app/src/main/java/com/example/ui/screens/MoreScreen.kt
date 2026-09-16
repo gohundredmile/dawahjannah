@@ -187,7 +187,7 @@ fun MoreScreen(
                 val countBn = CalendarHelper.toBanglaNumber(salatDuaSec?.items?.size ?: 28)
                 MoreFeatureItem(
                     title = "★★★সালাত ও দোয়া★★★",
-                    subtitle = "সিজদায় দো'আ • বিত্রের কুনূত ও যিকির • জামা'আত ওয়াজিব ও কাযা বিধান • কিয়ামতে প্রথম হিসাব ও ফজরের ৭টি ফজিলত",
+                    subtitle = "সিজদায় দো'আ • বিত্‌রের কুনুতের দোয়া ও যিকির • জামা'আত ওয়াজিব ও কাযা বিধান • কিয়ামতে প্রথম হিসাব ও ফজরের ৭টি ফজিলত",
                     icon = Icons.Default.Mosque,
                     iconTint = Color(0xFF0D9488),
                     badge = "${countBn}টি প্রামাণ্য আমল • নতুন",

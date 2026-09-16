@@ -70,6 +70,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.data.model.SalatConfiguration
 import com.example.util.BengaliDayItem
 import com.example.util.CalendarHelper
 import com.example.util.CalendarMonthProvider
@@ -85,10 +86,13 @@ import java.util.Locale
 @Composable
 fun DateTimeMasterCard(
     calendarInfo: CalendarHelper.TripleCalendarInfo,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    salatConfig: SalatConfiguration = SalatConfiguration(),
+    onOpenSalatCalendar: (() -> Unit)? = null
 ) {
     // Current time ticker state
     var currentTime by remember { mutableStateOf(Date()) }
+    var showDailySalatCalendar by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) {
         while (true) {
             currentTime = Date()
@@ -162,9 +166,15 @@ fun DateTimeMasterCard(
                 .padding(start = 12.dp, end = 12.dp, top = 4.dp, bottom = 8.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // 1. BIG DIGITAL CLOCK DISPLAY (Replicating screenshot)
+            // 1. BIG DIGITAL CLOCK DISPLAY (Tap on Time opens Daily Salat Calendar)
             Row(
-                modifier = Modifier.padding(top = 2.dp, bottom = 6.dp),
+                modifier = Modifier
+                    .clip(RoundedCornerShape(14.dp))
+                    .clickable {
+                        showDailySalatCalendar = true
+                        onOpenSalatCalendar?.invoke()
+                    }
+                    .padding(horizontal = 10.dp, vertical = 3.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.Center
             ) {
@@ -222,31 +232,33 @@ fun DateTimeMasterCard(
                 }
             }
 
-            // 2. MIDDLE BANGLA DAY & DATE PILL (Replicating screenshot)
-            Surface(
-                shape = RoundedCornerShape(20.dp),
-                color = Color(0xFFE8F4ED),
-                border = BorderStroke(1.dp, Color(0xFFCBE5D6)),
-                modifier = Modifier.padding(bottom = 12.dp)
+            // 2. PRIMARY GREGORIAN & BANGLA DAY DATE (Placed directly below the clock)
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier
+                    .clip(RoundedCornerShape(10.dp))
+                    .clickable {
+                        showDailySalatCalendar = true
+                        onOpenSalatCalendar?.invoke()
+                    }
+                    .padding(horizontal = 10.dp, vertical = 3.dp)
             ) {
-                Row(
-                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.AutoAwesome,
-                        contentDescription = "Star",
-                        tint = Color(0xFFD97706),
-                        modifier = Modifier.size(16.dp)
-                    )
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Text(
-                        text = "আজ ${calendarInfo.englishDay.replace(" (জুমাবার)", "")}, ${calendarInfo.bengaliMonth} ${calendarInfo.bengaliDateFormatted.substringBefore("(").trim()}",
-                        style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = Color(0xFF166534)
-                    )
-                }
+                Text(
+                    text = "$dynamicGregorianDateBn, ${calendarInfo.englishDay}",
+                    fontSize = 17.5.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFF111827),
+                    letterSpacing = (-0.3).sp,
+                    textAlign = TextAlign.Center
+                )
+                Text(
+                    text = calendarInfo.englishDateFormatted,
+                    fontSize = 12.5.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = Color(0xFF4B5563),
+                    modifier = Modifier.padding(top = 2.dp),
+                    textAlign = TextAlign.Center
+                )
             }
 
             HorizontalDivider(
@@ -512,6 +524,14 @@ fun DateTimeMasterCard(
             }
         }
     }
+
+    if (showDailySalatCalendar) {
+        DailySalatCalendarDialog(
+            onDismiss = { showDailySalatCalendar = false },
+            initialDate = cal,
+            salatConfig = salatConfig
+        )
+    }
 }
 
 // -------------------------------------------------------------
@@ -589,24 +609,7 @@ private fun SingleTodayCalendarCard(
                 }
             }
 
-            Spacer(modifier = Modifier.height(12.dp))
-
-            // Main Primary Date
-            Text(
-                text = "$gregorianDateBn, $englishDay",
-                fontSize = 18.5.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color(0xFF111827),
-                letterSpacing = (-0.3).sp
-            )
-            Text(
-                text = calendarInfo.englishDateFormatted,
-                fontSize = 12.5.sp,
-                color = Color(0xFF4B5563),
-                modifier = Modifier.padding(top = 2.dp)
-            )
-
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(10.dp))
 
             // 3 Calendar Horizontal Quick Cards (always clean white cards on lite warm background)
             Row(

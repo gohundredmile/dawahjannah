@@ -131,7 +131,10 @@ fun HomeScreen(
 
         // 3. Date & Time Master Card with Expandable Triple Calendars
         item {
-            DateTimeMasterCard(calendarInfo = tripleCalendar)
+            DateTimeMasterCard(
+                calendarInfo = tripleCalendar,
+                salatConfig = salatConfig
+            )
         }
 
         // 4. সেহরি এবং ইফতারের সময়সূচী (Sehri & Ifter Timing)

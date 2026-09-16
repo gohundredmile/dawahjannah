@@ -56,18 +56,18 @@ object CalendarHelper {
         val year: Int
     )
 
-    private val banglaMonths = arrayOf(
+    val banglaMonths = arrayOf(
         "বৈশাখ", "জ্যৈষ্ঠ", "আষাঢ়", "শ্রাবণ", "ভাদ্র", "আশ্বিন",
         "কার্তিক", "অগ্রহায়ণ", "পৌষ", "মাঘ", "ফাল্গুন", "চৈত্র"
     )
 
-    private val banglaSeasons = arrayOf(
+    val banglaSeasons = arrayOf(
         "গ্রীষ্মকাল", "বর্ষাকাল", "শরৎকাল", "হেমন্তকাল", "শীতকাল", "বসন্তকাল"
     )
 
-    private val hijriMonths = arrayOf(
-        "মুহররম", "সফর", "রবিউল আউয়াল", "রবিউস সানি",
-        "জমাদিউল আউয়াল", "জমাদিউস সানি", "রজব", "শাবান",
+    val hijriMonths = arrayOf(
+        "মুহররম", "সফর", "রবিউল আউয়াল", "রবিউল আখির",
+        "জমাদিউল আউয়াল", "জমাদিউল আখির", "রজব", "শাবান",
         "রমাদান", "শাওয়াল", "জিলকদ", "জিলহজ্জ"
     )
 
@@ -116,7 +116,7 @@ object CalendarHelper {
         )
     }
 
-    private val englishDaysBn = mapOf(
+    val englishDaysBn = mapOf(
         Calendar.SUNDAY to "রবিবার",
         Calendar.MONDAY to "সোমবার",
         Calendar.TUESDAY to "মঙ্গলবার",
@@ -126,7 +126,7 @@ object CalendarHelper {
         Calendar.SATURDAY to "শনিবার"
     )
 
-    private val englishShortDaysBn = mapOf(
+    val englishShortDaysBn = mapOf(
         Calendar.SUNDAY to "রবি",
         Calendar.MONDAY to "সোম",
         Calendar.TUESDAY to "মঙ্গল",
@@ -136,9 +136,31 @@ object CalendarHelper {
         Calendar.SATURDAY to "শনি"
     )
 
-    private val englishMonthsBn = arrayOf(
+    val englishMonthsBn = arrayOf(
         "জানুয়ারি", "ফেব্রুয়ারি", "মার্চ", "এপ্রিল", "মে", "জুন",
         "জুলাই", "আগস্ট", "সেপ্টেম্বর", "অক্টোবর", "নভেম্বর", "ডিসেম্বর"
+    )
+
+    data class DaySalatScheduleItem(
+        val dayOfMonth: Int,
+        val monthIndex: Int,
+        val year: Int,
+        val dayOfWeekBn: String,
+        val gregorianHeaderDateBn: String, // e.g. "১৬ সেপ্টেম্বর, ২০২৬ – বুধবার"
+        val hijriBengaliSubtitleBn: String, // e.g. "৪ রবিউল আখির, ১৪৪৮ • ১ আশ্বিন, ১৪৩৩"
+        val isToday: Boolean,
+        val fajrTimeBn: String,
+        val dhuhrTimeBn: String,
+        val asrTimeBn: String,
+        val maghribTimeBn: String,
+        val ishaTimeBn: String,
+        val sunriseTimeBn: String,
+        val sunsetTimeBn: String,
+        val sehriTimeBn: String,
+        val iftarTimeBn: String,
+        val morningForbiddenTimeBn: String,
+        val noonForbiddenTimeBn: String,
+        val eveningForbiddenTimeBn: String
     )
 
     fun getTripleCalendar(date: Date = Date()): TripleCalendarInfo {

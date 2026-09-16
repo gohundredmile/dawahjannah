@@ -6,6 +6,9 @@ import com.example.data.model.IslamicLifeSection
 object IslamicLifeData {
 
     val sections: List<IslamicLifeSection> = listOf(
+        // ★★★রুকিয়াহ - Ruqyah★★★
+        RuqyahShariahData.section,
+
         // ★★★সালাত ও দোয়া★★★
         SalatAndDuaData.section,
 

@@ -87,6 +87,7 @@ fun IslamicLifeSectionDetailScreen(
     val context = LocalContext.current
 
     val sectionIcon = when (section.id) {
+        "ruqyah_shariah_special" -> Icons.Default.Healing
         "salat_and_dua_special" -> Icons.Default.Mosque
         "morning_evening_special" -> Icons.Default.WbSunny
         "sayyidul_istighfar_special" -> Icons.Default.Star
@@ -105,6 +106,7 @@ fun IslamicLifeSectionDetailScreen(
     }
 
     val iconTint = when (section.id) {
+        "ruqyah_shariah_special" -> Color(0xFF059669)
         "salat_and_dua_special" -> Color(0xFF0D9488)
         "ali_imran_rizq_honor" -> IslamicGold
         "morning_evening_special" -> Color(0xFFD97706)
@@ -122,6 +124,7 @@ fun IslamicLifeSectionDetailScreen(
         else -> MaterialTheme.colorScheme.primary
     }
 
+    val isRuqyah = section.id == "ruqyah_shariah_special"
     val isSalatAndDua = section.id == "salat_and_dua_special"
     val isAliImranRizq = section.id == "ali_imran_rizq_honor"
     val isSalamBefore = section.id == "salam_before"
@@ -133,12 +136,13 @@ fun IslamicLifeSectionDetailScreen(
     val isAsmaulHusna = section.id == "asmaul_husna_special"
     val isSayyidulIstighfar = section.id == "sayyidul_istighfar_special"
     val isMorningEvening = section.id == "morning_evening_special"
-    val isDuaRichSection = isSalatAndDua || isAliImranRizq || isSalamBefore || isFarzAfter || isNightAwaken || isFajrBetweenAfter || isFiveWaqtAfter || isFridaySpecial || isAsmaulHusna || isSayyidulIstighfar || isMorningEvening
+    val isDuaRichSection = isRuqyah || isSalatAndDua || isAliImranRizq || isSalamBefore || isFarzAfter || isNightAwaken || isFajrBetweenAfter || isFiveWaqtAfter || isFridaySpecial || isAsmaulHusna || isSayyidulIstighfar || isMorningEvening
 
     var searchQuery by remember { mutableStateOf("") }
     var selectedCategoryFilter by remember(section.id) {
         mutableStateOf(
             when (section.id) {
+                "ruqyah_shariah_special" -> "সকল রুকিয়াহ ও আমল"
                 "salat_and_dua_special" -> "সকল বিষয় ও দো'আ"
                 "ali_imran_rizq_honor" -> "সকল বিষয় ও দো'আ"
                 "morning_evening_special" -> "সকল দো'আ ও আমল"
@@ -156,6 +160,16 @@ fun IslamicLifeSectionDetailScreen(
 
     val categoryFilters = remember(section.id) {
         when (section.id) {
+            "ruqyah_shariah_special" -> listOf(
+                "সকল রুকিয়াহ ও আমল",
+                "রোগ ও ব্যথা মুক্তি",
+                "বদনজর ও জিনের আছর",
+                "আকস্মিক বিপদ ও ক্ষতিপূরণ",
+                "শত্রুতা ও তাওয়াক্কুল",
+                "উদ্ধার ও খাস সাহায্য",
+                "মহামারী ও সার্বিক সুরক্ষা",
+                "নবীজী ﷺ ও জিবরাঈল (আ.)"
+            )
             "salat_and_dua_special" -> listOf("সকল বিষয় ও দো'আ", "সিজদায় দো'আ", "দুই সিজদার বৈঠক", "রুকু, সালাম ও তাশাহহুদ", "বিতর ও ফজর সালাত", "মনোযোগ ও আদব গাইড", "ওয়াক্ত, জামা'আত ও কাযা")
             "ali_imran_rizq_honor" -> listOf("সকল বিষয় ও দো'আ", "সূরা আল ইমরান ও ঋণমুক্তি", "সূরা হাশরের শেষ ৩ আয়াত", "রিযিক ও ঋণমুক্তির সহীহ দো'আ", "তাহকীক ও তাওয়াক্কুল গাইড")
             "morning_evening_special" -> listOf("সকল দো'আ ও আমল", "ফরজ সালাত পরবর্তী", "হেফাজত ও নিরাপত্তা", "ক্ষমা ও জান্নাত লাভ", "তাওহীদ ও তাসবীহাত", "ফিকহ ও আদব গাইড")
@@ -174,6 +188,13 @@ fun IslamicLifeSectionDetailScreen(
 
     val filteredItems = remember(section.items, searchQuery, selectedCategoryFilter) {
         val baseList = when (selectedCategoryFilter) {
+            "রোগ ও ব্যথা মুক্তি" -> section.items.filter { it.id in listOf("rq_anam_17_disease_cure", "rq_headache_migraine_relief", "rq_ayyub_disease_cure_dua", "rq_body_pain_prophetic_ruqyah", "rq_fatal_disease_paralysis_protection", "rq_body_organs_health_dua", "rq_leprosy_insanity_severe_diseases") }
+            "বদনজর ও জিনের আছর" -> section.items.filter { it.id in listOf("rq_evil_eye_jinn_symptoms_diagnosis", "rq_thirty_three_ayats_hirz") }
+            "আকস্মিক বিপদ ও ক্ষতিপূরণ" -> section.items.filter { it.id in listOf("rq_sudden_calamity_loss_of_blessing", "rq_loss_reward_better_replacement_salama", "rq_alhamdulillah_afani_seeing_afflicted") }
+            "শত্রুতা ও তাওয়াক্কুল" -> section.items.filter { it.id in listOf("rq_anfal_17_divine_strike", "rq_ali_imran_125_five_thousand_angels", "rq_hasbunallah_best_protector", "rq_hawqalah_istighfar_99_calamities") }
+            "উদ্ধার ও খাস সাহায্য" -> section.items.filter { it.id in listOf("rq_ya_hayyu_ya_qayyum_istigheeth", "rq_prophet_karb_great_calamity", "rq_dua_yunus_calamity_solver", "rq_anxiety_sorrow_debt_prophetic_dua") }
+            "মহামারী ও সার্বিক সুরক্ষা" -> section.items.filter { it.id in listOf("rq_five_duas_epidemic_infection_protection", "rq_bismillahilladhi_protection_all_harm", "rq_audhu_bikalimatillah_scorpion_poison", "rq_afiyah_dunya_akhirah_dua") }
+            "নবীজী ﷺ ও জিবরাঈল (আ.)" -> section.items.filter { it.id in listOf("rq_fatiha_and_three_quls_ruqyah", "rq_jibreel_prophetic_ruqyah_cure", "rq_prophet_cure_sick_rabbin_naas", "rq_sunnah_medicine_blackseed_honey_dates", "rq_protective_surahs_quran_sahih_virtues") }
             "সিজদায় দো'আ" -> section.items.filter { it.id.startsWith("sd_sujood_") }
             "দুই সিজদার বৈঠক" -> section.items.filter { it.id.startsWith("sd_jalsah_") }
             "রুকু, সালাম ও তাশাহহুদ", "রুকু ও সালামের দো'আ" -> section.items.filter { it.id in listOf("sd_opening_takbeer_istiftah", "sd_ruku_tasbeeh_quddus", "sd_qawmah_tahmeed_thirty_angels", "sd_before_salam_four_protections", "sd_refuge_bukhari_bukhl_qubr", "sd_attahiyyat_durood_virtue") }
@@ -554,7 +575,14 @@ fun IslamicLifeSectionDetailScreen(
                         items(categoryFilters) { cat ->
                             val isSelected = selectedCategoryFilter == cat
                             val count = when (cat) {
-                                "সকল বিষয়", "সকল দো'আ", "সকল আমল ও দো'আ", "সকল দো'আ ও আমল", "সকল অধ্যায়", "সকল আমল ও নাম", "সকল বাক্য ও আমল", "সকল বিষয় ও দো'আ" -> section.items.size
+                                "সকল বিষয়", "সকল দো'আ", "সকল আমল ও দো'আ", "সকল দো'আ ও আমল", "সকল অধ্যায়", "সকল আমল ও নাম", "সকল বাক্য ও আমল", "সকল বিষয় ও দো'আ", "সকল রুকিয়াহ ও আমল" -> section.items.size
+                                "রোগ ও ব্যথা মুক্তি" -> section.items.count { it.id in listOf("rq_anam_17_disease_cure", "rq_headache_migraine_relief", "rq_ayyub_disease_cure_dua", "rq_body_pain_prophetic_ruqyah", "rq_fatal_disease_paralysis_protection", "rq_body_organs_health_dua", "rq_leprosy_insanity_severe_diseases") }
+                                "বদনজর ও জিনের আছর" -> section.items.count { it.id in listOf("rq_evil_eye_jinn_symptoms_diagnosis", "rq_thirty_three_ayats_hirz") }
+                                "আকস্মিক বিপদ ও ক্ষতিপূরণ" -> section.items.count { it.id in listOf("rq_sudden_calamity_loss_of_blessing", "rq_loss_reward_better_replacement_salama", "rq_alhamdulillah_afani_seeing_afflicted") }
+                                "শত্রুতা ও তাওয়াক্কুল" -> section.items.count { it.id in listOf("rq_anfal_17_divine_strike", "rq_ali_imran_125_five_thousand_angels", "rq_hasbunallah_best_protector", "rq_hawqalah_istighfar_99_calamities") }
+                                "উদ্ধার ও খাস সাহায্য" -> section.items.count { it.id in listOf("rq_ya_hayyu_ya_qayyum_istigheeth", "rq_prophet_karb_great_calamity", "rq_dua_yunus_calamity_solver", "rq_anxiety_sorrow_debt_prophetic_dua") }
+                                "মহামারী ও সার্বিক সুরক্ষা" -> section.items.count { it.id in listOf("rq_five_duas_epidemic_infection_protection", "rq_bismillahilladhi_protection_all_harm", "rq_audhu_bikalimatillah_scorpion_poison", "rq_afiyah_dunya_akhirah_dua") }
+                                "নবীজী ﷺ ও জিবরাঈল (আ.)" -> section.items.count { it.id in listOf("rq_fatiha_and_three_quls_ruqyah", "rq_jibreel_prophetic_ruqyah_cure", "rq_prophet_cure_sick_rabbin_naas", "rq_sunnah_medicine_blackseed_honey_dates", "rq_protective_surahs_quran_sahih_virtues") }
                                 "সিজদায় দো'আ" -> section.items.count { it.id.startsWith("sd_sujood_") }
                                 "দুই সিজদার বৈঠক" -> section.items.count { it.id.startsWith("sd_jalsah_") }
                                 "জামা'আত তরকের উযর" -> section.items.count { it.id == "sd_jamaat_excuses_fiqh" }

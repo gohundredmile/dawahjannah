@@ -162,6 +162,25 @@ fun MoreScreen(
                 Spacer(modifier = Modifier.height(16.dp))
             }
 
+            // Featured: Ruqyah Special (★★★রুকিয়াহ - Ruqyah★★★)
+            val ruqyahSec = viewModel.getIslamicLifeSection("ruqyah_shariah_special")
+            item {
+                val countBn = CalendarHelper.toBanglaNumber(ruqyahSec?.items?.size ?: 20)
+                MoreFeatureItem(
+                    title = "★★★রুকিয়াহ - Ruqyah★★★",
+                    subtitle = "বদনজর, যাদু-টোনা, রোগব্যাধি ও শয়তানের অনিষ্ট থেকে সুরক্ষায় কুরআন ও সিহাহ সিত্তাহর সহীহ রুকইয়াহ ও দো'আ",
+                    icon = Icons.Default.Healing,
+                    iconTint = Color(0xFF059669),
+                    badge = "${countBn}টি সহীহ রুকইয়াহ ও আমল • নতুন",
+                    onClick = {
+                        (viewModel.getIslamicLifeSection("ruqyah_shariah_special") ?: IslamicLifeData.sections.find { it.id == "ruqyah_shariah_special" })?.let {
+                            viewModel.openIslamicLifeSection(it)
+                        }
+                    }
+                )
+                Spacer(modifier = Modifier.height(10.dp))
+            }
+
             // Featured: Salat and Dua Special (★★★সালাত ও দোয়া★★★)
             val salatDuaSec = viewModel.getIslamicLifeSection("salat_and_dua_special")
             item {
@@ -587,6 +606,8 @@ private fun IslamicLifeSectionNavCard(
     onClick: () -> Unit
 ) {
     val sectionIcon = when (section.id) {
+        "ruqyah_shariah_special" -> Icons.Default.Healing
+        "salat_and_dua_special" -> Icons.Default.Mosque
         "sayyidul_istighfar_special" -> Icons.Default.Star
         "asmaul_husna_special" -> Icons.Default.Star
         "five_waqt_after_salat" -> Icons.Default.Mosque
@@ -602,6 +623,8 @@ private fun IslamicLifeSectionNavCard(
     }
 
     val iconTint = when (section.id) {
+        "ruqyah_shariah_special" -> Color(0xFF059669)
+        "salat_and_dua_special" -> Color(0xFF0D9488)
         "sayyidul_istighfar_special", "asmaul_husna_special" -> IslamicGold
         "five_waqt_after_salat" -> Color(0xFF0D9488)
         "daily_dhikr_tasbih_tahlil" -> IslamicGold

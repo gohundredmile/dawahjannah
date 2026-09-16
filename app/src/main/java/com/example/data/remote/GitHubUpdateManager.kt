@@ -11,6 +11,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
 import okhttp3.Request
+import org.json.JSONArray
 import org.json.JSONObject
 import java.io.File
 import java.io.FileOutputStream
@@ -256,8 +257,11 @@ class GitHubUpdateManager(private val context: Context) {
                             val asset = assetsArray.getJSONObject(i)
                             val name = asset.optString("name", "")
                             if (name.endsWith(".apk", ignoreCase = true)) {
-                                apkDownloadUrl = asset.optString("browser_download_url", null)
-                                break
+                                val dl = asset.optString("browser_download_url", "")
+                                if (dl.isNotBlank()) {
+                                    apkDownloadUrl = dl
+                                    break
+                                }
                             }
                         }
                     }
@@ -730,79 +734,188 @@ class GitHubUpdateManager(private val context: Context) {
         val repo = repoName
         return when {
             rawUrl.contains("releases/download/") -> rawUrl
-            rawUrl.isNotBlank() && !rawUrl.contains("releases/latest") -> rawUrl
+            rawUrl.isNotBlank() && !rawUrl.contains("releases/latest") && !rawUrl.endsWith("releases") -> rawUrl
             else -> "https://github.com/$owner/$repo/releases/latest/download/app-release.apk"
         }
     }
 
     /**
+     * Searches GitHub Releases API for any live .apk asset browser_download_url
+     */
+    suspend fun discoverLiveApkUrl(owner: String = repoOwner, repo: String = repoName): String? = withContext(Dispatchers.IO) {
+        // 1. Check latest release
+        try {
+            val req = Request.Builder()
+                .url("https://api.github.com/repos/$owner/$repo/releases/latest")
+                .header("Accept", "application/vnd.github.v3+json")
+                .header("User-Agent", "DawahToJannah-Android-App")
+                .header("Cache-Control", "no-cache")
+                .build()
+            val resp = client.newCall(req).execute()
+            if (resp.isSuccessful) {
+                val body = resp.body?.string()
+                if (!body.isNullOrBlank()) {
+                    val json = JSONObject(body)
+                    val assets = json.optJSONArray("assets")
+                    if (assets != null) {
+                        for (i in 0 until assets.length()) {
+                            val asset = assets.getJSONObject(i)
+                            val name = asset.optString("name", "")
+                            if (name.endsWith(".apk", ignoreCase = true)) {
+                                val downloadUrl = asset.optString("browser_download_url", "")
+                                if (downloadUrl.isNotBlank()) return@withContext downloadUrl
+                            }
+                        }
+                    }
+                }
+            }
+        } catch (_: Exception) {}
+
+        // 2. Check all recent releases (in case latest is not tagged as 'latest' release)
+        try {
+            val req = Request.Builder()
+                .url("https://api.github.com/repos/$owner/$repo/releases?per_page=5")
+                .header("Accept", "application/vnd.github.v3+json")
+                .header("User-Agent", "DawahToJannah-Android-App")
+                .header("Cache-Control", "no-cache")
+                .build()
+            val resp = client.newCall(req).execute()
+            if (resp.isSuccessful) {
+                val body = resp.body?.string()
+                if (!body.isNullOrBlank()) {
+                    val releases = JSONArray(body)
+                    for (i in 0 until releases.length()) {
+                        val rel = releases.getJSONObject(i)
+                        val assets = rel.optJSONArray("assets")
+                        if (assets != null) {
+                            for (j in 0 until assets.length()) {
+                                val asset = assets.getJSONObject(j)
+                                val name = asset.optString("name", "")
+                                if (name.endsWith(".apk", ignoreCase = true)) {
+                                    val downloadUrl = asset.optString("browser_download_url", "")
+                                    if (downloadUrl.isNotBlank()) return@withContext downloadUrl
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        } catch (_: Exception) {}
+
+        null
+    }
+
+    /**
      * Downloads the full APK file with real-time progress callbacks for OTA installation.
+     * Automatically attempts GitHub Releases API asset discovery, release/latest, tag-based URLs,
+     * and debug asset URLs before returning informative guidance.
      */
     suspend fun downloadApkWithProgress(
         url: String,
         onProgress: (progress: Float, downloadedBytes: Long, totalBytes: Long) -> Unit
     ): Result<File> = withContext(Dispatchers.IO) {
-        try {
-            val targetUrl = resolveDirectApkUrl(url)
-            val request = Request.Builder()
-                .url(targetUrl)
-                .header("User-Agent", "DawahToJannah-Android-App")
-                .header("Accept", "application/vnd.android.package-archive, application/octet-stream, */*")
-                .build()
+        val candidates = mutableListOf<String>()
 
-            val response = client.newCall(request).execute()
-            if (!response.isSuccessful) {
-                return@withContext Result.failure(
-                    Exception("APK সার্ভার থেকে ডাউনলোড করা সম্ভব হয়নি (HTTP ${response.code})। লিঙ্ক: $targetUrl")
-                )
-            }
-
-            val body = response.body ?: return@withContext Result.failure(Exception("ডাউনলোড রেসপন্স খালি এসেছে।"))
-            val contentLength = body.contentLength()
-
-            val contentType = response.header("Content-Type", "") ?: ""
-            if (contentType.contains("text/html", ignoreCase = true) && contentLength in 1..200000) {
-                return@withContext Result.failure(
-                    Exception("সরাসরি APK ফাইল পাওয়া যায়নি। গিটহাব রিলিজ পেজে এখনও .apk ফাইল আপলোড করা হয়নি। ব্রাউজার থেকে রিলিজ পেজে গিয়ে ডাউনলোড করুন।")
-                )
-            }
-
-            val apkDir = File(context.cacheDir, "apk_updates").apply { mkdirs() }
-            val apkFile = File(apkDir, "dawah_to_jannah_update.apk")
-            if (apkFile.exists()) {
-                apkFile.delete()
-            }
-
-            val inputStream = body.byteStream()
-            val outputStream = FileOutputStream(apkFile)
-
-            val buffer = ByteArray(16384)
-            var bytesRead: Int
-            var totalRead: Long = 0
-
-            while (inputStream.read(buffer).also { bytesRead = it } != -1) {
-                outputStream.write(buffer, 0, bytesRead)
-                totalRead += bytesRead
-                val progress = if (contentLength > 0) (totalRead.toFloat() / contentLength.toFloat()).coerceIn(0f, 1f) else -1f
-                onProgress(progress, totalRead, contentLength)
-            }
-
-            outputStream.flush()
-            outputStream.close()
-            inputStream.close()
-
-            if (apkFile.length() < 100_000) {
-                val size = apkFile.length()
-                apkFile.delete()
-                return@withContext Result.failure(
-                    Exception("ডাউনলোডকৃত APK ফাইলটি অসম্পূর্ণ বা ক্ষতিগ্রস্ত (সাইজ: $size বাইট)। পুনরায় ডাউনলোড করুন।")
-                )
-            }
-
-            Result.success(apkFile)
-        } catch (e: Exception) {
-            Result.failure(e)
+        // 1. Direct discovery from GitHub API
+        val discoveredUrl = discoverLiveApkUrl(repoOwner, repoName)
+        if (!discoveredUrl.isNullOrBlank()) {
+            candidates.add(discoveredUrl)
         }
+
+        // 2. The input URL passed
+        val primaryTarget = resolveDirectApkUrl(url)
+        if (!candidates.contains(primaryTarget)) {
+            candidates.add(primaryTarget)
+        }
+
+        // 3. Fallback standard release naming conventions
+        val standardFallbacks = listOf(
+            "https://github.com/$repoOwner/$repoName/releases/latest/download/app-release.apk",
+            "https://github.com/$repoOwner/$repoName/releases/latest/download/app-debug.apk",
+            "https://github.com/$repoOwner/$repoName/releases/download/v$currentAppVersion/app-release.apk",
+            "https://github.com/$repoOwner/$repoName/releases/download/v$currentAppVersion/app-debug.apk",
+            "https://github.com/$repoOwner/$repoName/releases/download/latest/app-release.apk",
+            "https://github.com/$repoOwner/$repoName/releases/download/latest/app-debug.apk"
+        )
+        for (u in standardFallbacks) {
+            if (!candidates.contains(u)) {
+                candidates.add(u)
+            }
+        }
+
+        var lastError: Exception? = null
+        val apkDir = File(context.cacheDir, "apk_updates").apply { mkdirs() }
+        val apkFile = File(apkDir, "dawah_to_jannah_update.apk")
+
+        for (candidateUrl in candidates) {
+            try {
+                val request = Request.Builder()
+                    .url(candidateUrl)
+                    .header("User-Agent", "DawahToJannah-Android-App")
+                    .header("Accept", "application/vnd.android.package-archive, application/octet-stream, */*")
+                    .build()
+
+                val response = client.newCall(request).execute()
+                if (!response.isSuccessful) {
+                    lastError = Exception("HTTP ${response.code} (URL: $candidateUrl)")
+                    continue
+                }
+
+                val body = response.body ?: continue
+                val contentLength = body.contentLength()
+                val contentType = response.header("Content-Type", "") ?: ""
+
+                if (contentType.contains("text/html", ignoreCase = true) && contentLength in 1..200000) {
+                    lastError = Exception("HTML page returned instead of APK from $candidateUrl")
+                    continue
+                }
+
+                if (apkFile.exists()) {
+                    apkFile.delete()
+                }
+
+                val inputStream = body.byteStream()
+                val outputStream = FileOutputStream(apkFile)
+                val buffer = ByteArray(16384)
+                var bytesRead: Int
+                var totalRead: Long = 0
+
+                while (inputStream.read(buffer).also { bytesRead = it } != -1) {
+                    outputStream.write(buffer, 0, bytesRead)
+                    totalRead += bytesRead
+                    val progress = if (contentLength > 0) (totalRead.toFloat() / contentLength.toFloat()).coerceIn(0f, 1f) else -1f
+                    onProgress(progress, totalRead, contentLength)
+                }
+
+                outputStream.flush()
+                outputStream.close()
+                inputStream.close()
+
+                if (apkFile.length() < 100_000) {
+                    val size = apkFile.length()
+                    apkFile.delete()
+                    lastError = Exception("ডাউনলোডকৃত APK ফাইলটি অসম্পূর্ণ (সাইজ: $size বাইট)")
+                    continue
+                }
+
+                // Successfully downloaded a valid APK!
+                return@withContext Result.success(apkFile)
+            } catch (e: Exception) {
+                lastError = e
+            }
+        }
+
+        // If all candidates failed, provide clear diagnostic message in Bengali
+        val errorMessage = """
+গিটহাব রিপোজিটরিতে (github.com/$repoOwner/$repoName) এখনও কোনো রিলিজ APK ফাইল আপলোড করা হয়নি (HTTP 404)।
+
+💡 কীভাবে নতুন APK স্বয়ংক্রিয়ভাবে আপলোড ও প্রতিস্থাপন করবেন:
+১. রিপোজিটরিতে স্বয়ংক্রিয় 'GitHub Actions' ফাইল (.github/workflows/release-apk.yml) যুক্ত করা হয়েছে। এআই স্টুডিও থেকে গিটহাবে কোড পুশ করলেই স্বয়ংক্রিয়ভাবে নতুন APK তৈরি হবে এবং রিলিজ পেজে পুরনো APK নতুনটি দিয়ে রিপ্লেস হবে।
+২. আপনি এআই স্টুডিও ব্রাউজার থেকে সরাসরি 'Install via USB' বাটনে ক্লিক করেও ফোনে এখনই নতুন সংস্করণ ইনস্টল করে নিতে পারেন।
+৩. কোনো ইনস্টল ঝামেলা ছাড়াই নতুন সমস্ত দো'আ ও আমল পেতে 'অনলাইন কনটেন্ট দ্রুত সিঙ্ক' বাটনে চাপ দিন।
+""".trimIndent()
+
+        Result.failure(Exception(errorMessage))
     }
 
     /**

@@ -947,11 +947,19 @@ fun SettingsScreen(viewModel: MainViewModel) {
                                     )
                                 }
                                 apkDownloadState.error != null -> {
-                                    Text(
-                                        "ডাউনলোড বা ইনস্টলেশনে ত্রুটি ঘটেছে:\n\n${apkDownloadState.error}\n\nআপনি চাইলে ব্রাউজার থেকে সরাসরি রিলিজ পেজে গিয়ে APK নামিয়ে নিতে পারেন, অথবা ইউএসবি দিয়ে ইনস্টল করতে পারেন।",
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.error
-                                    )
+                                    Surface(
+                                        shape = RoundedCornerShape(8.dp),
+                                        color = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.25f),
+                                        modifier = Modifier.fillMaxWidth()
+                                    ) {
+                                        Column(modifier = Modifier.padding(10.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                                            Text(
+                                                text = apkDownloadState.error ?: "অজ্ঞাত ত্রুটি",
+                                                style = MaterialTheme.typography.bodySmall,
+                                                color = MaterialTheme.colorScheme.onSurface
+                                            )
+                                        }
+                                    }
                                 }
                             }
                         }
@@ -964,15 +972,45 @@ fun SettingsScreen(viewModel: MainViewModel) {
                                 }
                             }
                             apkDownloadState.error != null -> {
-                                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                    OutlinedButton(onClick = {
-                                        viewModel.dismissApkDownloadDialog()
-                                        viewModel.downloadNewApkVersion()
-                                    }) {
-                                        Text("ব্রাউজারে খুলুন")
+                                Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                                    Button(
+                                        onClick = {
+                                            viewModel.dismissApkDownloadDialog()
+                                            viewModel.downloadAndApplyInAppUpdate(isLocalPreview = false)
+                                        },
+                                        modifier = Modifier.fillMaxWidth(),
+                                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+                                    ) {
+                                        Icon(Icons.Default.Sync, contentDescription = null, modifier = Modifier.size(16.dp))
+                                        Spacer(modifier = Modifier.width(6.dp))
+                                        Text("অনলাইন কনটেন্ট দ্রুত সিঙ্ক করুন (Quick OTA)")
                                     }
-                                    Button(onClick = { viewModel.startFullOtaApkUpdate() }) {
-                                        Text("পুনরায় চেষ্টা")
+
+                                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                                        OutlinedButton(
+                                            onClick = {
+                                                viewModel.dismissApkDownloadDialog()
+                                                showUsbGuideDialog = true
+                                            },
+                                            modifier = Modifier.weight(1f)
+                                        ) {
+                                            Text("USB গাইড", fontSize = 11.sp)
+                                        }
+                                        OutlinedButton(
+                                            onClick = {
+                                                viewModel.dismissApkDownloadDialog()
+                                                viewModel.downloadNewApkVersion()
+                                            },
+                                            modifier = Modifier.weight(1.2f)
+                                        ) {
+                                            Text("গিটহাব রিলিজ", fontSize = 11.sp)
+                                        }
+                                        Button(
+                                            onClick = { viewModel.startFullOtaApkUpdate() },
+                                            modifier = Modifier.weight(1f)
+                                        ) {
+                                            Text("রিট্রাই", fontSize = 11.sp)
+                                        }
                                     }
                                 }
                             }

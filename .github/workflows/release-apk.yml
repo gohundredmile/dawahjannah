@@ -1,0 +1,108 @@
+name: Build & Release APK (OTA Engine)
+
+on:
+  push:
+    branches:
+      - main
+      - master
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      release_title:
+        description: 'Optional Release Title'
+        required: false
+        default: ''
+      release_notes:
+        description: 'Optional Release Notes'
+        required: false
+        default: ''
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    name: Build APK and Publish to GitHub Releases
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Java JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v3
+
+      - name: Prepare Signing Keystore
+        run: |
+          if [ -f "debug.keystore.base64" ] && [ ! -f "debug.keystore" ]; then
+            echo "Decoding debug.keystore from base64..."
+            base64 -d debug.keystore.base64 > debug.keystore
+          fi
+          chmod +x gradlew || true
+
+      - name: Build Android APK with Gradle
+        run: |
+          ./gradlew assembleDebug --no-daemon --stacktrace
+
+      - name: Verify and Stage APK Artifacts
+        run: |
+          mkdir -p release_artifacts
+          APK_SRC=$(find app/build/outputs/apk -name "*.apk" | head -n 1)
+          if [ -z "$APK_SRC" ]; then
+            echo "Error: No APK found after build!"
+            exit 1
+          fi
+          echo "Found built APK at: $APK_SRC"
+          cp "$APK_SRC" release_artifacts/app-release.apk
+          cp "$APK_SRC" release_artifacts/app-debug.apk
+          ls -lh release_artifacts/
+
+      - name: Extract Version Info
+        id: get_version
+        run: |
+          VER_NAME=$(grep 'versionName = ' app/build.gradle.kts | head -n 1 | sed -E 's/.*"([^"]+)".*/\1/')
+          VER_CODE=$(grep 'versionCode = ' app/build.gradle.kts | head -n 1 | sed -E 's/.*([0-9]+).*/\1/')
+          if [ -z "$VER_NAME" ]; then
+            VER_NAME="1.3.7"
+          fi
+          echo "version_name=$VER_NAME" >> $GITHUB_OUTPUT
+          echo "version_code=$VER_CODE" >> $GITHUB_OUTPUT
+          echo "Detected App Version: $VER_NAME ($VER_CODE)"
+
+      - name: Publish or Update GitHub Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VER_NAME: ${{ steps.get_version.outputs.version_name }}
+          INPUT_TITLE: ${{ inputs.release_title }}
+          INPUT_NOTES: ${{ inputs.release_notes }}
+        run: |
+          TAG_VERSION="v${VER_NAME}"
+          TITLE="${INPUT_TITLE:-দা'ওয়াহ টু জান্নাহ - সংস্করণ ${VER_NAME}}"
+          NOTES="${INPUT_NOTES:-স্বয়ংক্রিয়ভাবে বিল্ডকৃত নতুন রিলিজ APK। ফোনের সেটিংস থেকে 'সম্পূর্ণ APK ওটিএ অটো-আপডেট' বাটনে চাপ দিলে সরাসরি এটি ফোনে ডাউনলোড ও ইনস্টল হবে।}"
+
+          echo "Publishing release for tag: $TAG_VERSION and 'latest'..."
+
+          # 1. Create or update specific version release tag (vX.X.X) with --clobber to replace previous files
+          gh release view "$TAG_VERSION" >/dev/null 2>&1 && \
+            gh release upload "$TAG_VERSION" release_artifacts/app-release.apk release_artifacts/app-debug.apk --clobber || \
+            gh release create "$TAG_VERSION" release_artifacts/app-release.apk release_artifacts/app-debug.apk \
+              --title "$TITLE" \
+              --notes "$NOTES"
+
+          # 2. Also maintain the 'latest' release tag so 'releases/latest/download/app-release.apk' ALWAYS points to the latest APK
+          gh release view "latest" >/dev/null 2>&1 && \
+            gh release upload "latest" release_artifacts/app-release.apk release_artifacts/app-debug.apk --clobber || \
+            gh release create "latest" release_artifacts/app-release.apk release_artifacts/app-debug.apk \
+              --title "Dawah to Jannah - Latest Release" \
+              --notes "সর্বশেষ স্বয়ংক্রিয় রিলিজ APK (Auto-built on push/dispatch). Replaces old APK automatically."
+
+          echo "Successfully published and replaced APK on GitHub Releases!"

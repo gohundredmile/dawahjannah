@@ -31,7 +31,12 @@ object PrayerCalculator {
         val zawalStartTimeFormatted: String = "১১:৫৯",
         val awwabinTimeFormatted: String = "মাগরিবের পর - ০৭:২৭",
         val tahajjudTimeFormatted: String = "ইশার পর - ০৪:২৫",
-        val lastThirdOfNightFormatted: String = "০১:০১"
+        val lastThirdOfNightFormatted: String = "০১:০১",
+        val presentPrayerNameBn: String = "এশা",
+        val presentNofolNameBn: String = "তাহাজ্জুদ",
+        val remainingHours: Int = 0,
+        val remainingMinutes: Int = 0,
+        val remainingSeconds: Int = 0
     )
 
     fun calculatePrayers(
@@ -359,6 +364,38 @@ object PrayerCalculator {
             else -> "এশা ও বরকতময় রজনী — আসসালামু আলাইকুম"
         }
 
+        // Present Wakt & Nofol Salat Information for Flip Board
+        val (presentName, nofolName) = when {
+            currentTotalMinutes in fajrMin until sunriseMin -> {
+                Pair("ফজর", "তাহিয়্যাতুল ওজু")
+            }
+            currentTotalMinutes in sunriseMin until sunriseEndMin -> {
+                Pair("সূর্যোদয়", "সালাত নিষিদ্ধ")
+            }
+            currentTotalMinutes in sunriseEndMin until (dhuhrMin - 15) -> {
+                Pair("চাশত", "সালাতুত দুহা")
+            }
+            currentTotalMinutes in (dhuhrMin - 15) until dhuhrMin -> {
+                Pair("জাওয়াল", "সালাত নিষিদ্ধ")
+            }
+            currentTotalMinutes in dhuhrMin until asrMin -> {
+                Pair("যোহর", "যোহরের নফল")
+            }
+            currentTotalMinutes in asrMin until sunsetStartMin -> {
+                Pair("আসর", "আসরের পূর্ব সুন্নাত")
+            }
+            currentTotalMinutes in sunsetStartMin until maghribMin -> {
+                Pair("আসর", "সূর্যাস্ত (মাকরূহ)")
+            }
+            currentTotalMinutes in maghribMin until ishaMin -> {
+                Pair("মাগরিব", "আওয়াবিন")
+            }
+            else -> {
+                // Isha wakt & late night tahajjud period
+                Pair("এশা", "তাহাজ্জুদ")
+            }
+        }
+
         return PrayerStatus(
             activePrayer = activePrayer,
             nextPrayer = nextPrayer,
@@ -383,7 +420,12 @@ object PrayerCalculator {
             zawalStartTimeFormatted = zawalStartFormatted,
             awwabinTimeFormatted = awwabinFormatted,
             tahajjudTimeFormatted = tahajjudFormatted,
-            lastThirdOfNightFormatted = lastThirdFormatted
+            lastThirdOfNightFormatted = lastThirdFormatted,
+            presentPrayerNameBn = presentName,
+            presentNofolNameBn = nofolName,
+            remainingHours = hoursRemaining,
+            remainingMinutes = minsRemaining,
+            remainingSeconds = secsRemaining
         )
     }
 }

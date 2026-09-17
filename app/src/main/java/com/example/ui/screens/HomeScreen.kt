@@ -74,12 +74,17 @@ fun HomeScreen(
             .padding(contentPadding),
         contentPadding = PaddingValues(bottom = 24.dp)
     ) {
-        // 1. Welcoming Cover & Clock
+        // 1. Welcoming Cover & Revamped Salat Timing Card
         item {
             IslamicHeaderCover(
                 salutation = prayerStatus.salutationBn,
                 countdownFormatted = prayerStatus.timeRemainingFormatted,
                 nextPrayerName = prayerStatus.nextPrayer?.nameBn ?: "ওয়াক্ত",
+                presentPrayerName = prayerStatus.presentPrayerNameBn,
+                presentNofolName = prayerStatus.presentNofolNameBn,
+                remainingHours = prayerStatus.remainingHours,
+                remainingMinutes = prayerStatus.remainingMinutes,
+                remainingSeconds = prayerStatus.remainingSeconds,
                 onOpenSettings = {
                     viewModel.openSettings(AppTab.HOME)
                 }

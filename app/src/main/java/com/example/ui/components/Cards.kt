@@ -86,7 +86,13 @@ fun IslamicHeaderCover(
     salutation: String,
     countdownFormatted: String,
     nextPrayerName: String,
-    onOpenSettings: () -> Unit = {}
+    presentPrayerName: String = "এশা",
+    presentNofolName: String = "তাহাজ্জুদ",
+    remainingHours: Int = 0,
+    remainingMinutes: Int = 0,
+    remainingSeconds: Int = 0,
+    onOpenSettings: () -> Unit = {},
+    onClickCard: () -> Unit = {}
 ) {
     Card(
         modifier = Modifier
@@ -115,18 +121,18 @@ fun IslamicHeaderCover(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 8.dp)
+                    .padding(start = 12.dp, end = 12.dp, top = 8.dp, bottom = 10.dp)
             ) {
             // Header Top Bar
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp)
             ) {
                 Column {
                     Text(
                         text = "আস-সালামু আলাইকুম",
-                        style = MaterialTheme.typography.titleLarge.copy(fontSize = 20.sp),
+                        style = MaterialTheme.typography.titleLarge.copy(fontSize = 19.sp),
                         fontFamily = LocalBanglaFontFamily.current,
                         fontWeight = FontWeight.Bold,
                         letterSpacing = 0.3.sp,
@@ -164,56 +170,23 @@ fun IslamicHeaderCover(
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // Natural Tones Next Prayer Card (Cream & Gold Container)
+            // Revamped 3-Part Salat Timing Card (Matching User Specimen)
             Surface(
                 color = IslamicIvory,
                 shape = RoundedCornerShape(16.dp),
                 shadowElevation = 2.dp,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 9.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Column {
-                        Text(
-                            text = "পরবর্তী সালাত",
-                            style = MaterialTheme.typography.labelSmall,
-                            fontFamily = LocalBanglaFontFamily.current,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.75f),
-                            letterSpacing = 0.5.sp
-                        )
-                        Spacer(modifier = Modifier.height(2.dp))
-                        Text(
-                            text = nextPrayerName,
-                            style = MaterialTheme.typography.headlineMedium.copy(fontSize = 28.sp),
-                            fontFamily = LocalBanglaFontFamily.current,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                    }
-
-                    Column(horizontalAlignment = Alignment.End) {
-                        Text(
-                            text = countdownFormatted,
-                            style = MaterialTheme.typography.headlineSmall,
-                            fontFamily = LocalBanglaFontFamily.current,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                        Text(
-                            text = salutation,
-                            style = MaterialTheme.typography.labelSmall,
-                            fontFamily = LocalBanglaFontFamily.current,
-                            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.75f),
-                            textAlign = TextAlign.End
-                        )
-                    }
-                }
+                SalatTimingFlipCard(
+                    nextPrayerName = nextPrayerName,
+                    presentPrayerName = presentPrayerName,
+                    presentNofolName = presentNofolName,
+                    remainingHours = remainingHours,
+                    remainingMinutes = remainingMinutes,
+                    remainingSeconds = remainingSeconds,
+                    countdownFormatted = countdownFormatted,
+                    onClickCard = onClickCard
+                )
             }
         }
     }

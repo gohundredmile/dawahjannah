@@ -1,9 +1,9 @@
 package com.example.ui.components
 
-import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -24,20 +25,24 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.PathEffect
+import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -45,13 +50,23 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.ui.theme.LocalBanglaFontFamily
 import com.example.util.CalendarHelper
+import kotlinx.coroutines.delay
+import java.util.Calendar
 import java.util.Locale
 
 /**
+ * Data item for continuous informative rotation in Present Salat Split-Flap Board
+ */
+data class SalatContextInfo(
+    val timeLabel: String,
+    val salatInfo: String
+)
+
+/**
  * Revamped 3-Section Salat Timing Card
- * Section 1 (Left): 'Next Salat' (পরবর্তী সালাত)
- * Section 2 (Middle): 'Present Salat' (বর্তমান সালাত) split-flap board showing Present Wakt and Nofol Salat info
- * Section 3 (Right): 'Remaining Time' (শেষ হতে বাকী) retro flip clock board
+ * Section 1 (Left): 'Next Salat' (পরবর্তী সালাত) - Clean view without vertical dashed divider
+ * Section 2 (Middle): 'Present Salat' (বর্তমান সালাত) - Wider Split-flap board with continuous 3s info rotation
+ * Section 3 (Right): 'Remaining Time' (শেষ হতে বাকী) - Authentic HTC phone split-flap clock with system font
  */
 @Composable
 fun SalatTimingFlipCard(
@@ -66,13 +81,97 @@ fun SalatTimingFlipCard(
     onClickCard: () -> Unit = {}
 ) {
     var useEnglishDigits by remember { mutableStateOf(false) }
-    var flipTrigger by remember { mutableStateOf(0) }
 
-    val flipAngle by animateFloatAsState(
-        targetValue = if (flipTrigger % 2 == 0) 0f else 360f,
-        animationSpec = tween(durationMillis = 400),
-        label = "boardFlip"
-    )
+    // -----------------------------------------------------------------
+    // Contextual Nofol & Salat information list based on authentic timings
+    // -----------------------------------------------------------------
+    val infoList = remember(presentPrayerName, presentNofolName) {
+        val cal = Calendar.getInstance()
+        val hour = cal.get(Calendar.HOUR_OF_DAY)
+        val minute = cal.get(Calendar.MINUTE)
+        val totalMins = hour * 60 + minute
+
+        val items = mutableListOf<SalatContextInfo>()
+
+        // 1. Current Wakt & Nofol as primary base pair
+        val waktTitle = if (presentPrayerName.isNotEmpty()) "বর্তমান ওয়াক্ত: $presentPrayerName" else "বর্তমান ওয়াক্ত"
+        val nofolTitle = if (presentNofolName.isNotEmpty()) "$presentNofolName এর সময়" else "নফল ইবাদত"
+        items.add(SalatContextInfo(waktTitle, nofolTitle))
+
+        // 2. Add time-appropriate authentic Sunnah & Nofol salat entries
+        when {
+            // Fajr period (approx 4:00 - 5:45)
+            totalMins in 240..345 -> {
+                items.add(SalatContextInfo("ভোরবেলা", "ফজরের সুন্নাত ও জামাত"))
+                items.add(SalatContextInfo("শুভ প্রভাত", "তাহিয়্যাতুল ওজু ও জিকির"))
+            }
+            // Sunrise forbidden window (approx 5:45 - 6:05)
+            totalMins in 346..370 -> {
+                items.add(SalatContextInfo("সূর্যোদয়ের সময়", "সালাত নিষিদ্ধ (১৫ মিনিট অপেক্ষা)"))
+                items.add(SalatContextInfo("সূর্যোদয় প্রহর", "জিকির ও ইস্তিগফারের সর্বোত্তম সময়"))
+            }
+            // Morning Ishraq & Chasht / Salatud-Duha (approx 6:05 - 11:30)
+            totalMins in 371..690 -> {
+                items.add(SalatContextInfo("স্নিগ্ধ সকাল", "ইশরাকের নামাজ বা চাশতের সময়"))
+                items.add(SalatContextInfo("স্নিগ্ধ সকাল", "সালাতুদ-দুহা র সময়"))
+                items.add(SalatContextInfo("চাশতের নামায", "বরকতময় নফল ইবাদত (মুসলিম ৭৪৮)"))
+            }
+            // Midday Zawal forbidden window (approx 11:35 - 11:55)
+            totalMins in 691..725 -> {
+                items.add(SalatContextInfo("দুপুর বেলা", "সালাত জাওয়াল শুরু"))
+                items.add(SalatContextInfo("দ্বিপ্রহর", "সূর্য মধ্যাকাশে থাকায় সালাত মাকরূহ"))
+            }
+            // Dhuhr period (approx 12:00 - 15:30)
+            totalMins in 726..930 -> {
+                items.add(SalatContextInfo("দুপুর বেলা", "যোহরের ওয়াক্ত ও কাবলিয়া সুন্নাত"))
+                items.add(SalatContextInfo("যোহরের নফল", "৪ রাকাত পূর্ব সুন্নাত ও ২ রাকাত বা'দিয়া"))
+            }
+            // Asr period (approx 15:30 - 18:00)
+            totalMins in 931..1070 -> {
+                items.add(SalatContextInfo("আসরের ওয়াক্ত", "আসরের পূর্ব ৪ রাকাত নফল বা সুন্নাত"))
+                items.add(SalatContextInfo("আসরের সুন্নাত", "আল্লাহর বিশেষ রহমতের সুসংবাদ"))
+            }
+            // Sunset / Maghrib / Awwabin (approx 18:00 - 19:30)
+            totalMins in 1071..1170 -> {
+                items.add(SalatContextInfo("শুভ সন্ধ্যা", "আওয়াবিন এর সময়"))
+                items.add(SalatContextInfo("সালাতুল আওয়াবিন", "মাগরিবের পর ৬ রাকাত নফল"))
+                items.add(SalatContextInfo("মাগরিবের পর", "২ রাকাত নিয়মিত সুন্নাত মুয়াক্কাদা"))
+            }
+            // Isha and Night / Tahajjud (approx 19:30 - 24:00 and 00:00 - 04:00)
+            else -> {
+                items.add(SalatContextInfo("শুভ রাত্রি", "একান্তে আল্লাহর সান্নিধ্যে আসুন"))
+                items.add(SalatContextInfo("তাহাজ্জুদের সময়", "রাতের শ্রেষ্ঠ নফল ইবাদত (মুসলিম ৭৫৮)"))
+                items.add(SalatContextInfo("রাতের শেষ প্রহর", "তাহাজ্জুদ ও দোয়া কবুলের শ্রেষ্ঠ সময়"))
+                items.add(SalatContextInfo("বিতর সালাত", "রাতের শেষ সালাত হিসাবে বিতর আদায়"))
+            }
+        }
+
+        items
+    }
+
+    var currentInfoIndex by remember { mutableIntStateOf(0) }
+    val boardFlipProgress = remember { Animatable(1f) }
+
+    // Continuous 3-second cycle for the middle split-flap board
+    LaunchedEffect(infoList.size) {
+        while (true) {
+            delay(3000L)
+            boardFlipProgress.snapTo(0f)
+            val nextIdx = (currentInfoIndex + 1) % infoList.size
+            currentInfoIndex = nextIdx
+            boardFlipProgress.animateTo(
+                targetValue = 1f,
+                animationSpec = tween(durationMillis = 480, easing = FastOutSlowInEasing)
+            )
+        }
+    }
+
+    val currentInfo = infoList.getOrElse(currentInfoIndex % infoList.size) {
+        SalatContextInfo(
+            if (presentPrayerName.isNotEmpty()) "বর্তমান ওয়াক্ত: $presentPrayerName" else "বর্তমান ওয়াক্ত",
+            if (presentNofolName.isNotEmpty()) "$presentNofolName এর সময়" else "নফল ইবাদত"
+        )
+    }
 
     Row(
         modifier = modifier
@@ -84,17 +183,18 @@ fun SalatTimingFlipCard(
     ) {
         // -------------------------------------------------------------
         // 1. LEFT SECTION: পরবর্তী সালাত (Next Salat)
+        // (Removed vertical dashed divider as requested)
         // -------------------------------------------------------------
         Column(
             modifier = Modifier
-                .weight(0.72f)
-                .padding(end = 2.dp),
+                .weight(0.68f)
+                .padding(horizontal = 2.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
             Text(
                 text = "পরবর্তী সালাত",
-                style = MaterialTheme.typography.labelSmall.copy(fontSize = 11.5.sp),
+                style = MaterialTheme.typography.labelSmall.copy(fontSize = 11.sp),
                 fontFamily = LocalBanglaFontFamily.current,
                 fontWeight = FontWeight.SemiBold,
                 color = Color(0xFF374151),
@@ -105,7 +205,7 @@ fun SalatTimingFlipCard(
 
             Text(
                 text = nextPrayerName,
-                style = MaterialTheme.typography.headlineMedium.copy(fontSize = 23.sp),
+                style = MaterialTheme.typography.headlineMedium.copy(fontSize = 22.sp),
                 fontFamily = LocalBanglaFontFamily.current,
                 fontWeight = FontWeight.Black,
                 color = Color(0xFF0F172A),
@@ -116,36 +216,20 @@ fun SalatTimingFlipCard(
         }
 
         // -------------------------------------------------------------
-        // VERTICAL DASHED DIVIDER
-        // -------------------------------------------------------------
-        Canvas(
-            modifier = Modifier
-                .width(1.dp)
-                .height(60.dp)
-                .padding(horizontal = 1.dp)
-        ) {
-            drawLine(
-                color = Color(0xFFD1D5DB),
-                start = Offset(0f, 0f),
-                end = Offset(0f, size.height),
-                strokeWidth = 1.5.dp.toPx(),
-                pathEffect = PathEffect.dashPathEffect(floatArrayOf(6f, 6f), 0f)
-            )
-        }
-
-        // -------------------------------------------------------------
         // 2. MIDDLE SECTION: বর্তমান সালাত (Present Salat & Nofol Flip Board)
+        // Made significantly wider (weight 1.90f) for full comfortable text
+        // Flips continuously every 3 seconds with rich authentic Sunnah info
         // -------------------------------------------------------------
         Column(
             modifier = Modifier
-                .weight(1.08f)
+                .weight(1.90f)
                 .padding(horizontal = 4.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
             Text(
-                text = "বর্তমান সালাত",
-                style = MaterialTheme.typography.labelSmall.copy(fontSize = 11.5.sp),
+                text = "বর্তমান সালাত ও নফল",
+                style = MaterialTheme.typography.labelSmall.copy(fontSize = 11.sp),
                 fontFamily = LocalBanglaFontFamily.current,
                 fontWeight = FontWeight.SemiBold,
                 color = Color(0xFF374151),
@@ -155,30 +239,37 @@ fun SalatTimingFlipCard(
             Spacer(modifier = Modifier.height(4.dp))
 
             // Flipping Board Outer Casing
+            val rotAngle = if (boardFlipProgress.value < 0.5f) {
+                -180f * boardFlipProgress.value
+            } else {
+                180f * (1f - boardFlipProgress.value)
+            }
+
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(58.dp)
                     .graphicsLayer {
-                        rotationX = if (flipAngle in 90f..270f) 180f - flipAngle else flipAngle
+                        rotationX = rotAngle
+                        cameraDistance = 14f * density
                     }
                     .shadow(elevation = 2.dp, shape = RoundedCornerShape(8.dp))
                     .clip(RoundedCornerShape(8.dp))
                     .background(
                         Brush.verticalGradient(
                             listOf(
-                                Color(0xFF2C323B),
-                                Color(0xFF1E2228),
-                                Color(0xFF15181C)
+                                Color(0xFF2B303A),
+                                Color(0xFF1E2229),
+                                Color(0xFF15171B)
                             )
                         )
                     )
-                    .border(BorderStroke(1.dp, Color(0xFF4B5563)), RoundedCornerShape(8.dp))
+                    .border(BorderStroke(1.dp, Color(0xFF475569)), RoundedCornerShape(8.dp))
                     .clickable(
                         interactionSource = remember { MutableInteractionSource() },
                         indication = null
                     ) {
-                        flipTrigger++
+                        currentInfoIndex = (currentInfoIndex + 1) % infoList.size
                         onClickCard()
                     }
             ) {
@@ -214,16 +305,20 @@ fun SalatTimingFlipCard(
                         verticalArrangement = Arrangement.SpaceBetween,
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        // Upper Flap: Present Wakt Salat Name (e.g. এশা / যোহর / ফজর)
+                        // Upper Flap: Time Label (e.g. স্নিগ্ধ সকাল / শুভ রাত্রি / বর্তমান ওয়াক্ত: এশা)
                         Box(
                             modifier = Modifier
                                 .weight(1f)
-                                .fillMaxWidth(),
+                                .fillMaxWidth()
+                                .padding(horizontal = 4.dp),
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
-                                text = presentPrayerName.ifEmpty { "ওয়াক্ত" },
-                                style = MaterialTheme.typography.titleMedium.copy(fontSize = 16.sp),
+                                text = currentInfo.timeLabel,
+                                style = MaterialTheme.typography.titleMedium.copy(
+                                    fontSize = 13.5.sp,
+                                    letterSpacing = 0.2.sp
+                                ),
                                 fontFamily = LocalBanglaFontFamily.current,
                                 fontWeight = FontWeight.Black,
                                 color = Color(0xFF0F172A),
@@ -241,16 +336,20 @@ fun SalatTimingFlipCard(
                                 .background(Color(0xFF334155))
                         )
 
-                        // Lower Flap: Nofol Salat Information (e.g. তাহাজ্জুদ / আওয়াবিন / চাশত)
+                        // Lower Flap: Salat / Nofol Info (e.g. সালাতুদ-দুহা র সময় / তাহাজ্জুদের সময় / আওয়াবিন এর সময়)
                         Box(
                             modifier = Modifier
                                 .weight(1f)
-                                .fillMaxWidth(),
+                                .fillMaxWidth()
+                                .padding(horizontal = 4.dp),
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
-                                text = presentNofolName.ifEmpty { "নফল ইবাদত" },
-                                style = MaterialTheme.typography.labelLarge.copy(fontSize = 13.sp),
+                                text = currentInfo.salatInfo,
+                                style = MaterialTheme.typography.labelLarge.copy(
+                                    fontSize = 12.5.sp,
+                                    letterSpacing = 0.1.sp
+                                ),
                                 fontFamily = LocalBanglaFontFamily.current,
                                 fontWeight = FontWeight.Bold,
                                 color = Color(0xFF1E293B),
@@ -265,18 +364,19 @@ fun SalatTimingFlipCard(
         }
 
         // -------------------------------------------------------------
-        // 3. RIGHT SECTION: শেষ হতে বাকী (Wider Flip Clock Board)
+        // 3. RIGHT SECTION: শেষ হতে বাকী (Authentic HTC Flip Clock Board)
+        // System font with larger, bolder numbers that flip on time changes
         // -------------------------------------------------------------
         Column(
             modifier = Modifier
-                .weight(1.40f)
+                .weight(1.22f)
                 .padding(start = 2.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
             Text(
                 text = "শেষ হতে বাকী",
-                style = MaterialTheme.typography.labelSmall.copy(fontSize = 11.5.sp),
+                style = MaterialTheme.typography.labelSmall.copy(fontSize = 11.sp),
                 fontFamily = LocalBanglaFontFamily.current,
                 fontWeight = FontWeight.SemiBold,
                 color = Color(0xFF374151),
@@ -296,7 +396,7 @@ fun SalatTimingFlipCard(
             val leftDisplay = if (useEnglishDigits) leftStr else CalendarHelper.toBanglaNumber(leftStr)
             val rightDisplay = if (useEnglishDigits) rightStr else CalendarHelper.toBanglaNumber(rightStr)
 
-            // Retro Mechanical Flip Clock Board as per Specimen
+            // Retro Mechanical HTC-style Flip Clock Board
             Row(
                 modifier = Modifier
                     .clip(RoundedCornerShape(8.dp))
@@ -306,8 +406,8 @@ fun SalatTimingFlipCard(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.Center
             ) {
-                // Left Flip Tile (Hours or Minutes)
-                FlipDigitCard(
+                // Left HTC Flip Tile (Hours or Minutes)
+                HtcFlipDigitCard(
                     digits = leftDisplay,
                     hasLeftHinge = true,
                     hasRightHinge = true
@@ -316,8 +416,8 @@ fun SalatTimingFlipCard(
                 // Central Vertical Colon Bracket with Two Pivot Screws
                 FlipClockCenterBracket()
 
-                // Right Flip Tile (Minutes or Seconds)
-                FlipDigitCard(
+                // Right HTC Flip Tile (Minutes or Seconds)
+                HtcFlipDigitCard(
                     digits = rightDisplay,
                     hasLeftHinge = true,
                     hasRightHinge = true
@@ -328,24 +428,41 @@ fun SalatTimingFlipCard(
 }
 
 /**
- * Split Flap Digit Card for Flip Clock (Wide 2-Digit Tile matching flipboard3.jpg)
+ * Authentic HTC Phone Flip Clock Digit Tile
+ * Features 3D top-down split flap flip animation whenever [digits] changes
+ * Aligned with Android system font and larger bold typeface
  */
 @Composable
-private fun FlipDigitCard(
+private fun HtcFlipDigitCard(
     digits: String,
     hasLeftHinge: Boolean = true,
     hasRightHinge: Boolean = true,
     modifier: Modifier = Modifier
 ) {
+    var previousDigits by remember { mutableStateOf(digits) }
+    var targetDigits by remember { mutableStateOf(digits) }
+    val flipProgress = remember { Animatable(1f) }
+
+    LaunchedEffect(digits) {
+        if (digits != targetDigits) {
+            previousDigits = targetDigits
+            targetDigits = digits
+            flipProgress.snapTo(0f)
+            flipProgress.animateTo(
+                targetValue = 1f,
+                animationSpec = tween(durationMillis = 420, easing = FastOutSlowInEasing)
+            )
+        }
+    }
+
     Box(
-        modifier = modifier
-            .padding(horizontal = 1.5.dp),
+        modifier = modifier.padding(horizontal = 1.dp),
         contentAlignment = Alignment.Center
     ) {
         // Multi-card Stack Layer Effect at the Bottom (representing stacked flap deck)
         Column(
             modifier = Modifier
-                .width(49.dp)
+                .width(46.dp)
                 .height(57.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Bottom
@@ -353,57 +470,89 @@ private fun FlipDigitCard(
             // Under-layer 2
             Box(
                 modifier = Modifier
-                    .width(44.dp)
+                    .width(41.dp)
                     .height(1.dp)
                     .background(Color(0xFFD1D5DB), RoundedCornerShape(bottomStart = 2.dp, bottomEnd = 2.dp))
             )
             // Under-layer 1
             Box(
                 modifier = Modifier
-                    .width(46.5.dp)
+                    .width(43.5.dp)
                     .height(1.dp)
                     .background(Color(0xFFE2E8F0), RoundedCornerShape(bottomStart = 3.dp, bottomEnd = 3.dp))
             )
         }
 
-        // Main Flap Card Faceplate
+        // Main Flap Card Assembly
         Box(
             modifier = Modifier
-                .size(width = 49.dp, height = 55.dp)
+                .size(width = 46.dp, height = 54.dp)
                 .shadow(elevation = 2.dp, shape = RoundedCornerShape(6.dp))
                 .clip(RoundedCornerShape(6.dp))
-                .background(
-                    Brush.verticalGradient(
-                        listOf(
-                            Color(0xFFFFFFFF),
-                            Color(0xFFF9FAFB),
-                            Color(0xFFF3F4F6)
-                        )
-                    )
-                )
                 .border(BorderStroke(1.dp, Color(0xFFD1D5DB)), RoundedCornerShape(6.dp))
         ) {
-            // Upper and Lower Flap Shading Separation with Center Split Line
+            // BASE LAYER:
+            // Top half displays the NEW digit (revealed when old flap falls down)
+            // Bottom half displays the OLD digit (until covered by new flap falling down)
             Column(modifier = Modifier.fillMaxSize()) {
-                Box(
-                    modifier = Modifier
-                        .weight(1f)
-                        .fillMaxWidth()
-                        .background(Color.White.copy(alpha = 0.6f))
-                )
-                // Center Horizontal Split Groove Line
+                DigitHalf(digits = targetDigits, isTopHalf = true)
+                // Center Horizontal Split Groove
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(1.dp)
-                        .background(Color(0xFF4B5563))
+                        .background(Color(0xFF374151))
                 )
+                DigitHalf(digits = previousDigits, isTopHalf = false)
+            }
+
+            // FLIPPING LAYER:
+            // Phase 1 (0.0 .. 0.5): The old top flap flips DOWNWARDS from 0° to -90°
+            if (flipProgress.value <= 0.5f) {
+                val rotX = -180f * flipProgress.value
                 Box(
                     modifier = Modifier
-                        .weight(1f)
+                        .align(Alignment.TopCenter)
                         .fillMaxWidth()
-                        .background(Color(0xFFE5E7EB).copy(alpha = 0.35f))
-                )
+                        .height(26.5.dp)
+                        .graphicsLayer {
+                            rotationX = rotX
+                            cameraDistance = 16f * density
+                            transformOrigin = TransformOrigin(0.5f, 1.0f) // Pivot at bottom edge of top half
+                        }
+                ) {
+                    DigitHalf(digits = previousDigits, isTopHalf = true)
+                    // Dynamic shadow overlay during downward fold
+                    val shadowAlpha = (flipProgress.value * 0.8f).coerceIn(0f, 0.45f)
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(Color.Black.copy(alpha = shadowAlpha))
+                    )
+                }
+            } else {
+                // Phase 2 (0.5 .. 1.0): The new bottom flap flips DOWNWARDS from +90° to 0°
+                val rotX = 90f - 180f * (flipProgress.value - 0.5f)
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .fillMaxWidth()
+                        .height(26.5.dp)
+                        .graphicsLayer {
+                            rotationX = rotX
+                            cameraDistance = 16f * density
+                            transformOrigin = TransformOrigin(0.5f, 0.0f) // Pivot at top edge of bottom half
+                        }
+                ) {
+                    DigitHalf(digits = targetDigits, isTopHalf = false)
+                    // Dynamic shadow fading away as card lands flat
+                    val shadowAlpha = ((1f - flipProgress.value) * 0.8f).coerceIn(0f, 0.45f)
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(Color.Black.copy(alpha = shadowAlpha))
+                    )
+                }
             }
 
             // Left & Right Mechanical Hinge Clips on Card Edges
@@ -411,7 +560,7 @@ private fun FlipDigitCard(
                 Box(
                     modifier = Modifier
                         .align(Alignment.CenterStart)
-                        .size(width = 2.5.dp, height = 11.dp)
+                        .size(width = 2.5.dp, height = 10.dp)
                         .background(Color(0xFF6B7280), RoundedCornerShape(topEnd = 1.dp, bottomEnd = 1.dp))
                 )
             }
@@ -419,31 +568,61 @@ private fun FlipDigitCard(
                 Box(
                     modifier = Modifier
                         .align(Alignment.CenterEnd)
-                        .size(width = 2.5.dp, height = 11.dp)
+                        .size(width = 2.5.dp, height = 10.dp)
                         .background(Color(0xFF6B7280), RoundedCornerShape(topStart = 1.dp, bottomStart = 1.dp))
                 )
             }
+        }
+    }
+}
 
-            // Two Digits Text prominently and comfortably centered
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(horizontal = 2.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = digits,
-                    style = MaterialTheme.typography.headlineMedium.copy(
-                        fontSize = 21.sp,
-                        letterSpacing = 0.5.sp
-                    ),
-                    fontFamily = LocalBanglaFontFamily.current,
-                    fontWeight = FontWeight.Black,
-                    color = Color(0xFF111827),
-                    textAlign = TextAlign.Center,
-                    maxLines = 1
+/**
+ * Renders either the top half or bottom half of the 2-digit number
+ * Aligned with Android System Font and large bold tabular styling
+ */
+@Composable
+private fun DigitHalf(
+    digits: String,
+    isTopHalf: Boolean,
+    modifier: Modifier = Modifier
+) {
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .height(26.5.dp)
+            .clipToBounds()
+            .background(
+                Brush.verticalGradient(
+                    if (isTopHalf) {
+                        listOf(Color(0xFFFFFFFF), Color(0xFFF9FAFB))
+                    } else {
+                        listOf(Color(0xFFF3F4F6), Color(0xFFE5E7EB))
+                    }
                 )
-            }
+            ),
+        contentAlignment = if (isTopHalf) Alignment.TopCenter else Alignment.BottomCenter
+    ) {
+        // Full height text container precisely cropped to top or bottom half
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(53.dp)
+                .offset(y = if (isTopHalf) 0.dp else (-26.5).dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = digits,
+                style = TextStyle(
+                    fontFamily = FontFamily.SansSerif, // Aligned with Android system font
+                    fontWeight = FontWeight.ExtraBold,
+                    fontSize = 25.sp,                  // Bigger, prominent font
+                    lineHeight = 25.sp,
+                    letterSpacing = 0.5.sp,
+                    color = Color(0xFF111827),
+                    textAlign = TextAlign.Center
+                ),
+                maxLines = 1
+            )
         }
     }
 }
@@ -457,8 +636,8 @@ private fun FlipClockCenterBracket(
 ) {
     Box(
         modifier = modifier
-            .padding(horizontal = 1.5.dp)
-            .size(width = 9.dp, height = 38.dp)
+            .padding(horizontal = 1.dp)
+            .size(width = 8.dp, height = 36.dp)
             .shadow(elevation = 1.dp, shape = RoundedCornerShape(2.dp))
             .clip(RoundedCornerShape(2.dp))
             .background(
@@ -479,14 +658,14 @@ private fun FlipClockCenterBracket(
             // Upper Colon Pivot Screw Dot
             Box(
                 modifier = Modifier
-                    .size(4.5.dp)
+                    .size(4.dp)
                     .background(Color(0xFF4B5563), CircleShape)
             )
-            Spacer(modifier = Modifier.height(7.dp))
+            Spacer(modifier = Modifier.height(6.dp))
             // Lower Colon Pivot Screw Dot
             Box(
                 modifier = Modifier
-                    .size(4.5.dp)
+                    .size(4.dp)
                     .background(Color(0xFF4B5563), CircleShape)
             )
         }

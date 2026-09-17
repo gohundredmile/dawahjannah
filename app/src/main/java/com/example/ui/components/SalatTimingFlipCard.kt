@@ -48,6 +48,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.data.model.ForbiddenTimeInfo
 import com.example.ui.theme.LocalAppFontFamily
 import com.example.ui.theme.LocalBanglaFontFamily
 import com.example.ui.theme.LocalEnglishFontFamily
@@ -61,14 +62,15 @@ import java.util.Locale
  */
 data class SalatContextInfo(
     val timeLabel: String,
-    val salatInfo: String
+    val salatInfo: String,
+    val isAlert: Boolean = false
 )
 
 /**
  * Revamped 3-Section Salat Timing Card
  * Section 1 (Left): 'Next Salat' (পরবর্তী সালাত) - Clean view without vertical dashed divider
- * Section 2 (Middle): 'Present Salat' (বর্তমান সালাত) - Wider Split-flap board with continuous 3s info rotation
- * Section 3 (Right): 'Remaining Time' (শেষ হতে বাকী) - Authentic HTC phone split-flap clock with Typography Studio font
+ * Section 2 (Middle): 'Present Salat' (বর্তমান সালাত) - Wider Split-flap board with continuous 5s info rotation & Salat forbidden time alert (hh:mm)
+ * Section 3 (Right): 'Remaining Time' (শেষ হতে বাকী) - Authentic split-flap clock matching video, bold English font, HH:MM display
  */
 @Composable
 fun SalatTimingFlipCard(
@@ -77,30 +79,22 @@ fun SalatTimingFlipCard(
     presentNofolName: String,
     remainingHours: Int,
     remainingMinutes: Int,
-    remainingSeconds: Int,
+    remainingSeconds: Int = 0,
     countdownFormatted: String = "",
+    forbiddenTimeInfo: ForbiddenTimeInfo = ForbiddenTimeInfo(),
     modifier: Modifier = Modifier,
     onClickCard: () -> Unit = {}
 ) {
-    var useEnglishDigits by remember { mutableStateOf(false) }
-    // false = [মিনিট : সেকেন্ড] mode (ticks and flips every second), true = [ঘণ্টা : মিনিট] mode
-    var showHoursMode by remember { mutableStateOf(false) }
-
     val banglaFont = LocalBanglaFontFamily.current
     val englishFont = LocalEnglishFontFamily.current
-    val appFont = LocalAppFontFamily.current
 
-    // Font selected from Typography Studio
-    val activeTileFont = if (useEnglishDigits) {
-        if (englishFont != FontFamily.Default) englishFont else appFont
-    } else {
-        if (banglaFont != FontFamily.Default) banglaFont else appFont
-    }
+    // Video-exact English typography: bold, heavy grotesque sans-serif
+    val clockDigitFont = if (englishFont != FontFamily.Default) englishFont else FontFamily.SansSerif
 
     // -----------------------------------------------------------------
-    // Contextual Nofol & Salat information list based on authentic timings
+    // Contextual Nofol, Salat & Forbidden Time list for 5-second continuous rotation
     // -----------------------------------------------------------------
-    val infoList = remember(presentPrayerName, presentNofolName) {
+    val infoList = remember(presentPrayerName, presentNofolName, forbiddenTimeInfo) {
         val cal = Calendar.getInstance()
         val hour = cal.get(Calendar.HOUR_OF_DAY)
         val minute = cal.get(Calendar.MINUTE)
@@ -113,7 +107,51 @@ fun SalatTimingFlipCard(
         val nofolTitle = if (presentNofolName.isNotEmpty()) "$presentNofolName এর সময়" else "নফল ইবাদত"
         items.add(SalatContextInfo(waktTitle, nofolTitle))
 
-        // 2. Add time-appropriate authentic Sunnah & Nofol salat entries
+        // 2. Salat Forbidden Time (সালাত নিষিদ্ধ সময়) - Alert for upcoming / active wakt
+        if (forbiddenTimeInfo.isCurrentlyForbidden) {
+            items.add(
+                SalatContextInfo(
+                    timeLabel = "⚠️ সালাত নিষিদ্ধ চলছে!",
+                    salatInfo = "${forbiddenTimeInfo.activeForbiddenName} (সালাত মাকরূহ)",
+                    isAlert = true
+                )
+            )
+        } else {
+            // Determine the upcoming forbidden time window with exact HH:MM
+            val upcomingForbidden = when {
+                totalMins < 356 -> { // Before Sunrise ends (~05:56)
+                    SalatContextInfo(
+                        timeLabel = "⚠️ আসন্ন সালাত নিষিদ্ধ সময়",
+                        salatInfo = "সূর্যোদয়: ${forbiddenTimeInfo.sunriseStart24} - ${forbiddenTimeInfo.sunriseEnd24}",
+                        isAlert = true
+                    )
+                }
+                totalMins < 717 -> { // Before Midday Zawal ends (~11:57)
+                    SalatContextInfo(
+                        timeLabel = "⚠️ আসন্ন সালাত নিষিদ্ধ সময়",
+                        salatInfo = "জাওয়াল: ${forbiddenTimeInfo.zawalStart24} - ${forbiddenTimeInfo.zawalEnd24}",
+                        isAlert = true
+                    )
+                }
+                totalMins < 1094 -> { // Before Sunset ends (~18:14)
+                    SalatContextInfo(
+                        timeLabel = "⚠️ আসন্ন সালাত নিষিদ্ধ সময়",
+                        salatInfo = "সূর্যাস্ত: ${forbiddenTimeInfo.sunsetStart24} - ${forbiddenTimeInfo.sunsetEnd24}",
+                        isAlert = true
+                    )
+                }
+                else -> { // Night (Isha & Tahajjud) -> upcoming is tomorrow's sunrise
+                    SalatContextInfo(
+                        timeLabel = "⚠️ আসন্ন সালাত নিষিদ্ধ সময়",
+                        salatInfo = "সূর্যোদয়: ${forbiddenTimeInfo.sunriseStart24} - ${forbiddenTimeInfo.sunriseEnd24}",
+                        isAlert = true
+                    )
+                }
+            }
+            items.add(upcomingForbidden)
+        }
+
+        // 3. Time-appropriate authentic Sunnah & Nofol salat entries
         when {
             // Fajr period (approx 4:00 - 5:45)
             totalMins in 240..345 -> {
@@ -122,19 +160,16 @@ fun SalatTimingFlipCard(
             }
             // Sunrise forbidden window (approx 5:45 - 6:05)
             totalMins in 346..370 -> {
-                items.add(SalatContextInfo("সূর্যোদয়ের সময়", "সালাত নিষিদ্ধ (১৫ মিনিট অপেক্ষা)"))
                 items.add(SalatContextInfo("সূর্যোদয় প্রহর", "জিকির ও ইস্তিগফারের সর্বোত্তম সময়"))
             }
             // Morning Ishraq & Chasht / Salatud-Duha (approx 6:05 - 11:30)
             totalMins in 371..690 -> {
-                items.add(SalatContextInfo("স্নিগ্ধ সকাল", "ইশরাকের নামাজ বা চাশতের সময়"))
-                items.add(SalatContextInfo("স্নিগ্ধ সকাল", "সালাতুদ-দুহা র সময়"))
+                items.add(SalatContextInfo("স্নিগ্ধ সকাল", "ইশরাক ও সালাতুদ-দুহা র সময়"))
                 items.add(SalatContextInfo("চাশতের নামায", "বরকতময় নফল ইবাদত (মুসলিম ৭৪৮)"))
             }
             // Midday Zawal forbidden window (approx 11:35 - 11:55)
             totalMins in 691..725 -> {
-                items.add(SalatContextInfo("দুপুর বেলা", "সালাত জাওয়াল শুরু"))
-                items.add(SalatContextInfo("দ্বিপ্রহর", "সূর্য মধ্যাকাশে থাকায় সালাত মাকরূহ"))
+                items.add(SalatContextInfo("দ্বিপ্রহর সতর্কবার্তা", "সূর্য মধ্যাকাশে থাকায় সালাত মাকরূহ", isAlert = true))
             }
             // Dhuhr period (approx 12:00 - 15:30)
             totalMins in 726..930 -> {
@@ -150,11 +185,9 @@ fun SalatTimingFlipCard(
             totalMins in 1071..1170 -> {
                 items.add(SalatContextInfo("শুভ সন্ধ্যা", "আওয়াবিন এর সময়"))
                 items.add(SalatContextInfo("সালাতুল আওয়াবিন", "মাগরিবের পর ৬ রাকাত নফল"))
-                items.add(SalatContextInfo("মাগরিবের পর", "২ রাকাত নিয়মিত সুন্নাত মুয়াক্কাদা"))
             }
             // Isha and Night / Tahajjud (approx 19:30 - 24:00 and 00:00 - 04:00)
             else -> {
-                items.add(SalatContextInfo("শুভ রাত্রি", "একান্তে আল্লাহর সান্নিধ্যে আসুন"))
                 items.add(SalatContextInfo("তাহাজ্জুদের সময়", "রাতের শ্রেষ্ঠ নফল ইবাদত (মুসলিম ৭৫৮)"))
                 items.add(SalatContextInfo("রাতের শেষ প্রহর", "তাহাজ্জুদ ও দোয়া কবুলের শ্রেষ্ঠ সময়"))
                 items.add(SalatContextInfo("বিতর সালাত", "রাতের শেষ সালাত হিসাবে বিতর আদায়"))
@@ -167,16 +200,16 @@ fun SalatTimingFlipCard(
     var currentInfoIndex by remember { mutableIntStateOf(0) }
     val boardFlipProgress = remember { Animatable(1f) }
 
-    // Continuous 3-second cycle for the middle split-flap board
+    // Continuous 5-second cycle for the middle split-flap board
     LaunchedEffect(infoList.size) {
         while (true) {
-            delay(3000L)
+            delay(5000L)
             boardFlipProgress.snapTo(0f)
             val nextIdx = (currentInfoIndex + 1) % infoList.size
             currentInfoIndex = nextIdx
             boardFlipProgress.animateTo(
                 targetValue = 1f,
-                animationSpec = tween(durationMillis = 480, easing = FastOutSlowInEasing)
+                animationSpec = tween(durationMillis = 500, easing = FastOutSlowInEasing)
             )
         }
     }
@@ -320,7 +353,7 @@ fun SalatTimingFlipCard(
                         verticalArrangement = Arrangement.SpaceBetween,
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        // Upper Flap: Time Label (e.g. স্নিগ্ধ সকাল / শুভ রাত্রি / বর্তমান ওয়াক্ত: এশা)
+                        // Upper Flap: Time Label (e.g. স্নিগ্ধ সকাল / শুভ রাত্রি / বর্তমান ওয়াক্ত: এশা / ⚠️ সালাত নিষিদ্ধ সময়)
                         Box(
                             modifier = Modifier
                                 .weight(1f)
@@ -331,12 +364,12 @@ fun SalatTimingFlipCard(
                             Text(
                                 text = currentInfo.timeLabel,
                                 style = MaterialTheme.typography.titleMedium.copy(
-                                    fontSize = 13.5.sp,
+                                    fontSize = 13.sp,
                                     letterSpacing = 0.2.sp
                                 ),
                                 fontFamily = banglaFont,
                                 fontWeight = FontWeight.Black,
-                                color = Color(0xFF0F172A),
+                                color = if (currentInfo.isAlert) Color(0xFFDC2626) else Color(0xFF0F172A),
                                 textAlign = TextAlign.Center,
                                 maxLines = 1,
                                 overflow = TextOverflow.Ellipsis
@@ -351,7 +384,7 @@ fun SalatTimingFlipCard(
                                 .background(Color(0xFF334155))
                         )
 
-                        // Lower Flap: Salat / Nofol Info (e.g. সালাতুদ-দুহা র সময় / তাহাজ্জুদের সময় / আওয়াবিন এর সময়)
+                        // Lower Flap: Salat / Nofol Info (e.g. সালাতুদ-দুহা র সময় / তাহাজ্জুদের সময় / নিষিদ্ধ সময় hh:mm)
                         Box(
                             modifier = Modifier
                                 .weight(1f)
@@ -362,12 +395,12 @@ fun SalatTimingFlipCard(
                             Text(
                                 text = currentInfo.salatInfo,
                                 style = MaterialTheme.typography.labelLarge.copy(
-                                    fontSize = 12.5.sp,
+                                    fontSize = 12.sp,
                                     letterSpacing = 0.1.sp
                                 ),
                                 fontFamily = banglaFont,
                                 fontWeight = FontWeight.Bold,
-                                color = Color(0xFF1E293B),
+                                color = if (currentInfo.isAlert) Color(0xFFB91C1C) else Color(0xFF1E293B),
                                 textAlign = TextAlign.Center,
                                 maxLines = 1,
                                 overflow = TextOverflow.Ellipsis
@@ -380,91 +413,61 @@ fun SalatTimingFlipCard(
 
         // -------------------------------------------------------------
         // 3. RIGHT SECTION: শেষ হতে বাকী (Authentic HTC Sense Flip Clock Board)
-        // Uses selected font from Typography Studio, larger bold size,
-        // and 3D split-flap downward animation on every second/minute/hour change
+        // Matches video: English font style, displays HH:MM only,
+        // downward 3D split-flap drop, knurled central roller
         // -------------------------------------------------------------
         Column(
             modifier = Modifier
-                .weight(1.28f)
+                .weight(1.22f)
                 .padding(start = 2.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            // Header: Title with optional hour remaining reminder if in MM:SS mode
-            val hourBadgeText = if (remainingHours > 0 && !showHoursMode) {
-                if (useEnglishDigits) "${remainingHours}h left" else "${CalendarHelper.toBanglaNumber(remainingHours)}ঘণ্টা বাকী"
-            } else {
-                "শেষ হতে বাকী"
-            }
-
             Text(
-                text = hourBadgeText,
+                text = "শেষ হতে বাকী",
                 style = MaterialTheme.typography.labelSmall.copy(fontSize = 11.sp),
                 fontFamily = banglaFont,
                 fontWeight = FontWeight.SemiBold,
-                color = if (remainingHours > 0 && !showHoursMode) Color(0xFFB45309) else Color(0xFF374151),
+                color = Color(0xFF374151),
                 textAlign = TextAlign.Center,
                 maxLines = 1
             )
 
-            Spacer(modifier = Modifier.height(3.dp))
+            Spacer(modifier = Modifier.height(4.dp))
 
-            // Compute digits for left and right tiles
-            // In default MM:SS mode: left is minutes, right is seconds (ticks and flips every single second!)
-            // In HH:MM mode: left is hours, right is minutes
-            val leftRaw = if (showHoursMode) remainingHours else remainingMinutes
-            val rightRaw = if (showHoursMode) remainingMinutes else remainingSeconds
-
-            val leftStr = String.format(Locale.US, "%02d", leftRaw)
-            val rightStr = String.format(Locale.US, "%02d", rightRaw)
-
-            val leftDisplay = if (useEnglishDigits) leftStr else CalendarHelper.toBanglaNumber(leftStr)
-            val rightDisplay = if (useEnglishDigits) rightStr else CalendarHelper.toBanglaNumber(rightStr)
+            // Only HH:MM formatted in English digits
+            val hoursStr = String.format(Locale.US, "%02d", remainingHours)
+            val minutesStr = String.format(Locale.US, "%02d", remainingMinutes)
 
             // Retro Mechanical HTC-style Flip Clock Board
             Row(
-                modifier = Modifier
-                    .clip(RoundedCornerShape(8.dp))
-                    .clickable {
-                        // Tapping the board toggles between MM:SS mode and HH:MM mode,
-                        // or long click / double tap toggles digits. We toggle mode on tap!
-                        if (remainingHours > 0) {
-                            showHoursMode = !showHoursMode
-                        } else {
-                            useEnglishDigits = !useEnglishDigits
-                        }
-                    },
+                modifier = Modifier.clip(RoundedCornerShape(8.dp)),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.Center
             ) {
-                // Left HTC Flip Tile (Minutes or Hours)
+                // Left Flip Tile: Hours (HH)
                 HtcFlipDigitCard(
-                    digits = leftDisplay,
-                    fontFamily = activeTileFont,
+                    digits = hoursStr,
+                    fontFamily = clockDigitFont,
                     hasLeftHinge = true,
                     hasRightHinge = true
                 )
 
-                // Central Vertical Colon Bracket with Two Pivot Screws
-                FlipClockCenterBracket()
+                // Central knurled roller gear between HH and MM
+                FlipClockCenterRoller()
 
-                // Right HTC Flip Tile (Seconds or Minutes) - live flips every second!
+                // Right Flip Tile: Minutes (MM)
                 HtcFlipDigitCard(
-                    digits = rightDisplay,
-                    fontFamily = activeTileFont,
+                    digits = minutesStr,
+                    fontFamily = clockDigitFont,
                     hasLeftHinge = true,
                     hasRightHinge = true
                 )
             }
 
-            // Sub-label indicating unit (মি : সে or ঘণ্টা : মি)
-            val unitLabel = if (showHoursMode) {
-                if (useEnglishDigits) "hr : min" else "ঘণ্টা : মিনিট"
-            } else {
-                if (useEnglishDigits) "min : sec" else "মিনিট : সেকেন্ড"
-            }
+            // Sub-label indicating unit (ঘণ্টা : মিনিট)
             Text(
-                text = unitLabel,
+                text = "ঘণ্টা : মিনিট",
                 style = TextStyle(
                     fontSize = 9.sp,
                     fontWeight = FontWeight.Medium,
@@ -472,7 +475,7 @@ fun SalatTimingFlipCard(
                     fontFamily = banglaFont,
                     textAlign = TextAlign.Center
                 ),
-                modifier = Modifier.padding(top = 2.dp)
+                modifier = Modifier.padding(top = 3.dp)
             )
         }
     }
@@ -481,7 +484,7 @@ fun SalatTimingFlipCard(
 /**
  * Authentic HTC Phone Sense 3D Flip Clock Digit Tile
  * Features 3D top-down split flap flip animation whenever [digits] changes
- * Aligned with Typography Studio active font, bold tabular typeface
+ * Uses English bold tabular typeface matching the video
  */
 @Composable
 private fun HtcFlipDigitCard(
@@ -514,7 +517,7 @@ private fun HtcFlipDigitCard(
         // Multi-card Stack Layer Effect at the Bottom (representing stacked flap deck)
         Column(
             modifier = Modifier
-                .width(48.dp)
+                .width(44.dp)
                 .height(58.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Bottom
@@ -522,14 +525,14 @@ private fun HtcFlipDigitCard(
             // Under-layer 2
             Box(
                 modifier = Modifier
-                    .width(42.dp)
+                    .width(38.dp)
                     .height(1.dp)
                     .background(Color(0xFFD1D5DB), RoundedCornerShape(bottomStart = 2.dp, bottomEnd = 2.dp))
             )
             // Under-layer 1
             Box(
                 modifier = Modifier
-                    .width(45.dp)
+                    .width(41.dp)
                     .height(1.dp)
                     .background(Color(0xFFE2E8F0), RoundedCornerShape(bottomStart = 3.dp, bottomEnd = 3.dp))
             )
@@ -538,15 +541,16 @@ private fun HtcFlipDigitCard(
         // Main Flap Card Assembly
         Box(
             modifier = Modifier
-                .size(width = 48.dp, height = 55.dp)
+                .size(width = 44.dp, height = 55.dp)
                 .shadow(elevation = 2.dp, shape = RoundedCornerShape(6.dp))
                 .clip(RoundedCornerShape(6.dp))
+                .background(Color(0xFF1E2229))
                 .border(BorderStroke(1.dp, Color(0xFFCBD5E1)), RoundedCornerShape(6.dp))
         ) {
             // BASE LAYER:
             // Top half displays the NEW digit (revealed when old flap falls down)
-            // Bottom half displays OLD digit during phase 1 (<0.5), then switches to NEW digit
-            val bottomBaseDigits = if (flipProgress.value < 0.5f) previousDigits else displayedDigits
+            // Bottom half displays OLD digit until the flip completes (1.0f)
+            val bottomBaseDigits = if (flipProgress.value < 1.0f) previousDigits else displayedDigits
 
             Column(modifier = Modifier.fillMaxSize()) {
                 DigitHalf(digits = displayedDigits, isTopHalf = true, fontFamily = fontFamily)
@@ -577,7 +581,7 @@ private fun HtcFlipDigitCard(
                 ) {
                     DigitHalf(digits = previousDigits, isTopHalf = true, fontFamily = fontFamily)
                     // Dynamic shadow overlay during downward fold
-                    val shadowAlpha = (flipProgress.value * 0.9f).coerceIn(0f, 0.48f)
+                    val shadowAlpha = (flipProgress.value * 0.85f).coerceIn(0f, 0.45f)
                     Box(
                         modifier = Modifier
                             .fillMaxSize()
@@ -600,7 +604,7 @@ private fun HtcFlipDigitCard(
                 ) {
                     DigitHalf(digits = displayedDigits, isTopHalf = false, fontFamily = fontFamily)
                     // Dynamic shadow fading away as card lands flat
-                    val shadowAlpha = ((1f - flipProgress.value) * 0.9f).coerceIn(0f, 0.48f)
+                    val shadowAlpha = ((1f - flipProgress.value) * 0.85f).coerceIn(0f, 0.45f)
                     Box(
                         modifier = Modifier
                             .fillMaxSize()
@@ -609,12 +613,12 @@ private fun HtcFlipDigitCard(
                 }
             }
 
-            // Left & Right Mechanical Hinge Clips on Card Edges (HTC phone look)
+            // Left & Right Mechanical Hinge Clips on Card Edges
             if (hasLeftHinge) {
                 Box(
                     modifier = Modifier
                         .align(Alignment.CenterStart)
-                        .size(width = 2.5.dp, height = 10.dp)
+                        .size(width = 2.5.dp, height = 9.dp)
                         .background(Color(0xFF64748B), RoundedCornerShape(topEnd = 1.dp, bottomEnd = 1.dp))
                 )
             }
@@ -622,7 +626,7 @@ private fun HtcFlipDigitCard(
                 Box(
                     modifier = Modifier
                         .align(Alignment.CenterEnd)
-                        .size(width = 2.5.dp, height = 10.dp)
+                        .size(width = 2.5.dp, height = 9.dp)
                         .background(Color(0xFF64748B), RoundedCornerShape(topStart = 1.dp, bottomStart = 1.dp))
                 )
             }
@@ -632,7 +636,8 @@ private fun HtcFlipDigitCard(
 
 /**
  * Renders either the top half or bottom half of the 2-digit number
- * Uses Typography Studio active font, bold and large sizing
+ * Fixes previous issue where bottom half was rendered outside the visible area:
+ * Uses Alignment.TopCenter for both halves, with top having 0.dp offset and bottom having -27.dp offset.
  */
 @Composable
 private fun DigitHalf(
@@ -641,10 +646,12 @@ private fun DigitHalf(
     fontFamily: FontFamily,
     modifier: Modifier = Modifier
 ) {
+    val halfHeight = 27.dp
+    val fullHeight = 54.dp
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .height(27.dp)
+            .height(halfHeight)
             .clipToBounds()
             .background(
                 Brush.verticalGradient(
@@ -655,23 +662,23 @@ private fun DigitHalf(
                     }
                 )
             ),
-        contentAlignment = if (isTopHalf) Alignment.TopCenter else Alignment.BottomCenter
+        contentAlignment = Alignment.TopCenter
     ) {
         // Full height text container precisely cropped to top or bottom half
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(54.dp)
-                .offset(y = if (isTopHalf) 0.dp else (-27).dp),
+                .height(fullHeight)
+                .offset(y = if (isTopHalf) 0.dp else -halfHeight),
             contentAlignment = Alignment.Center
         ) {
             Text(
                 text = digits,
                 style = TextStyle(
                     fontFamily = fontFamily,
-                    fontWeight = FontWeight.ExtraBold,
-                    fontSize = 26.sp,                  // Bigger, prominent font
-                    lineHeight = 26.sp,
+                    fontWeight = FontWeight.Black,
+                    fontSize = 28.sp,
+                    lineHeight = 28.sp,
                     letterSpacing = 0.5.sp,
                     color = Color(0xFF0F172A),
                     textAlign = TextAlign.Center
@@ -683,47 +690,54 @@ private fun DigitHalf(
 }
 
 /**
- * Mechanical Flip Clock Central Colon Bracket (matching flipboard specimen)
+ * Central cylindrical knurled roller gear (as seen in the flip clock video between the two tiles)
  */
 @Composable
-private fun FlipClockCenterBracket(
+private fun FlipClockCenterRoller(
     modifier: Modifier = Modifier
 ) {
     Box(
         modifier = modifier
-            .padding(horizontal = 1.dp)
-            .size(width = 8.dp, height = 36.dp)
-            .shadow(elevation = 1.dp, shape = RoundedCornerShape(2.dp))
-            .clip(RoundedCornerShape(2.dp))
+            .padding(horizontal = 2.dp)
+            .size(width = 10.dp, height = 40.dp)
+            .shadow(elevation = 1.dp, shape = RoundedCornerShape(3.dp))
+            .clip(RoundedCornerShape(3.dp))
             .background(
-                Brush.verticalGradient(
+                Brush.horizontalGradient(
                     listOf(
-                        Color(0xFFFFFFFF),
-                        Color(0xFFF1F5F9)
+                        Color(0xFF1E2229),
+                        Color(0xFF333945),
+                        Color(0xFF475060),
+                        Color(0xFF333945),
+                        Color(0xFF1E2229)
                     )
                 )
             )
-            .border(BorderStroke(0.8.dp, Color(0xFFCBD5E1)), RoundedCornerShape(2.dp)),
+            .border(BorderStroke(0.6.dp, Color(0xFF475569)), RoundedCornerShape(3.dp)),
         contentAlignment = Alignment.Center
     ) {
+        // Realistic knurled horizontal ridges/teeth
         Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+            modifier = Modifier.fillMaxSize().padding(vertical = 3.dp),
+            verticalArrangement = Arrangement.SpaceEvenly,
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Upper Colon Pivot Screw Dot
-            Box(
-                modifier = Modifier
-                    .size(4.dp)
-                    .background(Color(0xFF475569), CircleShape)
-            )
-            Spacer(modifier = Modifier.height(6.dp))
-            // Lower Colon Pivot Screw Dot
-            Box(
-                modifier = Modifier
-                    .size(4.dp)
-                    .background(Color(0xFF475569), CircleShape)
-            )
+            repeat(7) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth(0.85f)
+                        .height(1.dp)
+                        .background(Color(0xFF64748B))
+                )
+            }
         }
+        // Center horizontal split notch
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(1.5.dp)
+                .background(Color(0xFF0F172A))
+        )
     }
 }
 

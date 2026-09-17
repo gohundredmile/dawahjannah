@@ -72,6 +72,7 @@ import androidx.compose.ui.unit.sp
 import com.example.R
 import com.example.data.model.DailyInspiration
 import com.example.data.model.DuaItem
+import com.example.data.model.ForbiddenTimeInfo
 import com.example.data.model.PrayerTimeItem
 import com.example.data.model.RoutineItem
 import com.example.ui.theme.IslamicGold
@@ -91,6 +92,7 @@ fun IslamicHeaderCover(
     remainingHours: Int = 0,
     remainingMinutes: Int = 0,
     remainingSeconds: Int = 0,
+    forbiddenTimeInfo: ForbiddenTimeInfo = ForbiddenTimeInfo(),
     onOpenSettings: () -> Unit = {},
     onClickCard: () -> Unit = {}
 ) {
@@ -185,6 +187,7 @@ fun IslamicHeaderCover(
                     remainingMinutes = remainingMinutes,
                     remainingSeconds = remainingSeconds,
                     countdownFormatted = countdownFormatted,
+                    forbiddenTimeInfo = forbiddenTimeInfo,
                     onClickCard = onClickCard
                 )
             }

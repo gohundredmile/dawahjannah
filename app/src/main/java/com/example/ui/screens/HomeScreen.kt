@@ -85,6 +85,7 @@ fun HomeScreen(
                 remainingHours = prayerStatus.remainingHours,
                 remainingMinutes = prayerStatus.remainingMinutes,
                 remainingSeconds = prayerStatus.remainingSeconds,
+                forbiddenTimeInfo = prayerStatus.forbiddenTimeInfo,
                 onOpenSettings = {
                     viewModel.openSettings(AppTab.HOME)
                 }

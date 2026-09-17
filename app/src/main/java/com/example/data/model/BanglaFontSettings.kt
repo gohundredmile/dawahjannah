@@ -165,6 +165,14 @@ enum class FlipClockFont(
     @FontRes val fontResId: Int?,
     val fontWeight: FontWeight = FontWeight.Normal
 ) {
+    RETRO_7SEGMENT(
+        id = "retro_7segment",
+        displayName = "HTC Sense 7-Segment (Original 1.4.8)",
+        subtitle = "খাঁটি মেকানিক্যাল ৭-সেগমেন্ট স্প্লিট ফ্ল্যাপ (ডিফল্ট ও পারফেক্ট)",
+        googleFontName = "HTC Sense Mechanical",
+        fontResId = null,
+        fontWeight = FontWeight.Normal
+    ),
     MONTSERRAT_THIN(
         id = "montserrat_thin",
         displayName = "Montserrat Ultra Thin",
@@ -284,14 +292,6 @@ enum class FlipClockFont(
         googleFontName = "Outfit",
         fontResId = R.font.font_outfit,
         fontWeight = FontWeight.W200
-    ),
-    RETRO_7SEGMENT(
-        id = "retro_7segment",
-        displayName = "Retro 7-Segment Mechanical",
-        subtitle = "খাঁটি মেকানিক্যাল ৭-সেগমেন্ট স্লিট ফ্ল্যাপ",
-        googleFontName = "Mechanical 7-Segment",
-        fontResId = null,
-        fontWeight = FontWeight.Normal
     )
 }
 

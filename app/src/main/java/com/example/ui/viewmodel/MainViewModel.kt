@@ -658,7 +658,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     val flipClockFont = repository.flipClockFontFlow.stateIn(
         viewModelScope,
         SharingStarted.WhileSubscribed(5000),
-        FlipClockFont.MONTSERRAT_THIN
+        FlipClockFont.RETRO_7SEGMENT
     )
 
     fun setFlipClockFont(font: FlipClockFont) {

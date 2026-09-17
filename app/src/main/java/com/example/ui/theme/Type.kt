@@ -23,7 +23,7 @@ private val flipClockFontCache = mutableMapOf<FlipClockFont, FontFamily>()
 val LocalAppFontFamily = compositionLocalOf<FontFamily> { FontFamily.SansSerif }
 val LocalEnglishFontFamily = compositionLocalOf<FontFamily> { FontFamily.SansSerif }
 val LocalBanglaFontFamily = compositionLocalOf<FontFamily> { FontFamily.Default }
-val LocalFlipClockFont = compositionLocalOf<FlipClockFont> { FlipClockFont.MONTSERRAT_THIN }
+val LocalFlipClockFont = compositionLocalOf<FlipClockFont> { FlipClockFont.RETRO_7SEGMENT }
 val LocalFlipClockFontFamily = compositionLocalOf<FontFamily> { FontFamily.SansSerif }
 
 val ArabicFontFamily = FontFamily(

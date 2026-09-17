@@ -46,8 +46,15 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.nativeCanvas
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
+import androidx.core.content.res.ResourcesCompat
+import android.graphics.Paint
+import android.graphics.Rect
+import android.graphics.Typeface
 import androidx.compose.ui.text.PlatformTextStyle
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
@@ -687,7 +694,7 @@ internal fun HtcFlipDigitCard(
 private fun DigitHalf(
     digits: String,
     isTopHalf: Boolean,
-    clockFont: FlipClockFont = FlipClockFont.MONTSERRAT_THIN,
+    clockFont: FlipClockFont = FlipClockFont.RETRO_7SEGMENT,
     fontFamily: FontFamily = FontFamily.SansSerif,
     modifier: Modifier = Modifier
 ) {
@@ -696,6 +703,19 @@ private fun DigitHalf(
         RoundedCornerShape(topStart = 5.dp, topEnd = 5.dp, bottomStart = 1.dp, bottomEnd = 1.dp)
     } else {
         RoundedCornerShape(topStart = 1.dp, topEnd = 1.dp, bottomStart = 5.dp, bottomEnd = 5.dp)
+    }
+
+    val context = LocalContext.current
+    val typeface = remember(clockFont) {
+        if (clockFont.fontResId != null) {
+            try {
+                ResourcesCompat.getFont(context, clockFont.fontResId)
+            } catch (_: Throwable) {
+                Typeface.SANS_SERIF
+            }
+        } else {
+            Typeface.SANS_SERIF
+        }
     }
 
     Box(
@@ -718,14 +738,15 @@ private fun DigitHalf(
             ),
         contentAlignment = if (isTopHalf) Alignment.TopCenter else Alignment.BottomCenter
     ) {
-        if (clockFont == FlipClockFont.RETRO_7SEGMENT) {
-            Canvas(modifier = Modifier.fillMaxSize()) {
-                val paddedDigits = digits.padStart(2, '0')
+        Canvas(modifier = Modifier.fillMaxSize()) {
+            val paddedDigits = digits.padStart(2, '0')
+            val w = size.width
+            val h = size.height
+
+            if (clockFont == FlipClockFont.RETRO_7SEGMENT) {
+                // Exact, authentic 1.4.8 HTC Sense 7-Segment Mechanical Split:
                 val d1 = paddedDigits[0]
                 val d2 = paddedDigits[1]
-
-                val w = size.width
-                val h = size.height
 
                 // Precise spacing for 2 digits on the card matching flipboard3.jpg
                 val digit1Center = w * 0.29f
@@ -746,30 +767,34 @@ private fun DigitHalf(
                     cardHeight = h,
                     digitWidth = digitWidth
                 )
-            }
-        } else {
-            // High-precision split-flap font renderer:
-            // Slices the 54.dp text container vertically across the 27.dp half-tile bounds:
-            // Top half aligns to TopCenter (shows upper 50%), bottom half aligns to BottomCenter (shows lower 50%)
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(54.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = digits.padStart(2, '0'),
-                    style = TextStyle(
-                        fontFamily = fontFamily,
-                        fontWeight = clockFont.fontWeight,
-                        fontSize = 28.sp,
-                        lineHeight = 28.sp,
-                        letterSpacing = (-0.5).sp,
-                        color = Color(0xFF0F172A),
-                        textAlign = TextAlign.Center
-                    ),
-                    maxLines = 1
-                )
+            } else {
+                // Mathematical Canvas Split for Typographic Fonts:
+                // Slices the font glyphs across the physical split seam with sub-pixel precision.
+                // In Top Half: seam is at local Y = h. Only the upper half of the font glyphs is drawn.
+                // In Bottom Half: seam is at local Y = 0. Only the lower half of the font glyphs is drawn.
+                drawIntoCanvas { composeCanvas ->
+                    val nativeCanvas = composeCanvas.nativeCanvas
+                    val paint = Paint().apply {
+                        isAntiAlias = true
+                        this.typeface = typeface
+                        color = android.graphics.Color.parseColor("#0F172A")
+                        textSize = h * 1.34f
+                        textAlign = Paint.Align.CENTER
+                    }
+
+                    val bounds = Rect()
+                    paint.getTextBounds(paddedDigits, 0, paddedDigits.length, bounds)
+                    val visualCenterY = bounds.exactCenterY()
+
+                    // Seam coordinate: in top half it's at h; in bottom half it's at 0
+                    val seamY = if (isTopHalf) h else 0f
+                    val drawY = seamY - visualCenterY
+
+                    nativeCanvas.save()
+                    nativeCanvas.clipRect(0f, 0f, w, h)
+                    nativeCanvas.drawText(paddedDigits, w / 2f, drawY, paint)
+                    nativeCanvas.restore()
+                }
             }
         }
     }

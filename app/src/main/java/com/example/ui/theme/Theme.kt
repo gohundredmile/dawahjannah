@@ -389,7 +389,7 @@ fun DawahTheme(
     banglaFont: BanglaFont = BanglaFont.NOTO_SANS_BENGALI,
     banglaWeight: BanglaFontWeight = BanglaFontWeight.NORMAL,
     primaryPreference: PrimaryFontPreference = PrimaryFontPreference.BANGLA_PRIMARY,
-    flipClockFont: FlipClockFont = FlipClockFont.MONTSERRAT_THIN,
+    flipClockFont: FlipClockFont = FlipClockFont.RETRO_7SEGMENT,
     content: @Composable () -> Unit
 ) {
     val systemDark = isSystemInDarkTheme()

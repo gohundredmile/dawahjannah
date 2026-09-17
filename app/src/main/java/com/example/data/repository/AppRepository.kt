@@ -282,11 +282,11 @@ class AppRepository(private val context: Context) {
     }
 
     val flipClockFontFlow: Flow<FlipClockFont> = context.dataStore.data.map { prefs ->
-        val name = prefs[KEY_FLIP_CLOCK_FONT] ?: FlipClockFont.MONTSERRAT_THIN.name
+        val name = prefs[KEY_FLIP_CLOCK_FONT] ?: FlipClockFont.RETRO_7SEGMENT.name
         try {
             FlipClockFont.valueOf(name)
         } catch (_: Exception) {
-            FlipClockFont.MONTSERRAT_THIN
+            FlipClockFont.RETRO_7SEGMENT
         }
     }
 

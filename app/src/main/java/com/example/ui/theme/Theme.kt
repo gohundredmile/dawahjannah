@@ -12,6 +12,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import com.example.data.model.BanglaFont
 import com.example.data.model.BanglaFontWeight
 import com.example.data.model.EnglishFont
+import com.example.data.model.FlipClockFont
 import com.example.data.model.PrimaryFontPreference
 import com.example.data.model.ThemeMode
 import com.example.data.model.ThemeStyle
@@ -388,6 +389,7 @@ fun DawahTheme(
     banglaFont: BanglaFont = BanglaFont.NOTO_SANS_BENGALI,
     banglaWeight: BanglaFontWeight = BanglaFontWeight.NORMAL,
     primaryPreference: PrimaryFontPreference = PrimaryFontPreference.BANGLA_PRIMARY,
+    flipClockFont: FlipClockFont = FlipClockFont.MONTSERRAT_THIN,
     content: @Composable () -> Unit
 ) {
     val systemDark = isSystemInDarkTheme()
@@ -405,6 +407,7 @@ fun DawahTheme(
     val activeFamily = getActiveAppFontFamily(englishFont, banglaFont, primaryPreference, context)
     val activeEnglishFamily = getEnglishFontFamily(englishFont)
     val activeBanglaFamily = getBanglaFontFamily(banglaFont)
+    val activeFlipClockFamily = getFlipClockFontFamily(flipClockFont)
 
     MaterialTheme(
         colorScheme = colorScheme,
@@ -414,6 +417,8 @@ fun DawahTheme(
             LocalAppFontFamily provides activeFamily,
             LocalEnglishFontFamily provides activeEnglishFamily,
             LocalBanglaFontFamily provides activeBanglaFamily,
+            LocalFlipClockFont provides flipClockFont,
+            LocalFlipClockFontFamily provides activeFlipClockFamily,
             LocalArabicFontFamily provides ArabicFontFamily,
             LocalTextStyle provides typography.bodyMedium
         ) {

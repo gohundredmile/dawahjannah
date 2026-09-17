@@ -36,6 +36,7 @@ import com.example.data.model.DailyWisdomState
 import com.example.data.model.DuaItem
 import com.example.data.model.DuroodItem
 import com.example.data.model.EnglishFont
+import com.example.data.model.FlipClockFont
 import com.example.data.model.FontSizeScale
 import com.example.data.model.HealthDuaItem
 import com.example.data.model.IslamicLifeCardItem
@@ -653,6 +654,16 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         SharingStarted.WhileSubscribed(5000),
         BanglaFontWeight.NORMAL
     )
+
+    val flipClockFont = repository.flipClockFontFlow.stateIn(
+        viewModelScope,
+        SharingStarted.WhileSubscribed(5000),
+        FlipClockFont.MONTSERRAT_THIN
+    )
+
+    fun setFlipClockFont(font: FlipClockFont) {
+        viewModelScope.launch { repository.setFlipClockFont(font) }
+    }
 
     fun setEnglishFont(font: EnglishFont) {
         viewModelScope.launch { repository.setEnglishFont(font) }

@@ -60,9 +60,11 @@ import androidx.compose.ui.window.DialogProperties
 import com.example.data.model.BanglaFont
 import com.example.data.model.BanglaFontWeight
 import com.example.data.model.EnglishFont
+import com.example.data.model.FlipClockFont
 import com.example.ui.theme.getBanglaFontFamily
 import com.example.ui.theme.getDualActiveFontFamily
 import com.example.ui.theme.getEnglishFontFamily
+import com.example.ui.theme.getFlipClockFontFamily
 import com.example.ui.viewmodel.AppTab
 import com.example.ui.viewmodel.MainViewModel
 import com.example.ui.viewmodel.MoreSubScreen
@@ -75,8 +77,9 @@ fun BanglaFontSettingsDialog(
     val currentEnglishFont by viewModel.englishFont.collectAsState()
     val currentBanglaFont by viewModel.banglaFont.collectAsState()
     val currentWeight by viewModel.banglaFontWeight.collectAsState()
+    val currentFlipClockFont by viewModel.flipClockFont.collectAsState()
 
-    // 0 = English Fonts, 1 = Bangla Fonts, 2 = Font Weight
+    // 0 = Flip Clock Fonts, 1 = English Fonts, 2 = Bangla Fonts, 3 = Font Weight
     var activeTab by remember { mutableIntStateOf(0) }
 
     Dialog(
@@ -189,9 +192,10 @@ fun BanglaFontSettingsDialog(
                     horizontalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
                     listOf(
-                        "ইংরেজি (English)" to 0,
-                        "বাংলা (Bangla)" to 1,
-                        "ওয়েট (Weight)" to 2
+                        "ফ্লিপ ক্লক" to 0,
+                        "ইংরেজি" to 1,
+                        "বাংলা" to 2,
+                        "ওয়েট" to 3
                     ).forEach { (title, index) ->
                         val isSelected = activeTab == index
                         Surface(
@@ -206,7 +210,8 @@ fun BanglaFontSettingsDialog(
                                 fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
                                 color = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
                                 textAlign = TextAlign.Center,
-                                modifier = Modifier.padding(vertical = 7.dp)
+                                maxLines = 1,
+                                modifier = Modifier.padding(vertical = 7.dp, horizontal = 2.dp)
                             )
                         }
                     }
@@ -214,8 +219,227 @@ fun BanglaFontSettingsDialog(
 
                 Spacer(modifier = Modifier.height(14.dp))
 
-                // TAB 0: ENGLISH FONTS (Roboto, Ubuntu Sans, Ubuntu Light, Outfit, Inter)
+                // TAB 0: FLIP CLOCK FONTS (10+ Ultra-Thin, Lite & Classic Mechanical Fonts)
                 if (activeTab == 0) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = "FLIP CLOCK TYPOGRAPHY STUDIO",
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.Bold,
+                                letterSpacing = 1.1.sp,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                            Text(
+                                text = "সালাত টাইমিং বোর্ডের ৩য় অংশে 'শেষ হতে বাকী' HTC Sense স্প্লিট ক্লক",
+                                style = MaterialTheme.typography.labelSmall,
+                                fontSize = 11.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                        Surface(
+                            shape = RoundedCornerShape(8.dp),
+                            color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.6f)
+                        ) {
+                            Text(
+                                text = "${FlipClockFont.entries.size}টি ফন্ট",
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.padding(horizontal = 7.dp, vertical = 3.dp)
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    // LIVE PREVIEW CARD OF SELECTED FLIP CLOCK FONT
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(16.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = Color(0xFF1E2430)
+                        ),
+                        border = BorderStroke(1.dp, Color(0xFF334155))
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(14.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Box(
+                                        modifier = Modifier
+                                            .size(7.dp)
+                                            .clip(CircleShape)
+                                            .background(Color(0xFF10B981))
+                                    )
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Text(
+                                        text = "লাইভ ৩ডি স্প্লিট প্রিভিউ",
+                                        color = Color(0xFF94A3B8),
+                                        fontSize = 10.sp,
+                                        fontWeight = FontWeight.SemiBold,
+                                        letterSpacing = 0.8.sp
+                                    )
+                                }
+                                Text(
+                                    text = currentFlipClockFont.displayName,
+                                    color = Color(0xFFF1F5F9),
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+
+                            Spacer(modifier = Modifier.height(12.dp))
+
+                            // Two Split Tiles Preview
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.Center
+                            ) {
+                                HtcFlipDigitCard(
+                                    digits = "08",
+                                    clockFont = currentFlipClockFont,
+                                    fontFamily = getFlipClockFontFamily(currentFlipClockFont),
+                                    hasLeftHinge = true,
+                                    hasRightHinge = true
+                                )
+
+                                FlipClockCenterPost()
+
+                                HtcFlipDigitCard(
+                                    digits = "45",
+                                    clockFont = currentFlipClockFont,
+                                    fontFamily = getFlipClockFontFamily(currentFlipClockFont),
+                                    hasLeftHinge = true,
+                                    hasRightHinge = true
+                                )
+                            }
+
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text(
+                                text = "${currentFlipClockFont.subtitle} • Google Fonts: ${currentFlipClockFont.googleFontName}",
+                                color = Color(0xFF94A3B8),
+                                fontSize = 11.sp,
+                                textAlign = TextAlign.Center
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(14.dp))
+
+                    Text(
+                        text = "১০+ আল্ট্রা-থিন ও লাইট ফন্ট নির্বাচন করুন:",
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+
+                    Spacer(modifier = Modifier.height(6.dp))
+
+                    FlipClockFont.entries.forEach { font ->
+                        val isSelected = currentFlipClockFont == font
+                        Surface(
+                            onClick = { viewModel.setFlipClockFont(font) },
+                            shape = RoundedCornerShape(14.dp),
+                            color = if (isSelected) {
+                                MaterialTheme.colorScheme.primary.copy(alpha = 0.09f)
+                            } else {
+                                MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f)
+                            },
+                            border = BorderStroke(
+                                1.dp,
+                                if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline.copy(alpha = 0.12f)
+                            ),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 3.dp)
+                                .testTag("flip_clock_font_${font.id}")
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 14.dp, vertical = 10.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Row(
+                                    modifier = Modifier.weight(1f),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Box(
+                                        modifier = Modifier
+                                            .size(8.dp)
+                                            .clip(CircleShape)
+                                            .background(
+                                                if (isSelected) MaterialTheme.colorScheme.primary
+                                                else Color.Transparent
+                                            )
+                                    )
+                                    Spacer(modifier = Modifier.width(10.dp))
+                                    Column {
+                                        Text(
+                                            text = font.displayName,
+                                            style = MaterialTheme.typography.titleSmall,
+                                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.SemiBold,
+                                            color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
+                                        )
+                                        Text(
+                                            text = font.subtitle,
+                                            style = MaterialTheme.typography.bodySmall,
+                                            fontSize = 11.5.sp,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                    }
+                                }
+
+                                // Sample Split Digit Preview Badge
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
+                                    Surface(
+                                        shape = RoundedCornerShape(6.dp),
+                                        color = Color(0xFF0F172A),
+                                        border = BorderStroke(0.5.dp, Color(0xFF475569))
+                                    ) {
+                                        Text(
+                                            text = "45",
+                                            fontFamily = getFlipClockFontFamily(font),
+                                            fontWeight = font.fontWeight,
+                                            fontSize = 15.sp,
+                                            color = Color(0xFFF8FAFC),
+                                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                                        )
+                                    }
+
+                                    if (isSelected) {
+                                        Icon(
+                                            imageVector = Icons.Default.Check,
+                                            contentDescription = "Selected",
+                                            tint = MaterialTheme.colorScheme.primary,
+                                            modifier = Modifier.size(18.dp)
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // TAB 1: ENGLISH FONTS (Roboto, Ubuntu Sans, Ubuntu Light, Outfit, Inter)
+                if (activeTab == 1) {
                     Text(
                         text = "CLEAN & THIN ENGLISH FONTS",
                         style = MaterialTheme.typography.labelSmall,
@@ -299,8 +523,8 @@ fun BanglaFontSettingsDialog(
                     }
                 }
 
-                // TAB 1: BENGALI FONTS (Solaiman Lipi, Kalpurush, Siyam Rupali, Nikosh, Adorsho Lipi, Noto Sans, Hind Siliguri, etc.)
-                if (activeTab == 1) {
+                // TAB 2: BENGALI FONTS (Solaiman Lipi, Kalpurush, Siyam Rupali, Nikosh, Adorsho Lipi, Noto Sans, Hind Siliguri, etc.)
+                if (activeTab == 2) {
                     Text(
                         text = "POPULAR BENGALI FONTS (১০টি ফন্ট)",
                         style = MaterialTheme.typography.labelSmall,
@@ -384,8 +608,8 @@ fun BanglaFontSettingsDialog(
                     }
                 }
 
-                // TAB 2: FONT WEIGHT (Thin 100 to Black 900)
-                if (activeTab == 2) {
+                // TAB 3: FONT WEIGHT (Thin 100 to Black 900)
+                if (activeTab == 3) {
                     Text(
                         text = "FONT WEIGHT / ঘনত্ব নির্বাচন (100 - 900)",
                         style = MaterialTheme.typography.labelSmall,

@@ -66,6 +66,7 @@ class MainActivity : ComponentActivity() {
             val banglaFont by viewModel.banglaFont.collectAsState()
             val banglaFontWeight by viewModel.banglaFontWeight.collectAsState()
             val primaryFontPreference by viewModel.primaryFontPreference.collectAsState()
+            val flipClockFont by viewModel.flipClockFont.collectAsState()
             val isFontMenuOpen by viewModel.isFontMenuOpen.collectAsState()
             val isThemeModalOpen by viewModel.isThemeModalOpen.collectAsState()
             val auroraConfig by viewModel.auroraConfig.collectAsState()
@@ -86,7 +87,8 @@ class MainActivity : ComponentActivity() {
                     englishFont = englishFont,
                     banglaFont = banglaFont,
                     banglaWeight = banglaFontWeight,
-                    primaryPreference = primaryFontPreference
+                    primaryPreference = primaryFontPreference,
+                    flipClockFont = flipClockFont
                 ) {
                     Box(modifier = Modifier.fillMaxSize()) {
                         // Magnificent Lite Background with Live Aurora Wave Wallpaper throughout the app

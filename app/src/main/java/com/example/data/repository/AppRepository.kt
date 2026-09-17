@@ -16,6 +16,7 @@ import com.example.data.model.AuroraWallpaperConfig
 import com.example.data.model.AuroraWavePreset
 import com.example.data.model.BanglaFontWeight
 import com.example.data.model.EnglishFont
+import com.example.data.model.FlipClockFont
 import com.example.data.model.FontSizeScale
 import com.example.data.model.PrimaryFontPreference
 import com.example.data.model.SalatConfiguration
@@ -42,6 +43,7 @@ class AppRepository(private val context: Context) {
         val KEY_THEME_MODE = stringPreferencesKey("theme_mode")
         val KEY_ENGLISH_FONT = stringPreferencesKey("english_font")
         val KEY_BANGLA_FONT = stringPreferencesKey("bangla_font")
+        val KEY_FLIP_CLOCK_FONT = stringPreferencesKey("flip_clock_font")
         val KEY_PRIMARY_FONT_PREF = stringPreferencesKey("primary_font_pref")
         val KEY_BANGLA_WEIGHT = intPreferencesKey("bangla_font_weight")
         val KEY_FONT_SCALE = floatPreferencesKey("font_scale")
@@ -276,6 +278,21 @@ class AppRepository(private val context: Context) {
     suspend fun setBanglaFontWeight(weight: BanglaFontWeight) {
         context.dataStore.edit { prefs ->
             prefs[KEY_BANGLA_WEIGHT] = weight.weightValue
+        }
+    }
+
+    val flipClockFontFlow: Flow<FlipClockFont> = context.dataStore.data.map { prefs ->
+        val name = prefs[KEY_FLIP_CLOCK_FONT] ?: FlipClockFont.MONTSERRAT_THIN.name
+        try {
+            FlipClockFont.valueOf(name)
+        } catch (_: Exception) {
+            FlipClockFont.MONTSERRAT_THIN
+        }
+    }
+
+    suspend fun setFlipClockFont(font: FlipClockFont) {
+        context.dataStore.edit { prefs ->
+            prefs[KEY_FLIP_CLOCK_FONT] = font.name
         }
     }
 

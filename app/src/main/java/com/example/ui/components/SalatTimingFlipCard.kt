@@ -56,10 +56,13 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.data.model.FlipClockFont
 import com.example.data.model.ForbiddenTimeInfo
 import com.example.ui.theme.LocalAppFontFamily
 import com.example.ui.theme.LocalBanglaFontFamily
 import com.example.ui.theme.LocalEnglishFontFamily
+import com.example.ui.theme.LocalFlipClockFont
+import com.example.ui.theme.LocalFlipClockFontFamily
 import com.example.util.CalendarHelper
 import kotlinx.coroutines.delay
 import java.util.Calendar
@@ -460,6 +463,8 @@ fun SalatTimingFlipCard(
 
             val leftStr = String.format(Locale.US, "%02d", leftRaw)
             val rightStr = String.format(Locale.US, "%02d", rightRaw)
+            val currentFlipClockFont = LocalFlipClockFont.current
+            val currentFlipClockFamily = LocalFlipClockFontFamily.current
 
             // Retro Mechanical HTC-style Flip Clock Board (Tap to toggle mode)
             Row(
@@ -476,7 +481,8 @@ fun SalatTimingFlipCard(
                 // Left Flip Tile: Minutes (or Hours)
                 HtcFlipDigitCard(
                     digits = leftStr,
-                    fontFamily = clockDigitFont,
+                    clockFont = currentFlipClockFont,
+                    fontFamily = currentFlipClockFamily,
                     hasLeftHinge = true,
                     hasRightHinge = true
                 )
@@ -487,7 +493,8 @@ fun SalatTimingFlipCard(
                 // Right Flip Tile: Seconds (or Minutes) - flips every second
                 HtcFlipDigitCard(
                     digits = rightStr,
-                    fontFamily = clockDigitFont,
+                    clockFont = currentFlipClockFont,
+                    fontFamily = currentFlipClockFamily,
                     hasLeftHinge = true,
                     hasRightHinge = true
                 )
@@ -517,9 +524,10 @@ fun SalatTimingFlipCard(
  * - In Phase 2: The new bottom half flap drops down into place with realistic perspective and shadow.
  */
 @Composable
-private fun HtcFlipDigitCard(
+internal fun HtcFlipDigitCard(
     digits: String,
-    fontFamily: FontFamily,
+    clockFont: FlipClockFont = LocalFlipClockFont.current,
+    fontFamily: FontFamily = LocalFlipClockFontFamily.current,
     hasLeftHinge: Boolean = true,
     hasRightHinge: Boolean = true,
     modifier: Modifier = Modifier
@@ -583,7 +591,7 @@ private fun HtcFlipDigitCard(
             val bottomBaseDigits = if (flipProgress.value < 1.0f) previousDigits else displayedDigits
 
             Column(modifier = Modifier.fillMaxSize()) {
-                DigitHalf(digits = displayedDigits, isTopHalf = true, fontFamily = fontFamily)
+                DigitHalf(digits = displayedDigits, isTopHalf = true, clockFont = clockFont, fontFamily = fontFamily)
                 // Center Horizontal Split Groove
                 Box(
                     modifier = Modifier
@@ -591,7 +599,7 @@ private fun HtcFlipDigitCard(
                         .height(1.dp)
                         .background(Color(0xFF334155))
                 )
-                DigitHalf(digits = bottomBaseDigits, isTopHalf = false, fontFamily = fontFamily)
+                DigitHalf(digits = bottomBaseDigits, isTopHalf = false, clockFont = clockFont, fontFamily = fontFamily)
             }
 
             // FLIPPING LAYER (HTC Sense 3D Downward Flap):
@@ -610,7 +618,7 @@ private fun HtcFlipDigitCard(
                             transformOrigin = TransformOrigin(0.5f, 1.0f) // Pivot at bottom edge of top half
                         }
                 ) {
-                    DigitHalf(digits = previousDigits, isTopHalf = true, fontFamily = fontFamily)
+                    DigitHalf(digits = previousDigits, isTopHalf = true, clockFont = clockFont, fontFamily = fontFamily)
                     // Dynamic shadow overlay during downward fold
                     val shadowAlpha = (p1 * 0.55f).coerceIn(0f, 0.55f)
                     Box(
@@ -635,7 +643,7 @@ private fun HtcFlipDigitCard(
                             transformOrigin = TransformOrigin(0.5f, 0.0f) // Pivot at top edge of bottom half
                         }
                 ) {
-                    DigitHalf(digits = displayedDigits, isTopHalf = false, fontFamily = fontFamily)
+                    DigitHalf(digits = displayedDigits, isTopHalf = false, clockFont = clockFont, fontFamily = fontFamily)
                     // Dynamic shadow fading away as card lands flat in place
                     val shadowAlpha = ((1f - p2) * 0.55f).coerceIn(0f, 0.55f)
                     Box(
@@ -679,6 +687,7 @@ private fun HtcFlipDigitCard(
 private fun DigitHalf(
     digits: String,
     isTopHalf: Boolean,
+    clockFont: FlipClockFont = FlipClockFont.MONTSERRAT_THIN,
     fontFamily: FontFamily = FontFamily.SansSerif,
     modifier: Modifier = Modifier
 ) {
@@ -706,35 +715,62 @@ private fun DigitHalf(
             .border(
                 BorderStroke(0.7.dp, if (isTopHalf) Color(0xFFD1D5DB) else Color(0xFFCBD5E1)),
                 shape
-            )
+            ),
+        contentAlignment = if (isTopHalf) Alignment.TopCenter else Alignment.BottomCenter
     ) {
-        Canvas(modifier = Modifier.fillMaxSize()) {
-            val paddedDigits = digits.padStart(2, '0')
-            val d1 = paddedDigits[0]
-            val d2 = paddedDigits[1]
+        if (clockFont == FlipClockFont.RETRO_7SEGMENT) {
+            Canvas(modifier = Modifier.fillMaxSize()) {
+                val paddedDigits = digits.padStart(2, '0')
+                val d1 = paddedDigits[0]
+                val d2 = paddedDigits[1]
 
-            val w = size.width
-            val h = size.height
+                val w = size.width
+                val h = size.height
 
-            // Precise spacing for 2 digits on the card matching flipboard3.jpg
-            val digit1Center = w * 0.29f
-            val digit2Center = w * 0.71f
-            val digitWidth = w * 0.35f
+                // Precise spacing for 2 digits on the card matching flipboard3.jpg
+                val digit1Center = w * 0.29f
+                val digit2Center = w * 0.71f
+                val digitWidth = w * 0.35f
 
-            drawSegmentHalfDigit(
-                char = d1,
-                isTopHalf = isTopHalf,
-                centerX = digit1Center,
-                cardHeight = h,
-                digitWidth = digitWidth
-            )
-            drawSegmentHalfDigit(
-                char = d2,
-                isTopHalf = isTopHalf,
-                centerX = digit2Center,
-                cardHeight = h,
-                digitWidth = digitWidth
-            )
+                drawSegmentHalfDigit(
+                    char = d1,
+                    isTopHalf = isTopHalf,
+                    centerX = digit1Center,
+                    cardHeight = h,
+                    digitWidth = digitWidth
+                )
+                drawSegmentHalfDigit(
+                    char = d2,
+                    isTopHalf = isTopHalf,
+                    centerX = digit2Center,
+                    cardHeight = h,
+                    digitWidth = digitWidth
+                )
+            }
+        } else {
+            // High-precision split-flap font renderer:
+            // Slices the 54.dp text container vertically across the 27.dp half-tile bounds:
+            // Top half aligns to TopCenter (shows upper 50%), bottom half aligns to BottomCenter (shows lower 50%)
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(54.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = digits.padStart(2, '0'),
+                    style = TextStyle(
+                        fontFamily = fontFamily,
+                        fontWeight = clockFont.fontWeight,
+                        fontSize = 28.sp,
+                        lineHeight = 28.sp,
+                        letterSpacing = (-0.5).sp,
+                        color = Color(0xFF0F172A),
+                        textAlign = TextAlign.Center
+                    ),
+                    maxLines = 1
+                )
+            }
         }
     }
 }
@@ -909,7 +945,7 @@ private fun DrawScope.drawSegmentHalfDigit(
  * Features a clean white column with two circular metallic colon rivets/screws (`:`) and axle hinge brackets.
  */
 @Composable
-private fun FlipClockCenterPost(
+internal fun FlipClockCenterPost(
     modifier: Modifier = Modifier
 ) {
     Row(

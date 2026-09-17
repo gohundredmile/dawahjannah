@@ -71,11 +71,13 @@ import java.util.Locale
 import com.example.data.model.BanglaFont
 import com.example.data.model.BanglaFontWeight
 import com.example.data.model.EnglishFont
+import com.example.data.model.FlipClockFont
 import com.example.data.model.FontSizeScale
 import com.example.data.model.ThemeMode
 import com.example.data.model.ThemeStyle
 import com.example.ui.theme.getBanglaFontFamily
 import com.example.ui.theme.getEnglishFontFamily
+import com.example.ui.theme.getFlipClockFontFamily
 import com.example.ui.theme.CosmicPrimaryLight
 import com.example.ui.theme.EmeraldPrimaryLight
 import com.example.ui.theme.IslamicGold
@@ -92,6 +94,7 @@ fun SettingsScreen(viewModel: MainViewModel) {
     val currentEnglishFont by viewModel.englishFont.collectAsState()
     val currentBanglaFont by viewModel.banglaFont.collectAsState()
     val currentBanglaWeight by viewModel.banglaFontWeight.collectAsState()
+    val currentFlipClockFont by viewModel.flipClockFont.collectAsState()
     val isHanafiAsr by viewModel.isHanafiAsr.collectAsState()
     val updateMessage by viewModel.updateAlertMessage.collectAsState()
     val latestReleaseInfo by viewModel.latestReleaseInfo.collectAsState()
@@ -385,6 +388,63 @@ fun SettingsScreen(viewModel: MainViewModel) {
                                     selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer
                                 )
                             )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(14.dp))
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.15f))
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    // Dedicated Flip Clock Typography Section
+                    Text(
+                        text = "ফ্লিপ ক্লক ফন্ট (HTC Sense Flip Clock - ১০+ থিন ও লাইট ফন্ট):",
+                        style = MaterialTheme.typography.bodySmall,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Surface(
+                        shape = RoundedCornerShape(12.dp),
+                        color = Color(0xFF1E2430),
+                        border = BorderStroke(1.dp, Color(0xFF334155)),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { viewModel.openFontMenu() }
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = currentFlipClockFont.displayName,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color(0xFFF1F5F9)
+                                )
+                                Text(
+                                    text = "${currentFlipClockFont.subtitle} • ${currentFlipClockFont.googleFontName}",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    fontSize = 11.sp,
+                                    color = Color(0xFF94A3B8)
+                                )
+                            }
+                            Surface(
+                                shape = RoundedCornerShape(6.dp),
+                                color = Color(0xFF0F172A),
+                                border = BorderStroke(0.5.dp, Color(0xFF475569))
+                            ) {
+                                Text(
+                                    text = "08:45",
+                                    fontFamily = getFlipClockFontFamily(currentFlipClockFont),
+                                    fontWeight = currentFlipClockFont.fontWeight,
+                                    fontSize = 15.sp,
+                                    color = Color(0xFFF8FAFC),
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                                )
+                            }
                         }
                     }
 

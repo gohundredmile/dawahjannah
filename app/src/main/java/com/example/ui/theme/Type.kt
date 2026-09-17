@@ -13,19 +13,36 @@ import com.example.R
 import com.example.data.model.BanglaFont
 import com.example.data.model.BanglaFontWeight
 import com.example.data.model.EnglishFont
+import com.example.data.model.FlipClockFont
 import com.example.data.model.PrimaryFontPreference
 
 private val englishFontCache = mutableMapOf<EnglishFont, FontFamily>()
 private val banglaFontCache = mutableMapOf<BanglaFont, FontFamily>()
+private val flipClockFontCache = mutableMapOf<FlipClockFont, FontFamily>()
 
 val LocalAppFontFamily = compositionLocalOf<FontFamily> { FontFamily.SansSerif }
 val LocalEnglishFontFamily = compositionLocalOf<FontFamily> { FontFamily.SansSerif }
 val LocalBanglaFontFamily = compositionLocalOf<FontFamily> { FontFamily.Default }
+val LocalFlipClockFont = compositionLocalOf<FlipClockFont> { FlipClockFont.MONTSERRAT_THIN }
+val LocalFlipClockFontFamily = compositionLocalOf<FontFamily> { FontFamily.SansSerif }
 
 val ArabicFontFamily = FontFamily(
     Font(resId = R.font.font_arabic_amiri, weight = FontWeight.Normal)
 )
 val LocalArabicFontFamily = compositionLocalOf<FontFamily> { ArabicFontFamily }
+
+fun getFlipClockFontFamily(font: FlipClockFont): FontFamily {
+    return flipClockFontCache.getOrPut(font) {
+        val resId = font.fontResId ?: return@getOrPut FontFamily.SansSerif
+        try {
+            FontFamily(
+                Font(resId = resId, weight = font.fontWeight)
+            )
+        } catch (e: Throwable) {
+            FontFamily.SansSerif
+        }
+    }
+}
 
 fun getEnglishFontFamily(font: EnglishFont): FontFamily {
     return englishFontCache.getOrPut(font) {

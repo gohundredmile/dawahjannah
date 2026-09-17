@@ -156,3 +156,142 @@ enum class BanglaFontWeight(
         }
     }
 }
+
+enum class FlipClockFont(
+    val id: String,
+    val displayName: String,
+    val subtitle: String,
+    val googleFontName: String,
+    @FontRes val fontResId: Int?,
+    val fontWeight: FontWeight = FontWeight.Normal
+) {
+    MONTSERRAT_THIN(
+        id = "montserrat_thin",
+        displayName = "Montserrat Ultra Thin",
+        subtitle = "আল্ট্রা থিন ও জ্যামিতিক মিনিমালিস্ট",
+        googleFontName = "Montserrat",
+        fontResId = R.font.montserrat,
+        fontWeight = FontWeight.W200
+    ),
+    RALEWAY_THIN(
+        id = "raleway_thin",
+        displayName = "Raleway Elegant Thin",
+        subtitle = "আর্টিস্টিক ও লাক্সারি কার্ভড ডিজিট",
+        googleFontName = "Raleway",
+        fontResId = R.font.raleway,
+        fontWeight = FontWeight.W200
+    ),
+    JOST_LITE(
+        id = "jost_lite",
+        displayName = "Jost Bauhaus Lite",
+        subtitle = "ফিউচুরা ইন্সপায়ার্ড সুনির্দিষ্ট রেজার ক্লিন",
+        googleFontName = "Jost",
+        fontResId = R.font.jost,
+        fontWeight = FontWeight.W200
+    ),
+    POPPINS_LIGHT(
+        id = "poppins_light",
+        displayName = "Poppins Geometric Lite",
+        subtitle = "সফট মিনিমালিস্ট ও পারফেক্ট ব্যালান্সড",
+        googleFontName = "Poppins",
+        fontResId = R.font.poppins,
+        fontWeight = FontWeight.W300
+    ),
+    QUICKSAND_LITE(
+        id = "quicksand_lite",
+        displayName = "Quicksand Gentle Lite",
+        subtitle = "রাউন্ডেড কর্নার ও দৃষ্টিনন্দন সফট টার্মিনাল",
+        googleFontName = "Quicksand",
+        fontResId = R.font.quicksand,
+        fontWeight = FontWeight.W300
+    ),
+    RAJDHANI_THIN(
+        id = "rajdhani_thin",
+        displayName = "Rajdhani Cyber Thin",
+        subtitle = "মডার্ন কনডেন্সড স্কয়ার্ড সাইবার ডিজিট",
+        googleFontName = "Rajdhani",
+        fontResId = R.font.rajdhani,
+        fontWeight = FontWeight.W300
+    ),
+    SPACE_GROTESK(
+        id = "space_grotesk",
+        displayName = "Space Grotesk Lite",
+        subtitle = "হাই-টেক মনোস্পেস ও মেকানিক্যাল নান্দনিকতা",
+        googleFontName = "Space Grotesk",
+        fontResId = R.font.space_grotesk,
+        fontWeight = FontWeight.W300
+    ),
+    EXO_2_LITE(
+        id = "exo_2_lite",
+        displayName = "Exo 2 Futuristic Lite",
+        subtitle = "ফিউচারিস্টিক ও এরোডাইনামিক ডিজিটাল লুক",
+        googleFontName = "Exo 2",
+        fontResId = R.font.exo_2,
+        fontWeight = FontWeight.W200
+    ),
+    BARLOW_THIN(
+        id = "barlow_thin",
+        displayName = "Barlow Architectural Lite",
+        subtitle = "লো-কনট্রাস্ট প্রিসিশন আধুনিক ফন্ট",
+        googleFontName = "Barlow",
+        fontResId = R.font.barlow,
+        fontWeight = FontWeight.W200
+    ),
+    SYNE_LITE(
+        id = "syne_lite",
+        displayName = "Syne Avant-Garde",
+        subtitle = "আই-ক্যাচিং ডিজাইনার ডিসপ্লে টাইপোগ্রাফি",
+        googleFontName = "Syne",
+        fontResId = R.font.syne,
+        fontWeight = FontWeight.W400
+    ),
+    COMFORTAA_LITE(
+        id = "comfortaa_lite",
+        displayName = "Comfortaa Ultra Soft",
+        subtitle = "আল্ট্রা স্মুথ সার্কুলার জ্যামিতি",
+        googleFontName = "Comfortaa",
+        fontResId = R.font.comfortaa,
+        fontWeight = FontWeight.W300
+    ),
+    OSWALD_FLIP(
+        id = "oswald_flip",
+        displayName = "Oswald Station Flip",
+        subtitle = "আইকনিক এয়ারপোর্ট ও স্টেশন স্প্লিট-ফ্ল্যাপ বোর্ড",
+        googleFontName = "Oswald",
+        fontResId = R.font.oswald,
+        fontWeight = FontWeight.W300
+    ),
+    BEBAS_NEUE(
+        id = "bebas_neue",
+        displayName = "Bebas Neue Display",
+        subtitle = "বোল্ড ও মার্জিত ক্ল্যাসিক স্প্লিট ক্লক",
+        googleFontName = "Bebas Neue",
+        fontResId = R.font.bebas_neue,
+        fontWeight = FontWeight.Normal
+    ),
+    UBUNTU_LIGHT(
+        id = "ubuntu_light",
+        displayName = "Ubuntu Sense Lite",
+        subtitle = "এইচটিসি সেন্স ফোন ক্লকের ক্লাসিক সৌন্দর্য",
+        googleFontName = "Ubuntu Light",
+        fontResId = R.font.font_ubuntu_light,
+        fontWeight = FontWeight.W300
+    ),
+    OUTFIT_LITE(
+        id = "outfit_lite",
+        displayName = "Outfit Neo-Grotesque",
+        subtitle = "প্রিমিয়াম ক্রিস্প স্টুডিও ফিনিশ",
+        googleFontName = "Outfit",
+        fontResId = R.font.font_outfit,
+        fontWeight = FontWeight.W200
+    ),
+    RETRO_7SEGMENT(
+        id = "retro_7segment",
+        displayName = "Retro 7-Segment Mechanical",
+        subtitle = "খাঁটি মেকানিক্যাল ৭-সেগমেন্ট স্লিট ফ্ল্যাপ",
+        googleFontName = "Mechanical 7-Segment",
+        fontResId = null,
+        fontWeight = FontWeight.Normal
+    )
+}
+

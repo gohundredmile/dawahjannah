@@ -4,6 +4,7 @@ import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -13,6 +14,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -36,9 +38,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.TransformOrigin
+import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.PlatformTextStyle
@@ -474,8 +481,8 @@ fun SalatTimingFlipCard(
                     hasRightHinge = true
                 )
 
-                // Central knurled roller gear between left and right tiles
-                FlipClockCenterRoller()
+                // Central colon post matching flipboard3.jpg
+                FlipClockCenterPost()
 
                 // Right Flip Tile: Seconds (or Minutes) - flips every second
                 HtcFlipDigitCard(
@@ -662,25 +669,24 @@ private fun HtcFlipDigitCard(
 }
 
 /**
- * Renders either the top half or bottom half of the 2-digit number:
- * - Both top and bottom halves use an identical 54.dp full-size container.
- * - Top half is clipped to the upper 27.dp via Alignment.TopCenter.
- * - Bottom half is clipped to the lower 27.dp via Alignment.BottomCenter.
- * - PlatformTextStyle(includeFontPadding = false) ensures zero padding so the split is perfectly centered.
+ * Renders either the top half or bottom half of the 2-digit number (e.g. "12", "00"):
+ * The digits are mathematically split into two distinct half-tiles across the horizontal centerline:
+ * - Top Half (isTopHalf = true): Only draws the upper half of the digit (top horizontal bar, upper verticals, top half of center bar).
+ * - Bottom Half (isTopHalf = false): Only draws the lower half of the digit (bottom half of center bar, lower verticals, bottom horizontal bar).
+ * When top and bottom half-tiles meet at the centerline seam, they form the complete 7-segment digit matching flipboard3.jpg.
  */
 @Composable
 private fun DigitHalf(
     digits: String,
     isTopHalf: Boolean,
-    fontFamily: FontFamily,
+    fontFamily: FontFamily = FontFamily.SansSerif,
     modifier: Modifier = Modifier
 ) {
     val halfHeight = 27.dp
-    val fullHeight = 54.dp
     val shape = if (isTopHalf) {
-        RoundedCornerShape(topStart = 5.dp, topEnd = 5.dp, bottomStart = 0.dp, bottomEnd = 0.dp)
+        RoundedCornerShape(topStart = 5.dp, topEnd = 5.dp, bottomStart = 1.dp, bottomEnd = 1.dp)
     } else {
-        RoundedCornerShape(topStart = 0.dp, topEnd = 0.dp, bottomStart = 5.dp, bottomEnd = 5.dp)
+        RoundedCornerShape(topStart = 1.dp, topEnd = 1.dp, bottomStart = 5.dp, bottomEnd = 5.dp)
     }
 
     Box(
@@ -691,38 +697,280 @@ private fun DigitHalf(
             .background(
                 Brush.verticalGradient(
                     if (isTopHalf) {
-                        listOf(Color(0xFFFFFFFF), Color(0xFFF8FAFC))
+                        listOf(Color(0xFFFFFFFF), Color(0xFFF3F4F6))
                     } else {
-                        listOf(Color(0xFFF1F5F9), Color(0xFFE2E8F0))
+                        listOf(Color(0xFFEEF1F4), Color(0xFFE2E8F0))
                     }
                 )
-            ),
-        contentAlignment = if (isTopHalf) Alignment.TopCenter else Alignment.BottomCenter
+            )
+            .border(
+                BorderStroke(0.7.dp, if (isTopHalf) Color(0xFFD1D5DB) else Color(0xFFCBD5E1)),
+                shape
+            )
     ) {
-        // Full height text container of exactly 54.dp
-        // When isTopHalf == true, Alignment.TopCenter keeps the top 27.dp visible.
-        // When isTopHalf == false, Alignment.BottomCenter keeps the bottom 27.dp visible.
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(fullHeight),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = digits,
-                style = TextStyle(
-                    fontFamily = fontFamily,
-                    fontWeight = FontWeight.Black,
-                    fontSize = 28.sp,
-                    lineHeight = 28.sp,
-                    platformStyle = PlatformTextStyle(includeFontPadding = false),
-                    letterSpacing = 0.5.sp,
-                    color = Color(0xFF0F172A),
-                    textAlign = TextAlign.Center
-                ),
-                maxLines = 1
+        Canvas(modifier = Modifier.fillMaxSize()) {
+            val paddedDigits = digits.padStart(2, '0')
+            val d1 = paddedDigits[0]
+            val d2 = paddedDigits[1]
+
+            val w = size.width
+            val h = size.height
+
+            // Precise spacing for 2 digits on the card matching flipboard3.jpg
+            val digit1Center = w * 0.29f
+            val digit2Center = w * 0.71f
+            val digitWidth = w * 0.35f
+
+            drawSegmentHalfDigit(
+                char = d1,
+                isTopHalf = isTopHalf,
+                centerX = digit1Center,
+                cardHeight = h,
+                digitWidth = digitWidth
+            )
+            drawSegmentHalfDigit(
+                char = d2,
+                isTopHalf = isTopHalf,
+                centerX = digit2Center,
+                cardHeight = h,
+                digitWidth = digitWidth
             )
         }
+    }
+}
+
+/**
+ * Mathematically renders only the upper or lower half of a 7-segment digit.
+ * Perfectly divides segments along the horizontal split line:
+ * - Segment A (top horizontal bar): top half only
+ * - Segment F (upper-left vertical): top half only
+ * - Segment B (upper-right vertical): top half only
+ * - Slant serif for '1': top half only
+ * - Segment G (center horizontal bar): upper half in top tile, lower half in bottom tile
+ * - Segment E (lower-left vertical): bottom half only
+ * - Segment C (lower-right vertical): bottom half only
+ * - Segment D (bottom horizontal bar): bottom half only
+ */
+private fun DrawScope.drawSegmentHalfDigit(
+    char: Char,
+    isTopHalf: Boolean,
+    centerX: Float,
+    cardHeight: Float,
+    digitWidth: Float,
+    color: Color = Color(0xFF111827)
+) {
+    val d = char.digitToIntOrNull() ?: 0
+
+    // Standard 7-segment display logic
+    val segA = d in listOf(0, 2, 3, 5, 6, 7, 8, 9)
+    val segB = d in listOf(0, 1, 2, 3, 4, 7, 8, 9)
+    val segC = d in listOf(0, 1, 3, 4, 5, 6, 7, 8, 9)
+    val segD = d in listOf(0, 2, 3, 5, 6, 8, 9)
+    val segE = d in listOf(0, 2, 6, 8)
+    val segF = d in listOf(0, 4, 5, 6, 8, 9)
+    val segG = d in listOf(2, 3, 4, 5, 6, 8, 9)
+    val isOne = d == 1
+
+    // Proportional dimensions
+    val fullDigitH = cardHeight * 1.34f
+    val halfDigitH = fullDigitH / 2f
+    val t = (digitWidth * 0.19f).coerceAtLeast(3.2.dp.toPx())
+    val cornerR = CornerRadius(t * 0.35f, t * 0.35f)
+    val gap = (t * 0.35f).coerceAtLeast(1.2.dp.toPx())
+    val halfT = t / 2f
+
+    // For digit '1', align stem cleanly with slant top serif
+    val left = if (isOne) centerX - t * 0.5f else centerX - digitWidth / 2f
+    val right = if (isOne) centerX + t * 0.5f + t else centerX + digitWidth / 2f
+    val effectiveW = right - left
+
+    if (isTopHalf) {
+        // TOP HALF:
+        // Midline (seam) is at local Y = cardHeight
+        // Top of the digit is at topY
+        val topY = cardHeight - halfDigitH
+
+        // Segment A: Top horizontal bar
+        if (segA && !isOne) {
+            drawRoundRect(
+                color = color,
+                topLeft = Offset(left + t * 0.7f, topY),
+                size = Size((effectiveW - t * 1.4f).coerceAtLeast(1f), t),
+                cornerRadius = cornerR
+            )
+        }
+
+        // Segment F: Upper-left vertical bar
+        if (segF && !isOne) {
+            val h = (cardHeight - halfT - gap) - (topY + t + gap)
+            if (h > 0) {
+                drawRoundRect(
+                    color = color,
+                    topLeft = Offset(left, topY + t + gap),
+                    size = Size(t, h),
+                    cornerRadius = cornerR
+                )
+            }
+        }
+
+        // Segment B: Upper-right vertical bar
+        if (segB) {
+            val h = (cardHeight - halfT - gap) - (topY + t + gap)
+            if (h > 0) {
+                drawRoundRect(
+                    color = color,
+                    topLeft = Offset(right - t, topY + t + gap),
+                    size = Size(t, h),
+                    cornerRadius = cornerR
+                )
+            }
+        }
+
+        // Distinct top slant serif for digit '1' matching flipboard3.jpg
+        if (isOne) {
+            val serifW = t * 1.3f
+            val path = Path().apply {
+                moveTo(right - t, topY + t * 1.4f)
+                lineTo(right - t - serifW, topY + t * 0.5f)
+                lineTo(right - t - serifW + t * 0.5f, topY)
+                lineTo(right - t, topY + t * 0.6f)
+                close()
+            }
+            drawPath(path = path, color = color)
+        }
+
+        // Segment G (Upper half of center horizontal bar):
+        // Positioned right against the bottom edge (seam) of the top tile
+        if (segG && !isOne) {
+            drawRoundRect(
+                color = color,
+                topLeft = Offset(left + t * 0.7f, cardHeight - halfT),
+                size = Size((effectiveW - t * 1.4f).coerceAtLeast(1f), halfT),
+                cornerRadius = CornerRadius(cornerR.x, 0f) // rounded top, flat at the seam
+            )
+        }
+    } else {
+        // BOTTOM HALF:
+        // Midline (seam) is at local Y = 0
+        // Bottom of the digit is at bottomY = halfDigitH
+        val bottomY = halfDigitH
+
+        // Segment G (Lower half of center horizontal bar):
+        // Positioned right against the top edge (seam) of the bottom tile
+        if (segG && !isOne) {
+            drawRoundRect(
+                color = color,
+                topLeft = Offset(left + t * 0.7f, 0f),
+                size = Size((effectiveW - t * 1.4f).coerceAtLeast(1f), halfT),
+                cornerRadius = CornerRadius(0f, cornerR.x) // flat at seam, rounded bottom
+            )
+        }
+
+        // Segment E: Lower-left vertical bar
+        if (segE && !isOne) {
+            val h = (bottomY - t - gap) - (halfT + gap)
+            if (h > 0) {
+                drawRoundRect(
+                    color = color,
+                    topLeft = Offset(left, halfT + gap),
+                    size = Size(t, h),
+                    cornerRadius = cornerR
+                )
+            }
+        }
+
+        // Segment C: Lower-right vertical bar
+        if (segC) {
+            val h = (bottomY - t - gap) - (halfT + gap)
+            if (h > 0) {
+                drawRoundRect(
+                    color = color,
+                    topLeft = Offset(right - t, halfT + gap),
+                    size = Size(t, h),
+                    cornerRadius = cornerR
+                )
+            }
+        }
+
+        // Segment D: Bottom horizontal bar
+        if (segD && !isOne) {
+            drawRoundRect(
+                color = color,
+                topLeft = Offset(left + t * 0.7f, bottomY - t),
+                size = Size((effectiveW - t * 1.4f).coerceAtLeast(1f), t),
+                cornerRadius = cornerR
+            )
+        }
+    }
+}
+
+/**
+ * Center vertical post between the two flip card units matching flipboard3.jpg:
+ * Features a clean white column with two circular metallic colon rivets/screws (`:`) and axle hinge brackets.
+ */
+@Composable
+private fun FlipClockCenterPost(
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier.padding(horizontal = 1.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        // Left hinge bracket connector
+        Box(
+            modifier = Modifier
+                .size(width = 2.dp, height = 12.dp)
+                .background(Color(0xFFCBD5E1))
+        )
+        // Center white column post with two colon rivet dots
+        Box(
+            modifier = Modifier
+                .size(width = 11.dp, height = 36.dp)
+                .shadow(elevation = 1.dp, shape = RoundedCornerShape(3.dp))
+                .clip(RoundedCornerShape(3.dp))
+                .background(
+                    Brush.verticalGradient(
+                        listOf(Color(0xFFFFFFFF), Color(0xFFF1F5F9))
+                    )
+                )
+                .border(BorderStroke(0.8.dp, Color(0xFFCBD5E1)), RoundedCornerShape(3.dp)),
+            contentAlignment = Alignment.Center
+        ) {
+            Column(
+                modifier = Modifier.fillMaxHeight().padding(vertical = 6.dp),
+                verticalArrangement = Arrangement.SpaceBetween,
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                // Top colon screw/dot
+                Box(
+                    modifier = Modifier
+                        .size(4.5.dp)
+                        .clip(CircleShape)
+                        .background(
+                            Brush.radialGradient(
+                                listOf(Color(0xFF94A3B8), Color(0xFF475569))
+                            )
+                        )
+                )
+                // Bottom colon screw/dot
+                Box(
+                    modifier = Modifier
+                        .size(4.5.dp)
+                        .clip(CircleShape)
+                        .background(
+                            Brush.radialGradient(
+                                listOf(Color(0xFF94A3B8), Color(0xFF475569))
+                            )
+                        )
+                )
+            }
+        }
+        // Right hinge bracket connector
+        Box(
+            modifier = Modifier
+                .size(width = 2.dp, height = 12.dp)
+                .background(Color(0xFFCBD5E1))
+        )
     }
 }
 

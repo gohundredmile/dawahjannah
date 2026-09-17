@@ -283,10 +283,12 @@ enum class ThemeMode(val titleBn: String) {
 }
 
 enum class FontSizeScale(val scale: Float, val titleBn: String) {
-    SMALL(0.9f, "ছোট"),
+    EXTRA_SMALL(0.85f, "খুব ছোট"),
+    SMALL(0.92f, "ছোট"),
     NORMAL(1.0f, "স্বাভাবিক"),
-    LARGE(1.15f, "বড়"),
-    EXTRA_LARGE(1.3f, "অনেক বড়")
+    MEDIUM_LARGE(1.12f, "মাঝারি বড়"),
+    LARGE(1.24f, "বড়"),
+    EXTRA_LARGE(1.38f, "অনেক বড়")
 }
 
 data class SalatPlaceInfo(

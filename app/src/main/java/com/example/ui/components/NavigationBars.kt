@@ -22,6 +22,7 @@ import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.AccessTime
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.CheckCircle
@@ -49,6 +50,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -77,6 +79,73 @@ val IslamicTitleFontFamily: FontFamily by lazy {
         )
     } catch (e: Throwable) {
         FontFamily.Serif
+    }
+}
+
+/**
+ * Controller interface provided to all screens via CompositionLocal to control
+ * font size decrease (A-) and increase (A+) globally with persistent storage.
+ */
+data class FontScaleController(
+    val scale: Float,
+    val canDecrease: Boolean = true,
+    val canIncrease: Boolean = true,
+    val onDecrease: () -> Unit,
+    val onIncrease: () -> Unit,
+    val onReset: () -> Unit = {}
+)
+
+val LocalFontScaleController = staticCompositionLocalOf<FontScaleController?> { null }
+
+/**
+ * Standard font scaling action buttons (A- and A+) styled matching the app top bar.
+ */
+@Composable
+fun FontSizeActionButtons(
+    modifier: Modifier = Modifier,
+    controller: FontScaleController? = LocalFontScaleController.current
+) {
+    if (controller == null) return
+
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = modifier
+    ) {
+        // Decrease Font (A-)
+        IconButton(
+            onClick = controller.onDecrease,
+            enabled = controller.canDecrease,
+            modifier = Modifier.size(36.dp)
+        ) {
+            Text(
+                text = "A-",
+                fontWeight = FontWeight.Bold,
+                style = MaterialTheme.typography.titleMedium,
+                color = if (controller.canDecrease) {
+                    MaterialTheme.colorScheme.primary
+                } else {
+                    MaterialTheme.colorScheme.primary.copy(alpha = 0.38f)
+                }
+            )
+        }
+
+        // Increase Font (A+)
+        IconButton(
+            onClick = controller.onIncrease,
+            enabled = controller.canIncrease,
+            modifier = Modifier.size(36.dp)
+        ) {
+            Text(
+                text = "A+",
+                fontWeight = FontWeight.Bold,
+                style = MaterialTheme.typography.titleMedium,
+                color = if (controller.canIncrease) {
+                    MaterialTheme.colorScheme.primary
+                } else {
+                    MaterialTheme.colorScheme.primary.copy(alpha = 0.38f)
+                }
+            )
+        }
     }
 }
 
@@ -167,6 +236,9 @@ fun HomeIslamicTopAppBar(
                 }
             },
             actions = {
+                // Font Scale Controls (A- and A+)
+                FontSizeActionButtons()
+
                 // Bangla Fonts Picker
                 IconButton(
                     onClick = onOpenFontMenu,
@@ -228,6 +300,7 @@ fun DawahTopAppBar(
     title: String,
     canNavigateBack: Boolean = false,
     onNavigateBack: () -> Unit = {},
+    showFontControls: Boolean = true,
     actions: @Composable RowScope.() -> Unit = {}
 ) {
     TopAppBar(
@@ -236,21 +309,28 @@ fun DawahTopAppBar(
                 text = title,
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurface
+                color = MaterialTheme.colorScheme.onSurface,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
             )
         },
         navigationIcon = {
             if (canNavigateBack) {
                 IconButton(onClick = onNavigateBack) {
                     Icon(
-                        imageVector = Icons.Default.ArrowBack,
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                         contentDescription = "Back",
                         tint = MaterialTheme.colorScheme.primary
                     )
                 }
             }
         },
-        actions = actions,
+        actions = {
+            if (showFontControls) {
+                FontSizeActionButtons()
+            }
+            actions()
+        },
         colors = TopAppBarDefaults.topAppBarColors(
             containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.88f)
         )

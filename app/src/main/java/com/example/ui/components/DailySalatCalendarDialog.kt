@@ -314,6 +314,9 @@ fun DailySalatCalendarDialog(
                                         modifier = Modifier.weight(1f)
                                     )
 
+                                    // Font scale controls (A- and A+)
+                                    FontSizeActionButtons()
+
                                     // Top right corner rectangle/grid shape: Opens Day Detail Schedule View
                                     IconButton(onClick = {
                                         // Set detailed view day to today (or currently selected day)
@@ -686,6 +689,9 @@ private fun DayDetailSalatScheduleView(
                             textAlign = TextAlign.Center,
                             modifier = Modifier.weight(1f)
                         )
+
+                        // Font scale controls (A- and A+)
+                        FontSizeActionButtons()
 
                         // Share Action
                         IconButton(onClick = {

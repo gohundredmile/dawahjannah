@@ -439,8 +439,7 @@ fun SehriIftarFullScreenDialog(
                         }
                     },
                     actions = {
-                        // Empty action to keep title perfectly centered
-                        Spacer(modifier = Modifier.width(48.dp))
+                        FontSizeActionButtons()
                     },
                     colors = TopAppBarDefaults.topAppBarColors(
                         containerColor = Color(0xFFFBFDFB)

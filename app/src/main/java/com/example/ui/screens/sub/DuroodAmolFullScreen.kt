@@ -92,6 +92,8 @@ import com.example.data.model.DuroodAmolItem
 import com.example.data.model.DuroodAttractionPoint
 import com.example.data.model.DuroodHadithItem
 import com.example.data.model.DuroodTabCategory
+import com.example.ui.components.FontSizeActionButtons
+import com.example.ui.components.LocalFontScaleController
 import com.example.ui.theme.LocalAppFontFamily
 import com.example.ui.viewmodel.MainViewModel
 import kotlinx.coroutines.launch
@@ -105,8 +107,10 @@ fun DuroodAmolFullScreen(
     onBack: () -> Unit
 ) {
     val context = LocalContext.current
+    val fontController = LocalFontScaleController.current
+    var localFontScale by rememberSaveable { mutableFloatStateOf(1.0f) }
+    val fontScale = fontController?.scale ?: localFontScale
     var selectedTabIndex by rememberSaveable { mutableIntStateOf(0) }
-    var fontScale by rememberSaveable { mutableFloatStateOf(1.0f) }
     var showFontSizeControls by rememberSaveable { mutableStateOf(false) }
     var isSearchActive by rememberSaveable { mutableStateOf(false) }
     var searchQuery by rememberSaveable { mutableStateOf("") }
@@ -200,6 +204,9 @@ fun DuroodAmolFullScreen(
                             )
                         }
 
+                        // Global Font Scaling Action Buttons (A- and A+)
+                        FontSizeActionButtons()
+
                         // Text Size Control Toggle Button
                         IconButton(
                             onClick = { showFontSizeControls = !showFontSizeControls }
@@ -271,7 +278,11 @@ fun DuroodAmolFullScreen(
                                         modifier = Modifier
                                             .size(34.dp)
                                             .clickable {
-                                                if (fontScale > 0.85f) fontScale -= 0.15f
+                                                if (fontController != null) {
+                                                    fontController.onDecrease()
+                                                } else if (localFontScale > 0.85f) {
+                                                    localFontScale -= 0.15f
+                                                }
                                             },
                                         shape = RoundedCornerShape(8.dp),
                                         color = Color.White,
@@ -293,7 +304,13 @@ fun DuroodAmolFullScreen(
                                     Surface(
                                         modifier = Modifier
                                             .height(34.dp)
-                                            .clickable { fontScale = 1.0f }
+                                            .clickable {
+                                                if (fontController != null) {
+                                                    fontController.onReset()
+                                                } else {
+                                                    localFontScale = 1.0f
+                                                }
+                                            }
                                             .padding(horizontal = 4.dp),
                                         shape = RoundedCornerShape(8.dp),
                                         color = Color.White,
@@ -317,7 +334,11 @@ fun DuroodAmolFullScreen(
                                         modifier = Modifier
                                             .size(34.dp)
                                             .clickable {
-                                                if (fontScale < 1.5f) fontScale += 0.15f
+                                                if (fontController != null) {
+                                                    fontController.onIncrease()
+                                                } else if (localFontScale < 1.5f) {
+                                                    localFontScale += 0.15f
+                                                }
                                             },
                                         shape = RoundedCornerShape(8.dp),
                                         color = Color.White,

@@ -34,13 +34,10 @@ android {
       enableV2Signing = true
     }
     create("debugConfig") {
-      val keystorePath = if (file("${rootDir}/release.keystore").exists()) "${rootDir}/release.keystore" else "${rootDir}/debug.keystore"
-      storeFile = file(keystorePath)
-      storePassword = if (file("${rootDir}/release.keystore").exists()) "dawahtojannah" else "android"
-      keyAlias = if (file("${rootDir}/release.keystore").exists()) "dawahkey" else "androiddebugkey"
-      keyPassword = if (file("${rootDir}/release.keystore").exists()) "dawahtojannah" else "android"
-      enableV1Signing = true
-      enableV2Signing = true
+      storeFile = file("${rootDir}/debug.keystore")
+      storePassword = "android"
+      keyAlias = "androiddebugkey"
+      keyPassword = "android"
     }
   }
 

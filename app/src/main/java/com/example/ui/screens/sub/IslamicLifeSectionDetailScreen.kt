@@ -74,6 +74,7 @@ import androidx.compose.ui.unit.sp
 import com.example.data.model.IslamicLifeCardItem
 import com.example.data.model.IslamicLifeSection
 import com.example.ui.components.DawahTopAppBar
+import com.example.ui.components.LocalFontScaleController
 import com.example.ui.theme.IslamicGold
 import com.example.ui.theme.LocalArabicFontFamily
 import com.example.util.CalendarHelper
@@ -156,7 +157,8 @@ fun IslamicLifeSectionDetailScreen(
         )
     }
     var showAurora by remember(section.id) { mutableStateOf(isDuaRichSection) }
-    var fontScale by remember { mutableStateOf(1.0f) }
+    val fontController = LocalFontScaleController.current
+    val fontScale = fontController?.scale ?: 1.0f
 
     val categoryFilters = remember(section.id) {
         when (section.id) {
@@ -280,40 +282,6 @@ fun IslamicLifeSectionDetailScreen(
                 canNavigateBack = true,
                 onNavigateBack = onBack,
                 actions = {
-                    // Font Scale: Decrease (A-)
-                    IconButton(
-                        onClick = {
-                            if (fontScale > 0.86f) {
-                                fontScale = (fontScale - 0.12f).coerceAtLeast(0.85f)
-                            }
-                        },
-                        modifier = Modifier.size(36.dp)
-                    ) {
-                        Text(
-                            text = "A-",
-                            fontWeight = FontWeight.Bold,
-                            style = MaterialTheme.typography.titleMedium,
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                    }
-
-                    // Font Scale: Increase (A+)
-                    IconButton(
-                        onClick = {
-                            if (fontScale < 1.39f) {
-                                fontScale = (fontScale + 0.12f).coerceAtMost(1.40f)
-                            }
-                        },
-                        modifier = Modifier.size(36.dp)
-                    ) {
-                        Text(
-                            text = "A+",
-                            fontWeight = FontWeight.Bold,
-                            style = MaterialTheme.typography.titleMedium,
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                    }
-
                     // Aurora Wallpaper live ambient toggle
                     IconButton(
                         onClick = { showAurora = !showAurora },

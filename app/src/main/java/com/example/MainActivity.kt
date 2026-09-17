@@ -33,13 +33,16 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Density
+import com.example.data.model.FontSizeScale
 import com.example.ui.components.AppOpeningSplashScreen
 import com.example.ui.components.AuroraThemesModal
 import com.example.ui.components.BanglaFontSettingsDialog
 import com.example.ui.components.DawahBottomNavigationBar
 import com.example.ui.components.DawahTopAppBar
+import com.example.ui.components.FontScaleController
 import com.example.ui.components.HomeIslamicTopAppBar
 import com.example.ui.components.LiveAuroraWallpaperBackground
+import com.example.ui.components.LocalFontScaleController
 import com.example.ui.screens.HomeScreen
 import com.example.ui.screens.MasnunDuaScreen
 import com.example.ui.screens.MoreScreen
@@ -80,7 +83,26 @@ class MainActivity : ComponentActivity() {
                 fontScale = baseDensity.fontScale * fontScale.scale
             )
 
-            CompositionLocalProvider(LocalDensity provides adjustedDensity) {
+            val fontScaleEntries = FontSizeScale.entries
+            val fontScaleIndex = fontScaleEntries.indexOf(fontScale).let { if (it == -1) 2 else it }
+            val canDecreaseFont = fontScaleIndex > 0
+            val canIncreaseFont = fontScaleIndex < fontScaleEntries.lastIndex
+
+            val fontScaleController = remember(fontScale, fontScaleIndex, canDecreaseFont, canIncreaseFont) {
+                FontScaleController(
+                    scale = fontScale.scale,
+                    canDecrease = canDecreaseFont,
+                    canIncrease = canIncreaseFont,
+                    onDecrease = { viewModel.decreaseFontScale() },
+                    onIncrease = { viewModel.increaseFontScale() },
+                    onReset = { viewModel.resetFontScale() }
+                )
+            }
+
+            CompositionLocalProvider(
+                LocalDensity provides adjustedDensity,
+                LocalFontScaleController provides fontScaleController
+            ) {
                 DawahTheme(
                     themeStyle = themeStyle,
                     themeMode = themeMode,

@@ -627,6 +627,28 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch { repository.setFontScale(scale) }
     }
 
+    fun increaseFontScale() {
+        val current = fontScale.value
+        val entries = FontSizeScale.entries
+        val idx = entries.indexOf(current).let { if (it == -1) 2 else it }
+        if (idx < entries.lastIndex) {
+            setFontScale(entries[idx + 1])
+        }
+    }
+
+    fun decreaseFontScale() {
+        val current = fontScale.value
+        val entries = FontSizeScale.entries
+        val idx = entries.indexOf(current).let { if (it == -1) 2 else it }
+        if (idx > 0) {
+            setFontScale(entries[idx - 1])
+        }
+    }
+
+    fun resetFontScale() {
+        setFontScale(FontSizeScale.NORMAL)
+    }
+
     fun setHanafiAsr(isHanafi: Boolean) {
         viewModelScope.launch { repository.setHanafiAsr(isHanafi) }
     }

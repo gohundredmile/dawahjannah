@@ -48,7 +48,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.ui.theme.LocalAppFontFamily
 import com.example.ui.theme.LocalBanglaFontFamily
+import com.example.ui.theme.LocalEnglishFontFamily
 import com.example.util.CalendarHelper
 import kotlinx.coroutines.delay
 import java.util.Calendar
@@ -66,7 +68,7 @@ data class SalatContextInfo(
  * Revamped 3-Section Salat Timing Card
  * Section 1 (Left): 'Next Salat' (পরবর্তী সালাত) - Clean view without vertical dashed divider
  * Section 2 (Middle): 'Present Salat' (বর্তমান সালাত) - Wider Split-flap board with continuous 3s info rotation
- * Section 3 (Right): 'Remaining Time' (শেষ হতে বাকী) - Authentic HTC phone split-flap clock with system font
+ * Section 3 (Right): 'Remaining Time' (শেষ হতে বাকী) - Authentic HTC phone split-flap clock with Typography Studio font
  */
 @Composable
 fun SalatTimingFlipCard(
@@ -81,6 +83,19 @@ fun SalatTimingFlipCard(
     onClickCard: () -> Unit = {}
 ) {
     var useEnglishDigits by remember { mutableStateOf(false) }
+    // false = [মিনিট : সেকেন্ড] mode (ticks and flips every second), true = [ঘণ্টা : মিনিট] mode
+    var showHoursMode by remember { mutableStateOf(false) }
+
+    val banglaFont = LocalBanglaFontFamily.current
+    val englishFont = LocalEnglishFontFamily.current
+    val appFont = LocalAppFontFamily.current
+
+    // Font selected from Typography Studio
+    val activeTileFont = if (useEnglishDigits) {
+        if (englishFont != FontFamily.Default) englishFont else appFont
+    } else {
+        if (banglaFont != FontFamily.Default) banglaFont else appFont
+    }
 
     // -----------------------------------------------------------------
     // Contextual Nofol & Salat information list based on authentic timings
@@ -183,7 +198,7 @@ fun SalatTimingFlipCard(
     ) {
         // -------------------------------------------------------------
         // 1. LEFT SECTION: পরবর্তী সালাত (Next Salat)
-        // (Removed vertical dashed divider as requested)
+        // (No vertical dashed divider, clean and balanced)
         // -------------------------------------------------------------
         Column(
             modifier = Modifier
@@ -195,7 +210,7 @@ fun SalatTimingFlipCard(
             Text(
                 text = "পরবর্তী সালাত",
                 style = MaterialTheme.typography.labelSmall.copy(fontSize = 11.sp),
-                fontFamily = LocalBanglaFontFamily.current,
+                fontFamily = banglaFont,
                 fontWeight = FontWeight.SemiBold,
                 color = Color(0xFF374151),
                 textAlign = TextAlign.Center
@@ -206,7 +221,7 @@ fun SalatTimingFlipCard(
             Text(
                 text = nextPrayerName,
                 style = MaterialTheme.typography.headlineMedium.copy(fontSize = 22.sp),
-                fontFamily = LocalBanglaFontFamily.current,
+                fontFamily = banglaFont,
                 fontWeight = FontWeight.Black,
                 color = Color(0xFF0F172A),
                 textAlign = TextAlign.Center,
@@ -217,12 +232,12 @@ fun SalatTimingFlipCard(
 
         // -------------------------------------------------------------
         // 2. MIDDLE SECTION: বর্তমান সালাত (Present Salat & Nofol Flip Board)
-        // Made significantly wider (weight 1.90f) for full comfortable text
+        // Made significantly wider (weight 1.85f) for full comfortable text
         // Flips continuously every 3 seconds with rich authentic Sunnah info
         // -------------------------------------------------------------
         Column(
             modifier = Modifier
-                .weight(1.90f)
+                .weight(1.85f)
                 .padding(horizontal = 4.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
@@ -230,7 +245,7 @@ fun SalatTimingFlipCard(
             Text(
                 text = "বর্তমান সালাত ও নফল",
                 style = MaterialTheme.typography.labelSmall.copy(fontSize = 11.sp),
-                fontFamily = LocalBanglaFontFamily.current,
+                fontFamily = banglaFont,
                 fontWeight = FontWeight.SemiBold,
                 color = Color(0xFF374151),
                 textAlign = TextAlign.Center
@@ -319,7 +334,7 @@ fun SalatTimingFlipCard(
                                     fontSize = 13.5.sp,
                                     letterSpacing = 0.2.sp
                                 ),
-                                fontFamily = LocalBanglaFontFamily.current,
+                                fontFamily = banglaFont,
                                 fontWeight = FontWeight.Black,
                                 color = Color(0xFF0F172A),
                                 textAlign = TextAlign.Center,
@@ -350,7 +365,7 @@ fun SalatTimingFlipCard(
                                     fontSize = 12.5.sp,
                                     letterSpacing = 0.1.sp
                                 ),
-                                fontFamily = LocalBanglaFontFamily.current,
+                                fontFamily = banglaFont,
                                 fontWeight = FontWeight.Bold,
                                 color = Color(0xFF1E293B),
                                 textAlign = TextAlign.Center,
@@ -364,31 +379,41 @@ fun SalatTimingFlipCard(
         }
 
         // -------------------------------------------------------------
-        // 3. RIGHT SECTION: শেষ হতে বাকী (Authentic HTC Flip Clock Board)
-        // System font with larger, bolder numbers that flip on time changes
+        // 3. RIGHT SECTION: শেষ হতে বাকী (Authentic HTC Sense Flip Clock Board)
+        // Uses selected font from Typography Studio, larger bold size,
+        // and 3D split-flap downward animation on every second/minute/hour change
         // -------------------------------------------------------------
         Column(
             modifier = Modifier
-                .weight(1.22f)
+                .weight(1.28f)
                 .padding(start = 2.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
+            // Header: Title with optional hour remaining reminder if in MM:SS mode
+            val hourBadgeText = if (remainingHours > 0 && !showHoursMode) {
+                if (useEnglishDigits) "${remainingHours}h left" else "${CalendarHelper.toBanglaNumber(remainingHours)}ঘণ্টা বাকী"
+            } else {
+                "শেষ হতে বাকী"
+            }
+
             Text(
-                text = "শেষ হতে বাকী",
+                text = hourBadgeText,
                 style = MaterialTheme.typography.labelSmall.copy(fontSize = 11.sp),
-                fontFamily = LocalBanglaFontFamily.current,
+                fontFamily = banglaFont,
                 fontWeight = FontWeight.SemiBold,
-                color = Color(0xFF374151),
-                textAlign = TextAlign.Center
+                color = if (remainingHours > 0 && !showHoursMode) Color(0xFFB45309) else Color(0xFF374151),
+                textAlign = TextAlign.Center,
+                maxLines = 1
             )
 
-            Spacer(modifier = Modifier.height(4.dp))
+            Spacer(modifier = Modifier.height(3.dp))
 
-            // Compute digits for flip clock
-            val isHoursDisplay = remainingHours > 0
-            val leftRaw = if (isHoursDisplay) remainingHours else remainingMinutes
-            val rightRaw = if (isHoursDisplay) remainingMinutes else remainingSeconds
+            // Compute digits for left and right tiles
+            // In default MM:SS mode: left is minutes, right is seconds (ticks and flips every single second!)
+            // In HH:MM mode: left is hours, right is minutes
+            val leftRaw = if (showHoursMode) remainingHours else remainingMinutes
+            val rightRaw = if (showHoursMode) remainingMinutes else remainingSeconds
 
             val leftStr = String.format(Locale.US, "%02d", leftRaw)
             val rightStr = String.format(Locale.US, "%02d", rightRaw)
@@ -401,14 +426,21 @@ fun SalatTimingFlipCard(
                 modifier = Modifier
                     .clip(RoundedCornerShape(8.dp))
                     .clickable {
-                        useEnglishDigits = !useEnglishDigits
+                        // Tapping the board toggles between MM:SS mode and HH:MM mode,
+                        // or long click / double tap toggles digits. We toggle mode on tap!
+                        if (remainingHours > 0) {
+                            showHoursMode = !showHoursMode
+                        } else {
+                            useEnglishDigits = !useEnglishDigits
+                        }
                     },
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.Center
             ) {
-                // Left HTC Flip Tile (Hours or Minutes)
+                // Left HTC Flip Tile (Minutes or Hours)
                 HtcFlipDigitCard(
                     digits = leftDisplay,
+                    fontFamily = activeTileFont,
                     hasLeftHinge = true,
                     hasRightHinge = true
                 )
@@ -416,41 +448,61 @@ fun SalatTimingFlipCard(
                 // Central Vertical Colon Bracket with Two Pivot Screws
                 FlipClockCenterBracket()
 
-                // Right HTC Flip Tile (Minutes or Seconds)
+                // Right HTC Flip Tile (Seconds or Minutes) - live flips every second!
                 HtcFlipDigitCard(
                     digits = rightDisplay,
+                    fontFamily = activeTileFont,
                     hasLeftHinge = true,
                     hasRightHinge = true
                 )
             }
+
+            // Sub-label indicating unit (মি : সে or ঘণ্টা : মি)
+            val unitLabel = if (showHoursMode) {
+                if (useEnglishDigits) "hr : min" else "ঘণ্টা : মিনিট"
+            } else {
+                if (useEnglishDigits) "min : sec" else "মিনিট : সেকেন্ড"
+            }
+            Text(
+                text = unitLabel,
+                style = TextStyle(
+                    fontSize = 9.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = Color(0xFF64748B),
+                    fontFamily = banglaFont,
+                    textAlign = TextAlign.Center
+                ),
+                modifier = Modifier.padding(top = 2.dp)
+            )
         }
     }
 }
 
 /**
- * Authentic HTC Phone Flip Clock Digit Tile
+ * Authentic HTC Phone Sense 3D Flip Clock Digit Tile
  * Features 3D top-down split flap flip animation whenever [digits] changes
- * Aligned with Android system font and larger bold typeface
+ * Aligned with Typography Studio active font, bold tabular typeface
  */
 @Composable
 private fun HtcFlipDigitCard(
     digits: String,
+    fontFamily: FontFamily,
     hasLeftHinge: Boolean = true,
     hasRightHinge: Boolean = true,
     modifier: Modifier = Modifier
 ) {
+    var displayedDigits by remember { mutableStateOf(digits) }
     var previousDigits by remember { mutableStateOf(digits) }
-    var targetDigits by remember { mutableStateOf(digits) }
     val flipProgress = remember { Animatable(1f) }
 
     LaunchedEffect(digits) {
-        if (digits != targetDigits) {
-            previousDigits = targetDigits
-            targetDigits = digits
+        if (digits != displayedDigits) {
+            previousDigits = displayedDigits
+            displayedDigits = digits
             flipProgress.snapTo(0f)
             flipProgress.animateTo(
                 targetValue = 1f,
-                animationSpec = tween(durationMillis = 420, easing = FastOutSlowInEasing)
+                animationSpec = tween(durationMillis = 440, easing = FastOutSlowInEasing)
             )
         }
     }
@@ -462,22 +514,22 @@ private fun HtcFlipDigitCard(
         // Multi-card Stack Layer Effect at the Bottom (representing stacked flap deck)
         Column(
             modifier = Modifier
-                .width(46.dp)
-                .height(57.dp),
+                .width(48.dp)
+                .height(58.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Bottom
         ) {
             // Under-layer 2
             Box(
                 modifier = Modifier
-                    .width(41.dp)
+                    .width(42.dp)
                     .height(1.dp)
                     .background(Color(0xFFD1D5DB), RoundedCornerShape(bottomStart = 2.dp, bottomEnd = 2.dp))
             )
             // Under-layer 1
             Box(
                 modifier = Modifier
-                    .width(43.5.dp)
+                    .width(45.dp)
                     .height(1.dp)
                     .background(Color(0xFFE2E8F0), RoundedCornerShape(bottomStart = 3.dp, bottomEnd = 3.dp))
             )
@@ -486,67 +538,69 @@ private fun HtcFlipDigitCard(
         // Main Flap Card Assembly
         Box(
             modifier = Modifier
-                .size(width = 46.dp, height = 54.dp)
+                .size(width = 48.dp, height = 55.dp)
                 .shadow(elevation = 2.dp, shape = RoundedCornerShape(6.dp))
                 .clip(RoundedCornerShape(6.dp))
-                .border(BorderStroke(1.dp, Color(0xFFD1D5DB)), RoundedCornerShape(6.dp))
+                .border(BorderStroke(1.dp, Color(0xFFCBD5E1)), RoundedCornerShape(6.dp))
         ) {
             // BASE LAYER:
             // Top half displays the NEW digit (revealed when old flap falls down)
-            // Bottom half displays the OLD digit (until covered by new flap falling down)
+            // Bottom half displays OLD digit during phase 1 (<0.5), then switches to NEW digit
+            val bottomBaseDigits = if (flipProgress.value < 0.5f) previousDigits else displayedDigits
+
             Column(modifier = Modifier.fillMaxSize()) {
-                DigitHalf(digits = targetDigits, isTopHalf = true)
+                DigitHalf(digits = displayedDigits, isTopHalf = true, fontFamily = fontFamily)
                 // Center Horizontal Split Groove
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(1.dp)
-                        .background(Color(0xFF374151))
+                        .background(Color(0xFF334155))
                 )
-                DigitHalf(digits = previousDigits, isTopHalf = false)
+                DigitHalf(digits = bottomBaseDigits, isTopHalf = false, fontFamily = fontFamily)
             }
 
-            // FLIPPING LAYER:
-            // Phase 1 (0.0 .. 0.5): The old top flap flips DOWNWARDS from 0° to -90°
-            if (flipProgress.value <= 0.5f) {
+            // FLIPPING LAYER (HTC Sense 3D Downward Flap):
+            if (flipProgress.value < 0.5f) {
+                // Phase 1 (0.0 .. 0.5): The old top flap flips DOWNWARDS from 0° to -90°
                 val rotX = -180f * flipProgress.value
                 Box(
                     modifier = Modifier
                         .align(Alignment.TopCenter)
                         .fillMaxWidth()
-                        .height(26.5.dp)
+                        .height(27.dp)
                         .graphicsLayer {
                             rotationX = rotX
-                            cameraDistance = 16f * density
+                            cameraDistance = 18f * density
                             transformOrigin = TransformOrigin(0.5f, 1.0f) // Pivot at bottom edge of top half
                         }
                 ) {
-                    DigitHalf(digits = previousDigits, isTopHalf = true)
+                    DigitHalf(digits = previousDigits, isTopHalf = true, fontFamily = fontFamily)
                     // Dynamic shadow overlay during downward fold
-                    val shadowAlpha = (flipProgress.value * 0.8f).coerceIn(0f, 0.45f)
+                    val shadowAlpha = (flipProgress.value * 0.9f).coerceIn(0f, 0.48f)
                     Box(
                         modifier = Modifier
                             .fillMaxSize()
                             .background(Color.Black.copy(alpha = shadowAlpha))
                     )
                 }
-            } else {
-                // Phase 2 (0.5 .. 1.0): The new bottom flap flips DOWNWARDS from +90° to 0°
+            } else if (flipProgress.value < 1.0f) {
+                // Phase 2 (0.5 .. 1.0): The new bottom flap lands from +90° to 0°
                 val rotX = 90f - 180f * (flipProgress.value - 0.5f)
                 Box(
                     modifier = Modifier
                         .align(Alignment.BottomCenter)
                         .fillMaxWidth()
-                        .height(26.5.dp)
+                        .height(27.dp)
                         .graphicsLayer {
                             rotationX = rotX
-                            cameraDistance = 16f * density
+                            cameraDistance = 18f * density
                             transformOrigin = TransformOrigin(0.5f, 0.0f) // Pivot at top edge of bottom half
                         }
                 ) {
-                    DigitHalf(digits = targetDigits, isTopHalf = false)
+                    DigitHalf(digits = displayedDigits, isTopHalf = false, fontFamily = fontFamily)
                     // Dynamic shadow fading away as card lands flat
-                    val shadowAlpha = ((1f - flipProgress.value) * 0.8f).coerceIn(0f, 0.45f)
+                    val shadowAlpha = ((1f - flipProgress.value) * 0.9f).coerceIn(0f, 0.48f)
                     Box(
                         modifier = Modifier
                             .fillMaxSize()
@@ -555,13 +609,13 @@ private fun HtcFlipDigitCard(
                 }
             }
 
-            // Left & Right Mechanical Hinge Clips on Card Edges
+            // Left & Right Mechanical Hinge Clips on Card Edges (HTC phone look)
             if (hasLeftHinge) {
                 Box(
                     modifier = Modifier
                         .align(Alignment.CenterStart)
                         .size(width = 2.5.dp, height = 10.dp)
-                        .background(Color(0xFF6B7280), RoundedCornerShape(topEnd = 1.dp, bottomEnd = 1.dp))
+                        .background(Color(0xFF64748B), RoundedCornerShape(topEnd = 1.dp, bottomEnd = 1.dp))
                 )
             }
             if (hasRightHinge) {
@@ -569,7 +623,7 @@ private fun HtcFlipDigitCard(
                     modifier = Modifier
                         .align(Alignment.CenterEnd)
                         .size(width = 2.5.dp, height = 10.dp)
-                        .background(Color(0xFF6B7280), RoundedCornerShape(topStart = 1.dp, bottomStart = 1.dp))
+                        .background(Color(0xFF64748B), RoundedCornerShape(topStart = 1.dp, bottomStart = 1.dp))
                 )
             }
         }
@@ -578,25 +632,26 @@ private fun HtcFlipDigitCard(
 
 /**
  * Renders either the top half or bottom half of the 2-digit number
- * Aligned with Android System Font and large bold tabular styling
+ * Uses Typography Studio active font, bold and large sizing
  */
 @Composable
 private fun DigitHalf(
     digits: String,
     isTopHalf: Boolean,
+    fontFamily: FontFamily,
     modifier: Modifier = Modifier
 ) {
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .height(26.5.dp)
+            .height(27.dp)
             .clipToBounds()
             .background(
                 Brush.verticalGradient(
                     if (isTopHalf) {
-                        listOf(Color(0xFFFFFFFF), Color(0xFFF9FAFB))
+                        listOf(Color(0xFFFFFFFF), Color(0xFFF8FAFC))
                     } else {
-                        listOf(Color(0xFFF3F4F6), Color(0xFFE5E7EB))
+                        listOf(Color(0xFFF1F5F9), Color(0xFFE2E8F0))
                     }
                 )
             ),
@@ -606,19 +661,19 @@ private fun DigitHalf(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(53.dp)
-                .offset(y = if (isTopHalf) 0.dp else (-26.5).dp),
+                .height(54.dp)
+                .offset(y = if (isTopHalf) 0.dp else (-27).dp),
             contentAlignment = Alignment.Center
         ) {
             Text(
                 text = digits,
                 style = TextStyle(
-                    fontFamily = FontFamily.SansSerif, // Aligned with Android system font
+                    fontFamily = fontFamily,
                     fontWeight = FontWeight.ExtraBold,
-                    fontSize = 25.sp,                  // Bigger, prominent font
-                    lineHeight = 25.sp,
+                    fontSize = 26.sp,                  // Bigger, prominent font
+                    lineHeight = 26.sp,
                     letterSpacing = 0.5.sp,
-                    color = Color(0xFF111827),
+                    color = Color(0xFF0F172A),
                     textAlign = TextAlign.Center
                 ),
                 maxLines = 1
@@ -628,7 +683,7 @@ private fun DigitHalf(
 }
 
 /**
- * Mechanical Flip Clock Central Colon Bracket (matching flipboard3.jpg)
+ * Mechanical Flip Clock Central Colon Bracket (matching flipboard specimen)
  */
 @Composable
 private fun FlipClockCenterBracket(
@@ -644,11 +699,11 @@ private fun FlipClockCenterBracket(
                 Brush.verticalGradient(
                     listOf(
                         Color(0xFFFFFFFF),
-                        Color(0xFFF3F4F6)
+                        Color(0xFFF1F5F9)
                     )
                 )
             )
-            .border(BorderStroke(0.8.dp, Color(0xFFD1D5DB)), RoundedCornerShape(2.dp)),
+            .border(BorderStroke(0.8.dp, Color(0xFFCBD5E1)), RoundedCornerShape(2.dp)),
         contentAlignment = Alignment.Center
     ) {
         Column(
@@ -659,14 +714,14 @@ private fun FlipClockCenterBracket(
             Box(
                 modifier = Modifier
                     .size(4.dp)
-                    .background(Color(0xFF4B5563), CircleShape)
+                    .background(Color(0xFF475569), CircleShape)
             )
             Spacer(modifier = Modifier.height(6.dp))
             // Lower Colon Pivot Screw Dot
             Box(
                 modifier = Modifier
                     .size(4.dp)
-                    .background(Color(0xFF4B5563), CircleShape)
+                    .background(Color(0xFF475569), CircleShape)
             )
         }
     }

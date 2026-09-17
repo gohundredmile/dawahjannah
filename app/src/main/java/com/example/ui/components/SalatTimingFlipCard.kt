@@ -41,6 +41,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.text.PlatformTextStyle
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -413,61 +414,82 @@ fun SalatTimingFlipCard(
 
         // -------------------------------------------------------------
         // 3. RIGHT SECTION: শেষ হতে বাকী (Authentic HTC Sense Flip Clock Board)
-        // Matches video: English font style, displays HH:MM only,
-        // downward 3D split-flap drop, knurled central roller
+        // Matches video: English bold font style, realistic 3D split-flap drop,
+        // live second/minute countdown, knurled central roller
         // -------------------------------------------------------------
+        var showHoursMode by remember { mutableStateOf(false) }
+
         Column(
             modifier = Modifier
-                .weight(1.22f)
+                .weight(1.24f)
                 .padding(start = 2.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
+            // Header title: displays hours remaining badge if in MM:SS mode and hours > 0
+            val headerText = if (remainingHours > 0 && !showHoursMode) {
+                "${CalendarHelper.toBanglaNumber(remainingHours)} ঘণ্টা বাকী"
+            } else {
+                "শেষ হতে বাকী"
+            }
+
             Text(
-                text = "শেষ হতে বাকী",
+                text = headerText,
                 style = MaterialTheme.typography.labelSmall.copy(fontSize = 11.sp),
                 fontFamily = banglaFont,
                 fontWeight = FontWeight.SemiBold,
-                color = Color(0xFF374151),
+                color = if (remainingHours > 0 && !showHoursMode) Color(0xFFB45309) else Color(0xFF374151),
                 textAlign = TextAlign.Center,
                 maxLines = 1
             )
 
             Spacer(modifier = Modifier.height(4.dp))
 
-            // Only HH:MM formatted in English digits
-            val hoursStr = String.format(Locale.US, "%02d", remainingHours)
-            val minutesStr = String.format(Locale.US, "%02d", remainingMinutes)
+            // Two flip tiles:
+            // Default mode (!showHoursMode): Left = Minutes, Right = Seconds (ticks & flips every second in 3D!)
+            // Hours mode (showHoursMode): Left = Hours, Right = Minutes
+            val leftRaw = if (showHoursMode) remainingHours else remainingMinutes
+            val rightRaw = if (showHoursMode) remainingMinutes else remainingSeconds
 
-            // Retro Mechanical HTC-style Flip Clock Board
+            val leftStr = String.format(Locale.US, "%02d", leftRaw)
+            val rightStr = String.format(Locale.US, "%02d", rightRaw)
+
+            // Retro Mechanical HTC-style Flip Clock Board (Tap to toggle mode)
             Row(
-                modifier = Modifier.clip(RoundedCornerShape(8.dp)),
+                modifier = Modifier
+                    .clip(RoundedCornerShape(8.dp))
+                    .clickable {
+                        if (remainingHours > 0) {
+                            showHoursMode = !showHoursMode
+                        }
+                    },
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.Center
             ) {
-                // Left Flip Tile: Hours (HH)
+                // Left Flip Tile: Minutes (or Hours)
                 HtcFlipDigitCard(
-                    digits = hoursStr,
+                    digits = leftStr,
                     fontFamily = clockDigitFont,
                     hasLeftHinge = true,
                     hasRightHinge = true
                 )
 
-                // Central knurled roller gear between HH and MM
+                // Central knurled roller gear between left and right tiles
                 FlipClockCenterRoller()
 
-                // Right Flip Tile: Minutes (MM)
+                // Right Flip Tile: Seconds (or Minutes) - flips every second
                 HtcFlipDigitCard(
-                    digits = minutesStr,
+                    digits = rightStr,
                     fontFamily = clockDigitFont,
                     hasLeftHinge = true,
                     hasRightHinge = true
                 )
             }
 
-            // Sub-label indicating unit (ঘণ্টা : মিনিট)
+            // Sub-label indicating unit
+            val unitText = if (showHoursMode) "ঘণ্টা : মিনিট" else "মিনিট : সেকেন্ড"
             Text(
-                text = "ঘণ্টা : মিনিট",
+                text = unitText,
                 style = TextStyle(
                     fontSize = 9.sp,
                     fontWeight = FontWeight.Medium,
@@ -483,8 +505,9 @@ fun SalatTimingFlipCard(
 
 /**
  * Authentic HTC Phone Sense 3D Flip Clock Digit Tile
- * Features 3D top-down split flap flip animation whenever [digits] changes
- * Uses English bold tabular typeface matching the video
+ * Features 3D top-down split flap flip animation whenever [digits] changes:
+ * - In Phase 1: The old top half flap folds downward, revealing the new number behind it.
+ * - In Phase 2: The new bottom half flap drops down into place with realistic perspective and shadow.
  */
 @Composable
 private fun HtcFlipDigitCard(
@@ -505,7 +528,7 @@ private fun HtcFlipDigitCard(
             flipProgress.snapTo(0f)
             flipProgress.animateTo(
                 targetValue = 1f,
-                animationSpec = tween(durationMillis = 440, easing = FastOutSlowInEasing)
+                animationSpec = tween(durationMillis = 380, easing = FastOutSlowInEasing)
             )
         }
     }
@@ -514,7 +537,7 @@ private fun HtcFlipDigitCard(
         modifier = modifier.padding(horizontal = 1.dp),
         contentAlignment = Alignment.Center
     ) {
-        // Multi-card Stack Layer Effect at the Bottom (representing stacked flap deck)
+        // Multi-card Stack Layer Effect at the Bottom (stacked flap deck)
         Column(
             modifier = Modifier
                 .width(44.dp)
@@ -549,7 +572,7 @@ private fun HtcFlipDigitCard(
         ) {
             // BASE LAYER:
             // Top half displays the NEW digit (revealed when old flap falls down)
-            // Bottom half displays OLD digit until the flip completes (1.0f)
+            // Bottom half displays OLD digit until the new bottom flap lands
             val bottomBaseDigits = if (flipProgress.value < 1.0f) previousDigits else displayedDigits
 
             Column(modifier = Modifier.fillMaxSize()) {
@@ -566,8 +589,9 @@ private fun HtcFlipDigitCard(
 
             // FLIPPING LAYER (HTC Sense 3D Downward Flap):
             if (flipProgress.value < 0.5f) {
-                // Phase 1 (0.0 .. 0.5): The old top flap flips DOWNWARDS from 0° to -90°
-                val rotX = -180f * flipProgress.value
+                // Phase 1 (0.0 .. 0.5): The old top flap flips FORWARD & DOWNWARDS from 0° to -90°
+                val p1 = flipProgress.value / 0.5f
+                val rotX = -90f * p1
                 Box(
                     modifier = Modifier
                         .align(Alignment.TopCenter)
@@ -575,22 +599,24 @@ private fun HtcFlipDigitCard(
                         .height(27.dp)
                         .graphicsLayer {
                             rotationX = rotX
-                            cameraDistance = 18f * density
+                            cameraDistance = 16f * density
                             transformOrigin = TransformOrigin(0.5f, 1.0f) // Pivot at bottom edge of top half
                         }
                 ) {
                     DigitHalf(digits = previousDigits, isTopHalf = true, fontFamily = fontFamily)
                     // Dynamic shadow overlay during downward fold
-                    val shadowAlpha = (flipProgress.value * 0.85f).coerceIn(0f, 0.45f)
+                    val shadowAlpha = (p1 * 0.55f).coerceIn(0f, 0.55f)
                     Box(
                         modifier = Modifier
                             .fillMaxSize()
+                            .clip(RoundedCornerShape(topStart = 5.dp, topEnd = 5.dp))
                             .background(Color.Black.copy(alpha = shadowAlpha))
                     )
                 }
             } else if (flipProgress.value < 1.0f) {
-                // Phase 2 (0.5 .. 1.0): The new bottom flap lands from +90° to 0°
-                val rotX = 90f - 180f * (flipProgress.value - 0.5f)
+                // Phase 2 (0.5 .. 1.0): The new bottom flap lands from +90° down to 0° flat
+                val p2 = (flipProgress.value - 0.5f) / 0.5f
+                val rotX = 90f * (1f - p2)
                 Box(
                     modifier = Modifier
                         .align(Alignment.BottomCenter)
@@ -598,16 +624,17 @@ private fun HtcFlipDigitCard(
                         .height(27.dp)
                         .graphicsLayer {
                             rotationX = rotX
-                            cameraDistance = 18f * density
+                            cameraDistance = 16f * density
                             transformOrigin = TransformOrigin(0.5f, 0.0f) // Pivot at top edge of bottom half
                         }
                 ) {
                     DigitHalf(digits = displayedDigits, isTopHalf = false, fontFamily = fontFamily)
-                    // Dynamic shadow fading away as card lands flat
-                    val shadowAlpha = ((1f - flipProgress.value) * 0.85f).coerceIn(0f, 0.45f)
+                    // Dynamic shadow fading away as card lands flat in place
+                    val shadowAlpha = ((1f - p2) * 0.55f).coerceIn(0f, 0.55f)
                     Box(
                         modifier = Modifier
                             .fillMaxSize()
+                            .clip(RoundedCornerShape(bottomStart = 5.dp, bottomEnd = 5.dp))
                             .background(Color.Black.copy(alpha = shadowAlpha))
                     )
                 }
@@ -635,9 +662,11 @@ private fun HtcFlipDigitCard(
 }
 
 /**
- * Renders either the top half or bottom half of the 2-digit number
- * Fixes previous issue where bottom half was rendered outside the visible area:
- * Uses Alignment.TopCenter for both halves, with top having 0.dp offset and bottom having -27.dp offset.
+ * Renders either the top half or bottom half of the 2-digit number:
+ * - Both top and bottom halves use an identical 54.dp full-size container.
+ * - Top half is clipped to the upper 27.dp via Alignment.TopCenter.
+ * - Bottom half is clipped to the lower 27.dp via Alignment.BottomCenter.
+ * - PlatformTextStyle(includeFontPadding = false) ensures zero padding so the split is perfectly centered.
  */
 @Composable
 private fun DigitHalf(
@@ -648,11 +677,17 @@ private fun DigitHalf(
 ) {
     val halfHeight = 27.dp
     val fullHeight = 54.dp
+    val shape = if (isTopHalf) {
+        RoundedCornerShape(topStart = 5.dp, topEnd = 5.dp, bottomStart = 0.dp, bottomEnd = 0.dp)
+    } else {
+        RoundedCornerShape(topStart = 0.dp, topEnd = 0.dp, bottomStart = 5.dp, bottomEnd = 5.dp)
+    }
+
     Box(
         modifier = modifier
             .fillMaxWidth()
             .height(halfHeight)
-            .clipToBounds()
+            .clip(shape)
             .background(
                 Brush.verticalGradient(
                     if (isTopHalf) {
@@ -662,14 +697,15 @@ private fun DigitHalf(
                     }
                 )
             ),
-        contentAlignment = Alignment.TopCenter
+        contentAlignment = if (isTopHalf) Alignment.TopCenter else Alignment.BottomCenter
     ) {
-        // Full height text container precisely cropped to top or bottom half
+        // Full height text container of exactly 54.dp
+        // When isTopHalf == true, Alignment.TopCenter keeps the top 27.dp visible.
+        // When isTopHalf == false, Alignment.BottomCenter keeps the bottom 27.dp visible.
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(fullHeight)
-                .offset(y = if (isTopHalf) 0.dp else -halfHeight),
+                .height(fullHeight),
             contentAlignment = Alignment.Center
         ) {
             Text(
@@ -679,6 +715,7 @@ private fun DigitHalf(
                     fontWeight = FontWeight.Black,
                     fontSize = 28.sp,
                     lineHeight = 28.sp,
+                    platformStyle = PlatformTextStyle(includeFontPadding = false),
                     letterSpacing = 0.5.sp,
                     color = Color(0xFF0F172A),
                     textAlign = TextAlign.Center

@@ -65,6 +65,8 @@ import com.example.ui.components.DetailedSehriIftarDialog
 import com.example.ui.components.HomeFeatureItem
 import com.example.ui.components.IslamicHeaderCover
 import com.example.ui.components.NofolSalatDetailsDialog
+import com.example.ui.components.NofolSalatIndependentCard
+import com.example.ui.components.NofolSalatScheduleDialog
 import com.example.ui.components.NofolSalatTimingsSection
 import com.example.ui.components.QuickActionCard
 import com.example.ui.components.RamadanMoonScheduleDialog

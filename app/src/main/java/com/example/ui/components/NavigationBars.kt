@@ -30,7 +30,9 @@ import androidx.compose.material.icons.filled.AccessTime
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.automirrored.filled.ArrowForwardIos
 import androidx.compose.material.icons.filled.FontDownload
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.FormatSize
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.MenuBook
@@ -166,11 +168,12 @@ fun FontSizeActionButtons(
 @Composable
 fun HomeIslamicTopAppBar(
     onOpenFontMenu: () -> Unit = {},
-    onOpenThemeModal: () -> Unit = {}
+    onOpenThemeModal: () -> Unit = {},
+    onOpenAppSettings: () -> Unit = {}
 ) {
     val isDark = isSystemInDarkTheme()
     val goldDivider = IslamicGold.copy(alpha = if (isDark) 0.35f else 0.45f)
-    var showVisualMenu by remember { mutableStateOf(false) }
+    var showSettingsMenu by remember { mutableStateOf(false) }
     val fontScaleController = LocalFontScaleController.current
 
     Surface(
@@ -251,62 +254,62 @@ fun HomeIslamicTopAppBar(
                 }
             },
             actions = {
-                // Folded "Visual" folder/icon at the top-right
+                // High-Contrast "Settings" button at the top-right
                 Box(
                     modifier = Modifier.padding(end = 6.dp),
                     contentAlignment = Alignment.CenterEnd
                 ) {
                     Surface(
                         shape = RoundedCornerShape(18.dp),
-                        color = if (showVisualMenu) {
-                            MaterialTheme.colorScheme.primary
+                        color = if (showSettingsMenu) {
+                            if (isDark) IslamicGold else MaterialTheme.colorScheme.primary
                         } else {
-                            MaterialTheme.colorScheme.primaryContainer.copy(alpha = if (isDark) 0.45f else 0.75f)
+                            if (isDark) Color(0xFF1E293B) else MaterialTheme.colorScheme.primary
                         },
                         border = BorderStroke(
                             1.2.dp,
-                            if (showVisualMenu) IslamicGold else IslamicGold.copy(alpha = 0.65f)
+                            if (isDark) IslamicGold else IslamicGold.copy(alpha = 0.75f)
                         ),
-                        shadowElevation = if (showVisualMenu) 3.dp else 1.dp,
+                        shadowElevation = if (showSettingsMenu) 3.dp else 2.dp,
                         modifier = Modifier
                             .clip(RoundedCornerShape(18.dp))
-                            .clickable { showVisualMenu = !showVisualMenu }
+                            .clickable { showSettingsMenu = !showSettingsMenu }
                     ) {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
+                            modifier = Modifier.padding(horizontal = 11.dp, vertical = 6.dp)
                         ) {
                             Icon(
-                                imageVector = Icons.Default.Tune,
-                                contentDescription = "Visual Settings",
-                                tint = if (showVisualMenu) Color.White else MaterialTheme.colorScheme.primary,
+                                imageVector = Icons.Default.Settings,
+                                contentDescription = "Settings",
+                                tint = if (showSettingsMenu && isDark) Color(0xFF0F172A) else Color.White,
                                 modifier = Modifier.size(15.dp)
                             )
-                            Spacer(modifier = Modifier.width(4.dp))
+                            Spacer(modifier = Modifier.width(5.dp))
                             Text(
-                                text = "Visual",
+                                text = "Settings",
                                 fontSize = 12.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = if (showVisualMenu) Color.White else MaterialTheme.colorScheme.primary
+                                color = if (showSettingsMenu && isDark) Color(0xFF0F172A) else Color.White
                             )
-                            Spacer(modifier = Modifier.width(2.dp))
+                            Spacer(modifier = Modifier.width(3.dp))
                             Icon(
                                 imageVector = Icons.Default.ArrowDropDown,
                                 contentDescription = null,
-                                tint = if (showVisualMenu) Color.White else MaterialTheme.colorScheme.primary,
+                                tint = if (showSettingsMenu && isDark) Color(0xFF0F172A) else Color.White,
                                 modifier = Modifier
                                     .size(16.dp)
-                                    .rotate(if (showVisualMenu) 180f else 0f)
+                                    .rotate(if (showSettingsMenu) 180f else 0f)
                             )
                         }
                     }
 
-                    // Folded Dropdown Menu containing all 4 items
+                    // Folded Dropdown Menu containing App Settings and Visual items
                     DropdownMenu(
-                        expanded = showVisualMenu,
-                        onDismissRequest = { showVisualMenu = false },
+                        expanded = showSettingsMenu,
+                        onDismissRequest = { showSettingsMenu = false },
                         modifier = Modifier
-                            .widthIn(min = 265.dp, max = 295.dp)
+                            .widthIn(min = 275.dp, max = 305.dp)
                             .background(MaterialTheme.colorScheme.surface, RoundedCornerShape(16.dp))
                             .border(BorderStroke(1.2.dp, IslamicGold.copy(alpha = 0.45f)), RoundedCornerShape(16.dp))
                             .padding(horizontal = 8.dp, vertical = 6.dp)
@@ -320,13 +323,13 @@ fun HomeIslamicTopAppBar(
                         ) {
                             Surface(
                                 shape = CircleShape,
-                                color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.65f),
+                                color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = if (isDark) 0.45f else 0.7f),
                                 border = BorderStroke(1.dp, IslamicGold.copy(alpha = 0.5f)),
                                 modifier = Modifier.size(28.dp)
                             ) {
                                 Box(contentAlignment = Alignment.Center) {
                                     Icon(
-                                        imageVector = Icons.Default.Tune,
+                                        imageVector = Icons.Default.Settings,
                                         contentDescription = null,
                                         tint = MaterialTheme.colorScheme.primary,
                                         modifier = Modifier.size(15.dp)
@@ -336,18 +339,73 @@ fun HomeIslamicTopAppBar(
                             Spacer(modifier = Modifier.width(8.dp))
                             Column {
                                 Text(
-                                    text = "ভিজ্যুয়াল সেটিংস (Visual)",
+                                    text = "সেটিংস ও কাস্টমাইজেশন",
                                     style = MaterialTheme.typography.titleSmall,
                                     fontWeight = FontWeight.Bold,
                                     color = MaterialTheme.colorScheme.onSurface
                                 )
                                 Text(
-                                    text = "ডিসপ্লে, ফন্ট ও থিম কাস্টমাইজেশন",
+                                    text = "অ্যাপ সেটিংস্, ফন্ট ও থিম শৈলী",
                                     style = MaterialTheme.typography.bodySmall,
                                     fontSize = 10.sp,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
+                        }
+
+                        HorizontalDivider(
+                            modifier = Modifier.padding(horizontal = 4.dp, vertical = 4.dp),
+                            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)
+                        )
+
+                        // 1: অ্যাপ সেটিংস্ (App Settings)
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(12.dp))
+                                .clickable {
+                                    showSettingsMenu = false
+                                    onOpenAppSettings()
+                                }
+                                .padding(horizontal = 8.dp, vertical = 8.dp)
+                        ) {
+                            Surface(
+                                shape = CircleShape,
+                                color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = if (isDark) 0.45f else 0.7f),
+                                border = BorderStroke(1.dp, IslamicGold.copy(alpha = 0.5f)),
+                                modifier = Modifier.size(36.dp)
+                            ) {
+                                Box(contentAlignment = Alignment.Center) {
+                                    Icon(
+                                        imageVector = Icons.Default.Settings,
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.primary,
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                }
+                            }
+                            Spacer(modifier = Modifier.width(10.dp))
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = "অ্যাপ সেটিংস্",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                                Text(
+                                    text = "নামাজের হিসাব পদ্ধতি, জেলা ও কনফিগারেশন",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    fontSize = 10.5.sp,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowForwardIos,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                                modifier = Modifier.size(12.dp)
+                            )
                         }
 
                         HorizontalDivider(
@@ -500,7 +558,7 @@ fun HomeIslamicTopAppBar(
                                 .fillMaxWidth()
                                 .clip(RoundedCornerShape(12.dp))
                                 .clickable {
-                                    showVisualMenu = false
+                                    showSettingsMenu = false
                                     onOpenFontMenu()
                                 }
                                 .padding(horizontal = 8.dp, vertical = 8.dp)
@@ -549,7 +607,7 @@ fun HomeIslamicTopAppBar(
                                 .fillMaxWidth()
                                 .clip(RoundedCornerShape(12.dp))
                                 .clickable {
-                                    showVisualMenu = false
+                                    showSettingsMenu = false
                                     onOpenThemeModal()
                                 }
                                 .padding(horizontal = 8.dp, vertical = 8.dp)

@@ -114,13 +114,15 @@ fun RoutineScreen(
     val selectedSlot by viewModel.routineTimeSlotFilter.collectAsState()
     val routineList by viewModel.filteredRoutineList.collectAsState()
 
+    val completedRoutineIds by viewModel.completedRoutineIds.collectAsState()
+
     // Persistent checklist state keyed by today's date
     val completedState = remember { mutableStateMapOf<String, Boolean>() }
 
-    // Load persisted completions on launch
-    LaunchedEffect(todayDateStr) {
-        val savedKeys = prefs.getStringSet("completed_ids_$todayDateStr", emptySet()) ?: emptySet()
-        savedKeys.forEach { id ->
+    // Keep completedState in sync with ViewModel
+    LaunchedEffect(completedRoutineIds) {
+        completedState.clear()
+        completedRoutineIds.forEach { id ->
             completedState[id] = true
         }
     }
@@ -128,23 +130,15 @@ fun RoutineScreen(
     // Helper to persist checked items
     fun persistCompletion(id: String, isCompleted: Boolean) {
         completedState[id] = isCompleted
-        val currentKeys = prefs.getStringSet("completed_ids_$todayDateStr", emptySet())?.toMutableSet() ?: mutableSetOf()
-        if (isCompleted) {
-            currentKeys.add(id)
-        } else {
-            currentKeys.remove(id)
-        }
-        prefs.edit().putStringSet("completed_ids_$todayDateStr", currentKeys).apply()
+        viewModel.toggleRoutineItem(id, isCompleted)
     }
 
     // Helper for Select All / Deselect All
     fun toggleSelectAll(itemsToToggle: List<String>, selectAll: Boolean) {
-        val currentKeys = prefs.getStringSet("completed_ids_$todayDateStr", emptySet())?.toMutableSet() ?: mutableSetOf()
         itemsToToggle.forEach { id ->
             completedState[id] = selectAll
-            if (selectAll) currentKeys.add(id) else currentKeys.remove(id)
         }
-        prefs.edit().putStringSet("completed_ids_$todayDateStr", currentKeys).apply()
+        viewModel.toggleAllRoutineItems(itemsToToggle, selectAll)
     }
 
     val completedCount = routineList.count { completedState[it.id] == true }

@@ -127,7 +127,8 @@ class MainActivity : ComponentActivity() {
                             if (currentTab == AppTab.HOME) {
                                 HomeIslamicTopAppBar(
                                     onOpenFontMenu = { viewModel.openFontMenu() },
-                                    onOpenThemeModal = { viewModel.openThemeModal() }
+                                    onOpenThemeModal = { viewModel.openThemeModal() },
+                                    onOpenAppSettings = { viewModel.openSettings(AppTab.HOME) }
                                 )
                             } else if (!(currentTab == AppTab.MORE && currentMoreSub != MoreSubScreen.MAIN)) {
                                 DawahTopAppBar(

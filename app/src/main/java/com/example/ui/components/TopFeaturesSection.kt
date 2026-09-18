@@ -150,31 +150,31 @@ fun TopFeaturesSection(
                     }
                 }
 
-                // Right: "আরও / More" Action Text Button
+                // Right: High-Contrast "More" Action Button
                 Surface(
                     shape = RoundedCornerShape(16.dp),
-                    color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = if (isDark) 0.45f else 0.75f),
-                    border = BorderStroke(1.dp, IslamicGold.copy(alpha = 0.55f)),
-                    shadowElevation = 1.dp,
+                    color = if (isDark) Color(0xFF1E293B) else MaterialTheme.colorScheme.primary,
+                    border = BorderStroke(1.dp, if (isDark) IslamicGold else IslamicGold.copy(alpha = 0.75f)),
+                    shadowElevation = 2.dp,
                     modifier = Modifier
                         .clip(RoundedCornerShape(16.dp))
                         .clickable { onOpenAllFeatures() }
                 ) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
+                        modifier = Modifier.padding(horizontal = 11.dp, vertical = 6.dp)
                     ) {
                         Text(
-                            text = "আরও / More",
+                            text = "More",
                             fontSize = 12.sp,
                             fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.primary
+                            color = Color.White
                         )
                         Spacer(modifier = Modifier.width(4.dp))
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowForwardIos,
                             contentDescription = "সকল ফিচার",
-                            tint = MaterialTheme.colorScheme.primary,
+                            tint = Color.White,
                             modifier = Modifier.size(10.dp)
                         )
                     }

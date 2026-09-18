@@ -85,6 +85,7 @@ fun AllFeaturesDialog(
             decorFitsSystemWindows = false
         )
     ) {
+        val isDark = isSystemInDarkTheme()
         var searchQuery by remember { mutableStateOf("") }
         var selectedCategory by remember { mutableStateOf("সবগুলো") }
 
@@ -113,30 +114,47 @@ fun AllFeaturesDialog(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Color(0xFF03140C))
+                .background(if (isDark) Color(0xFF03140C) else MaterialTheme.colorScheme.background)
         ) {
-            // Wallpaper Background
-            Image(
-                painter = painterResource(id = R.drawable.img_sehri_iftar_bg),
-                contentDescription = null,
-                contentScale = ContentScale.Crop,
-                modifier = Modifier.fillMaxSize()
-            )
+            if (isDark) {
+                // Dark Mode Wallpaper Background
+                Image(
+                    painter = painterResource(id = R.drawable.img_sehri_iftar_bg),
+                    contentDescription = null,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize()
+                )
 
-            // Multi-layer Islamic emerald gradient scrim for rich contrast & readability
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(
-                        Brush.verticalGradient(
-                            colors = listOf(
-                                Color(0xEE041C11),
-                                Color(0xF602120A),
-                                Color(0xFB010A06)
+                // Multi-layer Islamic emerald gradient scrim for rich contrast & readability
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(
+                            Brush.verticalGradient(
+                                colors = listOf(
+                                    Color(0xEE041C11),
+                                    Color(0xF602120A),
+                                    Color(0xFB010A06)
+                                )
                             )
                         )
-                    )
-            )
+                )
+            } else {
+                // Light Mode Clean, Bright, Luminous Canvas aligned with MaterialTheme
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(
+                            Brush.verticalGradient(
+                                colors = listOf(
+                                    MaterialTheme.colorScheme.surface,
+                                    MaterialTheme.colorScheme.background,
+                                    MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f)
+                                )
+                            )
+                        )
+                )
+            }
 
             // Main Content Layout
             Column(
@@ -159,8 +177,8 @@ fun AllFeaturesDialog(
                     ) {
                         Surface(
                             shape = CircleShape,
-                            color = Color(0x40FFFFFF),
-                            border = BorderStroke(1.dp, IslamicGold.copy(alpha = 0.6f)),
+                            color = if (isDark) Color(0x40FFFFFF) else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.8f),
+                            border = BorderStroke(1.dp, if (isDark) IslamicGold.copy(alpha = 0.6f) else IslamicGold.copy(alpha = 0.45f)),
                             modifier = Modifier.size(38.dp)
                         ) {
                             IconButton(
@@ -170,7 +188,7 @@ fun AllFeaturesDialog(
                                 Icon(
                                     imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                                     contentDescription = "বন্ধ করুন",
-                                    tint = Color.White,
+                                    tint = if (isDark) Color.White else MaterialTheme.colorScheme.onSurface,
                                     modifier = Modifier.size(20.dp)
                                 )
                             }
@@ -191,13 +209,13 @@ fun AllFeaturesDialog(
                                     text = "সকল ফিচার ও আমল",
                                     fontSize = 18.sp,
                                     fontWeight = FontWeight.Bold,
-                                    color = Color.White
+                                    color = if (isDark) Color.White else MaterialTheme.colorScheme.onSurface
                                 )
                             }
                             Text(
                                 text = "দা'ওয়াহ টু জান্নাহর ১৭টি প্রিমিয়াম বিভাগ",
                                 fontSize = 11.5.sp,
-                                color = Color(0xFFD1D5DB)
+                                color = if (isDark) Color(0xFFD1D5DB) else MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
                     }
@@ -205,14 +223,14 @@ fun AllFeaturesDialog(
                     // Count Badge
                     Surface(
                         shape = RoundedCornerShape(12.dp),
-                        color = IslamicGold.copy(alpha = 0.2f),
+                        color = IslamicGold.copy(alpha = if (isDark) 0.2f else 0.15f),
                         border = BorderStroke(1.dp, IslamicGold.copy(alpha = 0.65f))
                     ) {
                         Text(
                             text = "${features.size}টি ফিচার",
                             fontSize = 11.sp,
                             fontWeight = FontWeight.Bold,
-                            color = IslamicGold,
+                            color = if (isDark) IslamicGold else Color(0xFF92400E),
                             modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp)
                         )
                     }
@@ -231,7 +249,7 @@ fun AllFeaturesDialog(
                         placeholder = {
                             Text(
                                 text = "ফিচার বা আমল খুঁজুন...",
-                                color = Color.White.copy(alpha = 0.6f),
+                                color = if (isDark) Color.White.copy(alpha = 0.6f) else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
                                 fontSize = 13.sp
                             )
                         },
@@ -239,7 +257,7 @@ fun AllFeaturesDialog(
                             Icon(
                                 imageVector = Icons.Default.Search,
                                 contentDescription = "খুঁজুন",
-                                tint = IslamicGold,
+                                tint = if (isDark) IslamicGold else MaterialTheme.colorScheme.primary,
                                 modifier = Modifier.size(20.dp)
                             )
                         },
@@ -249,7 +267,7 @@ fun AllFeaturesDialog(
                                     Icon(
                                         imageVector = Icons.Default.Clear,
                                         contentDescription = "মুছুন",
-                                        tint = Color.White.copy(alpha = 0.7f),
+                                        tint = if (isDark) Color.White.copy(alpha = 0.7f) else MaterialTheme.colorScheme.onSurfaceVariant,
                                         modifier = Modifier.size(18.dp)
                                     )
                                 }
@@ -258,12 +276,12 @@ fun AllFeaturesDialog(
                         singleLine = true,
                         shape = RoundedCornerShape(16.dp),
                         colors = OutlinedTextFieldDefaults.colors(
-                            focusedContainerColor = Color(0x66062719),
-                            unfocusedContainerColor = Color(0x44062719),
-                            focusedBorderColor = IslamicGold,
-                            unfocusedBorderColor = Color(0x55FFFFFF),
-                            focusedTextColor = Color.White,
-                            unfocusedTextColor = Color.White
+                            focusedContainerColor = if (isDark) Color(0x66062719) else MaterialTheme.colorScheme.surface,
+                            unfocusedContainerColor = if (isDark) Color(0x44062719) else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f),
+                            focusedBorderColor = if (isDark) IslamicGold else MaterialTheme.colorScheme.primary,
+                            unfocusedBorderColor = if (isDark) Color(0x55FFFFFF) else MaterialTheme.colorScheme.outline.copy(alpha = 0.35f),
+                            focusedTextColor = if (isDark) Color.White else MaterialTheme.colorScheme.onSurface,
+                            unfocusedTextColor = if (isDark) Color.White else MaterialTheme.colorScheme.onSurface
                         )
                     )
                 }
@@ -278,10 +296,18 @@ fun AllFeaturesDialog(
                         val isSelected = category == selectedCategory
                         Surface(
                             shape = RoundedCornerShape(20.dp),
-                            color = if (isSelected) IslamicGold else Color(0x33FFFFFF),
+                            color = if (isSelected) {
+                                if (isDark) IslamicGold else MaterialTheme.colorScheme.primary
+                            } else {
+                                if (isDark) Color(0x33FFFFFF) else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f)
+                            },
                             border = BorderStroke(
                                 1.dp,
-                                if (isSelected) IslamicGold else Color(0x44FFFFFF)
+                                if (isSelected) {
+                                    if (isDark) IslamicGold else MaterialTheme.colorScheme.primary
+                                } else {
+                                    if (isDark) Color(0x44FFFFFF) else MaterialTheme.colorScheme.outline.copy(alpha = 0.25f)
+                                }
                             ),
                             modifier = Modifier
                                 .clip(RoundedCornerShape(20.dp))
@@ -291,7 +317,11 @@ fun AllFeaturesDialog(
                                 text = category,
                                 fontSize = 12.sp,
                                 fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                                color = if (isSelected) Color(0xFF0F172A) else Color.White,
+                                color = if (isSelected) {
+                                    if (isDark) Color(0xFF0F172A) else Color.White
+                                } else {
+                                    if (isDark) Color.White else MaterialTheme.colorScheme.onSurfaceVariant
+                                },
                                 modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
                             )
                         }
@@ -309,6 +339,7 @@ fun AllFeaturesDialog(
                     items(filteredFeatures, key = { it.id }) { item ->
                         FeatureDetailCard(
                             item = item,
+                            isDark = isDark,
                             onClick = {
                                 onDismiss()
                                 item.onClickAction()
@@ -333,14 +364,14 @@ fun AllFeaturesDialog(
                                 Spacer(modifier = Modifier.height(12.dp))
                                 Text(
                                     text = "কোনো ফিচার পাওয়া যায়নি",
-                                    color = Color.White.copy(alpha = 0.8f),
+                                    color = if (isDark) Color.White.copy(alpha = 0.8f) else MaterialTheme.colorScheme.onSurface,
                                     fontSize = 15.sp,
                                     fontWeight = FontWeight.Medium
                                 )
                                 Spacer(modifier = Modifier.height(4.dp))
                                 Text(
                                     text = "ভিন্ন নামে বা বানানে অনুসন্ধান করে দেখুন",
-                                    color = Color.White.copy(alpha = 0.5f),
+                                    color = if (isDark) Color.White.copy(alpha = 0.5f) else MaterialTheme.colorScheme.onSurfaceVariant,
                                     fontSize = 12.sp
                                 )
                             }
@@ -358,13 +389,17 @@ fun AllFeaturesDialog(
 @Composable
 private fun FeatureDetailCard(
     item: HomeFeatureItem,
+    isDark: Boolean,
     onClick: () -> Unit
 ) {
     Surface(
         shape = RoundedCornerShape(18.dp),
-        color = Color(0xD907291B),
-        border = BorderStroke(1.1.dp, IslamicGold.copy(alpha = 0.45f)),
-        shadowElevation = 3.dp,
+        color = if (isDark) Color(0xD907291B) else MaterialTheme.colorScheme.surface,
+        border = BorderStroke(
+            1.1.dp,
+            if (isDark) IslamicGold.copy(alpha = 0.45f) else IslamicGold.copy(alpha = 0.35f)
+        ),
+        shadowElevation = if (isDark) 3.dp else 2.dp,
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(18.dp))
@@ -380,8 +415,8 @@ private fun FeatureDetailCard(
             Box(contentAlignment = Alignment.BottomEnd) {
                 Surface(
                     shape = RoundedCornerShape(16.dp),
-                    color = Color.Transparent,
-                    border = BorderStroke(1.2.dp, item.iconColor.copy(alpha = 0.6f)),
+                    color = if (isDark) Color.Transparent else item.iconColor.copy(alpha = 0.1f),
+                    border = BorderStroke(1.2.dp, item.iconColor.copy(alpha = if (isDark) 0.6f else 0.4f)),
                     modifier = Modifier.size(52.dp)
                 ) {
                     Box(
@@ -390,8 +425,8 @@ private fun FeatureDetailCard(
                             .background(
                                 Brush.radialGradient(
                                     colors = listOf(
-                                        item.iconColor.copy(alpha = 0.35f),
-                                        item.iconColor.copy(alpha = 0.12f)
+                                        item.iconColor.copy(alpha = if (isDark) 0.35f else 0.25f),
+                                        item.iconColor.copy(alpha = if (isDark) 0.12f else 0.04f)
                                     )
                                 )
                             ),
@@ -409,7 +444,7 @@ private fun FeatureDetailCard(
                 // Number Badge
                 Surface(
                     shape = RoundedCornerShape(6.dp),
-                    color = Color(0xFF0F172A),
+                    color = if (isDark) Color(0xFF0F172A) else Color(0xFFF1F5F9),
                     border = BorderStroke(0.8.dp, IslamicGold.copy(alpha = 0.7f)),
                     modifier = Modifier.padding(end = 2.dp, bottom = 2.dp)
                 ) {
@@ -417,7 +452,7 @@ private fun FeatureDetailCard(
                         text = item.serialNumberBn,
                         fontSize = 9.5.sp,
                         fontWeight = FontWeight.Bold,
-                        color = IslamicGold,
+                        color = if (isDark) IslamicGold else Color(0xFF92400E),
                         modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp)
                     )
                 }
@@ -436,7 +471,7 @@ private fun FeatureDetailCard(
                         text = item.titleBn,
                         fontSize = 15.sp,
                         fontWeight = FontWeight.Bold,
-                        color = Color.White,
+                        color = if (isDark) Color.White else MaterialTheme.colorScheme.onSurface,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                         modifier = Modifier.weight(1f, fill = false)
@@ -446,8 +481,8 @@ private fun FeatureDetailCard(
 
                     Surface(
                         shape = RoundedCornerShape(6.dp),
-                        color = item.iconColor.copy(alpha = 0.2f),
-                        border = BorderStroke(0.7.dp, item.iconColor.copy(alpha = 0.45f))
+                        color = item.iconColor.copy(alpha = if (isDark) 0.2f else 0.12f),
+                        border = BorderStroke(0.7.dp, item.iconColor.copy(alpha = if (isDark) 0.45f else 0.35f))
                     ) {
                         Text(
                             text = item.categoryBn,
@@ -464,7 +499,7 @@ private fun FeatureDetailCard(
                 Text(
                     text = item.subtitleBn,
                     fontSize = 11.5.sp,
-                    color = Color(0xFFD1D5DB),
+                    color = if (isDark) Color(0xFFD1D5DB) else MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
                     lineHeight = 16.sp
@@ -476,15 +511,15 @@ private fun FeatureDetailCard(
             // Trailing Action Arrow
             Surface(
                 shape = CircleShape,
-                color = IslamicGold.copy(alpha = 0.15f),
-                border = BorderStroke(1.dp, IslamicGold.copy(alpha = 0.4f)),
+                color = if (isDark) IslamicGold.copy(alpha = 0.15f) else MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
+                border = BorderStroke(1.dp, if (isDark) IslamicGold.copy(alpha = 0.4f) else MaterialTheme.colorScheme.primary.copy(alpha = 0.25f)),
                 modifier = Modifier.size(32.dp)
             ) {
                 Box(contentAlignment = Alignment.Center) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowForwardIos,
                         contentDescription = "প্রবেশ করুন",
-                        tint = IslamicGold,
+                        tint = if (isDark) IslamicGold else MaterialTheme.colorScheme.primary,
                         modifier = Modifier.size(13.dp)
                     )
                 }

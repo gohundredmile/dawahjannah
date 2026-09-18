@@ -61,9 +61,11 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
 import java.util.Locale
@@ -409,7 +411,85 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), DuaVaultData.duas)
 
-    // 24H ROUTINE
+    // 24H ROUTINE & DAILY SCORECARD
+    private val routinePrefs = application.getSharedPreferences("routine_checklist_prefs", Context.MODE_PRIVATE)
+
+    private val _completedRoutineIds = MutableStateFlow<Set<String>>(emptySet())
+    val completedRoutineIds: StateFlow<Set<String>> = _completedRoutineIds.asStateFlow()
+
+    val scorecardTotalCount: Int = RoutineData.scorecardItems.size // 15 criteria
+
+    val scorecardCompletedCount: StateFlow<Int> = _completedRoutineIds.map { set ->
+        RoutineData.scorecardItems.count { it.id in set }
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0)
+
+    private val _scorecardStreak = MutableStateFlow(0)
+    val scorecardStreak: StateFlow<Int> = _scorecardStreak.asStateFlow()
+
+    fun loadScorecardData() {
+        val todayDateStr = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
+        val saved = routinePrefs.getStringSet("completed_ids_$todayDateStr", emptySet()) ?: emptySet()
+        _completedRoutineIds.value = saved
+        _scorecardStreak.value = calculateScorecardStreakFromPrefs(todayDateStr)
+    }
+
+    private fun calculateScorecardStreakFromPrefs(todayStr: String): Int {
+        val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+        var streak = 0
+
+        val todaySet = routinePrefs.getStringSet("completed_ids_$todayStr", emptySet()) ?: emptySet()
+        val todayCount = RoutineData.scorecardItems.count { it.id in todaySet }
+        if (todayCount > 0) {
+            streak++
+        }
+
+        val cal = Calendar.getInstance()
+        cal.add(Calendar.DAY_OF_YEAR, -1)
+        for (i in 0 until 365) {
+            val dateStr = sdf.format(cal.time)
+            val daySet = routinePrefs.getStringSet("completed_ids_$dateStr", emptySet()) ?: emptySet()
+            val dayCount = RoutineData.scorecardItems.count { it.id in daySet }
+            if (dayCount > 0) {
+                streak++
+                cal.add(Calendar.DAY_OF_YEAR, -1)
+            } else {
+                break
+            }
+        }
+        return streak
+    }
+
+    fun toggleRoutineItem(id: String, isCompleted: Boolean) {
+        val todayDateStr = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
+        val current = _completedRoutineIds.value.toMutableSet()
+        if (isCompleted) {
+            current.add(id)
+        } else {
+            current.remove(id)
+        }
+        _completedRoutineIds.value = current
+        routinePrefs.edit().putStringSet("completed_ids_$todayDateStr", current).apply()
+        _scorecardStreak.value = calculateScorecardStreakFromPrefs(todayDateStr)
+    }
+
+    fun toggleAllRoutineItems(ids: List<String>, isCompleted: Boolean) {
+        val todayDateStr = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
+        val current = _completedRoutineIds.value.toMutableSet()
+        if (isCompleted) {
+            current.addAll(ids)
+        } else {
+            current.removeAll(ids)
+        }
+        _completedRoutineIds.value = current
+        routinePrefs.edit().putStringSet("completed_ids_$todayDateStr", current).apply()
+        _scorecardStreak.value = calculateScorecardStreakFromPrefs(todayDateStr)
+    }
+
+    fun openScorecard() {
+        _routineTimeSlotFilter.value = "scorecard"
+        _currentTab.value = AppTab.ROUTINE
+    }
+
     private val _routineTimeSlotFilter = MutableStateFlow("all")
     val routineTimeSlotFilter = _routineTimeSlotFilter.asStateFlow()
 
@@ -1173,6 +1253,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private var lastRecordedDayOfYear: Int = Calendar.getInstance().get(Calendar.DAY_OF_YEAR)
 
     init {
+        loadScorecardData()
+
         // Load persisted or bundled in-app content updates into the app state
         val initialUpdates = gitHubUpdateManager.getPersistedDownloadedUpdates()
         if (initialUpdates != null) {
@@ -1212,6 +1294,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 val currentDayOfYear = Calendar.getInstance().apply { time = now }.get(Calendar.DAY_OF_YEAR)
                 if (currentDayOfYear != lastRecordedDayOfYear) {
                     lastRecordedDayOfYear = currentDayOfYear
+                    loadScorecardData()
                     // Forcefully/automatically rotate to new day's Ayat, Hadith, Quote & Inspiration
                     _wisdomState.value = wisdomApiService.getTodayWisdom()
                     viewModelScope.launch {

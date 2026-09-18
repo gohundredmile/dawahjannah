@@ -141,33 +141,6 @@ fun IslamicHeaderCover(
                         color = Color.White
                     )
                 }
-
-                // Settings Button (Replaces Fonts and Location Pin)
-                Surface(
-                    onClick = onOpenSettings,
-                    color = Color.White.copy(alpha = 0.2f),
-                    shape = RoundedCornerShape(14.dp),
-                    modifier = Modifier.testTag("header_settings_button")
-                ) {
-                    Row(
-                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Settings,
-                            contentDescription = "Settings",
-                            tint = Color.White,
-                            modifier = Modifier.size(15.dp)
-                        )
-                        Spacer(modifier = Modifier.width(5.dp))
-                        Text(
-                            text = "সেটিংস",
-                            style = MaterialTheme.typography.labelMedium.copy(fontSize = 12.sp),
-                            fontWeight = FontWeight.Bold,
-                            color = Color.White
-                        )
-                    }
-                }
             }
 
             Spacer(modifier = Modifier.height(8.dp))

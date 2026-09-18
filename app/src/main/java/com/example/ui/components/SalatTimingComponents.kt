@@ -11,6 +11,7 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -169,15 +170,16 @@ fun SalatTimingsSection(
         Spacer(modifier = Modifier.height(10.dp))
 
         // GPS Tracker & Place Configuration Control Bar
-        Card(
+        val isDark = isSystemInDarkTheme()
+        PureGlassCard(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp),
             shape = RoundedCornerShape(18.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-            ),
-            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.15f))
+            accentBorderColor = if (salatConfig.isGpsEnabled) Color(0xFF0284C7) else IslamicGold,
+            borderWidth = 1.2.dp,
+            elevation = 2.dp,
+            isDark = isDark
         ) {
             Column(
                 modifier = Modifier
@@ -194,7 +196,8 @@ fun SalatTimingsSection(
                         modifier = Modifier.weight(1f)
                     ) {
                         Surface(
-                            color = if (salatConfig.isGpsEnabled) Color(0xFF0284C7).copy(alpha = 0.15f) else MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
+                            color = if (salatConfig.isGpsEnabled) Color(0xFF0284C7).copy(alpha = if (isDark) 0.25f else 0.16f) else MaterialTheme.colorScheme.primary.copy(alpha = if (isDark) 0.25f else 0.14f),
+                            border = BorderStroke(1.dp, (if (salatConfig.isGpsEnabled) Color(0xFF0284C7) else MaterialTheme.colorScheme.primary).copy(alpha = 0.45f)),
                             shape = CircleShape,
                             modifier = Modifier.size(34.dp)
                         ) {
@@ -216,8 +219,8 @@ fun SalatTimingsSection(
                                     text = salatConfig.placeNameBn,
                                     style = MaterialTheme.typography.titleSmall,
                                     fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.onSurface,
-                                    fontSize = 14.sp
+                                    color = if (isDark) Color(0xFFF8FAFC) else Color(0xFF0F172A),
+                                    fontSize = 14.5.sp
                                 )
                                 if (salatConfig.isGpsEnabled) {
                                     Spacer(modifier = Modifier.width(4.dp))
@@ -239,8 +242,9 @@ fun SalatTimingsSection(
                             Text(
                                 text = "${String.format(Locale.US, "%.2f°N, %.2f°E", salatConfig.latitude, salatConfig.longitude)} • ${if (salatConfig.isHanafiAsr) "হানাফী আসর" else "শাফেয়ী আসর"}${if (salatConfig.manualOffsetMinutes != 0) " (${if (salatConfig.manualOffsetMinutes > 0) "+" else ""}${salatConfig.manualOffsetMinutes} মি.)" else ""}",
                                 style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                fontSize = 11.sp
+                                fontWeight = FontWeight.Medium,
+                                color = if (isDark) Color(0xFFCBD5E1) else Color(0xFF475569),
+                                fontSize = 11.5.sp
                             )
                         }
                     }
@@ -474,28 +478,51 @@ fun SalatTimingVerticalCard(
         else -> MaterialTheme.colorScheme.primary
     }
 
-    Card(
+    val isDark = isSystemInDarkTheme()
+    val glassBorderBrush = if (isHighlighted) {
+        Brush.verticalGradient(
+            listOf(
+                Color.White.copy(alpha = 0.65f),
+                Color.White.copy(alpha = 0.25f),
+                Color(0xFFFEF08A).copy(alpha = 0.45f)
+            )
+        )
+    } else {
+        GlassEffects.glassBorderBrush(isDark = isDark, accentColor = tagColor)
+    }
+
+    val cardBgModifier = if (isHighlighted) {
+        Modifier.background(activeBrush)
+    } else {
+        Modifier.background(GlassEffects.glassBackgroundBrush(isDark = isDark, tint = tagColor))
+    }
+
+    Surface(
         modifier = modifier
             .fillMaxWidth()
+            .clip(RoundedCornerShape(15.dp))
             .shadow(
-                elevation = if (isHighlighted) 3.dp else 1.dp,
-                shape = RoundedCornerShape(14.dp),
-                ambientColor = if (isHighlighted) Color(0xFFEA580C) else Color.Black.copy(alpha = 0.05f)
+                elevation = if (isHighlighted) 3.5.dp else 1.5.dp,
+                shape = RoundedCornerShape(15.dp),
+                ambientColor = if (isHighlighted) Color(0xFFEA580C).copy(alpha = 0.4f) else Color.Black.copy(alpha = 0.08f)
             )
+            .border(BorderStroke(1.2.dp, glassBorderBrush), RoundedCornerShape(15.dp))
             .clickable(onClick = onClick),
-        shape = RoundedCornerShape(14.dp),
-        colors = CardDefaults.cardColors(containerColor = if (isHighlighted) Color.Transparent else nonActiveBg),
-        border = if (isHighlighted) null else BorderStroke(1.1.dp, nonActiveBorder)
+        shape = RoundedCornerShape(15.dp),
+        color = Color.Transparent
     ) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .then(
-                    if (isHighlighted) Modifier.background(activeBrush)
-                    else Modifier.background(nonActiveBg)
-                )
-                .padding(horizontal = 14.dp, vertical = 9.dp)
+                .then(cardBgModifier)
+                .padding(horizontal = 14.dp, vertical = 9.5.dp)
         ) {
+            GlassTopHighlight(
+                modifier = Modifier.align(Alignment.TopCenter),
+                isDark = if (isHighlighted) false else isDark,
+                opacity = if (isHighlighted) 0.85f else 0.75f
+            )
+
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -508,7 +535,7 @@ fun SalatTimingVerticalCard(
                 ) {
                     Box(
                         modifier = Modifier
-                            .size(7.5.dp)
+                            .size(8.dp)
                             .clip(CircleShape)
                             .background(if (isHighlighted) Color(0xFFFEF08A) else tagColor)
                     )
@@ -517,13 +544,14 @@ fun SalatTimingVerticalCard(
                         text = prayer.nameBn,
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
-                        color = if (isHighlighted) Color.White else Color(0xFF0F172A),
+                        color = if (isHighlighted) Color.White else (if (isDark) Color(0xFFF8FAFC) else Color(0xFF0F172A)),
                         fontSize = 16.sp
                     )
                     Spacer(modifier = Modifier.width(6.dp))
                     if (isHighlighted) {
                         Surface(
                             color = Color.White.copy(alpha = 0.25f),
+                            border = BorderStroke(0.8.dp, Color.White.copy(alpha = 0.5f)),
                             shape = RoundedCornerShape(6.dp)
                         ) {
                             Text(
@@ -536,7 +564,8 @@ fun SalatTimingVerticalCard(
                         }
                     } else {
                         Surface(
-                            color = tagColor.copy(alpha = 0.1f),
+                            color = tagColor.copy(alpha = if (isDark) 0.22f else 0.12f),
+                            border = BorderStroke(0.8.dp, tagColor.copy(alpha = if (isDark) 0.5f else 0.35f)),
                             shape = RoundedCornerShape(6.dp)
                         ) {
                             Text(
@@ -544,7 +573,7 @@ fun SalatTimingVerticalCard(
                                 modifier = Modifier.padding(horizontal = 5.dp, vertical = 1.5.dp),
                                 style = MaterialTheme.typography.labelSmall,
                                 fontWeight = FontWeight.Bold,
-                                color = tagColor,
+                                color = if (isDark) tagColor.copy(alpha = 0.95f) else tagColor,
                                 fontSize = 9.5.sp,
                                 letterSpacing = 0.5.sp
                             )
@@ -560,22 +589,22 @@ fun SalatTimingVerticalCard(
                         text = "শুরু",
                         style = MaterialTheme.typography.labelSmall,
                         fontSize = 11.5.sp,
-                        fontWeight = FontWeight.Medium,
-                        color = if (isHighlighted) Color.White.copy(alpha = 0.85f) else Color(0xFF64748B)
+                        fontWeight = FontWeight.SemiBold,
+                        color = if (isHighlighted) Color.White.copy(alpha = 0.9f) else (if (isDark) Color(0xFFCBD5E1) else Color(0xFF475569))
                     )
                     Spacer(modifier = Modifier.width(5.dp))
                     Text(
                         text = prayer.startTimeFormatted.ifEmpty { prayer.timeFormatted },
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
-                        fontSize = 15.sp,
-                        color = if (isHighlighted) Color(0xFFFEF08A) else Color(0xFF0F172A)
+                        fontSize = 15.5.sp,
+                        color = if (isHighlighted) Color(0xFFFEF08A) else (if (isDark) Color(0xFFF8FAFC) else Color(0xFF0F172A))
                     )
                     Spacer(modifier = Modifier.width(5.dp))
                     Icon(
                         imageVector = Icons.Default.ChevronRight,
                         contentDescription = "বিস্তারিত",
-                        tint = if (isHighlighted) Color.White.copy(alpha = 0.85f) else Color(0xFF94A3B8),
+                        tint = if (isHighlighted) Color.White.copy(alpha = 0.9f) else (if (isDark) Color(0xFF94A3B8) else Color(0xFF64748B)),
                         modifier = Modifier.size(16.dp)
                     )
                 }
@@ -593,25 +622,45 @@ fun ForbiddenTimeVerticalCard(
     val crimsonGradient = Brush.horizontalGradient(
         listOf(
             Color(0xFFE11D48),
-            Color(0xFFB91C1C),
+            Color(0xFFBE123C),
             Color(0xFF881337)
         )
     )
 
-    Card(
+    Surface(
         modifier = modifier
             .fillMaxWidth()
-            .shadow(2.dp, RoundedCornerShape(14.dp), ambientColor = Color(0xFFDC2626))
+            .clip(RoundedCornerShape(15.dp))
+            .shadow(2.5.dp, RoundedCornerShape(15.dp), ambientColor = Color(0xFFDC2626).copy(alpha = 0.4f))
+            .border(
+                BorderStroke(
+                    1.2.dp,
+                    Brush.verticalGradient(
+                        listOf(
+                            Color.White.copy(alpha = 0.55f),
+                            Color.White.copy(alpha = 0.20f),
+                            Color(0xFFFDA4AF).copy(alpha = 0.35f)
+                        )
+                    )
+                ),
+                RoundedCornerShape(15.dp)
+            )
             .clickable(onClick = onClick),
-        shape = RoundedCornerShape(14.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.Transparent)
+        shape = RoundedCornerShape(15.dp),
+        color = Color.Transparent
     ) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .background(crimsonGradient)
-                .padding(horizontal = 14.dp, vertical = 9.dp)
+                .padding(horizontal = 14.dp, vertical = 9.5.dp)
         ) {
+            GlassTopHighlight(
+                modifier = Modifier.align(Alignment.TopCenter),
+                isDark = false,
+                opacity = 0.75f
+            )
+
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -624,7 +673,7 @@ fun ForbiddenTimeVerticalCard(
                 ) {
                     Box(
                         modifier = Modifier
-                            .size(7.5.dp)
+                            .size(8.dp)
                             .clip(CircleShape)
                             .background(Color(0xFFFEF08A))
                     )
@@ -637,7 +686,8 @@ fun ForbiddenTimeVerticalCard(
                     )
                     Spacer(modifier = Modifier.width(6.dp))
                     Surface(
-                        color = Color.White.copy(alpha = 0.2f),
+                        color = Color.White.copy(alpha = 0.22f),
+                        border = BorderStroke(0.8.dp, Color.White.copy(alpha = 0.45f)),
                         shape = RoundedCornerShape(6.dp)
                     ) {
                         Text(
@@ -655,14 +705,14 @@ fun ForbiddenTimeVerticalCard(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Surface(
-                        color = Color(0xFF450A0A).copy(alpha = 0.7f),
+                        color = Color(0xFF450A0A).copy(alpha = 0.75f),
                         shape = RoundedCornerShape(8.dp),
-                        border = BorderStroke(0.8.dp, Color(0xFFF87171).copy(alpha = 0.4f))
+                        border = BorderStroke(0.8.dp, Color(0xFFFCA5A5).copy(alpha = 0.3f))
                     ) {
                         Text(
-                            text = "⚠ নিষিদ্ধ সময়সূচী",
-                            color = Color(0xFFFCA5A5),
+                            text = "নিষিদ্ধ সময়সূচী",
                             fontSize = 10.5.sp,
+                            color = Color(0xFFFECDD3),
                             fontWeight = FontWeight.Bold,
                             modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
                         )
@@ -671,7 +721,7 @@ fun ForbiddenTimeVerticalCard(
                     Icon(
                         imageVector = Icons.Default.ChevronRight,
                         contentDescription = "বিস্তারিত",
-                        tint = Color.White.copy(alpha = 0.85f),
+                        tint = Color.White,
                         modifier = Modifier.size(16.dp)
                     )
                 }

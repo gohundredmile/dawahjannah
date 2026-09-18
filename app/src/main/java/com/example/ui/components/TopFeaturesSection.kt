@@ -71,28 +71,20 @@ fun TopFeaturesSection(
 ) {
     val isDark = isSystemInDarkTheme()
 
-    Card(
+    PureGlassCard(
         modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = 12.dp, vertical = 6.dp),
         shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = if (isDark) {
-                MaterialTheme.colorScheme.surface.copy(alpha = 0.92f)
-            } else {
-                MaterialTheme.colorScheme.surface
-            }
-        ),
-        border = BorderStroke(
-            1.2.dp,
-            if (isDark) IslamicGold.copy(alpha = 0.35f) else IslamicGold.copy(alpha = 0.45f)
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = if (isDark) 1.dp else 2.dp)
+        accentBorderColor = IslamicGold,
+        borderWidth = 1.2.dp,
+        elevation = 2.5.dp,
+        isDark = isDark
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 14.dp, vertical = 12.dp)
+                .padding(horizontal = 14.dp, vertical = 13.dp)
         ) {
             // Section Header
             Row(
@@ -106,14 +98,14 @@ fun TopFeaturesSection(
                         shape = CircleShape,
                         color = IslamicGold.copy(alpha = if (isDark) 0.22f else 0.16f),
                         border = BorderStroke(1.dp, IslamicGold.copy(alpha = 0.55f)),
-                        modifier = Modifier.size(30.dp)
+                        modifier = Modifier.size(32.dp)
                     ) {
                         Box(contentAlignment = Alignment.Center) {
                             Icon(
                                 imageVector = Icons.Default.Stars,
                                 contentDescription = null,
                                 tint = IslamicGold,
-                                modifier = Modifier.size(17.dp)
+                                modifier = Modifier.size(18.dp)
                             )
                         }
                     }
@@ -124,28 +116,29 @@ fun TopFeaturesSection(
                                 text = "টপ ফিচার",
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onSurface,
+                                color = if (isDark) Color(0xFFF8FAFC) else Color(0xFF0F172A),
                                 fontSize = 16.sp
                             )
                             Spacer(modifier = Modifier.width(6.dp))
                             Surface(
                                 shape = RoundedCornerShape(8.dp),
-                                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
-                                border = BorderStroke(0.8.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.35f))
+                                color = if (isDark) Color(0xFF0284C7).copy(alpha = 0.18f) else MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
+                                border = BorderStroke(0.8.dp, if (isDark) Color(0xFF38BDF8).copy(alpha = 0.4f) else MaterialTheme.colorScheme.primary.copy(alpha = 0.35f))
                             ) {
                                 Text(
                                     text = "৮টি সেবা",
                                     fontSize = 10.sp,
-                                    fontWeight = FontWeight.SemiBold,
-                                    color = MaterialTheme.colorScheme.primary,
+                                    fontWeight = FontWeight.Bold,
+                                    color = if (isDark) Color(0xFF38BDF8) else MaterialTheme.colorScheme.primary,
                                     modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
                                 )
                             }
                         }
                         Text(
                             text = "দৈনন্দিন জরুরি ইবাদত ও সময়সূচী",
-                            fontSize = 11.sp,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            fontSize = 11.5.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = if (isDark) Color(0xFFCBD5E1) else Color(0xFF475569)
                         )
                     }
                 }
@@ -236,13 +229,13 @@ private fun FeatureIconCell(
             .padding(horizontal = 2.dp, vertical = 4.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // Icon Badge Container
+        // Icon Badge Container with Frosted Glass Look
         Surface(
             shape = RoundedCornerShape(16.dp),
             color = Color.Transparent,
             border = BorderStroke(
-                1.1.dp,
-                item.iconColor.copy(alpha = if (isDark) 0.5f else 0.4f)
+                1.2.dp,
+                item.iconColor.copy(alpha = if (isDark) 0.55f else 0.45f)
             ),
             modifier = Modifier.size(48.dp)
         ) {
@@ -251,8 +244,8 @@ private fun FeatureIconCell(
                     .background(
                         Brush.radialGradient(
                             colors = listOf(
-                                item.iconColor.copy(alpha = if (isDark) 0.28f else 0.18f),
-                                item.iconColor.copy(alpha = if (isDark) 0.12f else 0.06f)
+                                item.iconColor.copy(alpha = if (isDark) 0.32f else 0.22f),
+                                item.iconColor.copy(alpha = if (isDark) 0.16f else 0.08f)
                             )
                         )
                     ),
@@ -269,12 +262,12 @@ private fun FeatureIconCell(
 
         Spacer(modifier = Modifier.height(6.dp))
 
-        // Title Label
+        // Title Label with High-Contrast Visibility
         Text(
             text = item.shortTitleBn,
             fontSize = 11.5.sp,
-            fontWeight = FontWeight.SemiBold,
-            color = MaterialTheme.colorScheme.onSurface,
+            fontWeight = FontWeight.Bold,
+            color = if (isDark) Color(0xFFF8FAFC) else Color(0xFF0F172A),
             textAlign = TextAlign.Center,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,

@@ -9,6 +9,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -239,6 +240,11 @@ fun SalatTimingFlipCard(
         )
     }
 
+    val isDark = isSystemInDarkTheme()
+    val headerLabelColor = if (isDark) Color(0xFFCBD5E1) else Color(0xFF475569)
+    val primaryTextColor = if (isDark) Color(0xFFF8FAFC) else Color(0xFF0F172A)
+    val subLabelColor = if (isDark) Color(0xFF94A3B8) else Color(0xFF64748B)
+
     Row(
         modifier = modifier
             .fillMaxWidth()
@@ -263,7 +269,7 @@ fun SalatTimingFlipCard(
                 style = MaterialTheme.typography.labelSmall.copy(fontSize = 11.sp),
                 fontFamily = banglaFont,
                 fontWeight = FontWeight.SemiBold,
-                color = Color(0xFF374151),
+                color = headerLabelColor,
                 textAlign = TextAlign.Center
             )
 
@@ -274,7 +280,7 @@ fun SalatTimingFlipCard(
                 style = MaterialTheme.typography.headlineMedium.copy(fontSize = 22.sp),
                 fontFamily = banglaFont,
                 fontWeight = FontWeight.Black,
-                color = Color(0xFF0F172A),
+                color = primaryTextColor,
                 textAlign = TextAlign.Center,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
@@ -298,7 +304,7 @@ fun SalatTimingFlipCard(
                 style = MaterialTheme.typography.labelSmall.copy(fontSize = 11.sp),
                 fontFamily = banglaFont,
                 fontWeight = FontWeight.SemiBold,
-                color = Color(0xFF374151),
+                color = headerLabelColor,
                 textAlign = TextAlign.Center
             )
 
@@ -455,7 +461,7 @@ fun SalatTimingFlipCard(
                 style = MaterialTheme.typography.labelSmall.copy(fontSize = 11.sp),
                 fontFamily = banglaFont,
                 fontWeight = FontWeight.SemiBold,
-                color = if (remainingHours > 0 && !showHoursMode) Color(0xFFB45309) else Color(0xFF374151),
+                color = if (remainingHours > 0 && !showHoursMode) (if (isDark) Color(0xFFFBBF24) else Color(0xFFB45309)) else headerLabelColor,
                 textAlign = TextAlign.Center,
                 maxLines = 1
             )
@@ -514,7 +520,7 @@ fun SalatTimingFlipCard(
                 style = TextStyle(
                     fontSize = 9.sp,
                     fontWeight = FontWeight.Medium,
-                    color = Color(0xFF64748B),
+                    color = subLabelColor,
                     fontFamily = banglaFont,
                     textAlign = TextAlign.Center
                 ),

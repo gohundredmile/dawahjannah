@@ -6,6 +6,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -155,17 +156,18 @@ fun SehriIftarSummaryCard(
     onOpenFullScreen: () -> Unit = onOpenDetailedSchedule,
     modifier: Modifier = Modifier
 ) {
-    Card(
+    val isDark = isSystemInDarkTheme()
+
+    PureGlassCard(
         modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = 8.dp, vertical = 5.dp)
             .testTag("sehri_iftar_summary_card"),
-        shape = RoundedCornerShape(18.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+        shape = RoundedCornerShape(20.dp),
+        accentBorderColor = Color(0xFF10B981),
+        borderWidth = 1.2.dp,
+        elevation = 2.5.dp,
+        isDark = isDark
     ) {
         Column(
             modifier = Modifier
@@ -183,7 +185,8 @@ fun SehriIftarSummaryCard(
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Surface(
                         shape = CircleShape,
-                        color = Color(0xFF10B981).copy(alpha = 0.14f),
+                        color = Color(0xFF10B981).copy(alpha = if (isDark) 0.22f else 0.16f),
+                        border = BorderStroke(1.dp, Color(0xFF10B981).copy(alpha = 0.5f)),
                         modifier = Modifier.size(34.dp)
                     ) {
                         Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
@@ -201,37 +204,39 @@ fun SehriIftarSummaryCard(
                             text = "সেহরি এবং ইফতারের সময়সূচী",
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
-                            fontSize = 15.sp,
-                            color = MaterialTheme.colorScheme.onSurface
+                            fontSize = 15.5.sp,
+                            color = if (isDark) Color(0xFFF8FAFC) else Color(0xFF0F172A)
                         )
                         Text(
                             text = "Sehri & Ifter • ${salatConfig.placeNameBn}",
                             style = MaterialTheme.typography.bodySmall,
-                            fontSize = 11.sp,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            fontWeight = FontWeight.Medium,
+                            fontSize = 11.5.sp,
+                            color = if (isDark) Color(0xFFCBD5E1) else Color(0xFF475569)
                         )
                     }
                 }
 
                 Surface(
                     shape = CircleShape,
-                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.08f),
-                    modifier = Modifier.size(30.dp)
+                    color = if (isDark) Color(0xFF10B981).copy(alpha = 0.18f) else Color(0xFF10B981).copy(alpha = 0.12f),
+                    border = BorderStroke(0.8.dp, Color(0xFF10B981).copy(alpha = 0.4f)),
+                    modifier = Modifier.size(32.dp)
                 ) {
                     Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
                         Icon(
                             imageVector = Icons.Default.Fullscreen,
                             contentDescription = "Full Screen",
-                            tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(17.dp)
+                            tint = if (isDark) Color(0xFF34D399) else Color(0xFF059669),
+                            modifier = Modifier.size(18.dp)
                         )
                     }
                 }
             }
 
-            Spacer(modifier = Modifier.height(11.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
-            // Timing Blocks: Sehri & Iftar Side-by-Side (Compact)
+            // Timing Blocks: Sehri & Iftar Side-by-Side (Frosted Glass sub-cards)
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -241,9 +246,9 @@ fun SehriIftarSummaryCard(
                     modifier = Modifier
                         .weight(1f)
                         .clickable { onOpenDetailedSchedule() },
-                    shape = RoundedCornerShape(12.dp),
-                    color = Color(0xFF0F766E).copy(alpha = 0.08f),
-                    border = BorderStroke(1.dp, Color(0xFF0F766E).copy(alpha = 0.2f))
+                    shape = RoundedCornerShape(14.dp),
+                    color = Color(0xFF0F766E).copy(alpha = if (isDark) 0.22f else 0.10f),
+                    border = BorderStroke(1.2.dp, Color(0xFF0F766E).copy(alpha = if (isDark) 0.45f else 0.28f))
                 ) {
                     Row(
                         modifier = Modifier
@@ -253,14 +258,15 @@ fun SehriIftarSummaryCard(
                     ) {
                         Surface(
                             shape = CircleShape,
-                            color = Color(0xFF0F766E).copy(alpha = 0.15f),
+                            color = Color(0xFF0F766E).copy(alpha = if (isDark) 0.30f else 0.18f),
+                            border = BorderStroke(0.8.dp, Color(0xFF0F766E).copy(alpha = 0.5f)),
                             modifier = Modifier.size(30.dp)
                         ) {
                             Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
                                 Icon(
                                     imageVector = Icons.Default.Restaurant,
                                     contentDescription = null,
-                                    tint = Color(0xFF0F766E),
+                                    tint = if (isDark) Color(0xFF2DD4BF) else Color(0xFF0F766E),
                                     modifier = Modifier.size(16.dp)
                                 )
                             }
@@ -271,20 +277,22 @@ fun SehriIftarSummaryCard(
                                 text = "আজকের সেহরি",
                                 style = MaterialTheme.typography.labelSmall,
                                 fontSize = 10.5.sp,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                fontWeight = FontWeight.SemiBold,
+                                color = if (isDark) Color(0xFFCBD5E1) else Color(0xFF334155)
                             )
                             Text(
                                 text = prayerStatus.nextSehriFormatted,
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold,
-                                fontSize = 17.sp,
-                                color = Color(0xFF0F766E)
+                                fontSize = 17.5.sp,
+                                color = if (isDark) Color(0xFF2DD4BF) else Color(0xFF0F766E)
                             )
                             Text(
                                 text = "শেষ সময়",
                                 style = MaterialTheme.typography.labelSmall,
                                 fontSize = 9.5.sp,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
+                                fontWeight = FontWeight.Medium,
+                                color = if (isDark) Color(0xFF94A3B8) else Color(0xFF64748B)
                             )
                         }
                     }
@@ -295,9 +303,9 @@ fun SehriIftarSummaryCard(
                     modifier = Modifier
                         .weight(1f)
                         .clickable { onOpenDetailedSchedule() },
-                    shape = RoundedCornerShape(12.dp),
-                    color = Color(0xFFD97706).copy(alpha = 0.08f),
-                    border = BorderStroke(1.dp, Color(0xFFD97706).copy(alpha = 0.2f))
+                    shape = RoundedCornerShape(14.dp),
+                    color = Color(0xFFD97706).copy(alpha = if (isDark) 0.22f else 0.10f),
+                    border = BorderStroke(1.2.dp, Color(0xFFD97706).copy(alpha = if (isDark) 0.45f else 0.28f))
                 ) {
                     Row(
                         modifier = Modifier
@@ -307,14 +315,15 @@ fun SehriIftarSummaryCard(
                     ) {
                         Surface(
                             shape = CircleShape,
-                            color = Color(0xFFD97706).copy(alpha = 0.15f),
+                            color = Color(0xFFD97706).copy(alpha = if (isDark) 0.30f else 0.18f),
+                            border = BorderStroke(0.8.dp, Color(0xFFD97706).copy(alpha = 0.5f)),
                             modifier = Modifier.size(30.dp)
                         ) {
                             Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
                                 Icon(
                                     imageVector = Icons.Default.SoupKitchen,
                                     contentDescription = null,
-                                    tint = Color(0xFFD97706),
+                                    tint = if (isDark) Color(0xFFFBBF24) else Color(0xFFD97706),
                                     modifier = Modifier.size(16.dp)
                                 )
                             }
@@ -325,27 +334,29 @@ fun SehriIftarSummaryCard(
                                 text = "আজকের ইফতার",
                                 style = MaterialTheme.typography.labelSmall,
                                 fontSize = 10.5.sp,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                fontWeight = FontWeight.SemiBold,
+                                color = if (isDark) Color(0xFFCBD5E1) else Color(0xFF334155)
                             )
                             Text(
                                 text = prayerStatus.nextIftarFormatted,
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold,
-                                fontSize = 17.sp,
-                                color = Color(0xFFD97706)
+                                fontSize = 17.5.sp,
+                                color = if (isDark) Color(0xFFFBBF24) else Color(0xFFD97706)
                             )
                             Text(
                                 text = "সূর্যাস্ত শুরু",
                                 style = MaterialTheme.typography.labelSmall,
                                 fontSize = 9.5.sp,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
+                                fontWeight = FontWeight.Medium,
+                                color = if (isDark) Color(0xFF94A3B8) else Color(0xFF64748B)
                             )
                         }
                     }
                 }
             }
 
-            Spacer(modifier = Modifier.height(10.dp))
+            Spacer(modifier = Modifier.height(11.dp))
 
             // Two Tiny Size Action Buttons
             Row(
@@ -359,9 +370,9 @@ fun SehriIftarSummaryCard(
                         .weight(1.3f)
                         .clickable { onOpenDetailedSchedule() }
                         .testTag("btn_detailed_sehri_iftar"),
-                    shape = RoundedCornerShape(10.dp),
-                    color = Color(0xFF047857).copy(alpha = 0.09f),
-                    border = BorderStroke(1.dp, Color(0xFF047857).copy(alpha = 0.35f))
+                    shape = RoundedCornerShape(11.dp),
+                    color = if (isDark) Color(0xFF047857).copy(alpha = 0.22f) else Color(0xFF047857).copy(alpha = 0.10f),
+                    border = BorderStroke(1.dp, if (isDark) Color(0xFF34D399).copy(alpha = 0.45f) else Color(0xFF047857).copy(alpha = 0.35f))
                 ) {
                     Row(
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 7.dp),
@@ -371,7 +382,7 @@ fun SehriIftarSummaryCard(
                         Icon(
                             imageVector = Icons.Default.CalendarMonth,
                             contentDescription = null,
-                            tint = Color(0xFF047857),
+                            tint = if (isDark) Color(0xFF34D399) else Color(0xFF047857),
                             modifier = Modifier.size(14.dp)
                         )
                         Spacer(modifier = Modifier.width(4.dp))
@@ -379,7 +390,7 @@ fun SehriIftarSummaryCard(
                             text = "সেহেরি ও ইফতারের বিস্তারিত সময়সূচী",
                             fontSize = 10.5.sp,
                             fontWeight = FontWeight.Bold,
-                            color = Color(0xFF065F46),
+                            color = if (isDark) Color(0xFF6EE7B7) else Color(0xFF065F46),
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
                         )
@@ -392,9 +403,9 @@ fun SehriIftarSummaryCard(
                         .weight(1f)
                         .clickable { onOpenRamadanSchedule() }
                         .testTag("btn_ramadan_schedule"),
-                    shape = RoundedCornerShape(10.dp),
-                    color = Color(0xFFD97706).copy(alpha = 0.09f),
-                    border = BorderStroke(1.dp, Color(0xFFD97706).copy(alpha = 0.35f))
+                    shape = RoundedCornerShape(11.dp),
+                    color = if (isDark) Color(0xFFD97706).copy(alpha = 0.22f) else Color(0xFFD97706).copy(alpha = 0.10f),
+                    border = BorderStroke(1.dp, if (isDark) Color(0xFFFBBF24).copy(alpha = 0.45f) else Color(0xFFD97706).copy(alpha = 0.35f))
                 ) {
                     Row(
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 7.dp),
@@ -404,7 +415,7 @@ fun SehriIftarSummaryCard(
                         Icon(
                             imageVector = Icons.Default.DarkMode,
                             contentDescription = null,
-                            tint = Color(0xFFD97706),
+                            tint = if (isDark) Color(0xFFFBBF24) else Color(0xFFD97706),
                             modifier = Modifier.size(14.dp)
                         )
                         Spacer(modifier = Modifier.width(4.dp))
@@ -412,7 +423,7 @@ fun SehriIftarSummaryCard(
                             text = "রামাদান সময়সূচী",
                             fontSize = 10.5.sp,
                             fontWeight = FontWeight.Bold,
-                            color = Color(0xFF92400E),
+                            color = if (isDark) Color(0xFFFCD34D) else Color(0xFF92400E),
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
                         )

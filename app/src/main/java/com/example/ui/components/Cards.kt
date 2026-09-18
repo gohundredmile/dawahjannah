@@ -129,142 +129,160 @@ fun HeaderTimeDateCard(
     val seconds = secFormat.format(currentTime)
     val amPm = amPmFormat.format(currentTime)
 
-    val liteEyeSoothingBg = Color(0xFFFFFDF7)
-    val soothingBorder = Color(0xFFF1E6D3)
+    val isDark = isSystemInDarkTheme()
+    val bgBrush = GlassEffects.glassBackgroundBrush(isDark = isDark, tint = Color(0xFFF0FDF4))
+    val borderBrush = GlassEffects.glassBorderBrush(isDark = isDark, accentColor = Color(0xFF10B981))
 
     Surface(
         modifier = modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(16.dp))
+            .clip(RoundedCornerShape(18.dp))
             .clickable(onClick = onClick)
+            .shadow(
+                elevation = 2.5.dp,
+                shape = RoundedCornerShape(18.dp),
+                ambientColor = if (isDark) Color.Black.copy(alpha = 0.5f) else Color(0xFF0F172A).copy(alpha = 0.08f)
+            )
+            .border(BorderStroke(1.2.dp, borderBrush), RoundedCornerShape(18.dp))
             .testTag("header_time_date_card"),
-        shape = RoundedCornerShape(16.dp),
-        color = liteEyeSoothingBg,
-        border = BorderStroke(1.dp, soothingBorder),
-        shadowElevation = 2.dp
+        shape = RoundedCornerShape(18.dp),
+        color = Color.Transparent
     ) {
-        Column(
+        Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 10.dp, vertical = 7.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+                .background(bgBrush)
         ) {
-            // Digital Clock
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Center
+            GlassTopHighlight(
+                modifier = Modifier.align(Alignment.TopCenter),
+                isDark = isDark,
+                opacity = 0.9f
+            )
+
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 10.dp, vertical = 7.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Text(
-                    text = hours,
-                    fontSize = 46.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    fontFamily = LocalAppFontFamily.current,
-                    color = Color(0xFF111827),
-                    letterSpacing = (-1).sp
-                )
-
-                // Colon Separator
-                Column(
-                    modifier = Modifier.padding(horizontal = 6.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Surface(
-                        modifier = Modifier.size(6.dp),
-                        shape = CircleShape,
-                        color = Color(0xFF9CA3AF)
-                    ) {}
-                    Surface(
-                        modifier = Modifier.size(6.dp),
-                        shape = CircleShape,
-                        color = Color(0xFF9CA3AF)
-                    ) {}
-                }
-
-                Text(
-                    text = minutes,
-                    fontSize = 46.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    fontFamily = LocalAppFontFamily.current,
-                    color = Color(0xFF111827),
-                    letterSpacing = (-1).sp
-                )
-
-                // Colon Separator
-                Column(
-                    modifier = Modifier.padding(horizontal = 6.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Surface(
-                        modifier = Modifier.size(6.dp),
-                        shape = CircleShape,
-                        color = Color(0xFF9CA3AF)
-                    ) {}
-                    Surface(
-                        modifier = Modifier.size(6.dp),
-                        shape = CircleShape,
-                        color = Color(0xFF9CA3AF)
-                    ) {}
-                }
-
-                // Seconds and AM/PM Stack
-                Column(
-                    modifier = Modifier.padding(start = 2.dp),
-                    horizontalAlignment = Alignment.Start,
-                    verticalArrangement = Arrangement.Center
+                // Digital Clock
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center
                 ) {
                     Text(
-                        text = seconds,
-                        fontSize = 19.sp,
+                        text = hours,
+                        fontSize = 46.sp,
                         fontWeight = FontWeight.Bold,
-                        color = Color(0xFF4B5563)
+                        fontFamily = LocalAppFontFamily.current,
+                        color = if (isDark) Color(0xFFF8FAFC) else Color(0xFF0F172A),
+                        letterSpacing = (-1).sp
                     )
-                    Spacer(modifier = Modifier.height(2.dp))
-                    Surface(
-                        color = Color(0xFFDCFCE7),
-                        shape = RoundedCornerShape(5.dp)
+
+                    // Colon Separator
+                    Column(
+                        modifier = Modifier.padding(horizontal = 6.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Surface(
+                            modifier = Modifier.size(6.dp),
+                            shape = CircleShape,
+                            color = if (isDark) Color(0xFF64748B) else Color(0xFF64748B)
+                        ) {}
+                        Surface(
+                            modifier = Modifier.size(6.dp),
+                            shape = CircleShape,
+                            color = if (isDark) Color(0xFF64748B) else Color(0xFF64748B)
+                        ) {}
+                    }
+
+                    Text(
+                        text = minutes,
+                        fontSize = 46.sp,
+                        fontWeight = FontWeight.Bold,
+                        fontFamily = LocalAppFontFamily.current,
+                        color = if (isDark) Color(0xFFF8FAFC) else Color(0xFF0F172A),
+                        letterSpacing = (-1).sp
+                    )
+
+                    // Colon Separator
+                    Column(
+                        modifier = Modifier.padding(horizontal = 6.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Surface(
+                            modifier = Modifier.size(6.dp),
+                            shape = CircleShape,
+                            color = if (isDark) Color(0xFF64748B) else Color(0xFF64748B)
+                        ) {}
+                        Surface(
+                            modifier = Modifier.size(6.dp),
+                            shape = CircleShape,
+                            color = if (isDark) Color(0xFF64748B) else Color(0xFF64748B)
+                        ) {}
+                    }
+
+                    // Seconds and AM/PM Stack
+                    Column(
+                        modifier = Modifier.padding(start = 2.dp),
+                        horizontalAlignment = Alignment.Start,
+                        verticalArrangement = Arrangement.Center
                     ) {
                         Text(
-                            text = amPm,
-                            fontSize = 10.sp,
-                            fontWeight = FontWeight.Black,
-                            color = Color(0xFF15803D),
-                            modifier = Modifier.padding(horizontal = 5.dp, vertical = 1.dp)
+                            text = seconds,
+                            fontSize = 19.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = if (isDark) Color(0xFF94A3B8) else Color(0xFF334155)
                         )
+                        Spacer(modifier = Modifier.height(2.dp))
+                        Surface(
+                            color = if (isDark) Color(0xFF064E3B) else Color(0xFFDCFCE7),
+                            border = BorderStroke(0.8.dp, if (isDark) Color(0xFF059669) else Color(0xFF86EFAC)),
+                            shape = RoundedCornerShape(5.dp)
+                        ) {
+                            Text(
+                                text = amPm,
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.Black,
+                                color = if (isDark) Color(0xFF34D399) else Color(0xFF15803D),
+                                modifier = Modifier.padding(horizontal = 5.dp, vertical = 1.dp)
+                            )
+                        }
                     }
                 }
-            }
 
-            Spacer(modifier = Modifier.height(2.dp))
+                Spacer(modifier = Modifier.height(2.dp))
 
-            // Primary Gregorian & Bangla Day Date (English calendar date in Bangla)
-            Text(
-                text = "$dynamicGregorianDateBn, ${calendarInfo.englishDay}",
-                fontSize = 15.sp,
-                fontWeight = FontWeight.Bold,
-                fontFamily = LocalBanglaFontFamily.current,
-                color = Color(0xFF111827),
-                letterSpacing = (-0.2).sp,
-                textAlign = TextAlign.Center
-            )
+                // Primary Gregorian & Bangla Day Date (English calendar date in Bangla)
+                Text(
+                    text = "$dynamicGregorianDateBn, ${calendarInfo.englishDay}",
+                    fontSize = 15.sp,
+                    fontWeight = FontWeight.Bold,
+                    fontFamily = LocalBanglaFontFamily.current,
+                    color = if (isDark) Color(0xFFF8FAFC) else Color(0xFF0F172A),
+                    letterSpacing = (-0.2).sp,
+                    textAlign = TextAlign.Center
+                )
 
-            // Rest of the two calendars' current date in one line in Bangla (Bengali San & Hijri Islamic San)
-            val cleanBengaliDate = remember(calendarInfo.bengaliDateFormatted) {
-                calendarInfo.bengaliDateFormatted.substringBefore("(").trim()
+                // Rest of the two calendars' current date in one line in Bangla (Bengali San & Hijri Islamic San)
+                val cleanBengaliDate = remember(calendarInfo.bengaliDateFormatted) {
+                    calendarInfo.bengaliDateFormatted.substringBefore("(").trim()
+                }
+                val cleanHijriDate = remember(calendarInfo.hijriDateFormatted) {
+                    calendarInfo.hijriDateFormatted.trim()
+                }
+                Text(
+                    text = "$cleanBengaliDate  •  $cleanHijriDate",
+                    fontSize = 12.5.sp,
+                    fontWeight = FontWeight.Bold,
+                    fontFamily = LocalBanglaFontFamily.current,
+                    color = if (isDark) Color(0xFF34D399) else Color(0xFF065F46),
+                    modifier = Modifier.padding(top = 2.dp),
+                    textAlign = TextAlign.Center
+                )
             }
-            val cleanHijriDate = remember(calendarInfo.hijriDateFormatted) {
-                calendarInfo.hijriDateFormatted.trim()
-            }
-            Text(
-                text = "$cleanBengaliDate  •  $cleanHijriDate",
-                fontSize = 12.5.sp,
-                fontWeight = FontWeight.SemiBold,
-                fontFamily = LocalBanglaFontFamily.current,
-                color = Color(0xFF15803D),
-                modifier = Modifier.padding(top = 2.dp),
-                textAlign = TextAlign.Center
-            )
         }
     }
 }
@@ -285,28 +303,33 @@ fun IslamicHeaderCover(
     onOpenSettings: () -> Unit = {},
     onClickCard: () -> Unit = {}
 ) {
+    val isDark = isSystemInDarkTheme()
     Card(
         modifier = Modifier
             .fillMaxWidth(),
         shape = RoundedCornerShape(bottomStart = 24.dp, bottomEnd = 24.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.primary
+        elevation = CardDefaults.cardElevation(defaultElevation = 3.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.Transparent),
+        border = BorderStroke(
+            1.2.dp,
+            Brush.verticalGradient(
+                listOf(
+                    Color.White.copy(alpha = 0.40f),
+                    Color.White.copy(alpha = 0.15f),
+                    Color(0xFF047857).copy(alpha = 0.35f)
+                )
+            )
         )
     ) {
-        Box(modifier = Modifier.fillMaxWidth()) {
-            // Elegant subtle geometric shading
-            Box(
-                modifier = Modifier
-                    .matchParentSize()
-                    .background(
-                        Brush.verticalGradient(
-                            listOf(
-                                MaterialTheme.colorScheme.primary,
-                                MaterialTheme.colorScheme.primary.copy(alpha = 0.92f)
-                            )
-                        )
-                    )
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(GlassEffects.emeraldHeaderGlassBrush())
+        ) {
+            GlassTopHighlight(
+                modifier = Modifier.align(Alignment.TopCenter),
+                isDark = false,
+                opacity = 0.75f
             )
 
             Column(
@@ -343,12 +366,15 @@ fun IslamicHeaderCover(
                     Spacer(modifier = Modifier.height(8.dp))
                 }
 
-                // Revamped 3-Part Salat Timing Card (Matching User Specimen)
-                Surface(
-                    color = IslamicIvory,
+                // Revamped 3-Part Salat Timing Card (Pure Glass Container)
+                PureGlassCard(
+                    modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(16.dp),
-                    shadowElevation = 2.dp,
-                    modifier = Modifier.fillMaxWidth()
+                    tint = if (isDark) Color(0xFF1E293B) else Color(0xFFFFFDF5),
+                    accentBorderColor = IslamicGold,
+                    borderWidth = 1.2.dp,
+                    elevation = 2.dp,
+                    isDark = isDark
                 ) {
                     SalatTimingFlipCard(
                         nextPrayerName = nextPrayerName,
@@ -411,8 +437,10 @@ private fun CalendarGridItem(
     Card(
         modifier = modifier,
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
+        colors = CardDefaults.cardColors(
+            containerColor = if (isSystemInDarkTheme()) Color(0xFF1E293B).copy(alpha = 0.85f) else Color.White.copy(alpha = 0.88f)
+        ),
+        border = BorderStroke(1.dp, if (isSystemInDarkTheme()) Color.White.copy(alpha = 0.15f) else Color(0xFFE2E8F0))
     ) {
         Column(
             modifier = Modifier
@@ -450,28 +478,34 @@ fun QuickActionCard(
     onClick: () -> Unit
 ) {
     val isDark = isSystemInDarkTheme()
-    Card(
-        modifier = modifier.clickable { onClick() },
-        shape = RoundedCornerShape(14.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = if (isDark) Color(0xFF1E293B) else Color.White
-        ),
-        border = BorderStroke(1.dp, iconTint.copy(alpha = if (isDark) 0.35f else 0.22f)),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.5.dp)
+    val bgBrush = GlassEffects.glassBackgroundBrush(isDark = isDark, tint = iconTint)
+    val borderBrush = GlassEffects.glassBorderBrush(isDark = isDark, accentColor = iconTint)
+
+    Surface(
+        modifier = modifier
+            .clip(RoundedCornerShape(16.dp))
+            .clickable { onClick() }
+            .shadow(
+                elevation = 2.dp,
+                shape = RoundedCornerShape(16.dp),
+                ambientColor = if (isDark) Color.Black.copy(alpha = 0.4f) else iconTint.copy(alpha = 0.12f)
+            )
+            .border(BorderStroke(1.2.dp, borderBrush), RoundedCornerShape(16.dp)),
+        shape = RoundedCornerShape(16.dp),
+        color = Color.Transparent
     ) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(
-                    Brush.verticalGradient(
-                        listOf(
-                            iconTint.copy(alpha = if (isDark) 0.16f else 0.08f),
-                            if (isDark) Color(0xFF161F2C) else Color(0xFFFCFCFD)
-                        )
-                    )
-                )
-                .padding(horizontal = 4.dp, vertical = 7.dp)
+                .background(bgBrush)
+                .padding(horizontal = 4.dp, vertical = 8.dp)
         ) {
+            GlassTopHighlight(
+                modifier = Modifier.align(Alignment.TopCenter),
+                isDark = isDark,
+                opacity = 0.85f
+            )
+
             Column(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalAlignment = Alignment.CenterHorizontally,
@@ -480,20 +514,20 @@ fun QuickActionCard(
                 // Compact eye-catchy squircle icon badge
                 Box(
                     modifier = Modifier
-                        .size(28.dp)
+                        .size(30.dp)
                         .background(
                             Brush.radialGradient(
                                 listOf(
-                                    iconTint.copy(alpha = 0.25f),
-                                    iconTint.copy(alpha = 0.12f)
+                                    iconTint.copy(alpha = if (isDark) 0.32f else 0.22f),
+                                    iconTint.copy(alpha = if (isDark) 0.16f else 0.10f)
                                 )
                             ),
-                            shape = RoundedCornerShape(8.dp)
+                            shape = RoundedCornerShape(9.dp)
                         )
                         .border(
-                            width = 0.8.dp,
-                            color = iconTint.copy(alpha = 0.35f),
-                            shape = RoundedCornerShape(8.dp)
+                            width = 1.dp,
+                            color = iconTint.copy(alpha = if (isDark) 0.50f else 0.35f),
+                            shape = RoundedCornerShape(9.dp)
                         ),
                     contentAlignment = Alignment.Center
                 ) {
@@ -501,11 +535,11 @@ fun QuickActionCard(
                         imageVector = icon,
                         contentDescription = null,
                         tint = iconTint,
-                        modifier = Modifier.size(16.dp)
+                        modifier = Modifier.size(17.dp)
                     )
                 }
 
-                Spacer(modifier = Modifier.height(4.dp))
+                Spacer(modifier = Modifier.height(5.dp))
 
                 Text(
                     text = value,
@@ -515,21 +549,21 @@ fun QuickActionCard(
                         letterSpacing = (-0.1).sp
                     ),
                     fontFamily = LocalBanglaFontFamily.current,
-                    color = if (isDark) Color.White else Color(0xFF1E293B),
+                    color = if (isDark) Color(0xFFF8FAFC) else Color(0xFF0F172A),
                     maxLines = 1,
                     textAlign = TextAlign.Center
                 )
 
-                Spacer(modifier = Modifier.height(1.dp))
+                Spacer(modifier = Modifier.height(2.dp))
 
                 Text(
                     text = title,
                     style = MaterialTheme.typography.labelSmall.copy(
                         fontSize = 10.sp,
-                        fontWeight = FontWeight.Medium
+                        fontWeight = FontWeight.SemiBold
                     ),
                     fontFamily = LocalBanglaFontFamily.current,
-                    color = if (isDark) Color(0xFF94A3B8) else Color(0xFF64748B),
+                    color = if (isDark) Color(0xFFCBD5E1) else Color(0xFF334155),
                     maxLines = 1,
                     textAlign = TextAlign.Center
                 )

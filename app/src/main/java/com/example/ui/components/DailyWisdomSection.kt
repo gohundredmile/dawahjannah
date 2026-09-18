@@ -19,6 +19,7 @@ import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -127,8 +128,10 @@ fun DailyWisdomSection(
             .padding(horizontal = 16.dp, vertical = 4.dp)
             .testTag("daily_wisdom_section")
     ) {
+        val isDark = isSystemInDarkTheme()
+
         // -------------------------------------------------------------
-        // COMPACT HEADER ROW: "Daily Light & Inspiration" + "Suffle Wisdom"
+        // COMPACT HEADER ROW: "Daily Light & Inspiration" + "Shuffle Wisdom"
         // -------------------------------------------------------------
         Row(
             modifier = Modifier
@@ -153,35 +156,43 @@ fun DailyWisdomSection(
                     text = "Daily Light & Inspiration",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface,
+                    color = if (isDark) Color(0xFFF8FAFC) else Color(0xFF0F172A),
                     letterSpacing = (-0.2).sp
                 )
             }
 
-            // Right Action: Only text button 'Suffle Wisdom'
-            TextButton(
+            // Right Action: Pure glass pill button 'Shuffle Wisdom'
+            Surface(
+                shape = RoundedCornerShape(12.dp),
+                color = if (isDark) Color(0xFF1E293B).copy(alpha = 0.5f) else Color(0xFFFFFFFF).copy(alpha = 0.65f),
+                border = BorderStroke(1.dp, if (isDark) Color(0xFF475569).copy(alpha = 0.45f) else Color(0xFFCBD5E1).copy(alpha = 0.7f)),
                 onClick = {
                     rotationAngle += 360f
                     onShuffle()
                 },
-                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp),
                 modifier = Modifier.testTag("shuffle_wisdom_button")
             ) {
-                Icon(
-                    imageVector = Icons.Default.Refresh,
-                    contentDescription = "Suffle Wisdom",
-                    tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier
-                        .size(15.dp)
-                        .rotate(animatedRotation)
-                )
-                Spacer(modifier = Modifier.width(4.dp))
-                Text(
-                    text = "Shuffle Wisdom",
-                    style = MaterialTheme.typography.labelMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.primary
-                )
+                Row(
+                    modifier = Modifier.padding(horizontal = 9.dp, vertical = 4.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Refresh,
+                        contentDescription = "Shuffle Wisdom",
+                        tint = if (isDark) Color(0xFF38BDF8) else MaterialTheme.colorScheme.primary,
+                        modifier = Modifier
+                            .size(14.dp)
+                            .rotate(animatedRotation)
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        text = "Shuffle Wisdom",
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = if (isDark) Color(0xFF38BDF8) else MaterialTheme.colorScheme.primary,
+                        fontSize = 11.5.sp
+                    )
+                }
             }
         }
 
@@ -331,13 +342,14 @@ private fun HolyQuranWisdomCard(
     quran: QuranWisdomItem,
     onCopy: () -> Unit
 ) {
-    Card(
+    val isDark = isSystemInDarkTheme()
+
+    PureGlassCard(
         shape = RoundedCornerShape(22.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
-        ),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.14f)),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
+        accentBorderColor = Color(0xFF10B981),
+        borderWidth = 1.2.dp,
+        elevation = 2.dp,
+        isDark = isDark,
         modifier = Modifier
             .fillMaxWidth()
             .testTag("holy_quran_wisdom_card")
@@ -357,8 +369,8 @@ private fun HolyQuranWisdomCard(
                     // Badge: Holy Al-Quran
                     Surface(
                         shape = RoundedCornerShape(10.dp),
-                        color = Color(0xFFECFDF5),
-                        border = BorderStroke(1.dp, Color(0xFFA7F3D0))
+                        color = Color(0xFF10B981).copy(alpha = if (isDark) 0.22f else 0.12f),
+                        border = BorderStroke(1.dp, Color(0xFF10B981).copy(alpha = if (isDark) 0.5f else 0.35f))
                     ) {
                         Row(
                             modifier = Modifier.padding(horizontal = 9.dp, vertical = 5.dp),
@@ -367,7 +379,7 @@ private fun HolyQuranWisdomCard(
                             Icon(
                                 imageVector = Icons.Default.MenuBook,
                                 contentDescription = null,
-                                tint = Color(0xFF059669),
+                                tint = if (isDark) Color(0xFF34D399) else Color(0xFF059669),
                                 modifier = Modifier.size(15.dp)
                             )
                             Spacer(modifier = Modifier.width(5.dp))
@@ -375,7 +387,7 @@ private fun HolyQuranWisdomCard(
                                 text = "Holy Al-Quran",
                                 fontSize = 12.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = Color(0xFF059669)
+                                color = if (isDark) Color(0xFF34D399) else Color(0xFF059669)
                             )
                         }
                     }
@@ -384,14 +396,14 @@ private fun HolyQuranWisdomCard(
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Surface(
                             shape = RoundedCornerShape(8.dp),
-                            color = Color(0xFFECFDF5),
-                            border = BorderStroke(1.dp, Color(0xFFA7F3D0))
+                            color = Color(0xFF10B981).copy(alpha = if (isDark) 0.22f else 0.12f),
+                            border = BorderStroke(1.dp, Color(0xFF10B981).copy(alpha = if (isDark) 0.5f else 0.35f))
                         ) {
                             Text(
                                 text = "Live API",
                                 fontSize = 10.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = Color(0xFF059669),
+                                color = if (isDark) Color(0xFF34D399) else Color(0xFF059669),
                                 modifier = Modifier.padding(horizontal = 7.dp, vertical = 3.dp)
                             )
                         }
@@ -403,7 +415,7 @@ private fun HolyQuranWisdomCard(
                             Icon(
                                 imageVector = Icons.Default.ContentCopy,
                                 contentDescription = "Copy Quran Verse",
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                                tint = if (isDark) Color(0xFFCBD5E1) else MaterialTheme.colorScheme.onSurfaceVariant,
                                 modifier = Modifier.size(17.dp)
                             )
                         }
@@ -415,8 +427,8 @@ private fun HolyQuranWisdomCard(
                 // Arabic Verse Inner Display Box
                 Surface(
                     shape = RoundedCornerShape(16.dp),
-                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f),
-                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.08f)),
+                    color = if (isDark) Color(0xFF065F46).copy(alpha = 0.24f) else Color(0xFF10B981).copy(alpha = 0.08f),
+                    border = BorderStroke(1.dp, if (isDark) Color(0xFF34D399).copy(alpha = 0.35f) else Color(0xFF10B981).copy(alpha = 0.25f)),
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Text(
@@ -425,7 +437,7 @@ private fun HolyQuranWisdomCard(
                         fontWeight = FontWeight.Medium,
                         lineHeight = 36.sp,
                         textAlign = TextAlign.Center,
-                        color = MaterialTheme.colorScheme.onSurface,
+                        color = if (isDark) Color(0xFFF8FAFC) else Color(0xFF0F172A),
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(horizontal = 16.dp, vertical = 14.dp)
@@ -453,7 +465,7 @@ private fun HolyQuranWisdomCard(
                         fontSize = 14.5.sp,
                         fontWeight = FontWeight.Normal,
                         lineHeight = 22.sp,
-                        color = MaterialTheme.colorScheme.onSurface
+                        color = if (isDark) Color(0xFFF1F5F9) else Color(0xFF1E293B)
                     )
                 }
 
@@ -465,7 +477,7 @@ private fun HolyQuranWisdomCard(
                     fontSize = 13.sp,
                     fontStyle = FontStyle.Italic,
                     lineHeight = 19.sp,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = if (isDark) Color(0xFFCBD5E1) else Color(0xFF475569)
                 )
 
                 Spacer(modifier = Modifier.height(14.dp))
@@ -480,13 +492,13 @@ private fun HolyQuranWisdomCard(
                         text = "${quran.surahAyahFormatted}...",
                         fontSize = 12.5.sp,
                         fontWeight = FontWeight.Bold,
-                        color = Color(0xFF065F46)
+                        color = if (isDark) Color(0xFF34D399) else Color(0xFF065F46)
                     )
                     Text(
                         text = quran.ayahFormatted,
                         fontSize = 12.sp,
                         fontWeight = FontWeight.SemiBold,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = if (isDark) Color(0xFFCBD5E1) else Color(0xFF475569)
                     )
                 }
             }
@@ -513,13 +525,14 @@ private fun HadithWisdomCard(
     hadith: HadithWisdomItem,
     onCopy: () -> Unit
 ) {
-    Card(
+    val isDark = isSystemInDarkTheme()
+
+    PureGlassCard(
         shape = RoundedCornerShape(22.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
-        ),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.14f)),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
+        accentBorderColor = Color(0xFF0284C7),
+        borderWidth = 1.2.dp,
+        elevation = 2.dp,
+        isDark = isDark,
         modifier = Modifier
             .fillMaxWidth()
             .testTag("hadith_wisdom_card")
@@ -539,8 +552,8 @@ private fun HadithWisdomCard(
                     // Badge: Hadith Wisdom
                     Surface(
                         shape = RoundedCornerShape(10.dp),
-                        color = Color(0xFFEFF6FF),
-                        border = BorderStroke(1.dp, Color(0xFFBFDBFE))
+                        color = Color(0xFF0284C7).copy(alpha = if (isDark) 0.22f else 0.12f),
+                        border = BorderStroke(1.dp, Color(0xFF0284C7).copy(alpha = if (isDark) 0.5f else 0.35f))
                     ) {
                         Row(
                             modifier = Modifier.padding(horizontal = 9.dp, vertical = 5.dp),
@@ -549,7 +562,7 @@ private fun HadithWisdomCard(
                             Icon(
                                 imageVector = Icons.Default.BookmarkBorder,
                                 contentDescription = null,
-                                tint = Color(0xFF0284C7),
+                                tint = if (isDark) Color(0xFF38BDF8) else Color(0xFF0284C7),
                                 modifier = Modifier.size(15.dp)
                             )
                             Spacer(modifier = Modifier.width(5.dp))
@@ -557,7 +570,7 @@ private fun HadithWisdomCard(
                                 text = "Hadith Wisdom",
                                 fontSize = 12.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = Color(0xFF0284C7)
+                                color = if (isDark) Color(0xFF38BDF8) else Color(0xFF0284C7)
                             )
                         }
                     }
@@ -566,14 +579,14 @@ private fun HadithWisdomCard(
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Surface(
                             shape = RoundedCornerShape(8.dp),
-                            color = Color(0xFFEFF6FF),
-                            border = BorderStroke(1.dp, Color(0xFFBFDBFE))
+                            color = Color(0xFF0284C7).copy(alpha = if (isDark) 0.22f else 0.12f),
+                            border = BorderStroke(1.dp, Color(0xFF0284C7).copy(alpha = if (isDark) 0.5f else 0.35f))
                         ) {
                             Text(
                                 text = "Live API",
                                 fontSize = 10.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = Color(0xFF0284C7),
+                                color = if (isDark) Color(0xFF38BDF8) else Color(0xFF0284C7),
                                 modifier = Modifier.padding(horizontal = 7.dp, vertical = 3.dp)
                             )
                         }
@@ -585,7 +598,7 @@ private fun HadithWisdomCard(
                             Icon(
                                 imageVector = Icons.Default.ContentCopy,
                                 contentDescription = "Copy Hadith",
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                                tint = if (isDark) Color(0xFFCBD5E1) else MaterialTheme.colorScheme.onSurfaceVariant,
                                 modifier = Modifier.size(17.dp)
                             )
                         }
@@ -600,7 +613,7 @@ private fun HadithWisdomCard(
                     fontSize = 14.5.sp,
                     fontWeight = FontWeight.Normal,
                     lineHeight = 23.sp,
-                    color = MaterialTheme.colorScheme.onSurface
+                    color = if (isDark) Color(0xFFF1F5F9) else Color(0xFF1E293B)
                 )
 
                 Spacer(modifier = Modifier.height(10.dp))
@@ -611,7 +624,7 @@ private fun HadithWisdomCard(
                     fontSize = 13.sp,
                     fontStyle = FontStyle.Italic,
                     lineHeight = 19.sp,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = if (isDark) Color(0xFFCBD5E1) else Color(0xFF475569)
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))
@@ -626,12 +639,13 @@ private fun HadithWisdomCard(
                         text = "Source: ${hadith.sourceName}",
                         fontSize = 12.5.sp,
                         fontWeight = FontWeight.Bold,
-                        color = Color(0xFF0369A1)
+                        color = if (isDark) Color(0xFF38BDF8) else Color(0xFF0369A1)
                     )
                     Text(
                         text = "Narrated by: ${hadith.narratorOrNumber}",
                         fontSize = 12.sp,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        fontWeight = FontWeight.SemiBold,
+                        color = if (isDark) Color(0xFFCBD5E1) else Color(0xFF475569)
                     )
                 }
             }
@@ -658,13 +672,14 @@ private fun InspirationalQuoteCard(
     quote: QuoteWisdomItem,
     onCopy: () -> Unit
 ) {
-    Card(
+    val isDark = isSystemInDarkTheme()
+
+    PureGlassCard(
         shape = RoundedCornerShape(22.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
-        ),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.14f)),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
+        accentBorderColor = Color(0xFF8B5CF6),
+        borderWidth = 1.2.dp,
+        elevation = 2.dp,
+        isDark = isDark,
         modifier = Modifier
             .fillMaxWidth()
             .testTag("inspirational_quote_card")
@@ -684,8 +699,8 @@ private fun InspirationalQuoteCard(
                     // Badge: Inspirational Quotes
                     Surface(
                         shape = RoundedCornerShape(10.dp),
-                        color = Color(0xFFF5F3FF),
-                        border = BorderStroke(1.dp, Color(0xFFDDD6FE))
+                        color = Color(0xFF8B5CF6).copy(alpha = if (isDark) 0.22f else 0.12f),
+                        border = BorderStroke(1.dp, Color(0xFF8B5CF6).copy(alpha = if (isDark) 0.5f else 0.35f))
                     ) {
                         Row(
                             modifier = Modifier.padding(horizontal = 9.dp, vertical = 5.dp),
@@ -694,7 +709,7 @@ private fun InspirationalQuoteCard(
                             Icon(
                                 imageVector = Icons.Default.AutoAwesome,
                                 contentDescription = null,
-                                tint = Color(0xFF7C3AED),
+                                tint = if (isDark) Color(0xFFA78BFA) else Color(0xFF7C3AED),
                                 modifier = Modifier.size(15.dp)
                             )
                             Spacer(modifier = Modifier.width(5.dp))
@@ -702,7 +717,7 @@ private fun InspirationalQuoteCard(
                                 text = "Inspirational Quotes",
                                 fontSize = 12.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = Color(0xFF7C3AED)
+                                color = if (isDark) Color(0xFFA78BFA) else Color(0xFF7C3AED)
                             )
                         }
                     }
@@ -711,14 +726,14 @@ private fun InspirationalQuoteCard(
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Surface(
                             shape = RoundedCornerShape(8.dp),
-                            color = Color(0xFFF5F3FF),
-                            border = BorderStroke(1.dp, Color(0xFFDDD6FE))
+                            color = Color(0xFF8B5CF6).copy(alpha = if (isDark) 0.22f else 0.12f),
+                            border = BorderStroke(1.dp, Color(0xFF8B5CF6).copy(alpha = if (isDark) 0.5f else 0.35f))
                         ) {
                             Text(
                                 text = "Live API",
                                 fontSize = 10.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = Color(0xFF7C3AED),
+                                color = if (isDark) Color(0xFFA78BFA) else Color(0xFF7C3AED),
                                 modifier = Modifier.padding(horizontal = 7.dp, vertical = 3.dp)
                             )
                         }
@@ -730,7 +745,7 @@ private fun InspirationalQuoteCard(
                             Icon(
                                 imageVector = Icons.Default.ContentCopy,
                                 contentDescription = "Copy Quote",
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                                tint = if (isDark) Color(0xFFCBD5E1) else MaterialTheme.colorScheme.onSurfaceVariant,
                                 modifier = Modifier.size(17.dp)
                             )
                         }
@@ -744,7 +759,7 @@ private fun InspirationalQuoteCard(
                     text = "“",
                     fontSize = 38.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color(0xFFDDD6FE),
+                    color = if (isDark) Color(0xFF8B5CF6).copy(alpha = 0.6f) else Color(0xFFDDD6FE),
                     lineHeight = 30.sp,
                     modifier = Modifier.padding(start = 2.dp)
                 )
@@ -755,7 +770,7 @@ private fun InspirationalQuoteCard(
                     fontSize = 15.sp,
                     fontWeight = FontWeight.Medium,
                     lineHeight = 23.sp,
-                    color = MaterialTheme.colorScheme.onSurface
+                    color = if (isDark) Color(0xFFF1F5F9) else Color(0xFF1E293B)
                 )
 
                 Spacer(modifier = Modifier.height(10.dp))
@@ -766,7 +781,7 @@ private fun InspirationalQuoteCard(
                     fontSize = 13.sp,
                     fontStyle = FontStyle.Italic,
                     lineHeight = 19.sp,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = if (isDark) Color(0xFFCBD5E1) else Color(0xFF475569)
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))
@@ -781,18 +796,19 @@ private fun InspirationalQuoteCard(
                         text = "— ${quote.author}",
                         fontSize = 13.sp,
                         fontWeight = FontWeight.Bold,
-                        color = Color(0xFF6D28D9)
+                        color = if (isDark) Color(0xFFA78BFA) else Color(0xFF6D28D9)
                     )
 
                     Surface(
                         shape = RoundedCornerShape(6.dp),
-                        color = Color(0xFFF5F3FF)
+                        color = Color(0xFF8B5CF6).copy(alpha = if (isDark) 0.25f else 0.12f),
+                        border = BorderStroke(1.dp, Color(0xFF8B5CF6).copy(alpha = if (isDark) 0.5f else 0.3f))
                     ) {
                         Text(
                             text = quote.tag.uppercase(),
                             fontSize = 10.sp,
                             fontWeight = FontWeight.Bold,
-                            color = Color(0xFF7C3AED),
+                            color = if (isDark) Color(0xFFDDD6FE) else Color(0xFF7C3AED),
                             letterSpacing = 0.8.sp,
                             modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
                         )

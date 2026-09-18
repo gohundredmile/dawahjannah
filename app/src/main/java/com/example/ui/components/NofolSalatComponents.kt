@@ -115,20 +115,16 @@ fun NofolSalatIndependentCard(
 
     val isDark = isSystemInDarkTheme()
 
-    Card(
+    PureGlassCard(
         modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = 12.dp, vertical = 6.dp)
             .clickable { onOpenScheduleWindow() },
         shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = if (isDark) MaterialTheme.colorScheme.surface.copy(alpha = 0.92f) else MaterialTheme.colorScheme.surface
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = if (isDark) 1.dp else 2.dp),
-        border = BorderStroke(
-            1.2.dp,
-            if (isDark) IslamicGold.copy(alpha = 0.35f) else IslamicGold.copy(alpha = 0.45f)
-        )
+        accentBorderColor = Color(0xFF047857),
+        borderWidth = 1.2.dp,
+        elevation = 2.dp,
+        isDark = isDark
     ) {
         Column(
             modifier = Modifier
@@ -147,14 +143,15 @@ fun NofolSalatIndependentCard(
                 ) {
                     Surface(
                         shape = CircleShape,
-                        color = Color(0xFF047857).copy(alpha = 0.14f),
+                        color = Color(0xFF047857).copy(alpha = if (isDark) 0.22f else 0.14f),
+                        border = BorderStroke(1.dp, Color(0xFF047857).copy(alpha = 0.5f)),
                         modifier = Modifier.size(36.dp)
                     ) {
                         Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
                             Icon(
                                 imageVector = Icons.Default.Spa,
                                 contentDescription = null,
-                                tint = Color(0xFF047857),
+                                tint = if (isDark) Color(0xFF34D399) else Color(0xFF047857),
                                 modifier = Modifier.size(20.dp)
                             )
                         }
@@ -166,21 +163,22 @@ fun NofolSalatIndependentCard(
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
                             fontSize = 15.5.sp,
-                            color = MaterialTheme.colorScheme.onSurface
+                            color = if (isDark) Color(0xFFF8FAFC) else Color(0xFF0F172A)
                         )
                         Text(
                             text = "তাহাজ্জুদ, ইশরাক, চাশত, আওয়াবীনসহ ${CalendarHelper.toBanglaNumber(allSalats.size)}টি সালাত",
                             style = MaterialTheme.typography.bodySmall,
+                            fontWeight = FontWeight.Medium,
                             fontSize = 11.5.sp,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            color = if (isDark) Color(0xFFCBD5E1) else Color(0xFF475569)
                         )
                     }
                 }
 
                 Surface(
                     shape = RoundedCornerShape(12.dp),
-                    color = Color(0xFF047857).copy(alpha = 0.10f),
-                    border = BorderStroke(1.dp, Color(0xFF047857).copy(alpha = 0.3f))
+                    color = Color(0xFF047857).copy(alpha = if (isDark) 0.22f else 0.12f),
+                    border = BorderStroke(1.dp, Color(0xFF047857).copy(alpha = if (isDark) 0.5f else 0.35f))
                 ) {
                     Row(
                         modifier = Modifier.padding(horizontal = 9.dp, vertical = 5.dp),
@@ -190,14 +188,14 @@ fun NofolSalatIndependentCard(
                             text = "${CalendarHelper.toBanglaNumber(allSalats.size)}টি সালাত",
                             style = MaterialTheme.typography.labelSmall,
                             fontWeight = FontWeight.Bold,
-                            color = Color(0xFF047857),
+                            color = if (isDark) Color(0xFF6EE7B7) else Color(0xFF047857),
                             fontSize = 11.sp
                         )
                         Spacer(modifier = Modifier.width(3.dp))
                         Icon(
                             imageVector = Icons.Default.ChevronRight,
                             contentDescription = null,
-                            tint = Color(0xFF047857),
+                            tint = if (isDark) Color(0xFF6EE7B7) else Color(0xFF047857),
                             modifier = Modifier.size(14.dp)
                         )
                     }
@@ -211,16 +209,24 @@ fun NofolSalatIndependentCard(
             Surface(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp),
-                color = if (hasActive) Color(0xFF047857).copy(alpha = 0.09f) else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f),
+                color = if (hasActive) {
+                    if (isDark) Color(0xFF047857).copy(alpha = 0.22f) else Color(0xFF047857).copy(alpha = 0.10f)
+                } else {
+                    if (isDark) Color(0xFF334155).copy(alpha = 0.30f) else Color(0xFFF1F5F9).copy(alpha = 0.65f)
+                },
                 border = BorderStroke(
                     1.dp,
-                    if (hasActive) Color(0xFF047857).copy(alpha = 0.35f) else MaterialTheme.colorScheme.outline.copy(alpha = 0.15f)
+                    if (hasActive) {
+                        if (isDark) Color(0xFF34D399).copy(alpha = 0.45f) else Color(0xFF047857).copy(alpha = 0.35f)
+                    } else {
+                        if (isDark) Color(0xFF475569).copy(alpha = 0.45f) else Color(0xFFCBD5E1).copy(alpha = 0.6f)
+                    }
                 )
             ) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 12.dp, vertical = 8.dp),
+                        .padding(horizontal = 12.dp, vertical = 8.5.dp),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
@@ -232,7 +238,7 @@ fun NofolSalatIndependentCard(
                             modifier = Modifier
                                 .size(8.dp)
                                 .clip(CircleShape)
-                                .background(if (hasActive) Color(0xFF047857) else IslamicGold)
+                                .background(if (hasActive) (if (isDark) Color(0xFF34D399) else Color(0xFF047857)) else IslamicGold)
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Column {
@@ -242,13 +248,14 @@ fun NofolSalatIndependentCard(
                                        else "দৈনিক ও বিশেষ নফল সালাতের গাইড",
                                 style = MaterialTheme.typography.bodyMedium,
                                 fontWeight = FontWeight.Bold,
-                                color = if (hasActive) Color(0xFF047857) else MaterialTheme.colorScheme.onSurface,
+                                color = if (hasActive) (if (isDark) Color(0xFF6EE7B7) else Color(0xFF047857)) else (if (isDark) Color(0xFFF8FAFC) else Color(0xFF0F172A)),
                                 fontSize = 12.5.sp
                             )
                             Text(
                                 text = activeNofolItem?.timingSummaryBn ?: "ওয়াক্ত, নিয়ত, রাকাত ও সহীহ দলিল দেখতে ট্যাপ করুন",
                                 style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                fontWeight = FontWeight.Medium,
+                                color = if (isDark) Color(0xFFCBD5E1) else Color(0xFF475569),
                                 fontSize = 11.sp,
                                 maxLines = 1,
                                 overflow = TextOverflow.Ellipsis
@@ -259,7 +266,7 @@ fun NofolSalatIndependentCard(
                     Icon(
                         imageVector = Icons.Default.AutoAwesome,
                         contentDescription = null,
-                        tint = if (hasActive) Color(0xFF047857) else IslamicGold,
+                        tint = if (hasActive) (if (isDark) Color(0xFF34D399) else Color(0xFF047857)) else IslamicGold,
                         modifier = Modifier.size(16.dp)
                     )
                 }
@@ -281,9 +288,9 @@ fun NofolSalatIndependentCard(
                 dailySalats.forEach { (name, time) ->
                     Surface(
                         modifier = Modifier.weight(1f),
-                        shape = RoundedCornerShape(8.dp),
-                        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f),
-                        border = BorderStroke(0.8.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.15f))
+                        shape = RoundedCornerShape(10.dp),
+                        color = if (isDark) Color(0xFF1E293B).copy(alpha = 0.45f) else Color(0xFFFFFFFF).copy(alpha = 0.55f),
+                        border = BorderStroke(1.dp, if (isDark) Color(0xFF475569).copy(alpha = 0.4f) else Color(0xFFE2E8F0).copy(alpha = 0.8f))
                     ) {
                         Column(
                             modifier = Modifier.padding(vertical = 6.dp, horizontal = 4.dp),
@@ -293,7 +300,7 @@ fun NofolSalatIndependentCard(
                                 text = name,
                                 style = MaterialTheme.typography.labelSmall,
                                 fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onSurface,
+                                color = if (isDark) Color(0xFFF8FAFC) else Color(0xFF0F172A),
                                 fontSize = 11.sp,
                                 maxLines = 1,
                                 overflow = TextOverflow.Ellipsis
@@ -301,7 +308,8 @@ fun NofolSalatIndependentCard(
                             Text(
                                 text = time,
                                 style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                fontWeight = FontWeight.Medium,
+                                color = if (isDark) Color(0xFFCBD5E1) else Color(0xFF64748B),
                                 fontSize = 9.5.sp,
                                 maxLines = 1
                             )
@@ -315,20 +323,21 @@ fun NofolSalatIndependentCard(
             // Action Button to open the window
             Surface(
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(10.dp),
-                color = Color(0xFF047857),
+                shape = RoundedCornerShape(11.dp),
+                color = if (isDark) Color(0xFF047857).copy(alpha = 0.28f) else Color(0xFF047857).copy(alpha = 0.12f),
+                border = BorderStroke(1.dp, if (isDark) Color(0xFF34D399).copy(alpha = 0.45f) else Color(0xFF047857).copy(alpha = 0.35f)),
                 onClick = onOpenScheduleWindow
             ) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(vertical = 8.dp),
+                        .padding(vertical = 8.5.dp),
                     horizontalArrangement = Arrangement.Center,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
                         text = "পূর্ণাঙ্গ সময়সূচী ও আমলের নিয়মাবলী দেখুন",
-                        color = Color.White,
+                        color = if (isDark) Color(0xFF6EE7B7) else Color(0xFF047857),
                         fontWeight = FontWeight.Bold,
                         fontSize = 12.5.sp
                     )
@@ -336,7 +345,7 @@ fun NofolSalatIndependentCard(
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowForward,
                         contentDescription = null,
-                        tint = Color.White,
+                        tint = if (isDark) Color(0xFF6EE7B7) else Color(0xFF047857),
                         modifier = Modifier.size(15.dp)
                     )
                 }

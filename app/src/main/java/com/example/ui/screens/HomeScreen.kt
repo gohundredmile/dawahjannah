@@ -67,7 +67,6 @@ import com.example.ui.components.IslamicHeaderCover
 import com.example.ui.components.NofolSalatDetailsDialog
 import com.example.ui.components.NofolSalatIndependentCard
 import com.example.ui.components.NofolSalatScheduleDialog
-import com.example.ui.components.NofolSalatTimingsSection
 import com.example.ui.components.QuickActionCard
 import com.example.ui.components.RamadanMoonScheduleDialog
 import com.example.ui.components.SalatTimingsSection
@@ -94,15 +93,20 @@ fun HomeScreen(
     val gpsStatusMessage by viewModel.gpsStatusMessage.collectAsState()
     // val announcement by viewModel.activeAnnouncement.collectAsState()
 
+    val scorecardCompletedCount by viewModel.scorecardCompletedCount.collectAsState()
+    val scorecardStreak by viewModel.scorecardStreak.collectAsState()
+    val scorecardTotal = viewModel.scorecardTotalCount
+
     var showSehriIftarFullScreen by remember { mutableStateOf(false) }
     var showDetailedSehriIftar by remember { mutableStateOf(false) }
     var showRamadanSchedule by remember { mutableStateOf(false) }
+    var showNofolScheduleDialog by remember { mutableStateOf(false) }
     var selectedNofolSalat by remember { mutableStateOf<NofolSalatItem?>(null) }
     var showAllFeaturesDialog by remember { mutableStateOf(false) }
     var showSalatCalendarDialog by remember { mutableStateOf(false) }
 
     // Full 17 Features list as requested by user
-    val allAppFeatures = remember(prayerStatus, salatConfig) {
+    val allAppFeatures = remember(prayerStatus, salatConfig, scorecardCompletedCount, scorecardStreak) {
         listOf(
             // ১. ট্র্যাকার
             HomeFeatureItem(
@@ -110,12 +114,12 @@ fun HomeScreen(
                 serialNumberBn = "০১",
                 titleBn = "১. ট্র্যাকার",
                 shortTitleBn = "ট্র্যাকার",
-                subtitleBn = "দৈনন্দিন আমল ট্র্যাকার, চেকলিস্ট ও ধারাবাহিক স্ট্রিক",
+                subtitleBn = "আজকের স্কোরকার্ড: ${CalendarHelper.toBanglaNumber(scorecardCompletedCount)}/${CalendarHelper.toBanglaNumber(scorecardTotal)} সম্পন্ন • ${CalendarHelper.toBanglaNumber(scorecardStreak)} দিন স্ট্রিক",
                 categoryBn = "আমল ট্র্যাকার",
                 icon = Icons.Default.CheckCircle,
                 iconColor = Color(0xFF10B981),
                 isTopEight = true,
-                onClickAction = { viewModel.selectTab(AppTab.ROUTINE) }
+                onClickAction = { viewModel.openScorecard() }
             ),
             // ২. ক্যালেন্ডার
             HomeFeatureItem(
@@ -175,15 +179,12 @@ fun HomeScreen(
                 serialNumberBn = "০৬",
                 titleBn = "৬. নফল সালাত",
                 shortTitleBn = "নফল সালাত",
-                subtitleBn = "তাহাজ্জুদ, ইশরাক, চাশত, আওয়াবীনসহ ৮টি নফল সালাতের গাইড",
+                subtitleBn = "তাহাজ্জুদ, ইশরাক, চাশত, আওয়াবীনসহ ৮টি নফল সালাতের পূর্ণাঙ্গ সময়সূচী",
                 categoryBn = "সালাত ও সময়",
                 icon = Icons.Default.SelfImprovement,
                 iconColor = Color(0xFFE11D48),
                 isTopEight = true,
-                onClickAction = {
-                    val salats = NofolSalatRepository.getAllNofolSalats(prayerStatus)
-                    selectedNofolSalat = salats.firstOrNull()
-                }
+                onClickAction = { showNofolScheduleDialog = true }
             ),
             // ৭. মাসনুন দোয়া
             HomeFeatureItem(
@@ -404,22 +405,20 @@ fun HomeScreen(
             ) {
                 QuickActionCard(
                     title = "ধারাবাহিকতা",
-                    value = "${CalendarHelper.toBanglaNumber(streak)} দিন স্ট্রিক",
+                    value = "${CalendarHelper.toBanglaNumber(scorecardStreak)} দিন স্ট্রিক",
                     icon = Icons.Default.LocalFireDepartment,
                     iconTint = Color(0xFFEA580C),
                     modifier = Modifier.weight(1f),
-                    onClick = { viewModel.selectTab(AppTab.ROUTINE) }
+                    onClick = { viewModel.openScorecard() }
                 )
 
-                val completedCount = todayRecord?.completedCount ?: 0
-                val totalHabits = viewModel.habitsList.size
                 QuickActionCard(
                     title = "আজকের আমল",
-                    value = "${CalendarHelper.toBanglaNumber(completedCount)}/${CalendarHelper.toBanglaNumber(totalHabits)} সম্পন্ন",
+                    value = "${CalendarHelper.toBanglaNumber(scorecardCompletedCount)}/${CalendarHelper.toBanglaNumber(scorecardTotal)} সম্পন্ন",
                     icon = Icons.Default.CheckCircle,
                     iconTint = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.weight(1f),
-                    onClick = { viewModel.selectTab(AppTab.ROUTINE) }
+                    onClick = { viewModel.openScorecard() }
                 )
 
                 QuickActionCard(
@@ -477,12 +476,12 @@ fun HomeScreen(
             )
         }
 
-        // 6. নফল সালাতের সময়সূচী (Nafl Prayer Timings Section)
+        // 6. নফল সালাতের সময়সূচী (Independent Home Screen Card)
         item {
-            NofolSalatTimingsSection(
+            NofolSalatIndependentCard(
                 prayerStatus = prayerStatus,
                 salatConfig = salatConfig,
-                onOpenNofolDetail = { selectedNofolSalat = it }
+                onOpenScheduleWindow = { showNofolScheduleDialog = true }
             )
         }
 
@@ -515,6 +514,18 @@ fun HomeScreen(
             prayerStatus = prayerStatus,
             salatConfig = salatConfig,
             onDismiss = { showSehriIftarFullScreen = false }
+        )
+    }
+
+    // Nofol Salat Full Dedicated Schedule Dialog
+    if (showNofolScheduleDialog) {
+        NofolSalatScheduleDialog(
+            prayerStatus = prayerStatus,
+            salatConfig = salatConfig,
+            onDismiss = { showNofolScheduleDialog = false },
+            onOpenNofolDetail = { item ->
+                selectedNofolSalat = item
+            }
         )
     }
 

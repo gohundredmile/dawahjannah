@@ -113,17 +113,22 @@ fun NofolSalatIndependentCard(
         }
     }
 
+    val isDark = isSystemInDarkTheme()
+
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 8.dp, vertical = 5.dp)
+            .padding(horizontal = 12.dp, vertical = 6.dp)
             .clickable { onOpenScheduleWindow() },
-        shape = RoundedCornerShape(18.dp),
+        shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
+            containerColor = if (isDark) MaterialTheme.colorScheme.surface.copy(alpha = 0.92f) else MaterialTheme.colorScheme.surface
         ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+        elevation = CardDefaults.cardElevation(defaultElevation = if (isDark) 1.dp else 2.dp),
+        border = BorderStroke(
+            1.2.dp,
+            if (isDark) IslamicGold.copy(alpha = 0.35f) else IslamicGold.copy(alpha = 0.45f)
+        )
     ) {
         Column(
             modifier = Modifier
@@ -375,7 +380,7 @@ fun NofolSalatScheduleDialog(
                 it.nameBn.contains(searchQuery, ignoreCase = true) ||
                 it.nameAr.contains(searchQuery, ignoreCase = true) ||
                 it.timingSummaryBn.contains(searchQuery, ignoreCase = true) ||
-                it.virtueBn.contains(searchQuery, ignoreCase = true)
+                it.virtuesBn.contains(searchQuery, ignoreCase = true)
             }
         }
     }

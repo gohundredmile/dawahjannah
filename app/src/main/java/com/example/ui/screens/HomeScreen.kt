@@ -41,8 +41,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.ui.components.DailyWisdomSection
 import com.example.ui.components.DateTimeMasterCard
+import com.example.ui.components.DetailedSehriIftarDialog
 import com.example.ui.components.IslamicHeaderCover
 import com.example.ui.components.QuickActionCard
+import com.example.ui.components.RamadanMoonScheduleDialog
 import com.example.ui.components.SalatTimingsSection
 import com.example.ui.components.SehriIftarFullScreenDialog
 import com.example.ui.components.SehriIftarSummaryCard
@@ -67,6 +69,8 @@ fun HomeScreen(
     // val announcement by viewModel.activeAnnouncement.collectAsState()
 
     var showSehriIftarFullScreen by remember { mutableStateOf(false) }
+    var showDetailedSehriIftar by remember { mutableStateOf(false) }
+    var showRamadanSchedule by remember { mutableStateOf(false) }
 
     LazyColumn(
         modifier = Modifier
@@ -148,7 +152,9 @@ fun HomeScreen(
             SehriIftarSummaryCard(
                 prayerStatus = prayerStatus,
                 salatConfig = salatConfig,
-                onOpenFullScreen = { showSehriIftarFullScreen = true }
+                onOpenDetailedSchedule = { showDetailedSehriIftar = true },
+                onOpenRamadanSchedule = { showRamadanSchedule = true },
+                onOpenFullScreen = { showDetailedSehriIftar = true }
             )
         }
 
@@ -174,6 +180,20 @@ fun HomeScreen(
                 onShuffle = { viewModel.shuffleWisdom() }
             )
         }
+    }
+
+    if (showDetailedSehriIftar) {
+        DetailedSehriIftarDialog(
+            salatConfig = salatConfig,
+            onDismiss = { showDetailedSehriIftar = false }
+        )
+    }
+
+    if (showRamadanSchedule) {
+        RamadanMoonScheduleDialog(
+            salatConfig = salatConfig,
+            onDismiss = { showRamadanSchedule = false }
+        )
     }
 
     // Full Screen Sawm & Ramadan Timing Expanded Dialog

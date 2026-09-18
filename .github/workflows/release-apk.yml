@@ -57,14 +57,11 @@ jobs:
         run: |
           touch .env || true
           echo "Setting up permanent Dawah To Jannah signing keystore..."
-          if [ -f "release.keystore.b64" ]; then
+          if [ -f "release.keystore.b64" ] && [ ! -f "release.keystore" ]; then
             base64 -d release.keystore.b64 > release.keystore
           fi
-          if [ -f "release.keystore" ]; then
-            cp release.keystore debug.keystore
-          elif [ -f "debug.keystore.base64" ]; then
+          if [ -f "debug.keystore.base64" ] && [ ! -f "debug.keystore" ]; then
             base64 -d debug.keystore.base64 > debug.keystore
-            cp debug.keystore release.keystore
           fi
           chmod +x gradlew || true
 
@@ -98,7 +95,7 @@ jobs:
           VER_NAME=$(grep 'versionName = ' app/build.gradle.kts | head -n 1 | sed -E 's/.*"([^"]+)".*/\1/')
           VER_CODE=$(grep 'versionCode = ' app/build.gradle.kts | head -n 1 | sed -E 's/.*([0-9]+).*/\1/')
           if [ -z "$VER_NAME" ]; then
-            VER_NAME="1.4.0"
+            VER_NAME="1.5.0"
           fi
           echo "version_name=$VER_NAME" >> $GITHUB_OUTPUT
           echo "version_code=$VER_CODE" >> $GITHUB_OUTPUT
@@ -118,8 +115,8 @@ jobs:
         continue-on-error: true
         with:
           tag_name: ${{ steps.get_version.outputs.tag_name }}
-          name: ${{ inputs.release_title || format('দা''ওয়াহ টু জান্নাহ - সংস্করণ {0}', steps.get_version.outputs.version_name) }}
-          body: ${{ inputs.release_notes || 'স্বয়ংক্রিয়ভাবে বিল্ডকৃত নতুন রিলিজ APK। ফোনের সেটিংস থেকে ''সম্পূর্ণ APK ওটিএ অটো-আপডেট'' বাটনে চাপ দিলে সরাসরি এটি ফোনে ডাউনলোড ও ইনস্টল হবে।' }}
+          name: ${{ inputs.release_title || format('দাওয়া টু জান্নাহ - সংস্করণ {0}', steps.get_version.outputs.version_name) }}
+          body: ${{ inputs.release_notes || 'স্বয়ংক্রিয়ভাবে বিল্ডকৃত নতুন রিলিজ APK। ফোনের সেটিংস থেকে সম্পূর্ণ APK ওটিএ অটো-আপডেট বাটনে চাপ দিলে সরাসরি এটি ফোনে ডাউনলোড ও ইনস্টল হবে।' }}
           draft: false
           prerelease: false
           make_latest: true
@@ -131,6 +128,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Fallback CLI Release & Latest Tag Mirroring
+        continue-on-error: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAG_VERSION: ${{ steps.get_version.outputs.tag_name }}
@@ -138,6 +136,7 @@ jobs:
           INPUT_TITLE: ${{ inputs.release_title }}
           INPUT_NOTES: ${{ inputs.release_notes }}
         run: |
+          set +e
           TITLE="$INPUT_TITLE"
           if [ -z "$TITLE" ]; then
             TITLE="দাওয়া টু জান্নাহ - সংস্করণ ${VER_NAME}"

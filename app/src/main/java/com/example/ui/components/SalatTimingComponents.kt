@@ -34,6 +34,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.LocationOn
@@ -365,7 +366,7 @@ fun SalatTimingsSection(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp)
+            verticalArrangement = Arrangement.spacedBy(7.dp)
         ) {
             // 5 Daily Prayers arranged Vertically
             prayerStatus.prayerList.forEach { prayerItem ->
@@ -477,14 +478,14 @@ fun SalatTimingVerticalCard(
         modifier = modifier
             .fillMaxWidth()
             .shadow(
-                elevation = if (isHighlighted) 6.dp else 1.5.dp,
-                shape = RoundedCornerShape(20.dp),
+                elevation = if (isHighlighted) 3.dp else 1.dp,
+                shape = RoundedCornerShape(14.dp),
                 ambientColor = if (isHighlighted) Color(0xFFEA580C) else Color.Black.copy(alpha = 0.05f)
             )
             .clickable(onClick = onClick),
-        shape = RoundedCornerShape(20.dp),
+        shape = RoundedCornerShape(14.dp),
         colors = CardDefaults.cardColors(containerColor = if (isHighlighted) Color.Transparent else nonActiveBg),
-        border = if (isHighlighted) null else BorderStroke(1.2.dp, nonActiveBorder)
+        border = if (isHighlighted) null else BorderStroke(1.1.dp, nonActiveBorder)
     ) {
         Box(
             modifier = Modifier
@@ -493,151 +494,90 @@ fun SalatTimingVerticalCard(
                     if (isHighlighted) Modifier.background(activeBrush)
                     else Modifier.background(nonActiveBg)
                 )
-                .padding(horizontal = 16.dp, vertical = 14.dp)
+                .padding(horizontal = 14.dp, vertical = 9.dp)
         ) {
-            Column(modifier = Modifier.fillMaxWidth()) {
-                // Top Row: Waqt Bengali Name, English Tag & Live indicator
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Left Side: Dot indicator + Wakt Name + Live/English badge in one line
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.weight(1f, fill = false)
                 ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(
-                            text = prayer.nameBn,
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = if (isHighlighted) Color.White else Color(0xFF0F172A),
-                            fontSize = 20.sp
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Surface(
-                            color = if (isHighlighted) Color.White.copy(alpha = 0.2f) else tagColor.copy(alpha = 0.12f),
-                            shape = RoundedCornerShape(8.dp)
-                        ) {
-                            Text(
-                                text = prayer.nameEn,
-                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
-                                style = MaterialTheme.typography.labelSmall,
-                                fontWeight = FontWeight.Bold,
-                                color = if (isHighlighted) Color.White else tagColor,
-                                fontSize = 10.5.sp,
-                                letterSpacing = 0.5.sp
-                            )
-                        }
-                    }
-
+                    Box(
+                        modifier = Modifier
+                            .size(7.5.dp)
+                            .clip(CircleShape)
+                            .background(if (isHighlighted) Color(0xFFFEF08A) else tagColor)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = prayer.nameBn,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = if (isHighlighted) Color.White else Color(0xFF0F172A),
+                        fontSize = 16.sp
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
                     if (isHighlighted) {
                         Surface(
                             color = Color.White.copy(alpha = 0.25f),
-                            shape = RoundedCornerShape(12.dp)
+                            shape = RoundedCornerShape(6.dp)
                         ) {
-                            Row(
-                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(7.dp)
-                                        .clip(CircleShape)
-                                        .background(Color(0xFFFEF08A))
-                                )
-                                Spacer(modifier = Modifier.width(5.dp))
-                                Text(
-                                    text = "চলমান ওয়াক্ত",
-                                    color = Color.White,
-                                    fontSize = 11.sp,
-                                    fontWeight = FontWeight.Bold
-                                )
-                            }
+                            Text(
+                                text = "চলমান",
+                                color = Color.White,
+                                fontSize = 10.5.sp,
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                            )
                         }
                     } else {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
+                        Surface(
+                            color = tagColor.copy(alpha = 0.1f),
+                            shape = RoundedCornerShape(6.dp)
+                        ) {
                             Text(
-                                text = prayer.durationBn,
-                                style = MaterialTheme.typography.bodySmall,
-                                color = Color(0xFF64748B),
-                                fontSize = 11.5.sp
-                            )
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Filled.ArrowForward,
-                                contentDescription = "View Details",
-                                tint = Color(0xFF94A3B8),
-                                modifier = Modifier.size(13.dp)
+                                text = prayer.nameEn,
+                                modifier = Modifier.padding(horizontal = 5.dp, vertical = 1.5.dp),
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = tagColor,
+                                fontSize = 9.5.sp,
+                                letterSpacing = 0.5.sp
                             )
                         }
                     }
                 }
 
-                // Subtitle
-                Text(
-                    text = prayer.subtitleEn,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = if (isHighlighted) Color.White.copy(alpha = 0.88f) else Color(0xFF64748B),
-                    fontSize = 11.5.sp
-                )
-
-                Spacer(modifier = Modifier.height(10.dp))
-
-                // Bottom Row: START time, END time, and Duration
-                Surface(
-                    color = if (isHighlighted) Color.Black.copy(alpha = 0.18f) else Color.White.copy(alpha = 0.7f),
-                    shape = RoundedCornerShape(14.dp),
-                    modifier = Modifier.fillMaxWidth()
+                // Right Side: Starting time only + Chevron in the same line
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 12.dp, vertical = 8.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        // Start Time
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text(
-                                text = "START:",
-                                style = MaterialTheme.typography.labelSmall,
-                                fontSize = 10.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = if (isHighlighted) Color.White.copy(alpha = 0.8f) else Color(0xFF64748B)
-                            )
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Text(
-                                text = prayer.startTimeFormatted.ifEmpty { prayer.timeFormatted },
-                                style = MaterialTheme.typography.bodyMedium,
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 14.5.sp,
-                                color = if (isHighlighted) Color(0xFFFEF08A) else Color(0xFF0F172A)
-                            )
-                        }
-
-                        // Divider dot
-                        Text(
-                            text = "•",
-                            color = if (isHighlighted) Color.White.copy(alpha = 0.5f) else Color(0xFFCBD5E1),
-                            fontSize = 14.sp
-                        )
-
-                        // End Time
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text(
-                                text = "END:",
-                                style = MaterialTheme.typography.labelSmall,
-                                fontSize = 10.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = if (isHighlighted) Color.White.copy(alpha = 0.8f) else Color(0xFF64748B)
-                            )
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Text(
-                                text = prayer.endTimeFormatted,
-                                style = MaterialTheme.typography.bodyMedium,
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 14.5.sp,
-                                color = if (isHighlighted) Color(0xFFFEF08A) else Color(0xFF0F172A)
-                            )
-                        }
-                    }
+                    Text(
+                        text = "শুরু",
+                        style = MaterialTheme.typography.labelSmall,
+                        fontSize = 11.5.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = if (isHighlighted) Color.White.copy(alpha = 0.85f) else Color(0xFF64748B)
+                    )
+                    Spacer(modifier = Modifier.width(5.dp))
+                    Text(
+                        text = prayer.startTimeFormatted.ifEmpty { prayer.timeFormatted },
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 15.sp,
+                        color = if (isHighlighted) Color(0xFFFEF08A) else Color(0xFF0F172A)
+                    )
+                    Spacer(modifier = Modifier.width(5.dp))
+                    Icon(
+                        imageVector = Icons.Default.ChevronRight,
+                        contentDescription = "বিস্তারিত",
+                        tint = if (isHighlighted) Color.White.copy(alpha = 0.85f) else Color(0xFF94A3B8),
+                        modifier = Modifier.size(16.dp)
+                    )
                 }
             }
         }
@@ -661,173 +601,79 @@ fun ForbiddenTimeVerticalCard(
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .shadow(4.dp, RoundedCornerShape(20.dp), ambientColor = Color(0xFFDC2626))
+            .shadow(2.dp, RoundedCornerShape(14.dp), ambientColor = Color(0xFFDC2626))
             .clickable(onClick = onClick),
-        shape = RoundedCornerShape(20.dp),
+        shape = RoundedCornerShape(14.dp),
         colors = CardDefaults.cardColors(containerColor = Color.Transparent)
     ) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .background(crimsonGradient)
-                .padding(16.dp)
+                .padding(horizontal = 14.dp, vertical = 9.dp)
         ) {
-            Column(modifier = Modifier.fillMaxWidth()) {
-                // Header Row
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Left Side: Dot + Title + Tag in one line
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.weight(1f, fill = false)
                 ) {
-                    Column {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text(
-                                text = "সালাতের নিষিদ্ধ সময়",
-                                color = Color.White,
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 18.sp
-                            )
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Surface(
-                                color = Color.White.copy(alpha = 0.2f),
-                                shape = RoundedCornerShape(6.dp)
-                            ) {
-                                Text(
-                                    text = "FORBIDDEN",
-                                    color = Color.White,
-                                    fontSize = 9.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    modifier = Modifier.padding(horizontal = 5.dp, vertical = 2.dp)
-                                )
-                            }
-                        }
-                        Text(
-                            text = "Three specific intervals • ৩টি সময়ে সকল সালাত নিষিদ্ধ",
-                            color = Color.White.copy(alpha = 0.85f),
-                            fontSize = 11.sp
-                        )
-                    }
-
-                    Surface(
-                        color = Color(0xFF450A0A).copy(alpha = 0.85f),
-                        shape = RoundedCornerShape(12.dp),
-                        border = BorderStroke(1.dp, Color(0xFFF87171).copy(alpha = 0.4f))
-                    ) {
-                        Row(
-                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                text = "⚠ নামাজ নিষেধ",
-                                color = Color(0xFFFCA5A5),
-                                fontSize = 10.sp,
-                                fontWeight = FontWeight.Bold
-                            )
-                        }
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(12.dp))
-
-                // 3 Intervals Display in 3 Columns
-                Surface(
-                    color = Color.Black.copy(alpha = 0.35f),
-                    shape = RoundedCornerShape(14.dp),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Row(
+                    Box(
                         modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 10.dp, vertical = 8.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
+                            .size(7.5.dp)
+                            .clip(CircleShape)
+                            .background(Color(0xFFFEF08A))
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "সালাতের নিষিদ্ধ সময়",
+                        color = Color.White,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 15.5.sp
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Surface(
+                        color = Color.White.copy(alpha = 0.2f),
+                        shape = RoundedCornerShape(6.dp)
                     ) {
-                        // Sunrise
-                        Column(
-                            modifier = Modifier.weight(1f),
-                            horizontalAlignment = Alignment.Start
-                        ) {
-                            Text(
-                                text = "সূর্যোদয়",
-                                color = Color.White.copy(alpha = 0.8f),
-                                fontSize = 10.sp
-                            )
-                            Spacer(modifier = Modifier.height(2.dp))
-                            Text(
-                                text = "${forbiddenInfo.sunriseStart24} – ${forbiddenInfo.sunriseEnd24}",
-                                color = Color(0xFFFEF08A),
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 12.sp
-                            )
-                        }
-
-                        // Zenith
-                        Column(
-                            modifier = Modifier.weight(1f),
-                            horizontalAlignment = Alignment.CenterHorizontally
-                        ) {
-                            Text(
-                                text = "দ্বিপ্রহর (জাওয়াল)",
-                                color = Color.White.copy(alpha = 0.8f),
-                                fontSize = 10.sp
-                            )
-                            Spacer(modifier = Modifier.height(2.dp))
-                            Text(
-                                text = "${forbiddenInfo.zawalStart24} – ${forbiddenInfo.zawalEnd24}",
-                                color = Color(0xFFFEF08A),
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 12.sp
-                            )
-                        }
-
-                        // Sunset
-                        Column(
-                            modifier = Modifier.weight(1f),
-                            horizontalAlignment = Alignment.End
-                        ) {
-                            Text(
-                                text = "সূর্যাস্ত",
-                                color = Color.White.copy(alpha = 0.8f),
-                                fontSize = 10.sp
-                            )
-                            Spacer(modifier = Modifier.height(2.dp))
-                            Text(
-                                text = "${forbiddenInfo.sunsetStart24} – ${forbiddenInfo.sunsetEnd24}",
-                                color = Color(0xFFFEF08A),
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 12.sp
-                            )
-                        }
+                        Text(
+                            text = "৩টি সময়",
+                            color = Color.White,
+                            fontSize = 9.5.sp,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.padding(horizontal = 5.dp, vertical = 2.dp)
+                        )
                     }
                 }
 
-                Spacer(modifier = Modifier.height(8.dp))
-
+                // Right Side: Warning or guide text + Chevron
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(
-                        text = "বৈধ আমল: রকু-সিজদাহ ছাড়া জিকির, ইস্তিগফার ও দোয়া",
-                        color = Color.White.copy(alpha = 0.85f),
-                        fontSize = 10.5.sp
-                    )
-                    Row(verticalAlignment = Alignment.CenterVertically) {
+                    Surface(
+                        color = Color(0xFF450A0A).copy(alpha = 0.7f),
+                        shape = RoundedCornerShape(8.dp),
+                        border = BorderStroke(0.8.dp, Color(0xFFF87171).copy(alpha = 0.4f))
+                    ) {
                         Text(
-                            text = "বিস্তারিত নিয়ম",
-                            color = Color(0xFFFEF08A),
+                            text = "⚠ নিষিদ্ধ সময়সূচী",
+                            color = Color(0xFFFCA5A5),
+                            fontSize = 10.5.sp,
                             fontWeight = FontWeight.Bold,
-                            fontSize = 11.sp
-                        )
-                        Spacer(modifier = Modifier.width(3.dp))
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowForward,
-                            contentDescription = "Details",
-                            tint = Color(0xFFFEF08A),
-                            modifier = Modifier.size(12.dp)
+                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
                         )
                     }
+                    Spacer(modifier = Modifier.width(5.dp))
+                    Icon(
+                        imageVector = Icons.Default.ChevronRight,
+                        contentDescription = "বিস্তারিত",
+                        tint = Color.White.copy(alpha = 0.85f),
+                        modifier = Modifier.size(16.dp)
+                    )
                 }
             }
         }

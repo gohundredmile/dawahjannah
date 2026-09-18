@@ -1,4 +1,6 @@
 import com.google.gms.googleservices.GoogleServicesPlugin.MissingGoogleServicesStrategy
+import java.security.KeyStore
+import java.io.InputStream
 
 plugins {
   alias(libs.plugins.android.application)
@@ -34,10 +36,26 @@ android {
       enableV2Signing = true
     }
     create("debugConfig") {
-      storeFile = file("${rootDir}/debug.keystore")
-      storePassword = "android"
-      keyAlias = "androiddebugkey"
-      keyPassword = "android"
+      val debugKs = file("${rootDir}/debug.keystore")
+      var useReleaseCreds = false
+      if (debugKs.exists()) {
+        try {
+          val ks = KeyStore.getInstance("PKCS12")
+          val stream: InputStream = debugKs.inputStream()
+          stream.use { s ->
+            ks.load(s, "dawahtojannah".toCharArray())
+            useReleaseCreds = true
+          }
+        } catch (_: Exception) {
+          useReleaseCreds = false
+        }
+      }
+      storeFile = debugKs
+      storePassword = if (useReleaseCreds) "dawahtojannah" else "android"
+      keyAlias = if (useReleaseCreds) "dawahkey" else "androiddebugkey"
+      keyPassword = if (useReleaseCreds) "dawahtojannah" else "android"
+      enableV1Signing = true
+      enableV2Signing = true
     }
   }
 

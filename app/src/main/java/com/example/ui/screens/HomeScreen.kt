@@ -39,10 +39,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.data.model.NofolSalatItem
 import com.example.ui.components.DailyWisdomSection
 import com.example.ui.components.DateTimeMasterCard
 import com.example.ui.components.DetailedSehriIftarDialog
 import com.example.ui.components.IslamicHeaderCover
+import com.example.ui.components.NofolSalatDetailsDialog
+import com.example.ui.components.NofolSalatTimingsSection
 import com.example.ui.components.QuickActionCard
 import com.example.ui.components.RamadanMoonScheduleDialog
 import com.example.ui.components.SalatTimingsSection
@@ -71,6 +74,7 @@ fun HomeScreen(
     var showSehriIftarFullScreen by remember { mutableStateOf(false) }
     var showDetailedSehriIftar by remember { mutableStateOf(false) }
     var showRamadanSchedule by remember { mutableStateOf(false) }
+    var selectedNofolSalat by remember { mutableStateOf<NofolSalatItem?>(null) }
 
     LazyColumn(
         modifier = Modifier
@@ -173,7 +177,16 @@ fun HomeScreen(
             )
         }
 
-        // 6. Daily Light & Inspiration: Holy Quran, Hadith, and Inspirational Quotes
+        // 6. নফল সালাতের সময়সূচী (Nafl Prayer Timings Section)
+        item {
+            NofolSalatTimingsSection(
+                prayerStatus = prayerStatus,
+                salatConfig = salatConfig,
+                onOpenNofolDetail = { selectedNofolSalat = it }
+            )
+        }
+
+        // 7. Daily Light & Inspiration: Holy Quran, Hadith, and Inspirational Quotes
         item {
             DailyWisdomSection(
                 wisdomState = wisdomState,
@@ -202,6 +215,15 @@ fun HomeScreen(
             prayerStatus = prayerStatus,
             salatConfig = salatConfig,
             onDismiss = { showSehriIftarFullScreen = false }
+        )
+    }
+
+    // Nofol Salat Details Dialog (Opens in a rich details window upon tapping any Nafl salat)
+    selectedNofolSalat?.let { nofolItem ->
+        NofolSalatDetailsDialog(
+            initialItem = nofolItem,
+            prayerStatus = prayerStatus,
+            onDismiss = { selectedNofolSalat = null }
         )
     }
 }

@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -28,6 +29,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -35,6 +37,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBackIos
 import androidx.compose.material.icons.automirrored.filled.ArrowForwardIos
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.CalendarMonth
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Explore
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
@@ -70,6 +73,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import com.example.data.model.SalatConfiguration
 import com.example.util.BengaliDayItem
 import com.example.util.CalendarHelper
@@ -534,6 +539,361 @@ fun DateTimeMasterCard(
     }
 }
 
+/**
+ * Standalone/Popup Three Calendar Dialog ("ত্রিমুখী বর্ষপঞ্জি (৩টি ক্যালেন্ডার)")
+ * Shown when tapping the relocated Time & Date card on top, or tapping "২. ক্যালেন্ডার"
+ */
+@Composable
+fun TripleCalendarDialog(
+    calendarInfo: CalendarHelper.TripleCalendarInfo,
+    salatConfig: SalatConfiguration = SalatConfiguration(),
+    onDismiss: () -> Unit
+) {
+    var currentTime by remember { mutableStateOf(Date()) }
+    var showDailySalatCalendar by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) {
+        while (true) {
+            currentTime = Date()
+            delay(1000)
+        }
+    }
+
+    var expandedCalendar by remember { mutableStateOf(CalendarViewType.NONE) }
+
+    val cal = remember(currentTime) { Calendar.getInstance().apply { time = currentTime } }
+    val currentDayOfMonth = cal.get(Calendar.DAY_OF_MONTH)
+    val currentMonth = cal.get(Calendar.MONTH)
+    val currentYear = cal.get(Calendar.YEAR)
+
+    val banglaDayStr = CalendarHelper.toBanglaNumber(currentDayOfMonth)
+    val bengaliMonthNames = listOf(
+        "জানুয়ারি", "ফেব্রুয়ারি", "মার্চ", "এপ্রিল", "মে", "জুন",
+        "জুলাই", "আগস্ট", "সেপ্টেম্বর", "অক্টোবর", "নভেম্বর", "ডিসেম্বর"
+    )
+    val engMonthBn = bengaliMonthNames.getOrElse(currentMonth) { "সেপ্টেম্বর" }
+    val banglaYearStr = CalendarHelper.toBanglaNumber(currentYear)
+    val dynamicGregorianDateBn = "$banglaDayStr $engMonthBn $banglaYearStr খ্রিস্টাব্দ"
+
+    val todayGreg = remember(currentTime) { CalendarHelper.getGregorianDateDetail(cal) }
+    val todayBengali = remember(currentTime) { CalendarHelper.getBengaliDateDetail(cal) }
+    val todayHijri = remember(currentTime) { CalendarHelper.getHijriDateDetail(cal) }
+
+    var gregMonthIndex by remember(currentTime) { mutableIntStateOf(todayGreg.monthIndex) }
+    var gregYear by remember(currentTime) { mutableIntStateOf(todayGreg.year) }
+
+    var banglaMonthIndex by remember(currentTime) { mutableIntStateOf(todayBengali.monthIndex) }
+    var banglaYear by remember(currentTime) { mutableIntStateOf(todayBengali.year) }
+
+    var hijriMonthIndex by remember(currentTime) { mutableIntStateOf(todayHijri.monthIndex) }
+    var hijriYear by remember(currentTime) { mutableIntStateOf(todayHijri.year) }
+
+    Dialog(
+        onDismissRequest = onDismiss,
+        properties = DialogProperties(
+            usePlatformDefaultWidth = false,
+            decorFitsSystemWindows = false
+        )
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Black.copy(alpha = 0.55f))
+                .clickable(onClick = onDismiss),
+            contentAlignment = Alignment.Center
+        ) {
+            Surface(
+                modifier = Modifier
+                    .fillMaxWidth(0.95f)
+                    .fillMaxHeight(0.92f)
+                    .widthIn(max = 520.dp)
+                    .clickable(enabled = false) {},
+                shape = RoundedCornerShape(24.dp),
+                color = Color(0xFFFFFDF8),
+                shadowElevation = 8.dp,
+                border = BorderStroke(1.dp, Color(0xFFF1E5D2))
+            ) {
+                Column(
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                    // Header Bar
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(start = 16.dp, end = 12.dp, top = 14.dp, bottom = 12.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
+                            Surface(
+                                shape = CircleShape,
+                                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
+                                modifier = Modifier.size(40.dp)
+                            ) {
+                                Box(contentAlignment = Alignment.Center) {
+                                    Icon(
+                                        imageVector = Icons.Default.CalendarMonth,
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.primary,
+                                        modifier = Modifier.size(22.dp)
+                                    )
+                                }
+                            }
+
+                            Column {
+                                Text(
+                                    text = "ত্রিমুখী বর্ষপঞ্জি (৩টি ক্যালেন্ডার)",
+                                    fontSize = 17.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    fontFamily = LocalBanglaFontFamily.current,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                                Text(
+                                    text = "হিজরি, বাংলা ও ইংরেজি সর্বজনীন ক্যালেন্ডার",
+                                    fontSize = 11.5.sp,
+                                    fontFamily = LocalBanglaFontFamily.current,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
+
+                        IconButton(
+                            onClick = onDismiss,
+                            modifier = Modifier.size(36.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Close,
+                                contentDescription = "বন্ধ করুন",
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+
+                    HorizontalDivider(color = Color(0xFFF1E5D2))
+
+                    // Scrollable Calendar Content
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .weight(1f)
+                            .verticalScroll(rememberScrollState())
+                            .padding(14.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        // A. GREGORIAN DATE CARD
+                        DateInteractiveVerticalCard(
+                            title = "ইংরেজি ক্যালেন্ডার",
+                            badgeText = "GREGORIAN • খ্রিস্টাব্দ",
+                            mainDate = dynamicGregorianDateBn,
+                            subtitle = calendarInfo.englishDateFormatted,
+                            icon = Icons.Default.CalendarMonth,
+                            isSelected = expandedCalendar == CalendarViewType.GREGORIAN,
+                            accentColor = Color(0xFF0284C7),
+                            selectedGradient = Brush.horizontalGradient(
+                                listOf(Color(0xFFE0F2FE), Color(0xFFF0F9FF), Color(0xFFE0F2FE))
+                            ),
+                            lightBgColor = Color(0xFFF0F9FF),
+                            lightBorderColor = Color(0xFFBAE6FD),
+                            infoItems = listOf(
+                                "বার" to calendarInfo.englishDay.substringBefore(" "),
+                                "মাস" to "$engMonthBn (${cal.getActualMaximum(Calendar.DAY_OF_MONTH)} দিন)",
+                                "সাল" to "$banglaYearStr খ্রিস্টাব্দ"
+                            ),
+                            onClick = {
+                                expandedCalendar = if (expandedCalendar == CalendarViewType.GREGORIAN) {
+                                    CalendarViewType.NONE
+                                } else {
+                                    CalendarViewType.GREGORIAN
+                                }
+                            },
+                            expandedContent = {
+                                ExpandedGregorianCalendarView(
+                                    monthIndex = gregMonthIndex,
+                                    year = gregYear,
+                                    todayCal = cal,
+                                    onSelectMonth = { gregMonthIndex = it },
+                                    onPrevMonth = {
+                                        if (gregMonthIndex == 0) {
+                                            gregMonthIndex = 11
+                                            gregYear--
+                                        } else {
+                                            gregMonthIndex--
+                                        }
+                                    },
+                                    onNextMonth = {
+                                        if (gregMonthIndex == 11) {
+                                            gregMonthIndex = 0
+                                            gregYear++
+                                        } else {
+                                            gregMonthIndex++
+                                        }
+                                    },
+                                    onGoToToday = {
+                                        gregMonthIndex = todayGreg.monthIndex
+                                        gregYear = todayGreg.year
+                                    }
+                                )
+                            }
+                        )
+
+                        // B. BENGALI SAN CARD
+                        DateInteractiveVerticalCard(
+                            title = "বাংলা বর্ষপঞ্জি",
+                            badgeText = "BENGALI SAN • বঙ্গাব্দ সন",
+                            mainDate = calendarInfo.bengaliDateFormatted.substringBefore("(").trim(),
+                            subtitle = "ঋতু: ${calendarInfo.bengaliSeason} • বাংলা সন ${todayBengali.year}",
+                            icon = Icons.Default.AutoAwesome,
+                            isSelected = expandedCalendar == CalendarViewType.BENGALI,
+                            accentColor = Color(0xFFD97706),
+                            selectedGradient = Brush.horizontalGradient(
+                                listOf(Color(0xFFFEF3C7), Color(0xFFFFFBEB), Color(0xFFFEF3C7))
+                            ),
+                            lightBgColor = Color(0xFFFEFCE8),
+                            lightBorderColor = Color(0xFFFDE047),
+                            infoItems = listOf(
+                                "ঋতু" to calendarInfo.bengaliSeason,
+                                "মাস" to "${calendarInfo.bengaliMonth} মাস",
+                                "সন" to "${CalendarHelper.toBanglaNumber(todayBengali.year)} বঙ্গাব্দ"
+                            ),
+                            onClick = {
+                                expandedCalendar = if (expandedCalendar == CalendarViewType.BENGALI) {
+                                    CalendarViewType.NONE
+                                } else {
+                                    CalendarViewType.BENGALI
+                                }
+                            },
+                            expandedContent = {
+                                ExpandedBengaliCalendarView(
+                                    monthIndex = banglaMonthIndex,
+                                    year = banglaYear,
+                                    todayCal = cal,
+                                    onSelectMonth = { banglaMonthIndex = it },
+                                    onPrevMonth = {
+                                        if (banglaMonthIndex == 0) {
+                                            banglaMonthIndex = 11
+                                            banglaYear--
+                                        } else {
+                                            banglaMonthIndex--
+                                        }
+                                    },
+                                    onNextMonth = {
+                                        if (banglaMonthIndex == 11) {
+                                            banglaMonthIndex = 0
+                                            banglaYear++
+                                        } else {
+                                            banglaMonthIndex++
+                                        }
+                                    },
+                                    onGoToToday = {
+                                        banglaMonthIndex = todayBengali.monthIndex
+                                        banglaYear = todayBengali.year
+                                    }
+                                )
+                            }
+                        )
+
+                        // C. HIJRI ISLAMIC CARD
+                        DateInteractiveVerticalCard(
+                            title = "হিজরি ইসলামিক সন",
+                            badgeText = "HIJRI ISLAMIC • চন্দ্রমাস",
+                            mainDate = calendarInfo.hijriDateFormatted,
+                            subtitle = "উম্মুল কুরা ভিত্তিক চন্দ্রমাস • হিজরি ${todayHijri.year}",
+                            icon = Icons.Default.Explore,
+                            isSelected = expandedCalendar == CalendarViewType.HIJRI,
+                            accentColor = Color(0xFF059669),
+                            selectedGradient = Brush.horizontalGradient(
+                                listOf(Color(0xFFDCFCE7), Color(0xFFF0FDF4), Color(0xFFDCFCE7))
+                            ),
+                            lightBgColor = Color(0xFFF0FDF4),
+                            lightBorderColor = Color(0xFFBBF7D0),
+                            infoItems = listOf(
+                                "বার" to calendarInfo.englishDay.substringBefore(" "),
+                                "মাস" to "${calendarInfo.hijriMonth} মাস",
+                                "সন" to "${CalendarHelper.toBanglaNumber(todayHijri.year)} হিজরি"
+                            ),
+                            onClick = {
+                                expandedCalendar = if (expandedCalendar == CalendarViewType.HIJRI) {
+                                    CalendarViewType.NONE
+                                } else {
+                                    CalendarViewType.HIJRI
+                                }
+                            },
+                            expandedContent = {
+                                ExpandedHijriCalendarView(
+                                    monthIndex = hijriMonthIndex,
+                                    year = hijriYear,
+                                    todayCal = cal,
+                                    onSelectMonth = { hijriMonthIndex = it },
+                                    onPrevMonth = {
+                                        if (hijriMonthIndex == 0) {
+                                            hijriMonthIndex = 11
+                                            hijriYear--
+                                        } else {
+                                            hijriMonthIndex--
+                                        }
+                                    },
+                                    onNextMonth = {
+                                        if (hijriMonthIndex == 11) {
+                                            hijriMonthIndex = 0
+                                            hijriYear++
+                                        } else {
+                                            hijriMonthIndex++
+                                        }
+                                    },
+                                    onGoToToday = {
+                                        hijriMonthIndex = todayHijri.monthIndex
+                                        hijriYear = todayHijri.year
+                                    }
+                                )
+                            }
+                        )
+
+                        // Option to open daily salat schedule
+                        Surface(
+                            onClick = { showDailySalatCalendar = true },
+                            shape = RoundedCornerShape(12.dp),
+                            color = Color(0xFFF0FDF4),
+                            border = BorderStroke(1.dp, Color(0xFFBBF7D0)),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.Center
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Today,
+                                    contentDescription = null,
+                                    tint = Color(0xFF15803D),
+                                    modifier = Modifier.size(18.dp)
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    text = "দৈনিক সালাতের বিস্তারিত সময়সূচী ক্যালেন্ডার দেখুন",
+                                    fontSize = 12.5.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    fontFamily = LocalBanglaFontFamily.current,
+                                    color = Color(0xFF15803D)
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    if (showDailySalatCalendar) {
+        DailySalatCalendarDialog(
+            onDismiss = { showDailySalatCalendar = false },
+            initialDate = cal,
+            salatConfig = salatConfig
+        )
+    }
+}
+
 // -------------------------------------------------------------
 // SINGLE UNIFIED CARD FOR TODAY'S DATE (Collapsed state)
 // -------------------------------------------------------------
@@ -746,7 +1106,7 @@ private fun TodayCalendarMiniBadge(
 // CLOCK COLON SEPARATOR WITH TWO SQUARES
 // -------------------------------------------------------------
 @Composable
-private fun ClockColonSeparator() {
+fun ClockColonSeparator() {
     Column(
         modifier = Modifier.padding(horizontal = 8.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),

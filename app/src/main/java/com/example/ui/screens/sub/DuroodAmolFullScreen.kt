@@ -92,8 +92,10 @@ import com.example.data.model.DuroodAmolItem
 import com.example.data.model.DuroodAttractionPoint
 import com.example.data.model.DuroodHadithItem
 import com.example.data.model.DuroodTabCategory
+import com.example.ui.components.DawahTopAppBar
 import com.example.ui.components.FontSizeActionButtons
 import com.example.ui.components.LocalFontScaleController
+import com.example.ui.theme.IslamicGold
 import com.example.ui.theme.LocalAppFontFamily
 import com.example.ui.viewmodel.MainViewModel
 import kotlinx.coroutines.launch
@@ -108,10 +110,8 @@ fun DuroodAmolFullScreen(
 ) {
     val context = LocalContext.current
     val fontController = LocalFontScaleController.current
-    var localFontScale by rememberSaveable { mutableFloatStateOf(1.0f) }
-    val fontScale = fontController?.scale ?: localFontScale
+    val fontScale = fontController?.scale ?: 1.0f
     var selectedTabIndex by rememberSaveable { mutableIntStateOf(0) }
-    var showFontSizeControls by rememberSaveable { mutableStateOf(false) }
     var isSearchActive by rememberSaveable { mutableStateOf(false) }
     var searchQuery by rememberSaveable { mutableStateOf("") }
 
@@ -140,316 +140,193 @@ fun DuroodAmolFullScreen(
 
         // 2. MAIN CONTENT OVERLAY
         Column(modifier = Modifier.fillMaxSize()) {
-            // TOP APP BAR
-            Surface(
-                color = Color.White.copy(alpha = 0.85f),
-                shadowElevation = 2.dp,
-                border = BorderStroke(1.dp, Color(0xFF10B981).copy(alpha = 0.15f))
-            ) {
-                Column(modifier = Modifier.fillMaxWidth()) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 8.dp, vertical = 6.dp),
-                        verticalAlignment = Alignment.CenterVertically
+            // TOP APP BAR (Standard DawahTopAppBar as in Tawba Istighfar)
+            DawahTopAppBar(
+                title = "দুরুদ শরীফের আমল",
+                canNavigateBack = true,
+                onNavigateBack = onBack,
+                actions = {
+                    // Search Toggle Button
+                    IconButton(
+                        onClick = {
+                            isSearchActive = !isSearchActive
+                            if (!isSearchActive) searchQuery = ""
+                        },
+                        modifier = Modifier.size(36.dp)
                     ) {
-                        IconButton(onClick = onBack) {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                contentDescription = "ফিরে যান",
-                                tint = Color(0xFF047857)
-                            )
-                        }
+                        Icon(
+                            imageVector = if (isSearchActive) Icons.Default.Close else Icons.Default.Search,
+                            contentDescription = "অনুসন্ধান",
+                            tint = if (isSearchActive) Color(0xFFDC2626) else MaterialTheme.colorScheme.primary
+                        )
+                    }
 
-                        Column(modifier = Modifier.weight(1f)) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Text(
-                                    text = "দুরুদ শরীফের আমল",
-                                    fontSize = 19.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    fontFamily = LocalAppFontFamily.current,
-                                    color = Color(0xFF064E3B)
-                                )
-                                Spacer(modifier = Modifier.width(6.dp))
-                                Surface(
-                                    color = Color(0xFF10B981).copy(alpha = 0.15f),
-                                    shape = RoundedCornerShape(12.dp)
-                                ) {
-                                    Row(
-                                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
-                                        verticalAlignment = Alignment.CenterVertically
-                                    ) {
-                                        Icon(
-                                            imageVector = Icons.Default.AutoAwesome,
-                                            contentDescription = null,
-                                            tint = Color(0xFF059669),
-                                            modifier = Modifier.size(11.dp)
-                                        )
-                                        Spacer(modifier = Modifier.width(3.dp))
-                                        Text(
-                                            text = "লাইভ অরোরা",
-                                            fontSize = 10.sp,
-                                            fontWeight = FontWeight.SemiBold,
-                                            color = Color(0xFF047857),
-                                            fontFamily = LocalAppFontFamily.current
-                                        )
-                                    }
-                                }
+                    // Share Section
+                    IconButton(
+                        onClick = {
+                            val shareText = buildString {
+                                appendLine("📖 দুরুদ শরীফের আমল")
+                                appendLine("আমল, বিশুদ্ধ উচ্চারণ, ফযিলত ও বরকত ভাণ্ডার")
+                                appendLine("\n— দাওয়াহ টু জান্নাহ অ্যাপ")
                             }
+                            val intent = Intent().apply {
+                                action = Intent.ACTION_SEND
+                                putExtra(Intent.EXTRA_TEXT, shareText)
+                                type = "text/plain"
+                            }
+                            context.startActivity(Intent.createChooser(intent, "শেয়ার করুন"))
+                        },
+                        modifier = Modifier.size(36.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Share,
+                            contentDescription = "Share Section",
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                }
+            )
+
+            // User Friendly Quick Controls Banner (Mirroring Tawba Istighfar controls banner)
+            Surface(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 4.dp),
+                shape = RoundedCornerShape(12.dp),
+                color = Color.White.copy(alpha = 0.88f),
+                border = BorderStroke(1.dp, IslamicGold.copy(alpha = 0.3f))
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 12.dp, vertical = 6.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Default.AutoAwesome,
+                            contentDescription = null,
+                            tint = IslamicGold,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = "লাইভ অরোরা: চালু",
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
+
+                    Surface(
+                        shape = RoundedCornerShape(6.dp),
+                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
+                    ) {
+                        Text(
+                            text = "হরফের আকার: ${(fontScale * 100).toInt()}%",
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                        )
+                    }
+                }
+            }
+
+            // COLLAPSIBLE SEARCH BAR
+            AnimatedVisibility(visible = isSearchActive) {
+                Surface(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 4.dp),
+                    color = Color.White.copy(alpha = 0.95f),
+                    shape = RoundedCornerShape(12.dp),
+                    border = BorderStroke(1.dp, Color(0xFFE5E7EB))
+                ) {
+                    OutlinedTextField(
+                        value = searchQuery,
+                        onValueChange = { searchQuery = it },
+                        placeholder = {
                             Text(
-                                text = "আমল, বিশুদ্ধ উচ্চারণ, ফযিলত ও বরকত ভাণ্ডার",
-                                fontSize = 11.5.sp,
-                                color = Color(0xFF4B5563),
+                                text = "দরূদের নাম বা ফজিলত খুঁজুন (যেমন: তাজ, নারিয়া, শিফা)...",
+                                fontSize = 13.sp,
                                 fontFamily = LocalAppFontFamily.current
                             )
-                        }
-
-                        // Global Font Scaling Action Buttons (A- and A+)
-                        FontSizeActionButtons()
-
-                        // Text Size Control Toggle Button
-                        IconButton(
-                            onClick = { showFontSizeControls = !showFontSizeControls }
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.FormatSize,
-                                contentDescription = "ফন্ট সাইজ পরিবর্তন",
-                                tint = if (showFontSizeControls) Color(0xFF059669) else Color(0xFF374151)
-                            )
-                        }
-
-                        // Search Toggle Button
-                        IconButton(
-                            onClick = {
-                                isSearchActive = !isSearchActive
-                                if (!isSearchActive) searchQuery = ""
+                        },
+                        singleLine = true,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 12.dp, vertical = 6.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = Color(0xFF10B981),
+                            unfocusedBorderColor = Color(0xFFD1D5DB)
+                        ),
+                        shape = RoundedCornerShape(12.dp),
+                        trailingIcon = {
+                            if (searchQuery.isNotEmpty()) {
+                                IconButton(onClick = { searchQuery = "" }) {
+                                    Icon(imageVector = Icons.Default.Close, contentDescription = "মুছুন", tint = Color.Gray)
+                                }
                             }
-                        ) {
-                            Icon(
-                                imageVector = if (isSearchActive) Icons.Default.Close else Icons.Default.Search,
-                                contentDescription = "অনুসন্ধান",
-                                tint = if (isSearchActive) Color(0xFFDC2626) else Color(0xFF374151)
-                            )
                         }
-                    }
+                    )
+                }
+            }
 
-                    // COLLAPSIBLE FONT SIZE CONTROL BAR (User-friendly: text large/small)
-                    AnimatedVisibility(visible = showFontSizeControls) {
+            // SCROLLABLE TABS (Distinct Tabs / Sections)
+            ScrollableTabRow(
+                selectedTabIndex = selectedTabIndex,
+                edgePadding = 12.dp,
+                containerColor = Color.Transparent,
+                divider = {},
+                indicator = {}
+            ) {
+                tabs.forEachIndexed { index, tab ->
+                    val isSelected = selectedTabIndex == index
+                    Tab(
+                        selected = isSelected,
+                        onClick = {
+                            selectedTabIndex = index
+                            coroutineScope.launch {
+                                listState.scrollToItem(0)
+                            }
+                        },
+                        modifier = Modifier.padding(vertical = 6.dp, horizontal = 3.dp)
+                    ) {
                         Surface(
-                            modifier = Modifier.fillMaxWidth(),
-                            color = Color(0xFFECFDF5).copy(alpha = 0.95f),
-                            border = BorderStroke(1.dp, Color(0xFF10B981).copy(alpha = 0.2f))
+                            shape = RoundedCornerShape(20.dp),
+                            color = if (isSelected) MaterialTheme.colorScheme.primary else Color.White.copy(alpha = 0.8f),
+                            border = BorderStroke(
+                                1.dp,
+                                if (isSelected) MaterialTheme.colorScheme.primary else Color(0xFF10B981).copy(alpha = 0.25f)
+                            ),
+                            shadowElevation = if (isSelected) 3.dp else 0.dp
                         ) {
                             Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(horizontal = 16.dp, vertical = 8.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.SpaceBetween
+                                modifier = Modifier.padding(horizontal = 14.dp, vertical = 7.dp),
+                                verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Text(
-                                        text = "টেক্সট সাইজ:",
-                                        fontSize = 13.sp,
-                                        fontWeight = FontWeight.SemiBold,
-                                        color = Color(0xFF065F46),
-                                        fontFamily = LocalAppFontFamily.current
-                                    )
-                                    Spacer(modifier = Modifier.width(8.dp))
-                                    val percentageBn = when {
-                                        fontScale <= 0.85f -> "৮৫%"
-                                        fontScale <= 1.0f -> "১০০% (স্বাভাবিক)"
-                                        fontScale <= 1.15f -> "১১৫%"
-                                        fontScale <= 1.30f -> "১৩০%"
-                                        else -> "১৫০% (বড়)"
-                                    }
-                                    Text(
-                                        text = percentageBn,
-                                        fontSize = 12.sp,
-                                        fontWeight = FontWeight.Bold,
-                                        color = Color(0xFF047857),
-                                        fontFamily = LocalAppFontFamily.current
-                                    )
-                                }
-
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    // A- (Small)
-                                    Surface(
-                                        modifier = Modifier
-                                            .size(34.dp)
-                                            .clickable {
-                                                if (fontController != null) {
-                                                    fontController.onDecrease()
-                                                } else if (localFontScale > 0.85f) {
-                                                    localFontScale -= 0.15f
-                                                }
-                                            },
-                                        shape = RoundedCornerShape(8.dp),
-                                        color = Color.White,
-                                        border = BorderStroke(1.dp, Color(0xFF10B981).copy(alpha = 0.3f))
-                                    ) {
-                                        Box(contentAlignment = Alignment.Center) {
-                                            Text(
-                                                text = "A-",
-                                                fontWeight = FontWeight.Bold,
-                                                fontSize = 13.sp,
-                                                color = Color(0xFF065F46)
-                                            )
-                                        }
-                                    }
-
-                                    Spacer(modifier = Modifier.width(6.dp))
-
-                                    // Reset to 1.0
-                                    Surface(
-                                        modifier = Modifier
-                                            .height(34.dp)
-                                            .clickable {
-                                                if (fontController != null) {
-                                                    fontController.onReset()
-                                                } else {
-                                                    localFontScale = 1.0f
-                                                }
-                                            }
-                                            .padding(horizontal = 4.dp),
-                                        shape = RoundedCornerShape(8.dp),
-                                        color = Color.White,
-                                        border = BorderStroke(1.dp, Color(0xFF10B981).copy(alpha = 0.3f))
-                                    ) {
-                                        Box(contentAlignment = Alignment.Center, modifier = Modifier.padding(horizontal = 8.dp)) {
-                                            Text(
-                                                text = "রিসেট",
-                                                fontWeight = FontWeight.SemiBold,
-                                                fontSize = 11.sp,
-                                                color = Color(0xFF374151),
-                                                fontFamily = LocalAppFontFamily.current
-                                            )
-                                        }
-                                    }
-
-                                    Spacer(modifier = Modifier.width(6.dp))
-
-                                    // A+ (Large)
-                                    Surface(
-                                        modifier = Modifier
-                                            .size(34.dp)
-                                            .clickable {
-                                                if (fontController != null) {
-                                                    fontController.onIncrease()
-                                                } else if (localFontScale < 1.5f) {
-                                                    localFontScale += 0.15f
-                                                }
-                                            },
-                                        shape = RoundedCornerShape(8.dp),
-                                        color = Color.White,
-                                        border = BorderStroke(1.dp, Color(0xFF10B981).copy(alpha = 0.3f))
-                                    ) {
-                                        Box(contentAlignment = Alignment.Center) {
-                                            Text(
-                                                text = "A+",
-                                                fontWeight = FontWeight.Bold,
-                                                fontSize = 14.sp,
-                                                color = Color(0xFF065F46)
-                                            )
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-
-                    // COLLAPSIBLE SEARCH BAR
-                    AnimatedVisibility(visible = isSearchActive) {
-                        Surface(
-                            modifier = Modifier.fillMaxWidth(),
-                            color = Color.White.copy(alpha = 0.95f),
-                            border = BorderStroke(1.dp, Color(0xFFE5E7EB))
-                        ) {
-                            OutlinedTextField(
-                                value = searchQuery,
-                                onValueChange = { searchQuery = it },
-                                placeholder = {
-                                    Text(
-                                        text = "দরূদের নাম বা ফজিলত খুঁজুন (যেমন: তাজ, নারিয়া, শিফা)...",
-                                        fontSize = 13.sp,
-                                        fontFamily = LocalAppFontFamily.current
-                                    )
-                                },
-                                singleLine = true,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(horizontal = 12.dp, vertical = 6.dp),
-                                colors = OutlinedTextFieldDefaults.colors(
-                                    focusedBorderColor = Color(0xFF10B981),
-                                    unfocusedBorderColor = Color(0xFFD1D5DB)
-                                ),
-                                shape = RoundedCornerShape(12.dp),
-                                trailingIcon = {
-                                    if (searchQuery.isNotEmpty()) {
-                                        IconButton(onClick = { searchQuery = "" }) {
-                                            Icon(imageVector = Icons.Default.Close, contentDescription = "মুছুন", tint = Color.Gray)
-                                        }
-                                    }
-                                }
-                            )
-                        }
-                    }
-
-                    // SCROLLABLE TABS (5 Distinct Tabs / Sections)
-                    ScrollableTabRow(
-                        selectedTabIndex = selectedTabIndex,
-                        edgePadding = 12.dp,
-                        containerColor = Color.Transparent,
-                        divider = {},
-                        indicator = {}
-                    ) {
-                        tabs.forEachIndexed { index, tab ->
-                            val isSelected = selectedTabIndex == index
-                            Tab(
-                                selected = isSelected,
-                                onClick = {
-                                    selectedTabIndex = index
-                                    coroutineScope.launch {
-                                        listState.scrollToItem(0)
-                                    }
-                                },
-                                modifier = Modifier.padding(vertical = 6.dp, horizontal = 3.dp)
-                            ) {
+                                Text(
+                                    text = tab.tabTitleBn,
+                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                    color = if (isSelected) Color.White else Color(0xFF374151),
+                                    fontSize = 13.sp,
+                                    fontFamily = LocalAppFontFamily.current
+                                )
+                                Spacer(modifier = Modifier.width(5.dp))
                                 Surface(
-                                    shape = RoundedCornerShape(20.dp),
-                                    color = if (isSelected) Color(0xFF059669) else Color.White.copy(alpha = 0.8f),
-                                    border = BorderStroke(
-                                        1.dp,
-                                        if (isSelected) Color(0xFF047857) else Color(0xFF10B981).copy(alpha = 0.25f)
-                                    ),
-                                    shadowElevation = if (isSelected) 3.dp else 0.dp
+                                    shape = RoundedCornerShape(10.dp),
+                                    color = if (isSelected) Color.White.copy(alpha = 0.25f) else Color(0xFFF3F4F6)
                                 ) {
-                                    Row(
-                                        modifier = Modifier.padding(horizontal = 14.dp, vertical = 7.dp),
-                                        verticalAlignment = Alignment.CenterVertically
-                                    ) {
-                                        Text(
-                                            text = tab.tabTitleBn,
-                                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                                            color = if (isSelected) Color.White else Color(0xFF374151),
-                                            fontSize = 13.sp,
-                                            fontFamily = LocalAppFontFamily.current
-                                        )
-                                        Spacer(modifier = Modifier.width(5.dp))
-                                        Surface(
-                                            shape = RoundedCornerShape(10.dp),
-                                            color = if (isSelected) Color.White.copy(alpha = 0.25f) else Color(0xFFF3F4F6)
-                                        ) {
-                                            Text(
-                                                text = tab.badgeBn,
-                                                fontSize = 10.sp,
-                                                fontWeight = FontWeight.SemiBold,
-                                                color = if (isSelected) Color.White else Color(0xFF059669),
-                                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
-                                                fontFamily = LocalAppFontFamily.current
-                                            )
-                                        }
-                                    }
+                                    Text(
+                                        text = tab.badgeBn,
+                                        fontSize = 10.sp,
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = if (isSelected) Color.White else MaterialTheme.colorScheme.primary,
+                                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                                        fontFamily = LocalAppFontFamily.current
+                                    )
                                 }
                             }
                         }
@@ -860,49 +737,66 @@ private fun TabHeaderBanner(
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(18.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White.copy(alpha = 0.88f)),
-        border = BorderStroke(1.dp, Color(0xFF10B981).copy(alpha = 0.25f)),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.45f)
+        ),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.25f)),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
-        Column(
+        Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp)
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
+            Surface(
+                modifier = Modifier.size(52.dp),
+                shape = RoundedCornerShape(14.dp),
+                color = MaterialTheme.colorScheme.primary
             ) {
-                Text(
-                    text = title,
-                    fontSize = 17.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color(0xFF065F46),
-                    fontFamily = LocalAppFontFamily.current
-                )
-                Surface(
-                    color = Color(0xFF10B981).copy(alpha = 0.15f),
-                    shape = RoundedCornerShape(12.dp)
-                ) {
-                    Text(
-                        text = countText,
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color(0xFF047857),
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
-                        fontFamily = LocalAppFontFamily.current
+                Box(contentAlignment = Alignment.Center) {
+                    Icon(
+                        imageVector = Icons.Default.Favorite,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onPrimary,
+                        modifier = Modifier.size(28.dp)
                     )
                 }
             }
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(
-                text = subtitle,
-                fontSize = 12.5.sp,
-                color = Color(0xFF4B5563),
-                lineHeight = 17.sp,
-                fontFamily = LocalAppFontFamily.current
-            )
+
+            Spacer(modifier = Modifier.width(14.dp))
+
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    lineHeight = 22.sp
+                )
+                if (subtitle.isNotBlank()) {
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = subtitle,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        lineHeight = 17.sp
+                    )
+                }
+                Spacer(modifier = Modifier.height(6.dp))
+                Surface(
+                    shape = RoundedCornerShape(8.dp),
+                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
+                ) {
+                    Text(
+                        text = countText,
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                    )
+                }
+            }
         }
     }
 }

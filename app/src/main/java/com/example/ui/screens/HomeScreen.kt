@@ -58,6 +58,7 @@ import com.example.data.datasource.IslamicLifeData
 import com.example.data.model.NofolSalatItem
 import com.example.data.model.NofolSalatRepository
 import com.example.ui.components.AllFeaturesDialog
+import com.example.ui.components.AllahNamesOptionsDialog
 import com.example.ui.components.DailySalatCalendarDialog
 import com.example.ui.components.DailyWisdomSection
 import com.example.ui.components.DateTimeMasterCard
@@ -73,6 +74,7 @@ import com.example.ui.components.SalatTimingsSection
 import com.example.ui.components.SehriIftarFullScreenDialog
 import com.example.ui.components.SehriIftarSummaryCard
 import com.example.ui.components.TopFeaturesSection
+import com.example.ui.components.TripleCalendarDialog
 import com.example.ui.theme.IslamicGold
 import com.example.ui.viewmodel.AppTab
 import com.example.ui.viewmodel.MainViewModel
@@ -104,6 +106,8 @@ fun HomeScreen(
     var selectedNofolSalat by remember { mutableStateOf<NofolSalatItem?>(null) }
     var showAllFeaturesDialog by remember { mutableStateOf(false) }
     var showSalatCalendarDialog by remember { mutableStateOf(false) }
+    var showTripleCalendarDialog by remember { mutableStateOf(false) }
+    var showAllahNamesOptionsDialog by remember { mutableStateOf(false) }
 
     // Full 17 Features list as requested by user
     val allAppFeatures = remember(prayerStatus, salatConfig, scorecardCompletedCount, scorecardStreak) {
@@ -132,7 +136,7 @@ fun HomeScreen(
                 icon = Icons.Default.CalendarMonth,
                 iconColor = Color(0xFFF59E0B),
                 isTopEight = true,
-                onClickAction = { showSalatCalendarDialog = true }
+                onClickAction = { showTripleCalendarDialog = true }
             ),
             // ৩. সেহেরি ও ইফতাএর সময়
             HomeFeatureItem(
@@ -212,19 +216,18 @@ fun HomeScreen(
                 isTopEight = true,
                 onClickAction = { viewModel.selectTab(AppTab.ROUTINE) }
             ),
-            // ৯. আল্লাহ্র ৯৯ নাম
+            // ৯. আল্লাহর ৯৯ নাম
             HomeFeatureItem(
                 id = "names_of_allah",
                 serialNumberBn = "০৯",
-                titleBn = "৯. আল্লাহ্র ৯৯ নাম",
-                shortTitleBn = "আল্লাহ্র ৯৯ নাম",
+                titleBn = "৯. আল্লাহর ৯৯ নাম",
+                shortTitleBn = "৯. আল্লাহর ৯৯ নাম",
                 subtitleBn = "আসমাউল হুসনা, বাংলা অর্থ, গুরুত্ব ও প্রয়োজনভিত্তিক খাস আমল",
                 categoryBn = "আল্লাহর নাম",
                 icon = Icons.Default.Star,
                 iconColor = IslamicGold,
                 onClickAction = {
-                    viewModel.selectTab(AppTab.MORE)
-                    viewModel.navigateToMoreSubScreen(MoreSubScreen.NAMES_OF_ALLAH)
+                    showAllahNamesOptionsDialog = true
                 }
             ),
             // ১০. রুকিয়াহ
@@ -375,7 +378,7 @@ fun HomeScreen(
             .padding(contentPadding),
         contentPadding = PaddingValues(bottom = 24.dp)
     ) {
-        // 1. Welcoming Cover & Revamped Salat Timing Card
+        // 1. Welcoming Cover & Revamped Salat Timing Card with Relocated Time & Date
         item {
             IslamicHeaderCover(
                 salutation = prayerStatus.salutationBn,
@@ -387,6 +390,8 @@ fun HomeScreen(
                 remainingMinutes = prayerStatus.remainingMinutes,
                 remainingSeconds = prayerStatus.remainingSeconds,
                 forbiddenTimeInfo = prayerStatus.forbiddenTimeInfo,
+                calendarInfo = tripleCalendar,
+                onTapTimeDate = { showTripleCalendarDialog = true },
                 onOpenSettings = {
                     viewModel.openSettings(AppTab.HOME)
                 }
@@ -439,14 +444,6 @@ fun HomeScreen(
             TopFeaturesSection(
                 topFeatures = allAppFeatures.take(8),
                 onOpenAllFeatures = { showAllFeaturesDialog = true }
-            )
-        }
-
-        // 3. Date & Time Master Card with Expandable Triple Calendars
-        item {
-            DateTimeMasterCard(
-                calendarInfo = tripleCalendar,
-                salatConfig = salatConfig
             )
         }
 
@@ -551,6 +548,33 @@ fun HomeScreen(
         DailySalatCalendarDialog(
             onDismiss = { showSalatCalendarDialog = false },
             salatConfig = salatConfig
+        )
+    }
+
+    // Standalone Triple Calendar Dialog (Triggered when tapping Time & Date or Feature 2)
+    if (showTripleCalendarDialog) {
+        TripleCalendarDialog(
+            calendarInfo = tripleCalendar,
+            salatConfig = salatConfig,
+            onDismiss = { showTripleCalendarDialog = false }
+        )
+    }
+
+    // Allah's 99 Names Options Dialog (Option 1: 99 Names & Fojilot, Option 2: Needs-based Duas)
+    if (showAllahNamesOptionsDialog) {
+        AllahNamesOptionsDialog(
+            onDismiss = { showAllahNamesOptionsDialog = false },
+            onSelectNamesAndFojilot = {
+                viewModel.selectTab(AppTab.MORE)
+                viewModel.navigateToMoreSubScreen(MoreSubScreen.NAMES_OF_ALLAH)
+            },
+            onSelectNeedsBasedDua = {
+                viewModel.selectTab(AppTab.MORE)
+                (viewModel.getIslamicLifeSection("asmaul_husna_special")
+                    ?: IslamicLifeData.sections.find { it.id == "asmaul_husna_special" })?.let {
+                    viewModel.openIslamicLifeSection(it)
+                }
+            }
         )
     }
 }

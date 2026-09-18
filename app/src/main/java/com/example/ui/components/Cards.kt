@@ -50,10 +50,16 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import kotlinx.coroutines.delay
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.Date
+import java.util.Locale
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -82,6 +88,187 @@ import com.example.ui.theme.LocalAppFontFamily
 import com.example.ui.theme.LocalBanglaFontFamily
 import com.example.util.CalendarHelper
 
+// -------------------------------------------------------------
+// RELOCATED TIME & DATE CARD (Positioned right below "আস-সালামু আলাইকুম")
+// -------------------------------------------------------------
+@Composable
+fun HeaderTimeDateCard(
+    calendarInfo: CalendarHelper.TripleCalendarInfo,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    var currentTime by remember { mutableStateOf(Date()) }
+    LaunchedEffect(Unit) {
+        while (true) {
+            currentTime = Date()
+            delay(1000)
+        }
+    }
+
+    val cal = remember(currentTime) { Calendar.getInstance().apply { time = currentTime } }
+    val currentDayOfMonth = cal.get(Calendar.DAY_OF_MONTH)
+    val currentMonth = cal.get(Calendar.MONTH)
+    val currentYear = cal.get(Calendar.YEAR)
+
+    val banglaDayStr = CalendarHelper.toBanglaNumber(currentDayOfMonth)
+    val bengaliMonthNames = listOf(
+        "জানুয়ারি", "ফেব্রুয়ারি", "মার্চ", "এপ্রিল", "মে", "জুন",
+        "জুলাই", "আগস্ট", "সেপ্টেম্বর", "অক্টোবর", "নভেম্বর", "ডিসেম্বর"
+    )
+    val engMonthBn = bengaliMonthNames.getOrElse(currentMonth) { "সেপ্টেম্বর" }
+    val banglaYearStr = CalendarHelper.toBanglaNumber(currentYear)
+    val dynamicGregorianDateBn = "$banglaDayStr $engMonthBn $banglaYearStr খ্রিস্টাব্দ"
+
+    val hourFormat = remember { SimpleDateFormat("hh", Locale.ENGLISH) }
+    val minFormat = remember { SimpleDateFormat("mm", Locale.ENGLISH) }
+    val secFormat = remember { SimpleDateFormat("ss", Locale.ENGLISH) }
+    val amPmFormat = remember { SimpleDateFormat("a", Locale.ENGLISH) }
+
+    val hours = hourFormat.format(currentTime)
+    val minutes = minFormat.format(currentTime)
+    val seconds = secFormat.format(currentTime)
+    val amPm = amPmFormat.format(currentTime)
+
+    val liteEyeSoothingBg = Color(0xFFFFFDF7)
+    val soothingBorder = Color(0xFFF1E6D3)
+
+    Surface(
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(16.dp))
+            .clickable(onClick = onClick)
+            .testTag("header_time_date_card"),
+        shape = RoundedCornerShape(16.dp),
+        color = liteEyeSoothingBg,
+        border = BorderStroke(1.dp, soothingBorder),
+        shadowElevation = 2.dp
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 10.dp, vertical = 7.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            // Digital Clock
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center
+            ) {
+                Text(
+                    text = hours,
+                    fontSize = 46.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    fontFamily = LocalAppFontFamily.current,
+                    color = Color(0xFF111827),
+                    letterSpacing = (-1).sp
+                )
+
+                // Colon Separator
+                Column(
+                    modifier = Modifier.padding(horizontal = 6.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Surface(
+                        modifier = Modifier.size(6.dp),
+                        shape = CircleShape,
+                        color = Color(0xFF9CA3AF)
+                    ) {}
+                    Surface(
+                        modifier = Modifier.size(6.dp),
+                        shape = CircleShape,
+                        color = Color(0xFF9CA3AF)
+                    ) {}
+                }
+
+                Text(
+                    text = minutes,
+                    fontSize = 46.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    fontFamily = LocalAppFontFamily.current,
+                    color = Color(0xFF111827),
+                    letterSpacing = (-1).sp
+                )
+
+                // Colon Separator
+                Column(
+                    modifier = Modifier.padding(horizontal = 6.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Surface(
+                        modifier = Modifier.size(6.dp),
+                        shape = CircleShape,
+                        color = Color(0xFF9CA3AF)
+                    ) {}
+                    Surface(
+                        modifier = Modifier.size(6.dp),
+                        shape = CircleShape,
+                        color = Color(0xFF9CA3AF)
+                    ) {}
+                }
+
+                // Seconds and AM/PM Stack
+                Column(
+                    modifier = Modifier.padding(start = 2.dp),
+                    horizontalAlignment = Alignment.Start,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    Text(
+                        text = seconds,
+                        fontSize = 19.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF4B5563)
+                    )
+                    Spacer(modifier = Modifier.height(2.dp))
+                    Surface(
+                        color = Color(0xFFDCFCE7),
+                        shape = RoundedCornerShape(5.dp)
+                    ) {
+                        Text(
+                            text = amPm,
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.Black,
+                            color = Color(0xFF15803D),
+                            modifier = Modifier.padding(horizontal = 5.dp, vertical = 1.dp)
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(2.dp))
+
+            // Primary Gregorian & Bangla Day Date (English calendar date in Bangla)
+            Text(
+                text = "$dynamicGregorianDateBn, ${calendarInfo.englishDay}",
+                fontSize = 15.sp,
+                fontWeight = FontWeight.Bold,
+                fontFamily = LocalBanglaFontFamily.current,
+                color = Color(0xFF111827),
+                letterSpacing = (-0.2).sp,
+                textAlign = TextAlign.Center
+            )
+
+            // Rest of the two calendars' current date in one line in Bangla (Bengali San & Hijri Islamic San)
+            val cleanBengaliDate = remember(calendarInfo.bengaliDateFormatted) {
+                calendarInfo.bengaliDateFormatted.substringBefore("(").trim()
+            }
+            val cleanHijriDate = remember(calendarInfo.hijriDateFormatted) {
+                calendarInfo.hijriDateFormatted.trim()
+            }
+            Text(
+                text = "$cleanBengaliDate  •  $cleanHijriDate",
+                fontSize = 12.5.sp,
+                fontWeight = FontWeight.SemiBold,
+                fontFamily = LocalBanglaFontFamily.current,
+                color = Color(0xFF15803D),
+                modifier = Modifier.padding(top = 2.dp),
+                textAlign = TextAlign.Center
+            )
+        }
+    }
+}
+
 @Composable
 fun IslamicHeaderCover(
     salutation: String,
@@ -93,6 +280,8 @@ fun IslamicHeaderCover(
     remainingMinutes: Int = 0,
     remainingSeconds: Int = 0,
     forbiddenTimeInfo: ForbiddenTimeInfo = ForbiddenTimeInfo(),
+    calendarInfo: CalendarHelper.TripleCalendarInfo? = null,
+    onTapTimeDate: () -> Unit = {},
     onOpenSettings: () -> Unit = {},
     onClickCard: () -> Unit = {}
 ) {
@@ -125,48 +314,57 @@ fun IslamicHeaderCover(
                     .fillMaxWidth()
                     .padding(start = 12.dp, end = 12.dp, top = 8.dp, bottom = 10.dp)
             ) {
-            // Header Top Bar
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween,
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp)
-            ) {
-                Column {
-                    Text(
-                        text = "আস-সালামু আলাইকুম",
-                        style = MaterialTheme.typography.titleLarge.copy(fontSize = 19.sp),
-                        fontFamily = LocalBanglaFontFamily.current,
-                        fontWeight = FontWeight.Bold,
-                        letterSpacing = 0.3.sp,
-                        color = Color.White
+                // Header Top Bar
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp)
+                ) {
+                    Column {
+                        Text(
+                            text = "আস-সালামু আলাইকুম",
+                            style = MaterialTheme.typography.titleLarge.copy(fontSize = 19.sp),
+                            fontFamily = LocalBanglaFontFamily.current,
+                            fontWeight = FontWeight.Bold,
+                            letterSpacing = 0.3.sp,
+                            color = Color.White
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // Relocated 'Time & Date' Section - immediately below 'আস-সালামু আলাইকুম'
+                if (calendarInfo != null) {
+                    HeaderTimeDateCard(
+                        calendarInfo = calendarInfo,
+                        onClick = onTapTimeDate
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                }
+
+                // Revamped 3-Part Salat Timing Card (Matching User Specimen)
+                Surface(
+                    color = IslamicIvory,
+                    shape = RoundedCornerShape(16.dp),
+                    shadowElevation = 2.dp,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    SalatTimingFlipCard(
+                        nextPrayerName = nextPrayerName,
+                        presentPrayerName = presentPrayerName,
+                        presentNofolName = presentNofolName,
+                        remainingHours = remainingHours,
+                        remainingMinutes = remainingMinutes,
+                        remainingSeconds = remainingSeconds,
+                        countdownFormatted = countdownFormatted,
+                        forbiddenTimeInfo = forbiddenTimeInfo,
+                        onClickCard = onClickCard
                     )
                 }
             }
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            // Revamped 3-Part Salat Timing Card (Matching User Specimen)
-            Surface(
-                color = IslamicIvory,
-                shape = RoundedCornerShape(16.dp),
-                shadowElevation = 2.dp,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                SalatTimingFlipCard(
-                    nextPrayerName = nextPrayerName,
-                    presentPrayerName = presentPrayerName,
-                    presentNofolName = presentNofolName,
-                    remainingHours = remainingHours,
-                    remainingMinutes = remainingMinutes,
-                    remainingSeconds = remainingSeconds,
-                    countdownFormatted = countdownFormatted,
-                    forbiddenTimeInfo = forbiddenTimeInfo,
-                    onClickCard = onClickCard
-                )
-            }
         }
     }
-}
 }
 
 @Composable

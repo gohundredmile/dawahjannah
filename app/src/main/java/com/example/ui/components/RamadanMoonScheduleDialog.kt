@@ -53,8 +53,10 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -67,9 +69,11 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
@@ -143,8 +147,47 @@ fun RamadanMoonScheduleDialog(
             decorFitsSystemWindows = false
         )
     ) {
-        Scaffold(
-            topBar = {
+        val globalFontController = LocalFontScaleController.current
+        var localFontScale by remember { mutableFloatStateOf(globalFontController?.scale ?: 1.0f) }
+
+        LaunchedEffect(globalFontController?.scale) {
+            globalFontController?.scale?.let { localFontScale = it }
+        }
+
+        val dialogFontController = remember(globalFontController, localFontScale) {
+            FontScaleController(
+                scale = localFontScale,
+                canDecrease = localFontScale > 0.85f,
+                canIncrease = localFontScale < 1.6f,
+                onDecrease = {
+                    localFontScale = (localFontScale - 0.1f).coerceAtLeast(0.85f)
+                    globalFontController?.onDecrease?.invoke()
+                },
+                onIncrease = {
+                    localFontScale = (localFontScale + 0.1f).coerceAtMost(1.6f)
+                    globalFontController?.onIncrease?.invoke()
+                },
+                onReset = {
+                    localFontScale = 1.0f
+                    globalFontController?.onReset?.invoke()
+                }
+            )
+        }
+
+        val baseDensity = LocalDensity.current
+        val scaledDensity = remember(baseDensity, localFontScale) {
+            Density(
+                density = baseDensity.density,
+                fontScale = baseDensity.fontScale * localFontScale
+            )
+        }
+
+        CompositionLocalProvider(
+            LocalDensity provides scaledDensity,
+            LocalFontScaleController provides dialogFontController
+        ) {
+            Scaffold(
+                topBar = {
                 TopAppBar(
                     title = {
                         Column {
@@ -359,7 +402,7 @@ fun RamadanMoonScheduleDialog(
                                     Spacer(modifier = Modifier.width(8.dp))
                                     Text(
                                         text = if (liveState.isLiveConnected) "অনলাইন লাইভ ডাটা সক্রিয়" else "সংরক্ষিত জ্যোতির্বৈজ্ঞানিক ডাটা",
-                                        fontSize = 12.5.sp,
+                                        fontSize = 13.5.sp,
                                         fontWeight = FontWeight.Bold,
                                         color = if (liveState.isLiveConnected) Color(0xFF047857) else Color(0xFFB45309)
                                     )
@@ -393,7 +436,7 @@ fun RamadanMoonScheduleDialog(
                                             Spacer(modifier = Modifier.width(4.dp))
                                             Text(
                                                 text = "লাইভ রিফ্রেশ",
-                                                fontSize = 11.sp,
+                                                fontSize = 12.5.sp,
                                                 color = Color(0xFF047857),
                                                 fontWeight = FontWeight.SemiBold
                                             )
@@ -405,7 +448,7 @@ fun RamadanMoonScheduleDialog(
                             if (liveState.lastCheckedTimeBn.isNotEmpty()) {
                                 Text(
                                     text = liveState.lastCheckedTimeBn,
-                                    fontSize = 10.5.sp,
+                                    fontSize = 11.5.sp,
                                     color = Color(0xFF6B7280),
                                     modifier = Modifier.padding(top = 2.dp, bottom = 4.dp)
                                 )
@@ -413,8 +456,8 @@ fun RamadanMoonScheduleDialog(
 
                             Text(
                                 text = liveState.headlineBn,
-                                fontSize = 12.sp,
-                                lineHeight = 17.sp,
+                                fontSize = 13.5.sp,
+                                lineHeight = 19.sp,
                                 color = Color(0xFF374151),
                                 modifier = Modifier.padding(top = 4.dp)
                             )
@@ -429,24 +472,24 @@ fun RamadanMoonScheduleDialog(
                                 Column(modifier = Modifier.padding(10.dp)) {
                                     Text(
                                         text = "চাঁদ দেখার পূর্বাভাস ও বৈজ্ঞানিক প্যারামিটার:",
-                                        fontSize = 11.5.sp,
+                                        fontSize = 13.sp,
                                         fontWeight = FontWeight.Bold,
                                         color = Color(0xFF1E293B)
                                     )
                                     Spacer(modifier = Modifier.height(3.dp))
                                     Text(
                                         text = "• চাঁদের দৃশ্যমানতার স্থিতি: ${liveState.sightingProbabilityBn}",
-                                        fontSize = 11.sp,
+                                        fontSize = 12.5.sp,
                                         color = Color(0xFF475569)
                                     )
                                     Text(
                                         text = "• জাতীয় সমন্বয়: ${liveState.islamicFoundationStatusBn}",
-                                        fontSize = 11.sp,
+                                        fontSize = 12.5.sp,
                                         color = Color(0xFF475569)
                                     )
                                     Text(
                                         text = "• আন্তর্জাতিক ডাটাবেজ: ${liveState.internationalStatusBn}",
-                                        fontSize = 11.sp,
+                                        fontSize = 12.5.sp,
                                         color = Color(0xFF475569)
                                     )
                                 }
@@ -460,7 +503,7 @@ fun RamadanMoonScheduleDialog(
                     Column(modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp)) {
                         Text(
                             text = "চাঁদ দেখা সমন্বয় পদ্ধতি (Sighting Criteria):",
-                            fontSize = 13.sp,
+                            fontSize = 14.5.sp,
                             fontWeight = FontWeight.Bold,
                             color = Color(0xFF1F2937),
                             modifier = Modifier.padding(bottom = 6.dp)
@@ -493,7 +536,7 @@ fun RamadanMoonScheduleDialog(
                                     Spacer(modifier = Modifier.width(6.dp))
                                     Text(
                                         text = "বাংলাদেশ ও স্থানীয়",
-                                        fontSize = 12.5.sp,
+                                        fontSize = 13.5.sp,
                                         fontWeight = FontWeight.Bold,
                                         color = if (isLocalBangladesh) Color.White else Color(0xFF374151)
                                     )
@@ -523,7 +566,7 @@ fun RamadanMoonScheduleDialog(
                                     Spacer(modifier = Modifier.width(6.dp))
                                     Text(
                                         text = "সৌদি ও আন্তর্জাতিক",
-                                        fontSize = 12.5.sp,
+                                        fontSize = 13.5.sp,
                                         fontWeight = FontWeight.Bold,
                                         color = if (!isLocalBangladesh) Color.White else Color(0xFF374151)
                                     )
@@ -536,7 +579,7 @@ fun RamadanMoonScheduleDialog(
                                 "ভিত্তি: জাতীয় চাঁদ দেখা কমিটি (বায়তুল মোকাররম) ও ইসলামিক ফাউন্ডেশন বাংলাদেশ।"
                             else
                                 "ভিত্তি: উম্মুল কুরা বর্ষপঞ্জি, মক্কা মুকাররমা ও আন্তর্জাতিক ক্রিসেন্ট পর্যবেক্ষণ প্রকল্প (ICOP)।",
-                            fontSize = 11.sp,
+                            fontSize = 12.sp,
                             color = Color(0xFF6B7280),
                             modifier = Modifier.padding(top = 4.dp, start = 2.dp)
                         )
@@ -555,13 +598,13 @@ fun RamadanMoonScheduleDialog(
                         ) {
                             Text(
                                 text = "আসন্ন বছরসমূহের রমজান (Upcoming Years)",
-                                fontSize = 13.5.sp,
+                                fontSize = 14.5.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = Color(0xFF1F2937)
                             )
                             Text(
                                 text = "১৪৪৮-১৪৫৩ হিজরি",
-                                fontSize = 11.5.sp,
+                                fontSize = 12.5.sp,
                                 color = Color(0xFF047857),
                                 fontWeight = FontWeight.SemiBold
                             )
@@ -591,13 +634,13 @@ fun RamadanMoonScheduleDialog(
                                     ) {
                                         Text(
                                             text = "${CalendarHelper.toBanglaNumber(item.hijriYear)} হিজরি",
-                                            fontSize = 13.sp,
+                                            fontSize = 14.sp,
                                             fontWeight = FontWeight.Bold,
                                             color = if (isSelected) Color.White else Color(0xFF1F2937)
                                         )
                                         Text(
                                             text = "${CalendarHelper.toBanglaNumber(item.gregorianYear)} খ্রি.",
-                                            fontSize = 11.sp,
+                                            fontSize = 12.sp,
                                             color = if (isSelected) Color(0xFFA7F3D0) else Color(0xFF6B7280)
                                         )
                                     }
@@ -627,13 +670,13 @@ fun RamadanMoonScheduleDialog(
                                 Column {
                                     Text(
                                         text = activeForecast.hijriTitleBn,
-                                        fontSize = 16.sp,
+                                        fontSize = 17.5.sp,
                                         fontWeight = FontWeight.Bold,
                                         color = Color(0xFF065F46)
                                     )
                                     Text(
                                         text = activeForecast.statusBn,
-                                        fontSize = 11.5.sp,
+                                        fontSize = 12.5.sp,
                                         color = Color(0xFFD97706),
                                         fontWeight = FontWeight.Medium
                                     )
@@ -656,7 +699,7 @@ fun RamadanMoonScheduleDialog(
                                         Spacer(modifier = Modifier.width(4.dp))
                                         Text(
                                             text = "হিলাল দৃশ্যমানতা",
-                                            fontSize = 10.5.sp,
+                                            fontSize = 11.5.sp,
                                             fontWeight = FontWeight.Bold,
                                             color = Color(0xFF92400E)
                                         )
@@ -677,10 +720,10 @@ fun RamadanMoonScheduleDialog(
                                         modifier = Modifier.fillMaxWidth(),
                                         horizontalArrangement = Arrangement.SpaceBetween
                                     ) {
-                                        Text("রোজা শুরুর সম্ভাব্য তারিখ:", fontSize = 12.sp, color = Color(0xFF374151))
+                                        Text("রোজা শুরুর সম্ভাব্য তারিখ:", fontSize = 13.sp, color = Color(0xFF374151))
                                         Text(
                                             text = if (isLocalBangladesh) activeForecast.localStartDateBn else activeForecast.internationalStartDateBn,
-                                            fontSize = 12.5.sp,
+                                            fontSize = 13.5.sp,
                                             fontWeight = FontWeight.Bold,
                                             color = Color(0xFF047857)
                                         )
@@ -690,10 +733,10 @@ fun RamadanMoonScheduleDialog(
                                         modifier = Modifier.fillMaxWidth(),
                                         horizontalArrangement = Arrangement.SpaceBetween
                                     ) {
-                                        Text("চাঁদ দেখার সম্ভাব্য রাত:", fontSize = 12.sp, color = Color(0xFF374151))
+                                        Text("চাঁদ দেখার সম্ভাব্য রাত:", fontSize = 13.sp, color = Color(0xFF374151))
                                         Text(
                                             text = activeForecast.moonSightingEveBn,
-                                            fontSize = 11.5.sp,
+                                            fontSize = 12.5.sp,
                                             fontWeight = FontWeight.SemiBold,
                                             color = Color(0xFFB45309)
                                         )
@@ -703,10 +746,10 @@ fun RamadanMoonScheduleDialog(
                                         modifier = Modifier.fillMaxWidth(),
                                         horizontalArrangement = Arrangement.SpaceBetween
                                     ) {
-                                        Text("সম্ভাব্য ঈদুল ফিতর:", fontSize = 12.sp, color = Color(0xFF374151))
+                                        Text("সম্ভাব্য ঈদুল ফিতর:", fontSize = 13.sp, color = Color(0xFF374151))
                                         Text(
                                             text = activeForecast.approxEidDateBn,
-                                            fontSize = 12.sp,
+                                            fontSize = 13.sp,
                                             fontWeight = FontWeight.Bold,
                                             color = Color(0xFF1E40AF)
                                         )
@@ -718,14 +761,14 @@ fun RamadanMoonScheduleDialog(
 
                             Text(
                                 text = "জ্যোতির্বৈজ্ঞানিক হিসাব ও চাঁদের অবস্থান: ${activeForecast.moonPhaseDescription}",
-                                fontSize = 11.5.sp,
-                                lineHeight = 16.sp,
+                                fontSize = 12.5.sp,
+                                lineHeight = 18.sp,
                                 color = Color(0xFF4B5563)
                             )
                             Spacer(modifier = Modifier.height(4.dp))
                             Text(
                                 text = "★ স্বয়ংক্রিয় আপডেট: ${activeForecast.differenceNoteBn}",
-                                fontSize = 11.sp,
+                                fontSize = 12.sp,
                                 color = Color(0xFF047857),
                                 fontWeight = FontWeight.Medium
                             )
@@ -744,13 +787,13 @@ fun RamadanMoonScheduleDialog(
                     ) {
                         Text(
                             text = "৩০ দিনের পূর্ণাঙ্গ রমজান সময়সূচী (${salatConfig.placeNameBn})",
-                            fontSize = 14.5.sp,
+                            fontSize = 16.sp,
                             fontWeight = FontWeight.Bold,
                             color = Color(0xFF1F2937)
                         )
                         Text(
                             text = "৩টি দশক ভিত্তিক",
-                            fontSize = 11.5.sp,
+                            fontSize = 12.5.sp,
                             color = Color(0xFF047857),
                             fontWeight = FontWeight.Medium
                         )
@@ -775,14 +818,14 @@ fun RamadanMoonScheduleDialog(
                             Text(
                                 text = "রমজান ও তারিখ",
                                 modifier = Modifier.weight(1.4f),
-                                fontSize = 11.5.sp,
+                                fontSize = 13.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = Color.White
                             )
                             Text(
                                 text = "সেহরি শেষ",
                                 modifier = Modifier.weight(1f),
-                                fontSize = 11.5.sp,
+                                fontSize = 13.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = Color(0xFFA7F3D0),
                                 textAlign = TextAlign.Center
@@ -790,7 +833,7 @@ fun RamadanMoonScheduleDialog(
                             Text(
                                 text = "ইফতার",
                                 modifier = Modifier.weight(1f),
-                                fontSize = 11.5.sp,
+                                fontSize = 13.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = Color(0xFFFDE68A),
                                 textAlign = TextAlign.Center
@@ -798,7 +841,7 @@ fun RamadanMoonScheduleDialog(
                             Text(
                                 text = "রোজার দৈর্ঘ্য",
                                 modifier = Modifier.weight(1f),
-                                fontSize = 11.sp,
+                                fontSize = 12.5.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = Color.White,
                                 textAlign = TextAlign.Center
@@ -836,7 +879,7 @@ fun RamadanMoonScheduleDialog(
                                 Row(verticalAlignment = Alignment.CenterVertically) {
                                     Text(
                                         text = dayItem.dayNumberBn,
-                                        fontSize = 13.sp,
+                                        fontSize = 14.5.sp,
                                         fontWeight = FontWeight.Bold,
                                         color = ashraColor
                                     )
@@ -848,7 +891,7 @@ fun RamadanMoonScheduleDialog(
                                         ) {
                                             Text(
                                                 text = "কদর",
-                                                fontSize = 9.sp,
+                                                fontSize = 10.sp,
                                                 color = Color.White,
                                                 fontWeight = FontWeight.Bold,
                                                 modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp)
@@ -858,7 +901,7 @@ fun RamadanMoonScheduleDialog(
                                 }
                                 Text(
                                     text = "${dayItem.dateBn} • ${dayItem.dayOfWeekBn}",
-                                    fontSize = 11.sp,
+                                    fontSize = 12.sp,
                                     color = Color(0xFF4B5563)
                                 )
                             }
@@ -866,7 +909,7 @@ fun RamadanMoonScheduleDialog(
                             Text(
                                 text = dayItem.sehriEndBn,
                                 modifier = Modifier.weight(1f),
-                                fontSize = 13.sp,
+                                fontSize = 14.5.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = Color(0xFF047857),
                                 textAlign = TextAlign.Center
@@ -875,7 +918,7 @@ fun RamadanMoonScheduleDialog(
                             Text(
                                 text = dayItem.iftarBn,
                                 modifier = Modifier.weight(1f),
-                                fontSize = 13.sp,
+                                fontSize = 14.5.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = Color(0xFFC2410C),
                                 textAlign = TextAlign.Center
@@ -884,7 +927,7 @@ fun RamadanMoonScheduleDialog(
                             Text(
                                 text = dayItem.durationBn,
                                 modifier = Modifier.weight(1f),
-                                fontSize = 11.sp,
+                                fontSize = 12.5.sp,
                                 color = Color(0xFF374151),
                                 textAlign = TextAlign.Center
                             )
@@ -894,4 +937,5 @@ fun RamadanMoonScheduleDialog(
             }
         }
     }
+}
 }

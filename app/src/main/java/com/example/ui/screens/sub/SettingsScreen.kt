@@ -1118,7 +1118,7 @@ fun SettingsScreen(viewModel: MainViewModel) {
                         color = MaterialTheme.colorScheme.primary
                     )
                     Text(
-                        text = "ভার্সন ১.০ (কনটেন্ট v${viewModel.appliedContentVersion}) • প্যাকেজ: com.dawahtojannah.app",
+                        text = "ভার্সন v${viewModel.installedAppVersionName} (কনটেন্ট v${viewModel.appliedContentVersion}) • প্যাকেজ: com.dawahtojannah.app",
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )

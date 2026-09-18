@@ -55,8 +55,10 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -68,9 +70,11 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
@@ -233,25 +237,64 @@ fun DetailedSehriIftarDialog(
             decorFitsSystemWindows = false
         )
     ) {
-        Scaffold(
-            topBar = {
-                TopAppBar(
-                    title = {
-                        Column {
-                            Text(
-                                text = "সেহেরি ও ইফতারের বিস্তারিত সময়সূচী",
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold,
-                                color = Color(0xFF1E3A2F)
-                            )
-                            Text(
-                                text = "${salatConfig.placeNameBn} • তারিখ অনুযায়ী পূর্ণাঙ্গ সময়তালিকা",
-                                style = MaterialTheme.typography.bodySmall,
-                                fontSize = 11.5.sp,
-                                color = Color(0xFF047857)
-                            )
-                        }
-                    },
+        val globalFontController = LocalFontScaleController.current
+        var localFontScale by remember { mutableFloatStateOf(globalFontController?.scale ?: 1.0f) }
+
+        LaunchedEffect(globalFontController?.scale) {
+            globalFontController?.scale?.let { localFontScale = it }
+        }
+
+        val dialogFontController = remember(globalFontController, localFontScale) {
+            FontScaleController(
+                scale = localFontScale,
+                canDecrease = localFontScale > 0.85f,
+                canIncrease = localFontScale < 1.6f,
+                onDecrease = {
+                    localFontScale = (localFontScale - 0.1f).coerceAtLeast(0.85f)
+                    globalFontController?.onDecrease?.invoke()
+                },
+                onIncrease = {
+                    localFontScale = (localFontScale + 0.1f).coerceAtMost(1.6f)
+                    globalFontController?.onIncrease?.invoke()
+                },
+                onReset = {
+                    localFontScale = 1.0f
+                    globalFontController?.onReset?.invoke()
+                }
+            )
+        }
+
+        val baseDensity = LocalDensity.current
+        val scaledDensity = remember(baseDensity, localFontScale) {
+            Density(
+                density = baseDensity.density,
+                fontScale = baseDensity.fontScale * localFontScale
+            )
+        }
+
+        CompositionLocalProvider(
+            LocalDensity provides scaledDensity,
+            LocalFontScaleController provides dialogFontController
+        ) {
+            Scaffold(
+                topBar = {
+                    TopAppBar(
+                        title = {
+                            Column {
+                                Text(
+                                    text = "সেহেরি ও ইফতারের বিস্তারিত সময়সূচী",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color(0xFF1E3A2F)
+                                )
+                                Text(
+                                    text = "${salatConfig.placeNameBn} • তারিখ অনুযায়ী পূর্ণাঙ্গ সময়তালিকা",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    fontSize = 12.sp,
+                                    color = Color(0xFF047857)
+                                )
+                            }
+                        },
                     navigationIcon = {
                         IconButton(onClick = onDismiss) {
                             Icon(
@@ -424,7 +467,7 @@ fun DetailedSehriIftarDialog(
                         Column(modifier = Modifier.padding(14.dp)) {
                             Text(
                                 text = "মাস ও তারিখ নির্বাচন করুন (Dropdown Selection)",
-                                fontSize = 13.sp,
+                                fontSize = 14.5.sp,
                                 fontWeight = FontWeight.SemiBold,
                                 color = Color(0xFF374151),
                                 modifier = Modifier.padding(bottom = 10.dp)
@@ -459,7 +502,7 @@ fun DetailedSehriIftarDialog(
                                                 Spacer(modifier = Modifier.width(6.dp))
                                                 Text(
                                                     text = monthsBn[selectedMonth],
-                                                    fontSize = 13.5.sp,
+                                                    fontSize = 14.5.sp,
                                                     fontWeight = FontWeight.Bold,
                                                     color = Color(0xFF065F46)
                                                 )
@@ -481,6 +524,7 @@ fun DetailedSehriIftarDialog(
                                                 text = {
                                                     Text(
                                                         text = monthName,
+                                                        fontSize = 14.sp,
                                                         fontWeight = if (index == selectedMonth) FontWeight.Bold else FontWeight.Normal,
                                                         color = if (index == selectedMonth) Color(0xFF047857) else Color.Unspecified
                                                     )
@@ -519,7 +563,7 @@ fun DetailedSehriIftarDialog(
                                                 Spacer(modifier = Modifier.width(6.dp))
                                                 Text(
                                                     text = "${CalendarHelper.toBanglaNumber(selectedDay)} তারিখ",
-                                                    fontSize = 13.5.sp,
+                                                    fontSize = 14.5.sp,
                                                     fontWeight = FontWeight.Bold,
                                                     color = Color(0xFF92400E)
                                                 )
@@ -541,6 +585,7 @@ fun DetailedSehriIftarDialog(
                                                 text = {
                                                     Text(
                                                         text = "${CalendarHelper.toBanglaNumber(d)} তারিখ",
+                                                        fontSize = 14.sp,
                                                         fontWeight = if (d == selectedDay) FontWeight.Bold else FontWeight.Normal,
                                                         color = if (d == selectedDay) Color(0xFFB45309) else Color.Unspecified
                                                     )
@@ -577,7 +622,7 @@ fun DetailedSehriIftarDialog(
                                     contentPadding = PaddingValues(horizontal = 6.dp, vertical = 6.dp)
                                 ) {
                                     Icon(Icons.Default.ChevronLeft, contentDescription = null, modifier = Modifier.size(16.dp))
-                                    Text("আগের দিন", fontSize = 11.5.sp)
+                                    Text("আগের দিন", fontSize = 13.sp)
                                 }
 
                                 Button(
@@ -591,7 +636,7 @@ fun DetailedSehriIftarDialog(
                                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF047857)),
                                     contentPadding = PaddingValues(horizontal = 6.dp, vertical = 6.dp)
                                 ) {
-                                    Text("আজকের দিন", fontSize = 11.5.sp, color = Color.White)
+                                    Text("আজকের দিন", fontSize = 13.sp, color = Color.White)
                                 }
 
                                 OutlinedButton(
@@ -607,7 +652,7 @@ fun DetailedSehriIftarDialog(
                                     shape = RoundedCornerShape(10.dp),
                                     contentPadding = PaddingValues(horizontal = 6.dp, vertical = 6.dp)
                                 ) {
-                                    Text("পরের দিন", fontSize = 11.5.sp)
+                                    Text("পরের দিন", fontSize = 13.sp)
                                     Icon(Icons.Default.ChevronRight, contentDescription = null, modifier = Modifier.size(16.dp))
                                 }
                             }
@@ -634,7 +679,7 @@ fun DetailedSehriIftarDialog(
                             ) {
                                 Text(
                                     text = "নির্বাচিত দিনের সময়সূচী",
-                                    fontSize = 15.sp,
+                                    fontSize = 16.5.sp,
                                     fontWeight = FontWeight.Bold,
                                     color = Color(0xFF1E3A2F)
                                 )
@@ -644,7 +689,7 @@ fun DetailedSehriIftarDialog(
                                 ) {
                                     Text(
                                         text = "রোজার দৈর্ঘ্য: $activeDurationBn",
-                                        fontSize = 11.5.sp,
+                                        fontSize = 13.sp,
                                         fontWeight = FontWeight.SemiBold,
                                         color = Color(0xFF047857),
                                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
@@ -685,15 +730,15 @@ fun DetailedSehriIftarDialog(
                                             }
                                         }
                                         Spacer(modifier = Modifier.height(6.dp))
-                                        Text(text = "সেহরি শেষ সময়", fontSize = 11.5.sp, color = Color(0xFF4B5563))
+                                        Text(text = "সেহরি শেষ সময়", fontSize = 13.sp, color = Color(0xFF4B5563))
                                         Text(
                                             text = activeDayPrayerStatus.nextSehriFormatted,
-                                            fontSize = 20.sp,
+                                            fontSize = 22.sp,
                                             fontWeight = FontWeight.Bold,
                                             color = Color(0xFF047857),
                                             fontFamily = LocalAppFontFamily.current
                                         )
-                                        Text(text = "ফজর শুরু", fontSize = 10.sp, color = Color(0xFF6B7280))
+                                        Text(text = "ফজর শুরু", fontSize = 11.5.sp, color = Color(0xFF6B7280))
                                     }
                                 }
 
@@ -723,15 +768,15 @@ fun DetailedSehriIftarDialog(
                                             }
                                         }
                                         Spacer(modifier = Modifier.height(6.dp))
-                                        Text(text = "সূর্যোদয়", fontSize = 11.5.sp, color = Color(0xFF4B5563))
+                                        Text(text = "সূর্যোদয়", fontSize = 13.sp, color = Color(0xFF4B5563))
                                         Text(
                                             text = activeDayPrayerStatus.sunriseTimeFormatted,
-                                            fontSize = 20.sp,
+                                            fontSize = 22.sp,
                                             fontWeight = FontWeight.Bold,
                                             color = Color(0xFFD97706),
                                             fontFamily = LocalAppFontFamily.current
                                         )
-                                        Text(text = "ইশরাক শুরু", fontSize = 10.sp, color = Color(0xFF6B7280))
+                                        Text(text = "ইশরাক শুরু", fontSize = 11.5.sp, color = Color(0xFF6B7280))
                                     }
                                 }
 
@@ -761,15 +806,15 @@ fun DetailedSehriIftarDialog(
                                             }
                                         }
                                         Spacer(modifier = Modifier.height(6.dp))
-                                        Text(text = "ইফতারের সময়", fontSize = 11.5.sp, color = Color(0xFF4B5563))
+                                        Text(text = "ইফতারের সময়", fontSize = 13.sp, color = Color(0xFF4B5563))
                                         Text(
                                             text = activeDayPrayerStatus.nextIftarFormatted,
-                                            fontSize = 20.sp,
+                                            fontSize = 22.sp,
                                             fontWeight = FontWeight.Bold,
                                             color = Color(0xFFEA580C),
                                             fontFamily = LocalAppFontFamily.current
                                         )
-                                        Text(text = "মাগরিব শুরু", fontSize = 10.sp, color = Color(0xFF6B7280))
+                                        Text(text = "মাগরিব শুরু", fontSize = 11.5.sp, color = Color(0xFF6B7280))
                                     }
                                 }
                             }
@@ -788,13 +833,13 @@ fun DetailedSehriIftarDialog(
                     ) {
                         Text(
                             text = "${monthsBn[selectedMonth]} মাসের পূর্ণাঙ্গ সময়তালিকা",
-                            fontSize = 15.sp,
+                            fontSize = 16.5.sp,
                             fontWeight = FontWeight.Bold,
                             color = Color(0xFF1F2937)
                         )
                         Text(
                             text = "মোট ${CalendarHelper.toBanglaNumber(monthDaysList.size)} দিন",
-                            fontSize = 12.sp,
+                            fontSize = 13.sp,
                             color = Color(0xFF6B7280)
                         )
                     }
@@ -818,14 +863,14 @@ fun DetailedSehriIftarDialog(
                             Text(
                                 text = "তারিখ ও দিন",
                                 modifier = Modifier.weight(1.3f),
-                                fontSize = 11.5.sp,
+                                fontSize = 13.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = Color.White
                             )
                             Text(
                                 text = "সেহরি শেষ",
                                 modifier = Modifier.weight(1f),
-                                fontSize = 11.5.sp,
+                                fontSize = 13.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = Color(0xFFA7F3D0),
                                 textAlign = TextAlign.Center
@@ -833,7 +878,7 @@ fun DetailedSehriIftarDialog(
                             Text(
                                 text = "সূর্যোদয়",
                                 modifier = Modifier.weight(0.9f),
-                                fontSize = 11.5.sp,
+                                fontSize = 13.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = Color(0xFFFDE68A),
                                 textAlign = TextAlign.Center
@@ -841,7 +886,7 @@ fun DetailedSehriIftarDialog(
                             Text(
                                 text = "ইফতার",
                                 modifier = Modifier.weight(1f),
-                                fontSize = 11.5.sp,
+                                fontSize = 13.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = Color(0xFFFED7AA),
                                 textAlign = TextAlign.Center
@@ -886,7 +931,7 @@ fun DetailedSehriIftarDialog(
                                 Row(verticalAlignment = Alignment.CenterVertically) {
                                     Text(
                                         text = item.dateBn,
-                                        fontSize = 13.sp,
+                                        fontSize = 14.5.sp,
                                         fontWeight = if (isSelected || item.isToday) FontWeight.Bold else FontWeight.Medium,
                                         color = if (isSelected) Color(0xFF065F46) else Color(0xFF1F2937)
                                     )
@@ -898,7 +943,7 @@ fun DetailedSehriIftarDialog(
                                         ) {
                                             Text(
                                                 text = "আজ",
-                                                fontSize = 9.sp,
+                                                fontSize = 10.sp,
                                                 color = Color.White,
                                                 fontWeight = FontWeight.Bold,
                                                 modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp)
@@ -908,7 +953,7 @@ fun DetailedSehriIftarDialog(
                                 }
                                 Text(
                                     text = item.dayOfWeekBn,
-                                    fontSize = 11.sp,
+                                    fontSize = 12.sp,
                                     color = Color(0xFF6B7280)
                                 )
                             }
@@ -916,7 +961,7 @@ fun DetailedSehriIftarDialog(
                             Text(
                                 text = item.sehriEndBn,
                                 modifier = Modifier.weight(1f),
-                                fontSize = 13.sp,
+                                fontSize = 14.5.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = Color(0xFF047857),
                                 textAlign = TextAlign.Center
@@ -925,7 +970,7 @@ fun DetailedSehriIftarDialog(
                             Text(
                                 text = item.sunriseBn,
                                 modifier = Modifier.weight(0.9f),
-                                fontSize = 12.sp,
+                                fontSize = 13.5.sp,
                                 color = Color(0xFF92400E),
                                 textAlign = TextAlign.Center
                             )
@@ -933,7 +978,7 @@ fun DetailedSehriIftarDialog(
                             Text(
                                 text = item.iftarBn,
                                 modifier = Modifier.weight(1f),
-                                fontSize = 13.sp,
+                                fontSize = 14.5.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = Color(0xFFC2410C),
                                 textAlign = TextAlign.Center
@@ -944,4 +989,5 @@ fun DetailedSehriIftarDialog(
             }
         }
     }
+}
 }

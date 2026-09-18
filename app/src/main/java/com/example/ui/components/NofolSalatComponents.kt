@@ -6,6 +6,11 @@ import android.content.Context
 import android.content.Intent
 import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -33,6 +38,7 @@ import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.ContentCopy
+import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.MenuBook
 import androidx.compose.material.icons.filled.NightsStay
 import androidx.compose.material.icons.filled.Share
@@ -56,12 +62,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
@@ -103,20 +111,27 @@ fun NofolSalatTimingsSection(
         }
     }
 
+    var isExpanded by remember { mutableStateOf(false) }
+
     Column(
         modifier = modifier
             .fillMaxWidth()
             .padding(vertical = 10.dp)
     ) {
-        // Section Header
+        // Section Header (Clickable toggle)
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp),
+                .clip(RoundedCornerShape(12.dp))
+                .clickable { isExpanded = !isExpanded }
+                .padding(horizontal = 16.dp, vertical = 6.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.weight(1f, fill = false)
+            ) {
                 Box(
                     modifier = Modifier
                         .size(10.dp)
@@ -133,31 +148,67 @@ fun NofolSalatTimingsSection(
                 )
             }
 
-            Surface(
-                color = Color(0xFF047857).copy(alpha = 0.12f),
-                shape = RoundedCornerShape(12.dp)
-            ) {
-                Row(
-                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                    verticalAlignment = Alignment.CenterVertically
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Surface(
+                    color = Color(0xFF047857).copy(alpha = 0.12f),
+                    shape = RoundedCornerShape(12.dp)
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.AutoAwesome,
-                        contentDescription = null,
-                        tint = Color(0xFF047857),
-                        modifier = Modifier.size(13.dp)
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text(
-                        text = "সহীহ সুন্নাহ",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = Color(0xFF047857),
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.Bold
-                    )
+                    Row(
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.AutoAwesome,
+                            contentDescription = null,
+                            tint = Color(0xFF047857),
+                            modifier = Modifier.size(13.dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = if (isExpanded) "সংকুচিত করুন" else "সহীহ সুন্নাহ (${allSalats.size})",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = Color(0xFF047857),
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
                 }
+
+                Spacer(modifier = Modifier.width(4.dp))
+
+                val arrowRotation by animateFloatAsState(
+                    targetValue = if (isExpanded) 180f else 0f,
+                    label = "arrow_rotation"
+                )
+                Icon(
+                    imageVector = Icons.Default.KeyboardArrowDown,
+                    contentDescription = if (isExpanded) "সংকুচিত করুন" else "প্রসারিত করুন",
+                    tint = Color(0xFF047857),
+                    modifier = Modifier
+                        .size(24.dp)
+                        .rotate(arrowRotation)
+                )
             }
         }
+
+        AnimatedVisibility(visible = !isExpanded) {
+            Text(
+                text = "১২টি নফল নামাজের সময়সূচী ও বিস্তারিত দেখতে ট্যাপ করুন",
+                fontSize = 11.5.sp,
+                color = Color(0xFF64748B),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { isExpanded = true }
+                    .padding(horizontal = 16.dp, vertical = 2.dp)
+            )
+        }
+
+        AnimatedVisibility(
+            visible = isExpanded,
+            enter = expandVertically() + fadeIn(),
+            exit = shrinkVertically() + fadeOut()
+        ) {
+            Column {
 
         Spacer(modifier = Modifier.height(4.dp))
 
@@ -315,6 +366,8 @@ fun NofolSalatTimingsSection(
             }
         }
     }
+    }
+}
 }
 
 @Composable
@@ -341,12 +394,18 @@ fun NofolSalatThinCard(
         NofolCategory.SPECIAL_WORSHIP -> Color(0xFFE9D5FF)
     }
 
+    val timeText = if (item.isTimeBound) {
+        item.startingTimeBn.ifBlank { item.timingSummaryBn }
+    } else {
+        item.timingSummaryBn
+    }
+
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .shadow(1.dp, RoundedCornerShape(14.dp))
+            .shadow(1.dp, RoundedCornerShape(12.dp))
             .clickable(onClick = onClick),
-        shape = RoundedCornerShape(14.dp),
+        shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(containerColor = bgColor),
         border = BorderStroke(1.1.dp, borderColor)
     ) {
@@ -357,14 +416,14 @@ fun NofolSalatThinCard(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            // Left Side: Dot Indicator + Salat Name + Category Pill
+            // Salat Name (Left)
             Row(
-                modifier = Modifier.weight(1f, fill = false),
+                modifier = Modifier.weight(1.1f, fill = false),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Box(
                     modifier = Modifier
-                        .size(7.5.dp)
+                        .size(7.dp)
                         .clip(CircleShape)
                         .background(categoryColor)
                 )
@@ -374,45 +433,26 @@ fun NofolSalatThinCard(
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     color = Color(0xFF0F172A),
-                    fontSize = 15.sp
+                    fontSize = 14.5.sp,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
                 )
-                Spacer(modifier = Modifier.width(6.dp))
-                Surface(
-                    color = categoryColor.copy(alpha = 0.1f),
-                    shape = RoundedCornerShape(6.dp)
-                ) {
-                    Text(
-                        text = item.rakatsSummaryBn.split("(").firstOrNull()?.trim() ?: "২ রাকাত",
-                        color = categoryColor,
-                        fontSize = 10.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        modifier = Modifier.padding(horizontal = 5.dp, vertical = 1.5.dp)
-                    )
-                }
             }
 
             Spacer(modifier = Modifier.width(8.dp))
 
-            // Right Side: Starting time / timing summary + Chevron
-            Row(
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = if (item.isTimeBound) item.startingTimeBn else item.timingSummaryBn.take(20),
-                    style = MaterialTheme.typography.bodySmall,
-                    fontWeight = FontWeight.Medium,
-                    fontSize = 11.5.sp,
-                    color = Color(0xFF334155),
-                    maxLines = 1
-                )
-                Spacer(modifier = Modifier.width(4.dp))
-                Icon(
-                    imageVector = Icons.Default.ChevronRight,
-                    contentDescription = "বিস্তারিত",
-                    tint = Color(0xFF94A3B8),
-                    modifier = Modifier.size(16.dp)
-                )
-            }
+            // Time (Right) - Only salat name and time, strictly max 2 lines
+            Text(
+                text = timeText,
+                style = MaterialTheme.typography.bodySmall,
+                fontWeight = FontWeight.SemiBold,
+                fontSize = 12.sp,
+                color = categoryColor,
+                textAlign = TextAlign.End,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.weight(1f, fill = false)
+            )
         }
     }
 }

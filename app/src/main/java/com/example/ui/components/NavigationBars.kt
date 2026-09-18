@@ -4,7 +4,9 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -18,6 +20,7 @@ import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -25,20 +28,25 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.AccessTime
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.FontDownload
+import androidx.compose.material.icons.filled.FormatSize
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.MenuBook
 import androidx.compose.material.icons.filled.MoreHoriz
 import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.TouchApp
+import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material.icons.outlined.AccessTime
 import androidx.compose.material.icons.outlined.CheckCircleOutline
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.MenuBook
 import androidx.compose.material.icons.outlined.MoreHoriz
 import androidx.compose.material.icons.outlined.TouchApp
+import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -50,11 +58,16 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -157,6 +170,8 @@ fun HomeIslamicTopAppBar(
 ) {
     val isDark = isSystemInDarkTheme()
     val goldDivider = IslamicGold.copy(alpha = if (isDark) 0.35f else 0.45f)
+    var showVisualMenu by remember { mutableStateOf(false) }
+    val fontScaleController = LocalFontScaleController.current
 
     Surface(
         modifier = Modifier
@@ -236,56 +251,342 @@ fun HomeIslamicTopAppBar(
                 }
             },
             actions = {
-                // Font Scale Controls (A- and A+)
-                FontSizeActionButtons()
-
-                // Bangla Fonts Picker
-                IconButton(
-                    onClick = onOpenFontMenu,
-                    modifier = Modifier.size(40.dp)
+                // Folded "Visual" folder/icon at the top-right
+                Box(
+                    modifier = Modifier.padding(end = 6.dp),
+                    contentAlignment = Alignment.CenterEnd
                 ) {
                     Surface(
-                        shape = CircleShape,
-                        color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = if (isDark) 0.35f else 0.6f),
-                        border = BorderStroke(1.dp, IslamicGold.copy(alpha = 0.45f)),
-                        modifier = Modifier.size(34.dp)
+                        shape = RoundedCornerShape(18.dp),
+                        color = if (showVisualMenu) {
+                            MaterialTheme.colorScheme.primary
+                        } else {
+                            MaterialTheme.colorScheme.primaryContainer.copy(alpha = if (isDark) 0.45f else 0.75f)
+                        },
+                        border = BorderStroke(
+                            1.2.dp,
+                            if (showVisualMenu) IslamicGold else IslamicGold.copy(alpha = 0.65f)
+                        ),
+                        shadowElevation = if (showVisualMenu) 3.dp else 1.dp,
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(18.dp))
+                            .clickable { showVisualMenu = !showVisualMenu }
                     ) {
-                        Box(contentAlignment = Alignment.Center) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
+                        ) {
                             Icon(
-                                imageVector = Icons.Default.FontDownload,
-                                contentDescription = "বাংলা ফন্ট সেটিংস",
-                                tint = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.size(17.dp)
+                                imageVector = Icons.Default.Tune,
+                                contentDescription = "Visual Settings",
+                                tint = if (showVisualMenu) Color.White else MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(15.dp)
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = "Visual",
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = if (showVisualMenu) Color.White else MaterialTheme.colorScheme.primary
+                            )
+                            Spacer(modifier = Modifier.width(2.dp))
+                            Icon(
+                                imageVector = Icons.Default.ArrowDropDown,
+                                contentDescription = null,
+                                tint = if (showVisualMenu) Color.White else MaterialTheme.colorScheme.primary,
+                                modifier = Modifier
+                                    .size(16.dp)
+                                    .rotate(if (showVisualMenu) 180f else 0f)
                             )
                         }
                     }
-                }
 
-                Spacer(modifier = Modifier.width(2.dp))
-
-                // Aurora Themes Picker
-                IconButton(
-                    onClick = onOpenThemeModal,
-                    modifier = Modifier.size(40.dp)
-                ) {
-                    Surface(
-                        shape = CircleShape,
-                        color = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = if (isDark) 0.35f else 0.6f),
-                        border = BorderStroke(1.dp, IslamicGold.copy(alpha = 0.45f)),
-                        modifier = Modifier.size(34.dp)
+                    // Folded Dropdown Menu containing all 4 items
+                    DropdownMenu(
+                        expanded = showVisualMenu,
+                        onDismissRequest = { showVisualMenu = false },
+                        modifier = Modifier
+                            .widthIn(min = 265.dp, max = 295.dp)
+                            .background(MaterialTheme.colorScheme.surface, RoundedCornerShape(16.dp))
+                            .border(BorderStroke(1.2.dp, IslamicGold.copy(alpha = 0.45f)), RoundedCornerShape(16.dp))
+                            .padding(horizontal = 8.dp, vertical = 6.dp)
                     ) {
-                        Box(contentAlignment = Alignment.Center) {
-                            Icon(
-                                imageVector = Icons.Default.Palette,
-                                contentDescription = "থিম পরিবর্তন",
-                                tint = IslamicGold,
-                                modifier = Modifier.size(17.dp)
-                            )
+                        // Header
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 8.dp, vertical = 6.dp)
+                        ) {
+                            Surface(
+                                shape = CircleShape,
+                                color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.65f),
+                                border = BorderStroke(1.dp, IslamicGold.copy(alpha = 0.5f)),
+                                modifier = Modifier.size(28.dp)
+                            ) {
+                                Box(contentAlignment = Alignment.Center) {
+                                    Icon(
+                                        imageVector = Icons.Default.Tune,
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.primary,
+                                        modifier = Modifier.size(15.dp)
+                                    )
+                                }
+                            }
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Column {
+                                Text(
+                                    text = "ভিজ্যুয়াল সেটিংস (Visual)",
+                                    style = MaterialTheme.typography.titleSmall,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                                Text(
+                                    text = "ডিসপ্লে, ফন্ট ও থিম কাস্টমাইজেশন",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    fontSize = 10.sp,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
+
+                        HorizontalDivider(
+                            modifier = Modifier.padding(horizontal = 4.dp, vertical = 4.dp),
+                            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)
+                        )
+
+                        // 1 & 2: Universal Font Scaling (A- and A+)
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 6.dp, vertical = 6.dp)
+                        ) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(
+                                        imageVector = Icons.Default.FormatSize,
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.primary,
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Text(
+                                        text = "ফন্ট সাইজ স্কেলিং",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        fontWeight = FontWeight.SemiBold
+                                    )
+                                }
+                                Text(
+                                    text = "${((fontScaleController?.scale ?: 1f) * 100).toInt()}%",
+                                    style = MaterialTheme.typography.labelMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                            }
+
+                            Spacer(modifier = Modifier.height(6.dp))
+
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                // A- Button
+                                Surface(
+                                    shape = RoundedCornerShape(10.dp),
+                                    color = if (fontScaleController?.canDecrease == true) {
+                                        MaterialTheme.colorScheme.primaryContainer.copy(alpha = if (isDark) 0.35f else 0.65f)
+                                    } else {
+                                        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
+                                    },
+                                    border = BorderStroke(
+                                        1.dp,
+                                        IslamicGold.copy(alpha = if (fontScaleController?.canDecrease == true) 0.55f else 0.2f)
+                                    ),
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .height(38.dp)
+                                        .clip(RoundedCornerShape(10.dp))
+                                        .clickable(enabled = fontScaleController?.canDecrease == true) {
+                                            fontScaleController?.onDecrease?.invoke()
+                                        }
+                                ) {
+                                    Box(contentAlignment = Alignment.Center) {
+                                        Text(
+                                            text = "A- ছোট",
+                                            style = MaterialTheme.typography.labelMedium,
+                                            fontWeight = FontWeight.Bold,
+                                            color = if (fontScaleController?.canDecrease == true) {
+                                                MaterialTheme.colorScheme.primary
+                                            } else {
+                                                MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)
+                                            }
+                                        )
+                                    }
+                                }
+
+                                // 100% Reset Button
+                                Surface(
+                                    shape = RoundedCornerShape(10.dp),
+                                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = if (isDark) 0.25f else 0.45f),
+                                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)),
+                                    modifier = Modifier
+                                        .weight(0.85f)
+                                        .height(38.dp)
+                                        .clip(RoundedCornerShape(10.dp))
+                                        .clickable {
+                                            fontScaleController?.onReset?.invoke()
+                                        }
+                                ) {
+                                    Box(contentAlignment = Alignment.Center) {
+                                        Text(
+                                            text = "১০০%",
+                                            style = MaterialTheme.typography.labelSmall,
+                                            fontWeight = FontWeight.SemiBold,
+                                            color = MaterialTheme.colorScheme.onSurface
+                                        )
+                                    }
+                                }
+
+                                // A+ Button
+                                Surface(
+                                    shape = RoundedCornerShape(10.dp),
+                                    color = if (fontScaleController?.canIncrease == true) {
+                                        MaterialTheme.colorScheme.primaryContainer.copy(alpha = if (isDark) 0.35f else 0.65f)
+                                    } else {
+                                        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
+                                    },
+                                    border = BorderStroke(
+                                        1.dp,
+                                        IslamicGold.copy(alpha = if (fontScaleController?.canIncrease == true) 0.55f else 0.2f)
+                                    ),
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .height(38.dp)
+                                        .clip(RoundedCornerShape(10.dp))
+                                        .clickable(enabled = fontScaleController?.canIncrease == true) {
+                                            fontScaleController?.onIncrease?.invoke()
+                                        }
+                                ) {
+                                    Box(contentAlignment = Alignment.Center) {
+                                        Text(
+                                            text = "A+ বড়",
+                                            style = MaterialTheme.typography.labelMedium,
+                                            fontWeight = FontWeight.Bold,
+                                            color = if (fontScaleController?.canIncrease == true) {
+                                                MaterialTheme.colorScheme.primary
+                                            } else {
+                                                MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)
+                                            }
+                                        )
+                                    }
+                                }
+                            }
+                        }
+
+                        HorizontalDivider(
+                            modifier = Modifier.padding(horizontal = 4.dp, vertical = 4.dp),
+                            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)
+                        )
+
+                        // 3: Bangla Font Picker Item
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(12.dp))
+                                .clickable {
+                                    showVisualMenu = false
+                                    onOpenFontMenu()
+                                }
+                                .padding(horizontal = 8.dp, vertical = 8.dp)
+                        ) {
+                            Surface(
+                                shape = CircleShape,
+                                color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = if (isDark) 0.45f else 0.7f),
+                                border = BorderStroke(1.dp, IslamicGold.copy(alpha = 0.5f)),
+                                modifier = Modifier.size(36.dp)
+                            ) {
+                                Box(contentAlignment = Alignment.Center) {
+                                    Icon(
+                                        imageVector = Icons.Default.FontDownload,
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.primary,
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                }
+                            }
+                            Spacer(modifier = Modifier.width(10.dp))
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = "বাংলা ফন্ট নির্বাচন",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                                Text(
+                                    text = "নূরানি, আদর্শলিপি, সিয়াম রুপালী ইত্যাদি",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    fontSize = 10.5.sp,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
+
+                        HorizontalDivider(
+                            modifier = Modifier.padding(horizontal = 4.dp, vertical = 4.dp),
+                            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f)
+                        )
+
+                        // 4: Aurora Theme & Wallpaper Item
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(12.dp))
+                                .clickable {
+                                    showVisualMenu = false
+                                    onOpenThemeModal()
+                                }
+                                .padding(horizontal = 8.dp, vertical = 8.dp)
+                        ) {
+                            Surface(
+                                shape = CircleShape,
+                                color = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = if (isDark) 0.45f else 0.7f),
+                                border = BorderStroke(1.dp, IslamicGold.copy(alpha = 0.5f)),
+                                modifier = Modifier.size(36.dp)
+                            ) {
+                                Box(contentAlignment = Alignment.Center) {
+                                    Icon(
+                                        imageVector = Icons.Default.Palette,
+                                        contentDescription = null,
+                                        tint = IslamicGold,
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                }
+                            }
+                            Spacer(modifier = Modifier.width(10.dp))
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = "থিম ও কালার শৈলী",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                                Text(
+                                    text = "নূরানি গোল্ড, অরোরা ও ব্যাকগ্রাউন্ড ওয়ালপেপার",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    fontSize = 10.5.sp,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
                         }
                     }
                 }
-
-                Spacer(modifier = Modifier.width(6.dp))
             },
             colors = TopAppBarDefaults.topAppBarColors(
                 containerColor = Color.Transparent

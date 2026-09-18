@@ -36,12 +36,18 @@ android {
       enableV2Signing = true
     }
     create("debugConfig") {
-      val debugKs = file("${rootDir}/debug.keystore")
+      val ksFile = if (file("${rootDir}/debug.keystore").exists()) {
+        file("${rootDir}/debug.keystore")
+      } else if (file("${rootDir}/release.keystore").exists()) {
+        file("${rootDir}/release.keystore")
+      } else {
+        file("${rootDir}/debug.keystore")
+      }
       var useReleaseCreds = false
-      if (debugKs.exists()) {
+      if (ksFile.exists()) {
         try {
           val ks = KeyStore.getInstance("PKCS12")
-          val stream: InputStream = debugKs.inputStream()
+          val stream: InputStream = ksFile.inputStream()
           stream.use { s ->
             ks.load(s, "dawahtojannah".toCharArray())
             useReleaseCreds = true
@@ -50,7 +56,7 @@ android {
           useReleaseCreds = false
         }
       }
-      storeFile = debugKs
+      storeFile = ksFile
       storePassword = if (useReleaseCreds) "dawahtojannah" else "android"
       keyAlias = if (useReleaseCreds) "dawahkey" else "androiddebugkey"
       keyPassword = if (useReleaseCreds) "dawahtojannah" else "android"

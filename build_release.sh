@@ -6,9 +6,18 @@ echo " Building Dawah to Jannah Android APK for Release   "
 echo "===================================================="
 
 # Decode keystore if needed
+if [ -f "release.keystore.b64" ] && [ ! -f "release.keystore" ]; then
+  echo "Decoding release.keystore from base64..."
+  base64 -d release.keystore.b64 > release.keystore
+fi
 if [ -f "debug.keystore.base64" ] && [ ! -f "debug.keystore" ]; then
   echo "Decoding debug.keystore from base64..."
   base64 -d debug.keystore.base64 > debug.keystore
+fi
+if [ -f "release.keystore" ] && [ ! -f "debug.keystore" ]; then
+  cp release.keystore debug.keystore
+elif [ -f "debug.keystore" ] && [ ! -f "release.keystore" ]; then
+  cp debug.keystore release.keystore
 fi
 
 # Build APK

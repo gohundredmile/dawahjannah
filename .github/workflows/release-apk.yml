@@ -63,6 +63,11 @@ jobs:
           if [ -f "debug.keystore.base64" ] && [ ! -f "debug.keystore" ]; then
             base64 -d debug.keystore.base64 > debug.keystore
           fi
+          if [ -f "release.keystore" ] && [ ! -f "debug.keystore" ]; then
+            cp release.keystore debug.keystore
+          elif [ -f "debug.keystore" ] && [ ! -f "release.keystore" ]; then
+            cp debug.keystore release.keystore
+          fi
           chmod +x gradlew || true
 
       - name: Build Android APK with Gradle

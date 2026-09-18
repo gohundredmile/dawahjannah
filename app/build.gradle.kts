@@ -89,6 +89,43 @@ android {
   }
 }
 
+// Automatic Secrets Self-Healing: Guarantee that .env and .env.example always have valid
+// non-empty String values so Secrets Gradle Plugin never generates invalid Java syntax like
+// 'public static final String GEMINI_API_KEY = ;' which breaks CI/CD and release builds.
+val rootDirFile = rootDir
+val envFile = rootDirFile.resolve(".env")
+val envExampleFile = rootDirFile.resolve(".env.example")
+
+fun sanitizeSecretsProperties(file: java.io.File, defaultVal: String = "your_api_key_here") {
+    if (!file.exists()) {
+        file.writeText("GEMINI_API_KEY=\"$defaultVal\"\n")
+        return
+    }
+    val lines = file.readLines()
+    var modified = false
+    val newLines = lines.map { line ->
+        val trimmed = line.trim()
+        if (trimmed == "GEMINI_API_KEY=" || trimmed == "GEMINI_API_KEY=\"\"" || trimmed == "GEMINI_API_KEY=''") {
+            modified = true
+            "GEMINI_API_KEY=\"$defaultVal\""
+        } else {
+            line
+        }
+    }
+    if (!lines.any { it.trim().startsWith("GEMINI_API_KEY") }) {
+        file.appendText("\nGEMINI_API_KEY=\"$defaultVal\"\n")
+    } else if (modified) {
+        file.writeText(newLines.joinToString("\n") + "\n")
+    }
+}
+
+try {
+    sanitizeSecretsProperties(envExampleFile)
+    sanitizeSecretsProperties(envFile)
+} catch (_: Exception) {
+    // Gracefully continue if filesystem access is restricted
+}
+
 // Configure the Secrets Gradle Plugin to use .env and .env.example files
 // to match the convention used in Web projects.
 secrets {

@@ -20,6 +20,18 @@ elif [ -f "debug.keystore" ] && [ ! -f "release.keystore" ]; then
   cp debug.keystore release.keystore
 fi
 
+# Ensure secrets files have safe defaults
+if [ ! -s .env ]; then
+  echo "GEMINI_API_KEY=\"your_api_key_here\"" > .env
+fi
+for f in .env .env.example; do
+  if [ -f "$f" ]; then
+    sed -i 's/^GEMINI_API_KEY=$/GEMINI_API_KEY="your_api_key_here"/' "$f" || true
+    sed -i 's/^GEMINI_API_KEY=""$/GEMINI_API_KEY="your_api_key_here"/' "$f" || true
+    sed -i "s/^GEMINI_API_KEY=''$/GEMINI_API_KEY=\"your_api_key_here\"/" "$f" || true
+  fi
+done
+
 # Build APK
 gradle assembleDebug --no-daemon
 

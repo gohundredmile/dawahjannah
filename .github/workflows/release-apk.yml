@@ -55,7 +55,20 @@ jobs:
 
       - name: Prepare Signing Keystore & Build Environment
         run: |
-          touch .env || true
+          echo "Setting up permanent Dawah To Jannah secrets and build environment..."
+          # Ensure .env is populated with safe defaults so BuildConfig generation never breaks
+          if [ ! -s .env ]; then
+            echo "GEMINI_API_KEY=\"your_api_key_here\"" > .env
+          fi
+          # Ensure both .env and .env.example never contain empty assignments that cause javac syntax errors
+          for f in .env .env.example; do
+            if [ -f "$f" ]; then
+              sed -i 's/^GEMINI_API_KEY=$/GEMINI_API_KEY="your_api_key_here"/' "$f" || true
+              sed -i 's/^GEMINI_API_KEY=""$/GEMINI_API_KEY="your_api_key_here"/' "$f" || true
+              sed -i "s/^GEMINI_API_KEY=''$/GEMINI_API_KEY=\"your_api_key_here\"/" "$f" || true
+            fi
+          done
+
           echo "Setting up permanent Dawah To Jannah signing keystore..."
           if [ -f "release.keystore.b64" ] && [ ! -f "release.keystore" ]; then
             base64 -d release.keystore.b64 > release.keystore

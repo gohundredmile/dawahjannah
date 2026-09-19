@@ -47,8 +47,14 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Layers
+import androidx.compose.material.icons.filled.PhoneAndroid
+import androidx.compose.material3.RadioButton
+import androidx.compose.material3.RadioButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -67,11 +73,13 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.example.data.model.AuroraWallpaperConfig
 import com.example.data.model.AuroraWavePreset
+import com.example.data.model.ScreenEffectMode
 import com.example.data.model.ThemeStyle
 
 enum class ModalSectionTab(val title: String) {
-    THEMES("🎨 থিম কালার প্যালেট"),
-    AURORA_WAVES("🌊 লাইভ অরোরা ওয়েভ")
+    THEMES("🎨 কালার প্যালেট"),
+    AURORA_WAVES("🌊 অরোরা ওয়েভ"),
+    SCREEN_EFFECT("🪟 স্ক্রিন ইফেক্ট")
 }
 
 enum class ThemeFilterTab(val title: String) {
@@ -173,9 +181,12 @@ fun AuroraThemesModal(
     onSelectRandom: () -> Unit,
     auroraConfig: AuroraWallpaperConfig = AuroraWallpaperConfig(),
     onUpdateAuroraConfig: (AuroraWallpaperConfig) -> Unit = {},
+    initialTab: ModalSectionTab = ModalSectionTab.THEMES,
+    currentScreenEffectMode: ScreenEffectMode = ScreenEffectMode.GLASS,
+    onSelectScreenEffectMode: (ScreenEffectMode) -> Unit = {},
     onDismiss: () -> Unit
 ) {
-    var activeModalTab by remember { mutableStateOf(ModalSectionTab.THEMES) }
+    var activeModalTab by remember(initialTab) { mutableStateOf(initialTab) }
     var selectedFilter by remember { mutableStateOf(ThemeFilterTab.ALL) }
 
     val allThemes = remember {
@@ -212,6 +223,22 @@ fun AuroraThemesModal(
                 // -------------------------------------------------------------
                 // 1. TOP HEADER: Palette Icon, Title, Random Button, Close
                 // -------------------------------------------------------------
+                val headerIcon = when (activeModalTab) {
+                    ModalSectionTab.THEMES -> Icons.Default.Palette
+                    ModalSectionTab.AURORA_WAVES -> Icons.Default.Waves
+                    ModalSectionTab.SCREEN_EFFECT -> Icons.Default.Layers
+                }
+                val headerTitle = when (activeModalTab) {
+                    ModalSectionTab.THEMES -> "সকল অরোরা থিমসমূহ"
+                    ModalSectionTab.AURORA_WAVES -> "লাইভ অরোরা ওয়েভ ওয়ালপেপার"
+                    ModalSectionTab.SCREEN_EFFECT -> "উইন্ডো / স্ক্রিন ইফেক্ট মোড"
+                }
+                val headerSubtitle = when (activeModalTab) {
+                    ModalSectionTab.THEMES -> "১৫টি স্নিগ্ধ থিম ও রঙ নির্বাচন করুন"
+                    ModalSectionTab.AURORA_WAVES -> "জীবন্ত সুদৃশ্য ঢেউ, নূরানি কণা ও উজ্জ্বলতা পরিবর্তন"
+                    ModalSectionTab.SCREEN_EFFECT -> "স্বাভাবিক মোড (Normal) অথবা গ্লাস ইফেক্ট (Glass Effect)"
+                }
+
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically,
@@ -229,7 +256,7 @@ fun AuroraThemesModal(
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(
-                                imageVector = if (activeModalTab == ModalSectionTab.THEMES) Icons.Default.Palette else Icons.Default.Waves,
+                                imageVector = headerIcon,
                                 contentDescription = null,
                                 tint = Color(0xFF059669),
                                 modifier = Modifier.size(23.dp)
@@ -240,7 +267,7 @@ fun AuroraThemesModal(
 
                         Column {
                             Text(
-                                text = if (activeModalTab == ModalSectionTab.THEMES) "সকল অরোরা থিমসমূহ" else "লাইভ অরোরা ওয়েভ ওয়ালপেপার",
+                                text = headerTitle,
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold,
                                 color = Color(0xFF1E293B),
@@ -248,7 +275,7 @@ fun AuroraThemesModal(
                             )
                             Spacer(modifier = Modifier.height(2.dp))
                             Text(
-                                text = if (activeModalTab == ModalSectionTab.THEMES) "১৫টি স্নিগ্ধ থিম ও রঙ নির্বাচন করুন" else "জীবন্ত সুদৃশ্য ঢেউ, নূরানি কণা ও উজ্জ্বলতা পরিবর্তন",
+                                text = headerSubtitle,
                                 style = MaterialTheme.typography.bodySmall,
                                 color = Color(0xFF64748B),
                                 fontSize = 11.sp,
@@ -342,7 +369,8 @@ fun AuroraThemesModal(
                                 ) {
                                     Text(
                                         text = tab.title,
-                                        fontSize = 12.5.sp,
+                                        fontSize = 11.5.sp,
+                                        maxLines = 1,
                                         fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
                                         color = if (isSelected) Color(0xFF0F172A) else Color(0xFF64748B)
                                     )
@@ -483,7 +511,7 @@ fun AuroraThemesModal(
                             )
                         }
                     }
-                } else {
+                } else if (activeModalTab == ModalSectionTab.AURORA_WAVES) {
                     // =========================================================
                     // 🌊 LIVE AURORA WAVE WALLPAPER CUSTOMIZATION SECTION
                     // =========================================================
@@ -1044,6 +1072,324 @@ fun AuroraThemesModal(
                                             checkedTrackColor = Color(0xFF10B981)
                                         )
                                     )
+                                }
+                            }
+                        }
+                    }
+                } else {
+                    // =========================================================
+                    // 🪟 WINDOW / SCREEN EFFECT MODE SECTION
+                    // =========================================================
+                    LazyColumn(
+                        modifier = Modifier
+                            .weight(1f)
+                            .fillMaxWidth(),
+                        verticalArrangement = Arrangement.spacedBy(14.dp),
+                        contentPadding = PaddingValues(bottom = 8.dp)
+                    ) {
+                        // A. Explanatory Header Banner
+                        item {
+                            Surface(
+                                shape = RoundedCornerShape(16.dp),
+                                color = Color(0xFFF8FAFC),
+                                border = BorderStroke(1.dp, Color(0xFFE2E8F0)),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(14.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Box(
+                                        modifier = Modifier
+                                            .size(42.dp)
+                                            .clip(CircleShape)
+                                            .background(Color(0xFFECFDF5)),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.Layers,
+                                            contentDescription = null,
+                                            tint = Color(0xFF059669),
+                                            modifier = Modifier.size(22.dp)
+                                        )
+                                    }
+                                    Spacer(modifier = Modifier.width(12.dp))
+                                    Column(modifier = Modifier.weight(1f)) {
+                                        Text(
+                                            text = "উইন্ডো ও স্ক্রিন ভিজ্যুয়াল শৈলী",
+                                            fontWeight = FontWeight.Bold,
+                                            fontSize = 14.sp,
+                                            color = Color(0xFF0F172A)
+                                        )
+                                        Spacer(modifier = Modifier.height(2.dp))
+                                        Text(
+                                            text = "অ্যাপের হোম স্ক্রিন ও কার্ডসমূহের জন্য আপনার পছন্দের মোড বেছে নিন।",
+                                            fontSize = 11.5.sp,
+                                            color = Color(0xFF64748B),
+                                            lineHeight = 16.sp
+                                        )
+                                    }
+                                }
+                            }
+                        }
+
+                        // B. Option 1: স্বাভাবিক মোড (Normal Mode)
+                        item {
+                            val isNormal = currentScreenEffectMode == ScreenEffectMode.NORMAL
+                            Surface(
+                                onClick = { onSelectScreenEffectMode(ScreenEffectMode.NORMAL) },
+                                shape = RoundedCornerShape(18.dp),
+                                color = if (isNormal) Color(0xFFF0FDF4) else Color.White,
+                                border = BorderStroke(
+                                    if (isNormal) 2.dp else 1.dp,
+                                    if (isNormal) Color(0xFF10B981) else Color(0xFFE2E8F0)
+                                ),
+                                shadowElevation = if (isNormal) 3.dp else 1.dp,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .testTag("screen_effect_normal_option")
+                            ) {
+                                Column(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(16.dp)
+                                ) {
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.SpaceBetween
+                                    ) {
+                                        Row(
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            modifier = Modifier.weight(1f)
+                                        ) {
+                                            Box(
+                                                modifier = Modifier
+                                                    .size(40.dp)
+                                                    .clip(RoundedCornerShape(12.dp))
+                                                    .background(if (isNormal) Color(0xFF10B981) else Color(0xFFF1F5F9)),
+                                                contentAlignment = Alignment.Center
+                                            ) {
+                                                Icon(
+                                                    imageVector = Icons.Default.PhoneAndroid,
+                                                    contentDescription = null,
+                                                    tint = if (isNormal) Color.White else Color(0xFF64748B),
+                                                    modifier = Modifier.size(22.dp)
+                                                )
+                                            }
+                                            Spacer(modifier = Modifier.width(12.dp))
+                                            Column {
+                                                Text(
+                                                    text = "১. স্বাভাবিক মোড (Normal Mode)",
+                                                    fontWeight = FontWeight.Bold,
+                                                    fontSize = 14.sp,
+                                                    color = if (isNormal) Color(0xFF065F46) else Color(0xFF0F172A)
+                                                )
+                                                Spacer(modifier = Modifier.height(2.dp))
+                                                Text(
+                                                    text = "ট্যাপ করলে পূর্বের সাধারণ হোম স্ক্রিন ফিরবে",
+                                                    fontSize = 12.sp,
+                                                    fontWeight = FontWeight.SemiBold,
+                                                    color = if (isNormal) Color(0xFF059669) else Color(0xFF64748B)
+                                                )
+                                            }
+                                        }
+
+                                        RadioButton(
+                                            selected = isNormal,
+                                            onClick = { onSelectScreenEffectMode(ScreenEffectMode.NORMAL) },
+                                            colors = RadioButtonDefaults.colors(
+                                                selectedColor = Color(0xFF10B981),
+                                                unselectedColor = Color(0xFF94A3B8)
+                                            )
+                                        )
+                                    }
+
+                                    Spacer(modifier = Modifier.height(10.dp))
+                                    Text(
+                                        text = "• ক্লাসিক সলিড ম্যাটেরিয়াল সারফেস\n• অতিরিক্ত স্বচ্ছতা বা তরঙ্গের রিফ্লেকশন ছাড়া সাধারণ পরিচ্ছন্ন ডিসপ্লে\n• সর্বোত্তম গতি ও পারফরম্যান্স ফ্রেন্ডলি শৈলী",
+                                        fontSize = 11.5.sp,
+                                        color = Color(0xFF475569),
+                                        lineHeight = 17.sp
+                                    )
+                                }
+                            }
+                        }
+
+                        // C. Option 2: গ্লাস ইফেক্ট (Glass Effect)
+                        item {
+                            val isGlass = currentScreenEffectMode == ScreenEffectMode.GLASS
+                            Surface(
+                                onClick = { onSelectScreenEffectMode(ScreenEffectMode.GLASS) },
+                                shape = RoundedCornerShape(18.dp),
+                                color = if (isGlass) Color(0xFFECFDF5) else Color.White,
+                                border = BorderStroke(
+                                    if (isGlass) 2.dp else 1.dp,
+                                    if (isGlass) Color(0xFF10B981) else Color(0xFFE2E8F0)
+                                ),
+                                shadowElevation = if (isGlass) 3.dp else 1.dp,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .testTag("screen_effect_glass_option")
+                            ) {
+                                Column(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(16.dp)
+                                ) {
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.SpaceBetween
+                                    ) {
+                                        Row(
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            modifier = Modifier.weight(1f)
+                                        ) {
+                                            Box(
+                                                modifier = Modifier
+                                                    .size(40.dp)
+                                                    .clip(RoundedCornerShape(12.dp))
+                                                    .background(if (isGlass) Color(0xFF059669) else Color(0xFFF1F5F9)),
+                                                contentAlignment = Alignment.Center
+                                            ) {
+                                                Icon(
+                                                    imageVector = Icons.Default.AutoAwesome,
+                                                    contentDescription = null,
+                                                    tint = if (isGlass) Color.White else Color(0xFF64748B),
+                                                    modifier = Modifier.size(22.dp)
+                                                )
+                                            }
+                                            Spacer(modifier = Modifier.width(12.dp))
+                                            Column {
+                                                Text(
+                                                    text = "২. গ্লাস ইফেক্ট (Glass Effect)",
+                                                    fontWeight = FontWeight.Bold,
+                                                    fontSize = 14.sp,
+                                                    color = if (isGlass) Color(0xFF065F46) else Color(0xFF0F172A)
+                                                )
+                                                Spacer(modifier = Modifier.height(2.dp))
+                                                Text(
+                                                    text = "ফ্রস্টেড গ্লাস ও লিকুইড ওয়েভ ইফেক্ট",
+                                                    fontSize = 12.sp,
+                                                    fontWeight = FontWeight.SemiBold,
+                                                    color = if (isGlass) Color(0xFF059669) else Color(0xFF64748B)
+                                                )
+                                            }
+                                        }
+
+                                        RadioButton(
+                                            selected = isGlass,
+                                            onClick = { onSelectScreenEffectMode(ScreenEffectMode.GLASS) },
+                                            colors = RadioButtonDefaults.colors(
+                                                selectedColor = Color(0xFF10B981),
+                                                unselectedColor = Color(0xFF94A3B8)
+                                            )
+                                        )
+                                    }
+
+                                    Spacer(modifier = Modifier.height(10.dp))
+                                    Text(
+                                        text = "• অ্যারোরা ফ্রস্টেড গ্লাস ও স্পেকুলার গ্লেয়ার হাইলাইট\n• প্রতিটি প্রধান কার্ডের ভেতরে মনোরম জীবন্ত লিকুইড ওয়েভ মোশন\n• নূরানি আভা ও আধুনিক ইসলামিক গ্লাস ভিজ্যুয়াল",
+                                        fontSize = 11.5.sp,
+                                        color = Color(0xFF475569),
+                                        lineHeight = 17.sp
+                                    )
+                                }
+                            }
+                        }
+
+                        // D. Live Real-Time Interactive Card Preview
+                        item {
+                            Column(modifier = Modifier.fillMaxWidth()) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier.padding(horizontal = 2.dp, vertical = 4.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Visibility,
+                                        contentDescription = null,
+                                        tint = Color(0xFF059669),
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Text(
+                                        text = "কার্ডের নমুনা (Live Preview): ${currentScreenEffectMode.titleBn}",
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 12.5.sp,
+                                        color = Color(0xFF0F172A)
+                                    )
+                                }
+
+                                Spacer(modifier = Modifier.height(6.dp))
+
+                                CompositionLocalProvider(
+                                    LocalScreenEffectMode provides currentScreenEffectMode
+                                ) {
+                                    PureGlassCard(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        shape = RoundedCornerShape(18.dp),
+                                        tint = Color(0xFFF0FDF4),
+                                        accentBorderColor = Color(0xFF10B981),
+                                        borderWidth = 1.0.dp,
+                                        elevation = 2.dp,
+                                        isDark = currentTheme.isDark,
+                                        showWaveEffect = true
+                                    ) {
+                                        Row(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .padding(16.dp),
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.SpaceBetween
+                                        ) {
+                                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                                Surface(
+                                                    shape = CircleShape,
+                                                    color = Color(0xFF10B981).copy(alpha = 0.15f),
+                                                    modifier = Modifier.size(38.dp)
+                                                ) {
+                                                    Box(contentAlignment = Alignment.Center) {
+                                                        Icon(
+                                                            imageVector = if (currentScreenEffectMode == ScreenEffectMode.GLASS) Icons.Default.AutoAwesome else Icons.Default.PhoneAndroid,
+                                                            contentDescription = null,
+                                                            tint = Color(0xFF059669),
+                                                            modifier = Modifier.size(20.dp)
+                                                        )
+                                                    }
+                                                }
+                                                Spacer(modifier = Modifier.width(10.dp))
+                                                Column {
+                                                    Text(
+                                                        text = "নমুনা প্রিভিউ • " + currentScreenEffectMode.titleBn,
+                                                        fontWeight = FontWeight.Bold,
+                                                        fontSize = 13.5.sp,
+                                                        color = Color(0xFF0F172A)
+                                                    )
+                                                    Text(
+                                                        text = currentScreenEffectMode.subtitleBn,
+                                                        fontSize = 11.5.sp,
+                                                        color = Color(0xFF64748B)
+                                                    )
+                                                }
+                                            }
+
+                                            Surface(
+                                                shape = RoundedCornerShape(8.dp),
+                                                color = Color(0xFF10B981)
+                                            ) {
+                                                Text(
+                                                    text = if (currentScreenEffectMode == ScreenEffectMode.GLASS) "গ্লাস মোড" else "স্বাভাবিক মোড",
+                                                    fontSize = 11.sp,
+                                                    fontWeight = FontWeight.Bold,
+                                                    color = Color.White,
+                                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                                                )
+                                            }
+                                        }
+                                    }
                                 }
                             }
                         }

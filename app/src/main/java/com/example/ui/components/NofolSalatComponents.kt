@@ -114,12 +114,16 @@ fun NofolSalatIndependentCard(
     }
 
     val isDark = isSystemInDarkTheme()
+    var isExpanded by remember { mutableStateOf(false) }
+    val arrowRotation by animateFloatAsState(
+        targetValue = if (isExpanded) 180f else 0f,
+        label = "nofol_arrow_rotation"
+    )
 
     PureGlassCard(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 12.dp, vertical = 6.dp)
-            .clickable { onOpenScheduleWindow() },
+            .padding(horizontal = 12.dp, vertical = 6.dp),
         shape = RoundedCornerShape(20.dp),
         accentBorderColor = Color(0xFF047857),
         borderWidth = 1.2.dp,
@@ -131,9 +135,11 @@ fun NofolSalatIndependentCard(
                 .fillMaxWidth()
                 .padding(14.dp)
         ) {
-            // Header Row
+            // Header Row (Tappable to toggle collapsible section)
             Row(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { isExpanded = !isExpanded },
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
@@ -175,179 +181,206 @@ fun NofolSalatIndependentCard(
                     }
                 }
 
-                Surface(
-                    shape = RoundedCornerShape(12.dp),
-                    color = Color(0xFF047857).copy(alpha = if (isDark) 0.22f else 0.12f),
-                    border = BorderStroke(1.dp, Color(0xFF047857).copy(alpha = if (isDark) 0.5f else 0.35f))
-                ) {
-                    Row(
-                        modifier = Modifier.padding(horizontal = 9.dp, vertical = 5.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = "${CalendarHelper.toBanglaNumber(allSalats.size)}টি সালাত",
-                            style = MaterialTheme.typography.labelSmall,
-                            fontWeight = FontWeight.Bold,
-                            color = if (isDark) Color(0xFF6EE7B7) else Color(0xFF047857),
-                            fontSize = 11.sp
-                        )
-                        Spacer(modifier = Modifier.width(3.dp))
-                        Icon(
-                            imageVector = Icons.Default.ChevronRight,
-                            contentDescription = null,
-                            tint = if (isDark) Color(0xFF6EE7B7) else Color(0xFF047857),
-                            modifier = Modifier.size(14.dp)
-                        )
-                    }
-                }
-            }
-
-            Spacer(modifier = Modifier.height(10.dp))
-
-            // Active or Featured Nafl Status Highlight
-            val hasActive = activeNofolItem != null || prayerStatus.presentNofolNameBn.isNotBlank()
-            Surface(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp),
-                color = if (hasActive) {
-                    if (isDark) Color(0xFF047857).copy(alpha = 0.22f) else Color(0xFF047857).copy(alpha = 0.10f)
-                } else {
-                    if (isDark) Color(0xFF334155).copy(alpha = 0.30f) else Color(0xFFF1F5F9).copy(alpha = 0.65f)
-                },
-                border = BorderStroke(
-                    1.dp,
-                    if (hasActive) {
-                        if (isDark) Color(0xFF34D399).copy(alpha = 0.45f) else Color(0xFF047857).copy(alpha = 0.35f)
-                    } else {
-                        if (isDark) Color(0xFF475569).copy(alpha = 0.45f) else Color(0xFFCBD5E1).copy(alpha = 0.6f)
-                    }
-                )
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 12.dp, vertical = 8.5.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .size(8.dp)
-                                .clip(CircleShape)
-                                .background(if (hasActive) (if (isDark) Color(0xFF34D399) else Color(0xFF047857)) else IslamicGold)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Column {
-                            Text(
-                                text = if (activeNofolItem != null) "বর্তমানে আদায়যোগ্য: ${activeNofolItem.nameBn}"
-                                       else if (prayerStatus.presentNofolNameBn.isNotBlank()) "চলমান ওয়াক্ত: ${prayerStatus.presentNofolNameBn}"
-                                       else "দৈনিক ও বিশেষ নফল সালাতের গাইড",
-                                style = MaterialTheme.typography.bodyMedium,
-                                fontWeight = FontWeight.Bold,
-                                color = if (hasActive) (if (isDark) Color(0xFF6EE7B7) else Color(0xFF047857)) else (if (isDark) Color(0xFFF8FAFC) else Color(0xFF0F172A)),
-                                fontSize = 12.5.sp
-                            )
-                            Text(
-                                text = activeNofolItem?.timingSummaryBn ?: "ওয়াক্ত, নিয়ত, রাকাত ও সহীহ দলিল দেখতে ট্যাপ করুন",
-                                style = MaterialTheme.typography.bodySmall,
-                                fontWeight = FontWeight.Medium,
-                                color = if (isDark) Color(0xFFCBD5E1) else Color(0xFF475569),
-                                fontSize = 11.sp,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis
-                            )
-                        }
-                    }
-
-                    Icon(
-                        imageVector = Icons.Default.AutoAwesome,
-                        contentDescription = null,
-                        tint = if (hasActive) (if (isDark) Color(0xFF34D399) else Color(0xFF047857)) else IslamicGold,
-                        modifier = Modifier.size(16.dp)
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(10.dp))
-
-            // 4 Daily Nafl Salat Quick Pills
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(6.dp)
-            ) {
-                val dailySalats = listOf(
-                    "তাহাজ্জুদ" to "শেষ রাত",
-                    "ইশরাক" to "সূর্যোদয় পর",
-                    "চাশত / দুহা" to "পূর্বাহ্ন",
-                    "আওয়াবীন" to "মাগরিব পর"
-                )
-                dailySalats.forEach { (name, time) ->
+                Row(verticalAlignment = Alignment.CenterVertically) {
                     Surface(
-                        modifier = Modifier.weight(1f),
-                        shape = RoundedCornerShape(10.dp),
-                        color = if (isDark) Color(0xFF1E293B).copy(alpha = 0.45f) else Color(0xFFFFFFFF).copy(alpha = 0.55f),
-                        border = BorderStroke(1.dp, if (isDark) Color(0xFF475569).copy(alpha = 0.4f) else Color(0xFFE2E8F0).copy(alpha = 0.8f))
+                        shape = RoundedCornerShape(12.dp),
+                        color = Color(0xFF047857).copy(alpha = if (isDark) 0.22f else 0.12f),
+                        border = BorderStroke(1.dp, Color(0xFF047857).copy(alpha = if (isDark) 0.5f else 0.35f)),
+                        onClick = onOpenScheduleWindow
                     ) {
-                        Column(
-                            modifier = Modifier.padding(vertical = 6.dp, horizontal = 4.dp),
-                            horizontalAlignment = Alignment.CenterHorizontally
+                        Row(
+                            modifier = Modifier.padding(horizontal = 9.dp, vertical = 5.dp),
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
-                                text = name,
+                                text = "${CalendarHelper.toBanglaNumber(allSalats.size)}টি সালাত",
                                 style = MaterialTheme.typography.labelSmall,
                                 fontWeight = FontWeight.Bold,
-                                color = if (isDark) Color(0xFFF8FAFC) else Color(0xFF0F172A),
-                                fontSize = 11.sp,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis
+                                color = if (isDark) Color(0xFF6EE7B7) else Color(0xFF047857),
+                                fontSize = 11.sp
                             )
-                            Text(
-                                text = time,
-                                style = MaterialTheme.typography.bodySmall,
-                                fontWeight = FontWeight.Medium,
-                                color = if (isDark) Color(0xFFCBD5E1) else Color(0xFF64748B),
-                                fontSize = 9.5.sp,
-                                maxLines = 1
+                            Spacer(modifier = Modifier.width(3.dp))
+                            Icon(
+                                imageVector = Icons.Default.ChevronRight,
+                                contentDescription = null,
+                                tint = if (isDark) Color(0xFF6EE7B7) else Color(0xFF047857),
+                                modifier = Modifier.size(14.dp)
                             )
                         }
+                    }
+
+                    Spacer(modifier = Modifier.width(4.dp))
+
+                    IconButton(
+                        onClick = { isExpanded = !isExpanded },
+                        modifier = Modifier.size(30.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.KeyboardArrowDown,
+                            contentDescription = if (isExpanded) "সংকুচিত করুন" else "প্রসারিত করুন",
+                            tint = if (isDark) Color(0xFF6EE7B7) else Color(0xFF047857),
+                            modifier = Modifier
+                                .size(22.dp)
+                                .rotate(arrowRotation)
+                        )
                     }
                 }
             }
 
-            Spacer(modifier = Modifier.height(10.dp))
-
-            // Action Button to open the window
-            Surface(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(11.dp),
-                color = if (isDark) Color(0xFF047857).copy(alpha = 0.28f) else Color(0xFF047857).copy(alpha = 0.12f),
-                border = BorderStroke(1.dp, if (isDark) Color(0xFF34D399).copy(alpha = 0.45f) else Color(0xFF047857).copy(alpha = 0.35f)),
-                onClick = onOpenScheduleWindow
+            AnimatedVisibility(
+                visible = isExpanded,
+                enter = expandVertically() + fadeIn(),
+                exit = shrinkVertically() + fadeOut()
             ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 8.5.dp),
-                    horizontalArrangement = Arrangement.Center,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = "পূর্ণাঙ্গ সময়সূচী ও আমলের নিয়মাবলী দেখুন",
-                        color = if (isDark) Color(0xFF6EE7B7) else Color(0xFF047857),
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 12.5.sp
-                    )
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowForward,
-                        contentDescription = null,
-                        tint = if (isDark) Color(0xFF6EE7B7) else Color(0xFF047857),
-                        modifier = Modifier.size(15.dp)
-                    )
+                Column {
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    // Active or Featured Nafl Status Highlight
+                    val hasActive = activeNofolItem != null || prayerStatus.presentNofolNameBn.isNotBlank()
+                    Surface(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(12.dp),
+                        color = if (hasActive) {
+                            if (isDark) Color(0xFF047857).copy(alpha = 0.22f) else Color(0xFF047857).copy(alpha = 0.10f)
+                        } else {
+                            if (isDark) Color(0xFF334155).copy(alpha = 0.30f) else Color(0xFFF1F5F9).copy(alpha = 0.65f)
+                        },
+                        border = BorderStroke(
+                            1.dp,
+                            if (hasActive) {
+                                if (isDark) Color(0xFF34D399).copy(alpha = 0.45f) else Color(0xFF047857).copy(alpha = 0.35f)
+                            } else {
+                                if (isDark) Color(0xFF475569).copy(alpha = 0.45f) else Color(0xFFCBD5E1).copy(alpha = 0.6f)
+                            }
+                        )
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 12.dp, vertical = 8.5.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(8.dp)
+                                        .clip(CircleShape)
+                                        .background(if (hasActive) (if (isDark) Color(0xFF34D399) else Color(0xFF047857)) else IslamicGold)
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Column {
+                                    Text(
+                                        text = if (activeNofolItem != null) "বর্তমানে আদায়যোগ্য: ${activeNofolItem.nameBn}"
+                                               else if (prayerStatus.presentNofolNameBn.isNotBlank()) "চলমান ওয়াক্ত: ${prayerStatus.presentNofolNameBn}"
+                                               else "দৈনিক ও বিশেষ নফল সালাতের গাইড",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        fontWeight = FontWeight.Bold,
+                                        color = if (hasActive) (if (isDark) Color(0xFF6EE7B7) else Color(0xFF047857)) else (if (isDark) Color(0xFFF8FAFC) else Color(0xFF0F172A)),
+                                        fontSize = 12.5.sp
+                                    )
+                                    Text(
+                                        text = activeNofolItem?.timingSummaryBn ?: "ওয়াক্ত, নিয়ত, রাকাত ও সহীহ দলিল দেখতে ট্যাপ করুন",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        fontWeight = FontWeight.Medium,
+                                        color = if (isDark) Color(0xFFCBD5E1) else Color(0xFF475569),
+                                        fontSize = 11.sp,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis
+                                    )
+                                }
+                            }
+
+                            Icon(
+                                imageVector = Icons.Default.AutoAwesome,
+                                contentDescription = null,
+                                tint = if (hasActive) (if (isDark) Color(0xFF34D399) else Color(0xFF047857)) else IslamicGold,
+                                modifier = Modifier.size(16.dp)
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    // 4 Daily Nafl Salat Quick Pills
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        val dailySalats = listOf(
+                            "তাহাজ্জুদ" to "শেষ রাত",
+                            "ইশরাক" to "সূর্যোদয় পর",
+                            "চাশত / দুহা" to "পূর্বাহ্ন",
+                            "আওয়াবীন" to "মাগরিব পর"
+                        )
+                        dailySalats.forEach { (name, time) ->
+                            Surface(
+                                modifier = Modifier.weight(1f),
+                                shape = RoundedCornerShape(10.dp),
+                                color = if (isDark) Color(0xFF1E293B).copy(alpha = 0.45f) else Color(0xFFFFFFFF).copy(alpha = 0.55f),
+                                border = BorderStroke(1.dp, if (isDark) Color(0xFF475569).copy(alpha = 0.4f) else Color(0xFFE2E8F0).copy(alpha = 0.8f))
+                            ) {
+                                Column(
+                                    modifier = Modifier.padding(vertical = 6.dp, horizontal = 4.dp),
+                                    horizontalAlignment = Alignment.CenterHorizontally
+                                ) {
+                                    Text(
+                                        text = name,
+                                        style = MaterialTheme.typography.labelSmall,
+                                        fontWeight = FontWeight.Bold,
+                                        color = if (isDark) Color(0xFFF8FAFC) else Color(0xFF0F172A),
+                                        fontSize = 11.sp,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis
+                                    )
+                                    Text(
+                                        text = time,
+                                        style = MaterialTheme.typography.bodySmall,
+                                        fontWeight = FontWeight.Medium,
+                                        color = if (isDark) Color(0xFFCBD5E1) else Color(0xFF64748B),
+                                        fontSize = 9.5.sp,
+                                        maxLines = 1
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    // Action Button to open the window
+                    Surface(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(11.dp),
+                        color = if (isDark) Color(0xFF047857).copy(alpha = 0.28f) else Color(0xFF047857).copy(alpha = 0.12f),
+                        border = BorderStroke(1.dp, if (isDark) Color(0xFF34D399).copy(alpha = 0.45f) else Color(0xFF047857).copy(alpha = 0.35f)),
+                        onClick = onOpenScheduleWindow
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 8.5.dp),
+                            horizontalArrangement = Arrangement.Center,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "পূর্ণাঙ্গ সময়সূচী ও আমলের নিয়মাবলী দেখুন",
+                                color = if (isDark) Color(0xFF6EE7B7) else Color(0xFF047857),
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 12.5.sp
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                                contentDescription = null,
+                                tint = if (isDark) Color(0xFF6EE7B7) else Color(0xFF047857),
+                                modifier = Modifier.size(15.dp)
+                            )
+                        }
+                    }
                 }
             }
         }
@@ -1075,15 +1108,15 @@ fun NofolSalatThinCard(
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     color = if (isDark) Color.White else Color(0xFF0F172A),
-                    fontSize = 14.5.sp,
-                    maxLines = 2,
+                    fontSize = 14.sp,
+                    maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
             }
 
             Spacer(modifier = Modifier.width(8.dp))
 
-            // Time (Right) - Only salat name and time, strictly max 2 lines
+            // Time (Right) - Only salat name and time, strictly in 1 line
             Text(
                 text = timeText,
                 style = MaterialTheme.typography.bodySmall,
@@ -1091,7 +1124,7 @@ fun NofolSalatThinCard(
                 fontSize = 12.sp,
                 color = categoryColor,
                 textAlign = TextAlign.End,
-                maxLines = 2,
+                maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
                 modifier = Modifier.weight(1f, fill = false)
             )

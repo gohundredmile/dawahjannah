@@ -1,5 +1,11 @@
 package com.example.ui.screens.sub
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -21,6 +27,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CloudDownload
 import androidx.compose.material.icons.filled.ColorLens
@@ -31,12 +38,15 @@ import androidx.compose.material.icons.filled.FontDownload
 import androidx.compose.material.icons.filled.FormatSize
 import androidx.compose.material.icons.filled.HelpOutline
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.Layers
 import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.PhoneAndroid
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.Sync
 import androidx.compose.material.icons.filled.SystemUpdate
 import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material.icons.filled.Waves
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -47,10 +57,13 @@ import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.RadioButton
+import androidx.compose.material3.RadioButtonDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
@@ -65,8 +78,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import java.util.Locale
@@ -75,8 +90,10 @@ import com.example.data.model.BanglaFontWeight
 import com.example.data.model.EnglishFont
 import com.example.data.model.FlipClockFont
 import com.example.data.model.FontSizeScale
+import com.example.data.model.ScreenEffectMode
 import com.example.data.model.ThemeMode
 import com.example.data.model.ThemeStyle
+import com.example.ui.components.ModalSectionTab
 import com.example.ui.theme.getBanglaFontFamily
 import com.example.ui.theme.getEnglishFontFamily
 import com.example.ui.theme.getFlipClockFontFamily
@@ -97,6 +114,8 @@ fun SettingsScreen(viewModel: MainViewModel) {
     val currentBanglaFont by viewModel.banglaFont.collectAsState()
     val currentBanglaWeight by viewModel.banglaFontWeight.collectAsState()
     val currentFlipClockFont by viewModel.flipClockFont.collectAsState()
+    val currentScreenEffectMode by viewModel.screenEffectMode.collectAsState()
+    val auroraConfig by viewModel.auroraConfig.collectAsState()
     val isHanafiAsr by viewModel.isHanafiAsr.collectAsState()
     val updateMessage by viewModel.updateAlertMessage.collectAsState()
     val latestReleaseInfo by viewModel.latestReleaseInfo.collectAsState()
@@ -109,381 +128,765 @@ fun SettingsScreen(viewModel: MainViewModel) {
     var inputOwner by remember { mutableStateOf(viewModel.gitHubUpdateManager.repoOwner) }
     var inputRepo by remember { mutableStateOf(viewModel.gitHubUpdateManager.repoName) }
 
+    var isThemeExpanded by remember { mutableStateOf(true) }
+    var isFontsExpanded by remember { mutableStateOf(false) }
+
+    val themeNameBn = when (currentThemeStyle) {
+        ThemeStyle.EMERALD_JANNAH -> "এমেরাল্ড জান্নাহ"
+        ThemeStyle.SAGE_WHISPER -> "সেইজ হুইস্পার"
+        ThemeStyle.COSMIC_AURORA -> "কসমিক অরোরা"
+        ThemeStyle.SOLAR_DAWN -> "সোলার ডন"
+        ThemeStyle.LAVENDER_MIST -> "ল্যাভেন্ডার মিস্ট"
+        else -> currentThemeStyle.name.replace("_", " ").lowercase(Locale.ROOT).replaceFirstChar { it.uppercase() }
+    }
+    val currentModeLabel = when (currentThemeMode) {
+        ThemeMode.SYSTEM -> "সিস্টেম মোড"
+        ThemeMode.LIGHT -> "লাইট মোড"
+        ThemeMode.DARK -> "ডার্ক মোড"
+    }
+    val themeBadgeText = "$themeNameBn • $currentModeLabel • ${currentScreenEffectMode.titleBn}"
+    val fontsBadgeText = "বাংলা: ${currentBanglaFont.displayNameBn} • ইংরেজি: ${currentEnglishFont.displayName} • স্কেল: ${currentFontScale.titleBn}"
+
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(16.dp)
     ) {
-        // 1. THEME STYLES (AURORA & EMERALD)
+        // 1. CONSOLIDATED THEME & COLOR STYLES + DISPLAY MODE (COLLAPSIBLE)
         item {
-            SettingSectionHeader(title = "অরোরা থিম ও রঙ শৈলী", icon = Icons.Default.ColorLens)
-            Spacer(modifier = Modifier.height(8.dp))
+            CollapsibleSettingHeader(
+                title = "থিম ও কালার শৈলী",
+                icon = Icons.Default.Palette,
+                badgeText = themeBadgeText,
+                isExpanded = isThemeExpanded,
+                onToggle = { isThemeExpanded = !isThemeExpanded }
+            )
 
-            Button(
-                onClick = { viewModel.openThemeModal() },
-                modifier = Modifier
-                    .fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.primary
-                )
+            AnimatedVisibility(
+                visible = isThemeExpanded,
+                enter = expandVertically() + fadeIn(),
+                exit = shrinkVertically() + fadeOut()
             ) {
-                Icon(
-                    imageVector = Icons.Default.Palette,
-                    contentDescription = null,
-                    modifier = Modifier.size(18.dp)
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    text = "সকল অরোরা থিমসমূহ (১৫টি থিম দেখুন ও বাছাই করুন)",
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 13.sp
-                )
-            }
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    Spacer(modifier = Modifier.height(10.dp))
 
-            Spacer(modifier = Modifier.height(10.dp))
-
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.15f))
-            ) {
-                Column(modifier = Modifier.padding(14.dp)) {
-                    listOf(
-                        Triple(ThemeStyle.EMERALD_JANNAH, "এমেরাল্ড জান্নাহ (সবুজ ও স্বর্ণালী - মূল ইসলামিক থিম)", EmeraldPrimaryLight),
-                        Triple(ThemeStyle.SAGE_WHISPER, "সেইজ হুইস্পার (স্নিগ্ধ মৃদু প্রকৃতি)", SagePrimaryLight),
-                        Triple(ThemeStyle.COSMIC_AURORA, "কসমিক অরোরা (নীলকান্তমণি ও মহাকাশ)", CosmicPrimaryLight),
-                        Triple(ThemeStyle.SOLAR_DAWN, "সোলার ডন (সোনালী উষা ও অ্যাম্বার)", SolarPrimaryLight),
-                        Triple(ThemeStyle.LAVENDER_MIST, "ল্যাভেন্ডার মিস্ট (প্রশান্ত বেগুনি কুয়াশা)", LavenderPrimaryLight)
-                    ).forEach { (style, name, color) ->
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable { viewModel.setThemeStyle(style) }
-                                .padding(vertical = 8.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(24.dp)
-                                        .clip(CircleShape)
-                                        .background(color)
-                                )
-                                Spacer(modifier = Modifier.width(12.dp))
-                                Text(
-                                    text = name,
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    fontWeight = if (currentThemeStyle == style) FontWeight.Bold else FontWeight.Normal,
-                                    color = if (currentThemeStyle == style) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
-                                )
-                            }
-
-                            if (currentThemeStyle == style) {
-                                Icon(
-                                    imageVector = Icons.Default.Check,
-                                    contentDescription = "Selected",
-                                    tint = MaterialTheme.colorScheme.primary,
-                                    modifier = Modifier.size(20.dp)
-                                )
-                            }
-                        }
-                    }
-                }
-            }
-            Spacer(modifier = Modifier.height(16.dp))
-        }
-
-        // 2. THEME MODE (LIGHT / DARK / SYSTEM)
-        item {
-            SettingSectionHeader(title = "ডিসপ্লে মোড (ডার্ক / লাইট)", icon = Icons.Default.DarkMode)
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                listOf(
-                    ThemeMode.SYSTEM to "সিস্টেম",
-                    ThemeMode.LIGHT to "লাইট মোড",
-                    ThemeMode.DARK to "ডার্ক মোড"
-                ).forEach { (mode, label) ->
-                    FilterChip(
-                        selected = currentThemeMode == mode,
-                        onClick = { viewModel.setThemeMode(mode) },
-                        label = { Text(label) },
-                        modifier = Modifier.weight(1f),
-                        colors = FilterChipDefaults.filterChipColors(
-                            selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
-                            selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer
-                        )
-                    )
-                }
-            }
-            Spacer(modifier = Modifier.height(16.dp))
-        }
-
-        // 3. ENGLISH & BENGALI FONT SELECTION & WEIGHTS
-        item {
-            SettingSectionHeader(title = "ফন্ট ও টাইপোগ্রাফি স্টুডিও (Fonts & Typography)", icon = Icons.Default.FontDownload)
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.15f))
-            ) {
-                Column(modifier = Modifier.padding(14.dp)) {
-                    // Dual active fonts badge banner
-                    Surface(
-                        shape = RoundedCornerShape(10.dp),
-                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.08f),
-                        modifier = Modifier.fillMaxWidth()
+                    // A. Display Mode (Dark / Light / System)
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(14.dp),
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.15f))
                     ) {
-                        Text(
-                            text = "💡 যুগপৎ সক্রিয় ফন্ট: ইংরেজি ফন্ট নির্বাচন শুধুমাত্র ইংরেজি লেখা ও সংখ্যার ওপর প্রভাব ফেলবে এবং বাংলা ফন্ট নির্বাচন শুধুমাত্র বাংলা হরফের ওপর প্রভাব ফেলবে। উভয় ফন্ট একই সাথে সক্রিয় থাকে।",
-                            style = MaterialTheme.typography.bodySmall,
-                            fontSize = 11.5.sp,
-                            color = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.padding(10.dp)
-                        )
-                    }
-                    Spacer(modifier = Modifier.height(12.dp))
-
-                    // English Font Header
-                    Text(
-                        text = "ইংরেজি ফন্ট (Clean, Stunning & Thin English Fonts):",
-                        style = MaterialTheme.typography.bodySmall,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    EnglishFont.entries.forEach { font ->
-                        val isSelected = currentEnglishFont == font
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable { viewModel.setEnglishFont(font) }
-                                .padding(vertical = 6.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Column {
-                                Text(
-                                    text = font.displayName,
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    fontFamily = getEnglishFontFamily(font),
-                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                                    color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
-                                )
-                                Text(
-                                    text = "${font.subtitle} • 04:52 AM, September 2026",
-                                    fontFamily = getEnglishFontFamily(font),
-                                    style = MaterialTheme.typography.bodySmall,
-                                    fontSize = 11.sp,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            }
-
-                            if (isSelected) {
+                        Column(modifier = Modifier.padding(12.dp)) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
                                 Icon(
-                                    imageVector = Icons.Default.Check,
-                                    contentDescription = "Selected",
+                                    imageVector = Icons.Default.DarkMode,
+                                    contentDescription = null,
                                     tint = MaterialTheme.colorScheme.primary,
-                                    modifier = Modifier.size(20.dp)
+                                    modifier = Modifier.size(16.dp)
                                 )
-                            }
-                        }
-                        if (font != EnglishFont.entries.last()) {
-                            HorizontalDivider(
-                                color = MaterialTheme.colorScheme.outline.copy(alpha = 0.08f),
-                                modifier = Modifier.padding(vertical = 2.dp)
-                            )
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.height(14.dp))
-                    HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.15f))
-                    Spacer(modifier = Modifier.height(12.dp))
-
-                    // Bengali Font Header
-                    Text(
-                        text = "বাংলা ফন্ট (Bengali Fonts):",
-                        style = MaterialTheme.typography.bodySmall,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    BanglaFont.entries.forEach { font ->
-                        val isSelected = currentBanglaFont == font
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable { viewModel.setBanglaFont(font) }
-                                .padding(vertical = 6.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Column {
+                                Spacer(modifier = Modifier.width(6.dp))
                                 Text(
-                                    text = font.displayNameBn,
-                                    fontFamily = getBanglaFontFamily(font),
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                                    color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
-                                )
-                                Text(
-                                    text = "বিসমিল্লাহির রাহমানির রাহিম • ${font.displayNameEn}",
-                                    fontFamily = getBanglaFontFamily(font),
+                                    text = "ডিসপ্লে মোড (ডার্ক / লাইট):",
                                     style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.primary
                                 )
                             }
+                            Spacer(modifier = Modifier.height(8.dp))
 
-                            if (isSelected) {
-                                Icon(
-                                    imageVector = Icons.Default.Check,
-                                    contentDescription = "Selected",
-                                    tint = MaterialTheme.colorScheme.primary,
-                                    modifier = Modifier.size(20.dp)
-                                )
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                listOf(
+                                    ThemeMode.SYSTEM to "সিস্টেম",
+                                    ThemeMode.LIGHT to "লাইট মোড",
+                                    ThemeMode.DARK to "ডার্ক মোড"
+                                ).forEach { (mode, label) ->
+                                    FilterChip(
+                                        selected = currentThemeMode == mode,
+                                        onClick = { viewModel.setThemeMode(mode) },
+                                        label = { Text(label, fontSize = 12.sp) },
+                                        modifier = Modifier.weight(1f),
+                                        colors = FilterChipDefaults.filterChipColors(
+                                            selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                                            selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer
+                                        )
+                                    )
+                                }
                             }
-                        }
-                        if (font != BanglaFont.entries.last()) {
-                            HorizontalDivider(
-                                color = MaterialTheme.colorScheme.outline.copy(alpha = 0.08f),
-                                modifier = Modifier.padding(vertical = 2.dp)
-                            )
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(14.dp))
-                    Text(
-                        text = "ফন্ট ওয়েট (Font Weight):",
-                        style = MaterialTheme.typography.bodySmall,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
+                    Spacer(modifier = Modifier.height(10.dp))
 
+                    // B. Window / Screen Effect Mode: 1. Normal Mode, 2. Glass Effect
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(14.dp),
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.15f))
+                    ) {
+                        Column(modifier = Modifier.padding(12.dp)) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(
+                                        imageVector = Icons.Default.Layers,
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.primary,
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Text(
+                                        text = "উইন্ডো / স্ক্রিন ইফেক্ট মোড:",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.primary
+                                    )
+                                }
+
+                                Surface(
+                                    shape = RoundedCornerShape(6.dp),
+                                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
+                                ) {
+                                    Text(
+                                        text = currentScreenEffectMode.titleBn,
+                                        fontSize = 11.sp,
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = MaterialTheme.colorScheme.primary,
+                                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                    )
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.height(10.dp))
+
+                            // The Two Options Side-by-Side
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                // Option 1: স্বাভাবিক মোড (Normal Mode)
+                                val isNormal = currentScreenEffectMode == ScreenEffectMode.NORMAL
+                                Card(
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .clickable { viewModel.setScreenEffectMode(ScreenEffectMode.NORMAL) },
+                                    shape = RoundedCornerShape(12.dp),
+                                    colors = CardDefaults.cardColors(
+                                        containerColor = if (isNormal) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.45f) else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
+                                    ),
+                                    border = BorderStroke(
+                                        if (isNormal) 1.8.dp else 1.dp,
+                                        if (isNormal) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline.copy(alpha = 0.15f)
+                                    )
+                                ) {
+                                    Column(modifier = Modifier.padding(10.dp)) {
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            horizontalArrangement = Arrangement.SpaceBetween,
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Box(
+                                                modifier = Modifier
+                                                    .size(28.dp)
+                                                    .clip(CircleShape)
+                                                    .background(if (isNormal) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant),
+                                                contentAlignment = Alignment.Center
+                                            ) {
+                                                Icon(
+                                                    imageVector = Icons.Default.PhoneAndroid,
+                                                    contentDescription = null,
+                                                    tint = if (isNormal) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
+                                                    modifier = Modifier.size(16.dp)
+                                                )
+                                            }
+
+                                            RadioButton(
+                                                selected = isNormal,
+                                                onClick = { viewModel.setScreenEffectMode(ScreenEffectMode.NORMAL) },
+                                                colors = RadioButtonDefaults.colors(selectedColor = MaterialTheme.colorScheme.primary),
+                                                modifier = Modifier.size(18.dp)
+                                            )
+                                        }
+
+                                        Spacer(modifier = Modifier.height(6.dp))
+
+                                        Text(
+                                            text = "১. স্বাভাবিক মোড",
+                                            fontWeight = FontWeight.Bold,
+                                            fontSize = 12.5.sp,
+                                            color = MaterialTheme.colorScheme.onSurface
+                                        )
+                                        Text(
+                                            text = "(Normal Mode)",
+                                            fontSize = 10.sp,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+
+                                        Spacer(modifier = Modifier.height(4.dp))
+
+                                        Text(
+                                            text = "ট্যাপ করলে পূর্বের সাধারণ হোম স্ক্রিন ফিরবে",
+                                            fontSize = 10.5.sp,
+                                            lineHeight = 14.sp,
+                                            color = if (isNormal) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                    }
+                                }
+
+                                // Option 2: গ্লাস ইফেক্ট (Glass Effect)
+                                val isGlass = currentScreenEffectMode == ScreenEffectMode.GLASS
+                                Card(
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .clickable { viewModel.setScreenEffectMode(ScreenEffectMode.GLASS) },
+                                    shape = RoundedCornerShape(12.dp),
+                                    colors = CardDefaults.cardColors(
+                                        containerColor = if (isGlass) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.45f) else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
+                                    ),
+                                    border = BorderStroke(
+                                        if (isGlass) 1.8.dp else 1.dp,
+                                        if (isGlass) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline.copy(alpha = 0.15f)
+                                    )
+                                ) {
+                                    Column(modifier = Modifier.padding(10.dp)) {
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            horizontalArrangement = Arrangement.SpaceBetween,
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Box(
+                                                modifier = Modifier
+                                                    .size(28.dp)
+                                                    .clip(CircleShape)
+                                                    .background(if (isGlass) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant),
+                                                contentAlignment = Alignment.Center
+                                            ) {
+                                                Icon(
+                                                    imageVector = Icons.Default.AutoAwesome,
+                                                    contentDescription = null,
+                                                    tint = if (isGlass) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
+                                                    modifier = Modifier.size(16.dp)
+                                                )
+                                            }
+
+                                            RadioButton(
+                                                selected = isGlass,
+                                                onClick = { viewModel.setScreenEffectMode(ScreenEffectMode.GLASS) },
+                                                colors = RadioButtonDefaults.colors(selectedColor = MaterialTheme.colorScheme.primary),
+                                                modifier = Modifier.size(18.dp)
+                                            )
+                                        }
+
+                                        Spacer(modifier = Modifier.height(6.dp))
+
+                                        Text(
+                                            text = "২. গ্লাস ইফেক্ট",
+                                            fontWeight = FontWeight.Bold,
+                                            fontSize = 12.5.sp,
+                                            color = MaterialTheme.colorScheme.onSurface
+                                        )
+                                        Text(
+                                            text = "(Glass Effect)",
+                                            fontSize = 10.sp,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+
+                                        Spacer(modifier = Modifier.height(4.dp))
+
+                                        Text(
+                                            text = "ফ্রস্টেড গ্লাস ও লিকুইড ওয়েভ ইফেক্ট",
+                                            fontSize = 10.5.sp,
+                                            lineHeight = 14.sp,
+                                            color = if (isGlass) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    // C. Beside "থিম কালার প্যালেট" and "লাইভ অরোরা ওয়েভ" Companion Cards
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        listOf(
-                            BanglaFontWeight.THIN,
-                            BanglaFontWeight.LIGHT,
-                            BanglaFontWeight.NORMAL,
-                            BanglaFontWeight.SEMI_BOLD,
-                            BanglaFontWeight.BOLD
-                        ).forEach { weight ->
-                            FilterChip(
-                                selected = currentBanglaWeight == weight,
-                                onClick = { viewModel.setBanglaFontWeight(weight) },
-                                label = { Text(weight.label.split(" ").first(), fontSize = 11.sp) },
-                                colors = FilterChipDefaults.filterChipColors(
-                                    selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
-                                    selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer
-                                )
-                            )
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.height(14.dp))
-                    HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.15f))
-                    Spacer(modifier = Modifier.height(12.dp))
-
-                    // Dedicated Flip Clock Typography Section
-                    Text(
-                        text = "ফ্লিপ ক্লক ফন্ট (HTC Sense Flip Clock - ১০+ থিন ও লাইট ফন্ট):",
-                        style = MaterialTheme.typography.bodySmall,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    Surface(
-                        shape = RoundedCornerShape(12.dp),
-                        color = Color(0xFF1E2430),
-                        border = BorderStroke(1.dp, Color(0xFF334155)),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable { viewModel.openFontMenu() }
-                    ) {
-                        Row(
-                            modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween
+                        // 1. থিম কালার প্যালেট Card
+                        Card(
+                            modifier = Modifier
+                                .weight(1f)
+                                .clickable { viewModel.openThemeModal(ModalSectionTab.THEMES) },
+                            shape = RoundedCornerShape(14.dp),
+                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.15f))
                         ) {
-                            Column(modifier = Modifier.weight(1f)) {
+                            Column(modifier = Modifier.padding(12.dp)) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(
+                                        imageVector = Icons.Default.ColorLens,
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.primary,
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Text(
+                                        text = "থিম কালার প্যালেট",
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 12.5.sp,
+                                        color = MaterialTheme.colorScheme.onSurface
+                                    )
+                                }
+                                Spacer(modifier = Modifier.height(4.dp))
                                 Text(
-                                    text = currentFlipClockFont.displayName,
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    fontWeight = FontWeight.Bold,
-                                    color = Color(0xFFF1F5F9)
-                                )
-                                Text(
-                                    text = "${currentFlipClockFont.subtitle} • ${currentFlipClockFont.googleFontName}",
-                                    style = MaterialTheme.typography.bodySmall,
+                                    text = "১৫টি স্নিগ্ধ কালার স্কিম",
                                     fontSize = 11.sp,
-                                    color = Color(0xFF94A3B8)
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Text(
+                                    text = "প্যালেট স্টুডিও ➔",
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.primary
                                 )
                             }
-                            Surface(
-                                shape = RoundedCornerShape(6.dp),
-                                color = Color(0xFF0F172A),
-                                border = BorderStroke(0.5.dp, Color(0xFF475569))
-                            ) {
+                        }
+
+                        // 2. লাইভ অরোরা ওয়েভ Card
+                        Card(
+                            modifier = Modifier
+                                .weight(1f)
+                                .clickable { viewModel.openThemeModal(ModalSectionTab.AURORA_WAVES) },
+                            shape = RoundedCornerShape(14.dp),
+                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.15f))
+                        ) {
+                            Column(modifier = Modifier.padding(12.dp)) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Icon(
+                                            imageVector = Icons.Default.Waves,
+                                            contentDescription = null,
+                                            tint = MaterialTheme.colorScheme.primary,
+                                            modifier = Modifier.size(18.dp)
+                                        )
+                                        Spacer(modifier = Modifier.width(6.dp))
+                                        Text(
+                                            text = "লাইভ অরোরা ওয়েভ",
+                                            fontWeight = FontWeight.Bold,
+                                            fontSize = 12.5.sp,
+                                            color = MaterialTheme.colorScheme.onSurface
+                                        )
+                                    }
+                                }
+                                Spacer(modifier = Modifier.height(4.dp))
                                 Text(
-                                    text = "08:45",
-                                    fontFamily = getFlipClockFontFamily(currentFlipClockFont),
-                                    fontWeight = currentFlipClockFont.fontWeight,
-                                    fontSize = 15.sp,
-                                    color = Color(0xFFF8FAFC),
-                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                                    text = if (auroraConfig.isEnabled) "ওয়েভ: চালু (${auroraConfig.preset.titleBn})" else "ওয়েভ ওয়ালপেপার: বন্ধ",
+                                    fontSize = 11.sp,
+                                    color = if (auroraConfig.isEnabled) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Text(
+                                    text = "ওয়েভ কাস্টমাইজ ➔",
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.primary
                                 )
                             }
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(12.dp))
-                    OutlinedButton(
-                        onClick = { viewModel.openFontMenu() },
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    // D. Full Aurora Theme Modal Trigger
+                    Button(
+                        onClick = { viewModel.openThemeModal() },
                         modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(10.dp)
+                        shape = RoundedCornerShape(12.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.primary
+                        )
                     ) {
-                        Text("ফন্ট ও টাইপোগ্রাফি স্টুডিও খুলুন (সম্পূর্ণ প্রিভিউ)")
+                        Icon(
+                            imageVector = Icons.Default.ColorLens,
+                            contentDescription = null,
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = "সকল অরোরা থিমসমূহ (১৫টি থিম দেখুন ও বাছাই করুন)",
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 13.sp
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    // Theme Presets Card
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(16.dp),
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.15f))
+                    ) {
+                        Column(modifier = Modifier.padding(14.dp)) {
+                            Text(
+                                text = "জনপ্রিয় প্যালেটসমূহ:",
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                            Spacer(modifier = Modifier.height(6.dp))
+
+                            listOf(
+                                Triple(ThemeStyle.EMERALD_JANNAH, "এমেরাল্ড জান্নাহ (সবুজ ও স্বর্ণালী - মূল ইসলামিক থিম)", EmeraldPrimaryLight),
+                                Triple(ThemeStyle.SAGE_WHISPER, "সেইজ হুইস্পার (স্নিগ্ধ মৃদু প্রকৃতি)", SagePrimaryLight),
+                                Triple(ThemeStyle.COSMIC_AURORA, "কসমিক অরোরা (নীলকান্তমণি ও মহাকাশ)", CosmicPrimaryLight),
+                                Triple(ThemeStyle.SOLAR_DAWN, "সোলার ডন (সোনালী উষা ও অ্যাম্বার)", SolarPrimaryLight),
+                                Triple(ThemeStyle.LAVENDER_MIST, "ল্যাভেন্ডার মিস্ট (প্রশান্ত বেগুনি কুয়াশা)", LavenderPrimaryLight)
+                            ).forEach { (style, name, color) ->
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clickable { viewModel.setThemeStyle(style) }
+                                        .padding(vertical = 8.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
+                                        Box(
+                                            modifier = Modifier
+                                                .size(24.dp)
+                                                .clip(CircleShape)
+                                                .background(color)
+                                        )
+                                        Spacer(modifier = Modifier.width(12.dp))
+                                        Text(
+                                            text = name,
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            fontWeight = if (currentThemeStyle == style) FontWeight.Bold else FontWeight.Normal,
+                                            color = if (currentThemeStyle == style) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
+                                        )
+                                    }
+
+                                    if (currentThemeStyle == style) {
+                                        Icon(
+                                            imageVector = Icons.Default.Check,
+                                            contentDescription = "Selected",
+                                            tint = MaterialTheme.colorScheme.primary,
+                                            modifier = Modifier.size(20.dp)
+                                        )
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             }
             Spacer(modifier = Modifier.height(16.dp))
         }
 
-        // 4. BENGALI FONT SCALING
+        // 2. CONSOLIDATED FONTS & TYPOGRAPHY WITH BANGLA SCALING (COLLAPSIBLE)
         item {
-            SettingSectionHeader(title = "বাংলা ফন্ট স্কেলিং", icon = Icons.Default.FormatSize)
-            Spacer(modifier = Modifier.height(8.dp))
+            CollapsibleSettingHeader(
+                title = "ফন্ট ও টাইপোগ্রাফি (Fonts & Typography)",
+                icon = Icons.Default.FontDownload,
+                badgeText = fontsBadgeText,
+                isExpanded = isFontsExpanded,
+                onToggle = { isFontsExpanded = !isFontsExpanded }
+            )
 
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .horizontalScroll(rememberScrollState()),
-                horizontalArrangement = Arrangement.spacedBy(6.dp)
+            AnimatedVisibility(
+                visible = isFontsExpanded,
+                enter = expandVertically() + fadeIn(),
+                exit = shrinkVertically() + fadeOut()
             ) {
-                FontSizeScale.entries.forEach { scale ->
-                    FilterChip(
-                        selected = currentFontScale == scale,
-                        onClick = { viewModel.setFontScale(scale) },
-                        label = { Text(scale.titleBn, fontSize = 12.sp) },
-                        colors = FilterChipDefaults.filterChipColors(
-                            selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
-                            selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer
-                        )
-                    )
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(16.dp),
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.15f))
+                    ) {
+                        Column(modifier = Modifier.padding(14.dp)) {
+                            // 2A. Bangla Font Scaling inside Fonts & Typography
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(
+                                    imageVector = Icons.Default.FormatSize,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.size(16.dp)
+                                )
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text(
+                                    text = "বাংলা ফন্ট স্কেলিং (Font Size Scaling):",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                            }
+                            Spacer(modifier = Modifier.height(8.dp))
+
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .horizontalScroll(rememberScrollState()),
+                                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                            ) {
+                                FontSizeScale.entries.forEach { scale ->
+                                    FilterChip(
+                                        selected = currentFontScale == scale,
+                                        onClick = { viewModel.setFontScale(scale) },
+                                        label = { Text(scale.titleBn, fontSize = 12.sp) },
+                                        colors = FilterChipDefaults.filterChipColors(
+                                            selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                                            selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer
+                                        )
+                                    )
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.height(12.dp))
+                            HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.15f))
+                            Spacer(modifier = Modifier.height(12.dp))
+
+                            // 2B. Dual active fonts badge banner
+                            Surface(
+                                shape = RoundedCornerShape(10.dp),
+                                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.08f),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Text(
+                                    text = "💡 যুগপৎ সক্রিয় ফন্ট: ইংরেজি ফন্ট নির্বাচন শুধুমাত্র ইংরেজি লেখা ও সংখ্যার ওপর প্রভাব ফেলবে এবং বাংলা ফন্ট নির্বাচন শুধুমাত্র বাংলা হরফের ওপর প্রভাব ফেলবে। উভয় ফন্ট একই সাথে সক্রিয় থাকে।",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    fontSize = 11.5.sp,
+                                    color = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.padding(10.dp)
+                                )
+                            }
+                            Spacer(modifier = Modifier.height(12.dp))
+
+                            // English Font Header
+                            Text(
+                                text = "ইংরেজি ফন্ট (Clean, Stunning & Thin English Fonts):",
+                                style = MaterialTheme.typography.bodySmall,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+
+                            EnglishFont.entries.forEach { font ->
+                                val isSelected = currentEnglishFont == font
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clickable { viewModel.setEnglishFont(font) }
+                                        .padding(vertical = 6.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    Column {
+                                        Text(
+                                            text = font.displayName,
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            fontFamily = getEnglishFontFamily(font),
+                                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                                            color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
+                                        )
+                                        Text(
+                                            text = "${font.subtitle} • 04:52 AM, September 2026",
+                                            fontFamily = getEnglishFontFamily(font),
+                                            style = MaterialTheme.typography.bodySmall,
+                                            fontSize = 11.sp,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                    }
+
+                                    if (isSelected) {
+                                        Icon(
+                                            imageVector = Icons.Default.Check,
+                                            contentDescription = "Selected",
+                                            tint = MaterialTheme.colorScheme.primary,
+                                            modifier = Modifier.size(20.dp)
+                                        )
+                                    }
+                                }
+                                if (font != EnglishFont.entries.last()) {
+                                    HorizontalDivider(
+                                        color = MaterialTheme.colorScheme.outline.copy(alpha = 0.08f),
+                                        modifier = Modifier.padding(vertical = 2.dp)
+                                    )
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.height(14.dp))
+                            HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.15f))
+                            Spacer(modifier = Modifier.height(12.dp))
+
+                            // Bengali Font Header
+                            Text(
+                                text = "বাংলা ফন্ট (Bengali Fonts):",
+                                style = MaterialTheme.typography.bodySmall,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+
+                            BanglaFont.entries.forEach { font ->
+                                val isSelected = currentBanglaFont == font
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clickable { viewModel.setBanglaFont(font) }
+                                        .padding(vertical = 6.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    Column {
+                                        Text(
+                                            text = font.displayNameBn,
+                                            fontFamily = getBanglaFontFamily(font),
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                                            color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
+                                        )
+                                        Text(
+                                            text = "বিসমিল্লাহির রাহমানির রাহিম • ${font.displayNameEn}",
+                                            fontFamily = getBanglaFontFamily(font),
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                    }
+
+                                    if (isSelected) {
+                                        Icon(
+                                            imageVector = Icons.Default.Check,
+                                            contentDescription = "Selected",
+                                            tint = MaterialTheme.colorScheme.primary,
+                                            modifier = Modifier.size(20.dp)
+                                        )
+                                    }
+                                }
+                                if (font != BanglaFont.entries.last()) {
+                                    HorizontalDivider(
+                                        color = MaterialTheme.colorScheme.outline.copy(alpha = 0.08f),
+                                        modifier = Modifier.padding(vertical = 2.dp)
+                                    )
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.height(14.dp))
+                            Text(
+                                text = "ফন্ট ওয়েট (Font Weight):",
+                                style = MaterialTheme.typography.bodySmall,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                            ) {
+                                listOf(
+                                    BanglaFontWeight.THIN,
+                                    BanglaFontWeight.LIGHT,
+                                    BanglaFontWeight.NORMAL,
+                                    BanglaFontWeight.SEMI_BOLD,
+                                    BanglaFontWeight.BOLD
+                                ).forEach { weight ->
+                                    FilterChip(
+                                        selected = currentBanglaWeight == weight,
+                                        onClick = { viewModel.setBanglaFontWeight(weight) },
+                                        label = { Text(weight.label.split(" ").first(), fontSize = 11.sp) },
+                                        colors = FilterChipDefaults.filterChipColors(
+                                            selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                                            selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer
+                                        )
+                                    )
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.height(14.dp))
+                            HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.15f))
+                            Spacer(modifier = Modifier.height(12.dp))
+
+                            // Dedicated Flip Clock Typography Section
+                            Text(
+                                text = "ফ্লিপ ক্লক ফন্ট (HTC Sense Flip Clock - ১০+ থিন ও লাইট ফন্ট):",
+                                style = MaterialTheme.typography.bodySmall,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+
+                            Surface(
+                                shape = RoundedCornerShape(12.dp),
+                                color = Color(0xFF1E2430),
+                                border = BorderStroke(1.dp, Color(0xFF334155)),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable { viewModel.openFontMenu() }
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    Column(modifier = Modifier.weight(1f)) {
+                                        Text(
+                                            text = currentFlipClockFont.displayName,
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            fontWeight = FontWeight.Bold,
+                                            color = Color(0xFFF1F5F9)
+                                        )
+                                        Text(
+                                            text = "${currentFlipClockFont.subtitle} • ${currentFlipClockFont.googleFontName}",
+                                            style = MaterialTheme.typography.bodySmall,
+                                            fontSize = 11.sp,
+                                            color = Color(0xFF94A3B8)
+                                        )
+                                    }
+                                    Surface(
+                                        shape = RoundedCornerShape(6.dp),
+                                        color = Color(0xFF0F172A),
+                                        border = BorderStroke(0.5.dp, Color(0xFF475569))
+                                    ) {
+                                        Text(
+                                            text = "08:45",
+                                            fontFamily = getFlipClockFontFamily(currentFlipClockFont),
+                                            fontWeight = currentFlipClockFont.fontWeight,
+                                            fontSize = 15.sp,
+                                            color = Color(0xFFF8FAFC),
+                                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                                        )
+                                    }
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.height(12.dp))
+                            OutlinedButton(
+                                onClick = { viewModel.openFontMenu() },
+                                modifier = Modifier.fillMaxWidth(),
+                                shape = RoundedCornerShape(10.dp)
+                            ) {
+                                Text("ফন্ট ও টাইপোগ্রাফি স্টুডিও খুলুন (সম্পূর্ণ প্রিভিউ)")
+                            }
+                        }
+                    }
                 }
             }
             Spacer(modifier = Modifier.height(16.dp))
@@ -1189,5 +1592,89 @@ private fun SettingSectionHeader(title: String, icon: androidx.compose.ui.graphi
             fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.primary
         )
+    }
+}
+
+@Composable
+private fun CollapsibleSettingHeader(
+    title: String,
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    badgeText: String,
+    isExpanded: Boolean,
+    onToggle: () -> Unit
+) {
+    val arrowRotation by animateFloatAsState(
+        targetValue = if (isExpanded) 180f else 0f,
+        label = "collapsible_arrow"
+    )
+
+    Surface(
+        shape = RoundedCornerShape(14.dp),
+        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.08f),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.22f)),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(14.dp))
+            .clickable(onClick = onToggle)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 12.dp, vertical = 10.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.weight(1f)
+            ) {
+                Surface(
+                    shape = CircleShape,
+                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
+                    modifier = Modifier.size(32.dp)
+                ) {
+                    Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+                        Icon(
+                            imageVector = icon,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
+                }
+                Spacer(modifier = Modifier.width(10.dp))
+                Column {
+                    Text(
+                        text = title,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 14.5.sp,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    Text(
+                        text = badgeText,
+                        style = MaterialTheme.typography.bodySmall,
+                        fontSize = 11.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+            }
+
+            IconButton(
+                onClick = onToggle,
+                modifier = Modifier.size(32.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.KeyboardArrowDown,
+                    contentDescription = if (isExpanded) "সংকুচিত করুন" else "প্রসারিত করুন",
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier
+                        .size(22.dp)
+                        .rotate(arrowRotation)
+                )
+            }
+        }
     }
 }

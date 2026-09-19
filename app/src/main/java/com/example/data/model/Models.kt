@@ -282,6 +282,23 @@ enum class ThemeMode(val titleBn: String) {
     DARK("ডার্ক মোড")
 }
 
+enum class ScreenEffectMode(
+    val titleBn: String,
+    val titleEn: String,
+    val subtitleBn: String
+) {
+    NORMAL(
+        titleBn = "স্বাভাবিক মোড",
+        titleEn = "Normal Mode",
+        subtitleBn = "ট্যাপ করলে পূর্বের সাধারণ হোম স্ক্রিন ফিরবে"
+    ),
+    GLASS(
+        titleBn = "গ্লাস ইফেক্ট",
+        titleEn = "Glass Effect",
+        subtitleBn = "ফ্রস্টেড গ্লাস ও লিকুইড ওয়েভ ইফেক্ট"
+    )
+}
+
 enum class FontSizeScale(val scale: Float, val titleBn: String) {
     EXTRA_SMALL(0.85f, "খুব ছোট"),
     SMALL(0.92f, "ছোট"),

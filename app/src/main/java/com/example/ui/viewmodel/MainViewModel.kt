@@ -46,10 +46,12 @@ import com.example.data.model.PrimaryFontPreference
 import com.example.data.model.RoutineItem
 import com.example.data.model.SalatConfiguration
 import com.example.data.model.SalatPlaceInfo
+import com.example.data.model.ScreenEffectMode
 import com.example.data.model.TasbihDhikrItem
 import com.example.data.model.ThemeMode
 import com.example.data.model.ThemeStyle
 import com.example.data.repository.AppRepository
+import com.example.ui.components.ModalSectionTab
 import com.example.util.CalendarHelper
 import com.example.util.ExcludedIslamicLifeTopics
 import com.example.util.PrayerCalculator
@@ -683,6 +685,12 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         ThemeMode.SYSTEM
     )
 
+    val screenEffectMode = repository.screenEffectModeFlow.stateIn(
+        viewModelScope,
+        SharingStarted.WhileSubscribed(5000),
+        ScreenEffectMode.GLASS
+    )
+
     val fontScale = repository.fontScaleFlow.stateIn(
         viewModelScope,
         SharingStarted.WhileSubscribed(5000),
@@ -701,6 +709,10 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     fun setThemeMode(mode: ThemeMode) {
         viewModelScope.launch { repository.setThemeMode(mode) }
+    }
+
+    fun setScreenEffectMode(mode: ScreenEffectMode) {
+        viewModelScope.launch { repository.setScreenEffectMode(mode) }
     }
 
     fun setFontScale(scale: FontSizeScale) {
@@ -797,7 +809,11 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val _isThemeModalOpen = MutableStateFlow(false)
     val isThemeModalOpen = _isThemeModalOpen.asStateFlow()
 
-    fun openThemeModal() {
+    private val _themeModalInitialTab = MutableStateFlow(ModalSectionTab.THEMES)
+    val themeModalInitialTab = _themeModalInitialTab.asStateFlow()
+
+    fun openThemeModal(initialTab: ModalSectionTab = ModalSectionTab.THEMES) {
+        _themeModalInitialTab.value = initialTab
         _isThemeModalOpen.value = true
     }
 

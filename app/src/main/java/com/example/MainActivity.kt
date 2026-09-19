@@ -43,6 +43,7 @@ import com.example.ui.components.FontScaleController
 import com.example.ui.components.HomeIslamicTopAppBar
 import com.example.ui.components.LiveAuroraWallpaperBackground
 import com.example.ui.components.LocalFontScaleController
+import com.example.ui.components.LocalScreenEffectMode
 import com.example.ui.screens.HomeScreen
 import com.example.ui.screens.MasnunDuaScreen
 import com.example.ui.screens.MoreScreen
@@ -72,6 +73,8 @@ class MainActivity : ComponentActivity() {
             val flipClockFont by viewModel.flipClockFont.collectAsState()
             val isFontMenuOpen by viewModel.isFontMenuOpen.collectAsState()
             val isThemeModalOpen by viewModel.isThemeModalOpen.collectAsState()
+            val themeModalInitialTab by viewModel.themeModalInitialTab.collectAsState()
+            val screenEffectMode by viewModel.screenEffectMode.collectAsState()
             val auroraConfig by viewModel.auroraConfig.collectAsState()
             val currentTab by viewModel.currentTab.collectAsState()
             val currentMoreSub by viewModel.moreSubScreen.collectAsState()
@@ -101,7 +104,8 @@ class MainActivity : ComponentActivity() {
 
             CompositionLocalProvider(
                 LocalDensity provides adjustedDensity,
-                LocalFontScaleController provides fontScaleController
+                LocalFontScaleController provides fontScaleController,
+                LocalScreenEffectMode provides screenEffectMode
             ) {
                 DawahTheme(
                     themeStyle = themeStyle,
@@ -198,7 +202,7 @@ class MainActivity : ComponentActivity() {
                             )
                         }
 
-                        // Aurora Themes Modal (All 15 Themes + Live Aurora Waves)
+                        // Aurora Themes Modal (All 15 Themes + Live Aurora Waves + Window/Screen Effect Mode)
                         if (isThemeModalOpen) {
                             AuroraThemesModal(
                                 currentTheme = themeStyle,
@@ -206,6 +210,9 @@ class MainActivity : ComponentActivity() {
                                 onSelectRandom = { viewModel.selectRandomTheme() },
                                 auroraConfig = auroraConfig,
                                 onUpdateAuroraConfig = { newCfg -> viewModel.updateAuroraConfig(newCfg) },
+                                initialTab = themeModalInitialTab,
+                                currentScreenEffectMode = screenEffectMode,
+                                onSelectScreenEffectMode = { mode -> viewModel.setScreenEffectMode(mode) },
                                 onDismiss = { viewModel.closeThemeModal() }
                             )
                         }

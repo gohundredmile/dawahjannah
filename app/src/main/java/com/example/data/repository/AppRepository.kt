@@ -20,6 +20,7 @@ import com.example.data.model.FlipClockFont
 import com.example.data.model.FontSizeScale
 import com.example.data.model.PrimaryFontPreference
 import com.example.data.model.SalatConfiguration
+import com.example.data.model.ScreenEffectMode
 import com.example.data.model.ThemeMode
 import com.example.data.model.ThemeStyle
 import kotlinx.coroutines.flow.Flow
@@ -41,6 +42,7 @@ class AppRepository(private val context: Context) {
     companion object {
         val KEY_THEME_STYLE = stringPreferencesKey("theme_style")
         val KEY_THEME_MODE = stringPreferencesKey("theme_mode")
+        val KEY_SCREEN_EFFECT_MODE = stringPreferencesKey("screen_effect_mode")
         val KEY_ENGLISH_FONT = stringPreferencesKey("english_font")
         val KEY_BANGLA_FONT = stringPreferencesKey("bangla_font")
         val KEY_FLIP_CLOCK_FONT = stringPreferencesKey("flip_clock_font")
@@ -201,6 +203,21 @@ class AppRepository(private val context: Context) {
     suspend fun setThemeMode(mode: ThemeMode) {
         context.dataStore.edit { prefs ->
             prefs[KEY_THEME_MODE] = mode.name
+        }
+    }
+
+    val screenEffectModeFlow: Flow<ScreenEffectMode> = context.dataStore.data.map { prefs ->
+        val name = prefs[KEY_SCREEN_EFFECT_MODE] ?: ScreenEffectMode.GLASS.name
+        try {
+            ScreenEffectMode.valueOf(name)
+        } catch (_: Exception) {
+            ScreenEffectMode.GLASS
+        }
+    }
+
+    suspend fun setScreenEffectMode(mode: ScreenEffectMode) {
+        context.dataStore.edit { prefs ->
+            prefs[KEY_SCREEN_EFFECT_MODE] = mode.name
         }
     }
 

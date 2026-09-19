@@ -17,10 +17,13 @@ import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.getValue
+import com.example.data.model.ScreenEffectMode
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -346,9 +349,12 @@ fun GlassTopHighlight(
     )
 }
 
+val LocalScreenEffectMode = compositionLocalOf { ScreenEffectMode.GLASS }
+
 /**
  * Pure Glass Card Container:
- * Wraps content in a frosted glass container with specular edge, soft ambient shadow,
+ * In ScreenEffectMode.NORMAL: Reverts to a clean, solid, classic Material surface card as before.
+ * In ScreenEffectMode.GLASS: Wraps content in a frosted glass container with specular edge, soft ambient shadow,
  * top sheen highlight, and dynamic living wave effect inside the glass.
  */
 @Composable
@@ -363,6 +369,37 @@ fun PureGlassCard(
     showWaveEffect: Boolean = true,
     content: @Composable BoxScope.() -> Unit
 ) {
+    val effectMode = LocalScreenEffectMode.current
+
+    if (effectMode == ScreenEffectMode.NORMAL) {
+        // Normal Mode: Clean solid Material surface card as before (revert to normal home screen)
+        val normalBgColor = if (isDark) Color(0xFF1E293B) else Color.White
+        val normalBorderColor = accentBorderColor?.copy(alpha = 0.35f) ?: if (isDark) Color(0xFF334155) else Color(0xFFE2E8F0)
+
+        Surface(
+            modifier = modifier
+                .shadow(
+                    elevation = elevation,
+                    shape = shape,
+                    ambientColor = if (isDark) Color.Black.copy(alpha = 0.35f) else Color(0xFF0F172A).copy(alpha = 0.08f),
+                    spotColor = if (isDark) Color.Black.copy(alpha = 0.25f) else Color(0xFF0F172A).copy(alpha = 0.05f)
+                )
+                .clip(shape)
+                .border(BorderStroke(borderWidth, normalBorderColor), shape),
+            shape = shape,
+            color = normalBgColor
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(0.dp)
+            ) {
+                content()
+            }
+        }
+        return
+    }
+
     val bgBrush = GlassEffects.glassBackgroundBrush(isDark = isDark, tint = tint)
     val borderBrush = GlassEffects.glassBorderBrush(isDark = isDark, accentColor = accentBorderColor)
 

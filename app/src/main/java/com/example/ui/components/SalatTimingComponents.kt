@@ -496,43 +496,33 @@ fun SalatTimingVerticalCard(
         BorderStroke(0.8.dp, tagColor.copy(alpha = if (isDark) 0.35f else 0.22f))
     }
 
-    // Translucent glass background letting wallpaper breathe through seamlessly without harsh solid white box
+    // Translucent glass background: uniform smooth frosted glass without any vertical split, top/bottom white banding, or inner box
     val cardBgModifier = if (isHighlighted) {
         Modifier.background(activeBrush)
     } else if (isGlassMode) {
         Modifier.background(
-            Brush.verticalGradient(
+            Brush.horizontalGradient(
                 listOf(
-                    (if (isDark) Color(0xFF1E293B) else Color(0xFFF8FAFC)).copy(alpha = if (isDark) 0.65f else 0.55f),
-                    tagColor.copy(alpha = if (isDark) 0.08f else 0.04f),
-                    (if (isDark) Color(0xFF0F172A) else Color(0xFFF1F5F9)).copy(alpha = if (isDark) 0.70f else 0.60f)
+                    (if (isDark) Color(0xFF1E293B) else Color.White).copy(alpha = if (isDark) 0.55f else 0.45f),
+                    tagColor.copy(alpha = if (isDark) 0.12f else 0.08f),
+                    (if (isDark) Color(0xFF1E293B) else Color.White).copy(alpha = if (isDark) 0.50f else 0.40f)
                 )
             )
         )
     } else {
         Modifier.background(
-            Brush.verticalGradient(
-                listOf(
-                    if (isDark) Color(0xFF1E293B) else Color(0xFFF8FAFC),
-                    if (isDark) Color(0xFF0F172A) else Color(0xFFF1F5F9)
-                )
-            )
+            if (isDark) Color(0xFF1E293B) else Color.White
         )
     }
 
     Surface(
         modifier = modifier
             .fillMaxWidth()
-            .clip(cardShape)
-            .shadow(
-                elevation = if (isHighlighted) 3.0.dp else if (isGlassMode) 1.5.dp else 1.dp,
-                shape = cardShape,
-                ambientColor = if (isHighlighted) Color(0xFFEA580C).copy(alpha = 0.4f) else if (isDark) Color.Black.copy(alpha = 0.25f) else Color(0xFF0F172A).copy(alpha = 0.05f)
-            )
-            .border(cardBorder, cardShape)
             .clickable(onClick = onClick),
         shape = cardShape,
-        color = Color.Transparent
+        color = Color.Transparent,
+        border = cardBorder,
+        shadowElevation = if (isHighlighted) 2.dp else 0.dp
     ) {
         Box(
             modifier = Modifier
@@ -676,12 +666,11 @@ fun ForbiddenTimeVerticalCard(
     Surface(
         modifier = modifier
             .fillMaxWidth()
-            .clip(cardShape)
-            .shadow(2.0.dp, cardShape, ambientColor = Color(0xFFDC2626).copy(alpha = 0.35f))
-            .border(cardBorder, cardShape)
             .clickable(onClick = onClick),
         shape = cardShape,
-        color = Color.Transparent
+        color = Color.Transparent,
+        border = cardBorder,
+        shadowElevation = 1.dp
     ) {
         Box(
             modifier = Modifier

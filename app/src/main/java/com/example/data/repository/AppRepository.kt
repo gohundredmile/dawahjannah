@@ -209,9 +209,36 @@ class AppRepository(private val context: Context) {
         FontSizeScale.entries.minByOrNull { Math.abs(it.scale - scale) } ?: FontSizeScale.NORMAL
     }
 
+    val fontScaleFloatFlow: Flow<Float> = context.dataStore.data.map { prefs ->
+        prefs[KEY_FONT_SCALE] ?: 1.0f
+    }
+
     suspend fun setFontScale(scale: FontSizeScale) {
         context.dataStore.edit { prefs ->
             prefs[KEY_FONT_SCALE] = scale.scale
+        }
+    }
+
+    suspend fun setFontScaleFloat(value: Float) {
+        context.dataStore.edit { prefs ->
+            val clamped = (Math.round(value.coerceIn(0.80f, 1.45f) * 100f) / 100f)
+            prefs[KEY_FONT_SCALE] = clamped
+        }
+    }
+
+    suspend fun increaseFontScale() {
+        context.dataStore.edit { prefs ->
+            val current = prefs[KEY_FONT_SCALE] ?: 1.0f
+            val next = (Math.round((current + 0.08f).coerceAtMost(1.45f) * 100f) / 100f)
+            prefs[KEY_FONT_SCALE] = next
+        }
+    }
+
+    suspend fun decreaseFontScale() {
+        context.dataStore.edit { prefs ->
+            val current = prefs[KEY_FONT_SCALE] ?: 1.0f
+            val prev = (Math.round((current - 0.08f).coerceAtLeast(0.80f) * 100f) / 100f)
+            prefs[KEY_FONT_SCALE] = prev
         }
     }
 

@@ -33,7 +33,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import kotlinx.coroutines.launch
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -217,27 +219,46 @@ fun SalatTimingFlipCard(
     }
 
     var currentInfoIndex by remember { mutableIntStateOf(0) }
-    val boardFlipProgress = remember { Animatable(1f) }
+    val infoListSize = infoList.size
 
-    // Continuous 5-second cycle for the middle split-flap board
-    LaunchedEffect(infoList.size) {
-        while (true) {
-            delay(5000L)
-            boardFlipProgress.snapTo(0f)
-            val nextIdx = (currentInfoIndex + 1) % infoList.size
-            currentInfoIndex = nextIdx
-            boardFlipProgress.animateTo(
-                targetValue = 1f,
-                animationSpec = tween(durationMillis = 500, easing = FastOutSlowInEasing)
-            )
-        }
-    }
-
-    val currentInfo = infoList.getOrElse(currentInfoIndex % infoList.size) {
+    val displayedInfo = infoList.getOrElse(currentInfoIndex % infoListSize) {
         SalatContextInfo(
             if (presentPrayerName.isNotEmpty()) "বর্তমান ওয়াক্ত: $presentPrayerName" else "বর্তমান ওয়াক্ত",
             if (presentNofolName.isNotEmpty()) "$presentNofolName এর সময়" else "নফল ইবাদত"
         )
+    }
+    var previousInfo by remember { mutableStateOf(displayedInfo) }
+    val flipProgress = remember { Animatable(1f) }
+    val coroutineScope = rememberCoroutineScope()
+
+    // Smooth manual flip trigger
+    val onFlipCardClick: () -> Unit = {
+        val nextIdx = (currentInfoIndex + 1) % infoListSize
+        previousInfo = displayedInfo
+        currentInfoIndex = nextIdx
+        coroutineScope.launch {
+            flipProgress.snapTo(0f)
+            flipProgress.animateTo(
+                targetValue = 1f,
+                animationSpec = tween(durationMillis = 480, easing = FastOutSlowInEasing)
+            )
+        }
+        onClickCard()
+    }
+
+    // Continuous 5-second automatic rotation cycle
+    LaunchedEffect(infoListSize) {
+        while (true) {
+            delay(5000L)
+            val nextIdx = (currentInfoIndex + 1) % infoListSize
+            previousInfo = displayedInfo
+            currentInfoIndex = nextIdx
+            flipProgress.snapTo(0f)
+            flipProgress.animateTo(
+                targetValue = 1f,
+                animationSpec = tween(durationMillis = 480, easing = FastOutSlowInEasing)
+            )
+        }
     }
 
     val isDark = isSystemInDarkTheme()
@@ -289,8 +310,10 @@ fun SalatTimingFlipCard(
 
         // -------------------------------------------------------------
         // 2. MIDDLE SECTION: বর্তমান সালাত (Present Salat & Nofol Flip Board)
-        // Made significantly wider (weight 1.85f) for full comfortable text
-        // Flips continuously every 3 seconds with rich authentic Sunnah info
+        // Authentic HTC Sense-style 3D split-flap flip clock implementation
+        // True 2-Tile Split Architecture (SalatTileHalf)
+        // Smooth downward folding 3D mechanical animation rotating every 5 seconds (delay(5000L))
+        // Minimal near-to-vanish bezel with sleek micro-hinge accents
         // -------------------------------------------------------------
         Column(
             modifier = Modifier
@@ -310,129 +333,14 @@ fun SalatTimingFlipCard(
 
             Spacer(modifier = Modifier.height(4.dp))
 
-            // Flipping Board Outer Casing
-            val rotAngle = if (boardFlipProgress.value < 0.5f) {
-                -180f * boardFlipProgress.value
-            } else {
-                180f * (1f - boardFlipProgress.value)
-            }
-
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(58.dp)
-                    .graphicsLayer {
-                        rotationX = rotAngle
-                        cameraDistance = 14f * density
-                    }
-                    .shadow(elevation = 2.dp, shape = RoundedCornerShape(8.dp))
-                    .clip(RoundedCornerShape(8.dp))
-                    .background(
-                        Brush.verticalGradient(
-                            listOf(
-                                Color(0xFF2B303A),
-                                Color(0xFF1E2229),
-                                Color(0xFF15171B)
-                            )
-                        )
-                    )
-                    .border(BorderStroke(1.dp, Color(0xFF475569)), RoundedCornerShape(8.dp))
-                    .clickable(
-                        interactionSource = remember { MutableInteractionSource() },
-                        indication = null
-                    ) {
-                        currentInfoIndex = (currentInfoIndex + 1) % infoList.size
-                        onClickCard()
-                    }
-            ) {
-                // Outer Corner Screws / Rivets for realistic hardware look
-                CornerRivet(modifier = Modifier.align(Alignment.TopStart).padding(3.dp))
-                CornerRivet(modifier = Modifier.align(Alignment.TopEnd).padding(3.dp))
-                CornerRivet(modifier = Modifier.align(Alignment.BottomStart).padding(3.dp))
-                CornerRivet(modifier = Modifier.align(Alignment.BottomEnd).padding(3.dp))
-
-                // Left & Right Metal Pivot / Hinge Clips
-                SideHingeClip(modifier = Modifier.align(Alignment.CenterStart))
-                SideHingeClip(modifier = Modifier.align(Alignment.CenterEnd))
-
-                // Inner Split Flap Plate
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(horizontal = 6.dp, vertical = 3.5.dp)
-                        .clip(RoundedCornerShape(4.dp))
-                        .background(
-                            Brush.verticalGradient(
-                                listOf(
-                                    Color(0xFFFFFFFF),
-                                    Color(0xFFF8FAFC),
-                                    Color(0xFFEDF2F7)
-                                )
-                            )
-                        )
-                        .border(BorderStroke(0.5.dp, Color(0xFFCBD5E1)), RoundedCornerShape(4.dp))
-                ) {
-                    Column(
-                        modifier = Modifier.fillMaxSize(),
-                        verticalArrangement = Arrangement.SpaceBetween,
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        // Upper Flap: Time Label (e.g. স্নিগ্ধ সকাল / শুভ রাত্রি / বর্তমান ওয়াক্ত: এশা / ⚠️ সালাত নিষিদ্ধ সময়)
-                        Box(
-                            modifier = Modifier
-                                .weight(1f)
-                                .fillMaxWidth()
-                                .padding(horizontal = 4.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                text = currentInfo.timeLabel,
-                                style = MaterialTheme.typography.titleMedium.copy(
-                                    fontSize = 13.sp,
-                                    letterSpacing = 0.2.sp
-                                ),
-                                fontFamily = banglaFont,
-                                fontWeight = FontWeight.Black,
-                                color = if (currentInfo.isAlert) Color(0xFFDC2626) else Color(0xFF0F172A),
-                                textAlign = TextAlign.Center,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis
-                            )
-                        }
-
-                        // Split Seam / Horizontal Line
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(1.dp)
-                                .background(Color(0xFF334155))
-                        )
-
-                        // Lower Flap: Salat / Nofol Info (e.g. সালাতুদ-দুহা র সময় / তাহাজ্জুদের সময় / নিষিদ্ধ সময় hh:mm)
-                        Box(
-                            modifier = Modifier
-                                .weight(1f)
-                                .fillMaxWidth()
-                                .padding(horizontal = 4.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                text = currentInfo.salatInfo,
-                                style = MaterialTheme.typography.labelLarge.copy(
-                                    fontSize = 12.sp,
-                                    letterSpacing = 0.1.sp
-                                ),
-                                fontFamily = banglaFont,
-                                fontWeight = FontWeight.Bold,
-                                color = if (currentInfo.isAlert) Color(0xFFB91C1C) else Color(0xFF1E293B),
-                                textAlign = TextAlign.Center,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis
-                            )
-                        }
-                    }
-                }
-            }
+            HtcFlipSalatTileCard(
+                currentInfo = displayedInfo,
+                previousInfo = previousInfo,
+                flipProgress = flipProgress.value,
+                isDark = isDark,
+                banglaFont = banglaFont,
+                onClick = onFlipCardClick
+            )
         }
 
         // -------------------------------------------------------------
@@ -1115,4 +1023,268 @@ private fun SideHingeClip(modifier: Modifier = Modifier) {
             .size(width = 3.dp, height = 12.dp)
             .background(Color(0xFFCBD5E1), RoundedCornerShape(1.dp))
     )
+}
+
+/**
+ * HTC Sense-style 3D Mechanical Split-Flap Flip Tile Card for Current Salat & Nofol
+ * True 2-Tile Split Architecture (SalatTileHalf):
+ * - Upper Flap: Displays Time Label (স্নিগ্ধ সকাল / বর্তমান ওয়াক্ত: যোহর / ⚠️ সালাত নিষিদ্ধ সময়)
+ * - Horizontal Seam: 1.dp mechanical groove dividing upper and lower flaps
+ * - Lower Flap: Displays Salat & Nofol Info (যোহরের ৪ রাকাত পূর্ব সুন্নাত / সালাতুদ-দুহা র সময়)
+ * Mechanical 3D downward folding animation:
+ * - Phase 1: Old top flap flips forward & downwards (0° to -90°) revealing the new top flap underneath
+ * - Phase 2: New bottom flap lands down (+90° to 0°) flush onto the card
+ * - Minimal, near-to-vanish bezel with sleek metallic micro-hinges
+ */
+@Composable
+internal fun HtcFlipSalatTileCard(
+    currentInfo: SalatContextInfo,
+    previousInfo: SalatContextInfo,
+    flipProgress: Float,
+    isDark: Boolean,
+    banglaFont: FontFamily,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null,
+                onClick = onClick
+            ),
+        contentAlignment = Alignment.Center
+    ) {
+        // Multi-card Stack Layer Deck at the Bottom (HTC Sense multi-flap deck effect)
+        Column(
+            modifier = Modifier
+                .fillMaxWidth(0.96f)
+                .height(58.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Bottom
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth(0.92f)
+                    .height(1.dp)
+                    .background(
+                        if (isDark) Color(0x33475569) else Color(0xFFCBD5E1),
+                        RoundedCornerShape(bottomStart = 2.dp, bottomEnd = 2.dp)
+                    )
+            )
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth(0.96f)
+                    .height(1.dp)
+                    .background(
+                        if (isDark) Color(0x4464748B) else Color(0xFFE2E8F0),
+                        RoundedCornerShape(bottomStart = 3.dp, bottomEnd = 3.dp)
+                    )
+            )
+        }
+
+        // Main Flap Card Assembly - Minimal near-to-vanish border & modern styling
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(55.dp)
+                .shadow(elevation = 1.5.dp, shape = RoundedCornerShape(6.dp))
+                .clip(RoundedCornerShape(6.dp))
+                .background(if (isDark) Color(0xFF1E242C) else Color(0xFFFFFFFF))
+                .border(
+                    BorderStroke(
+                        0.5.dp,
+                        if (isDark) Color(0x3364748B) else Color(0xFFCBD5E1)
+                    ),
+                    RoundedCornerShape(6.dp)
+                )
+        ) {
+            // BASE LAYER:
+            // Top half displays the NEW info (revealed when old flap falls down)
+            // Bottom half displays OLD info until the new bottom flap lands
+            val bottomBaseInfo = if (flipProgress < 1.0f) previousInfo else currentInfo
+
+            Column(modifier = Modifier.fillMaxSize()) {
+                SalatTileHalf(
+                    text = currentInfo.timeLabel,
+                    isTopHalf = true,
+                    isAlert = currentInfo.isAlert,
+                    isDark = isDark,
+                    banglaFont = banglaFont
+                )
+                // Center Horizontal Split Seam / Groove
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(1.dp)
+                        .background(if (isDark) Color(0xFF334155) else Color(0xFFCBD5E1))
+                )
+                SalatTileHalf(
+                    text = bottomBaseInfo.salatInfo,
+                    isTopHalf = false,
+                    isAlert = bottomBaseInfo.isAlert,
+                    isDark = isDark,
+                    banglaFont = banglaFont
+                )
+            }
+
+            // FLIPPING LAYER (HTC Sense 3D Downward Flap):
+            if (flipProgress < 0.5f) {
+                // Phase 1 (0.0 .. 0.5): The old top flap flips FORWARD & DOWNWARDS from 0° to -90°
+                val p1 = flipProgress / 0.5f
+                val rotX = -90f * p1
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.TopCenter)
+                        .fillMaxWidth()
+                        .height(27.dp)
+                        .graphicsLayer {
+                            rotationX = rotX
+                            cameraDistance = 16f * density
+                            transformOrigin = TransformOrigin(0.5f, 1.0f) // Pivot at bottom edge of top half
+                        }
+                ) {
+                    SalatTileHalf(
+                        text = previousInfo.timeLabel,
+                        isTopHalf = true,
+                        isAlert = previousInfo.isAlert,
+                        isDark = isDark,
+                        banglaFont = banglaFont
+                    )
+                    // Dynamic shadow overlay during downward fold
+                    val shadowAlpha = (p1 * 0.55f).coerceIn(0f, 0.55f)
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .clip(RoundedCornerShape(topStart = 6.dp, topEnd = 6.dp))
+                            .background(Color.Black.copy(alpha = shadowAlpha))
+                    )
+                }
+            } else if (flipProgress < 1.0f) {
+                // Phase 2 (0.5 .. 1.0): The new bottom flap lands from +90° down to 0° flat
+                val p2 = (flipProgress - 0.5f) / 0.5f
+                val rotX = 90f * (1f - p2)
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .fillMaxWidth()
+                        .height(27.dp)
+                        .graphicsLayer {
+                            rotationX = rotX
+                            cameraDistance = 16f * density
+                            transformOrigin = TransformOrigin(0.5f, 0.0f) // Pivot at top edge of bottom half
+                        }
+                ) {
+                    SalatTileHalf(
+                        text = currentInfo.salatInfo,
+                        isTopHalf = false,
+                        isAlert = currentInfo.isAlert,
+                        isDark = isDark,
+                        banglaFont = banglaFont
+                    )
+                    // Dynamic shadow fading away as card lands flat in place
+                    val shadowAlpha = ((1f - p2) * 0.55f).coerceIn(0f, 0.55f)
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .clip(RoundedCornerShape(bottomStart = 6.dp, bottomEnd = 6.dp))
+                            .background(Color.Black.copy(alpha = shadowAlpha))
+                    )
+                }
+            }
+
+            // Minimalist Left & Right Micro Hinge Clips (vanishing/minimal edge)
+            Box(
+                modifier = Modifier
+                    .align(Alignment.CenterStart)
+                    .size(width = 2.dp, height = 7.dp)
+                    .background(
+                        if (isDark) Color(0xFF64748B) else Color(0xFF94A3B8),
+                        RoundedCornerShape(topEnd = 1.dp, bottomEnd = 1.dp)
+                    )
+            )
+            Box(
+                modifier = Modifier
+                    .align(Alignment.CenterEnd)
+                    .size(width = 2.dp, height = 7.dp)
+                    .background(
+                        if (isDark) Color(0xFF64748B) else Color(0xFF94A3B8),
+                        RoundedCornerShape(topStart = 1.dp, bottomStart = 1.dp)
+                    )
+            )
+        }
+    }
+}
+
+/**
+ * Individual Flap Half for Salat Tile (Top or Bottom Half)
+ * Follows the True 2-Tile Split-Digit Architecture of the 3rd part flip clock
+ */
+@Composable
+private fun SalatTileHalf(
+    text: String,
+    isTopHalf: Boolean,
+    isAlert: Boolean,
+    isDark: Boolean,
+    banglaFont: FontFamily,
+    modifier: Modifier = Modifier
+) {
+    val halfHeight = 27.dp
+    val shape = if (isTopHalf) {
+        RoundedCornerShape(topStart = 6.dp, topEnd = 6.dp, bottomStart = 1.dp, bottomEnd = 1.dp)
+    } else {
+        RoundedCornerShape(topStart = 1.dp, topEnd = 1.dp, bottomStart = 6.dp, bottomEnd = 6.dp)
+    }
+
+    val bgBrush = if (isDark) {
+        if (isTopHalf) {
+            Brush.verticalGradient(listOf(Color(0xFF252B35), Color(0xFF1E232B)))
+        } else {
+            Brush.verticalGradient(listOf(Color(0xFF1B2028), Color(0xFF151920)))
+        }
+    } else {
+        if (isTopHalf) {
+            Brush.verticalGradient(listOf(Color(0xFFFFFFFF), Color(0xFFF8FAFC)))
+        } else {
+            Brush.verticalGradient(listOf(Color(0xFFF1F5F9), Color(0xFFE2E8F0)))
+        }
+    }
+
+    val borderColor = if (isDark) {
+        if (isTopHalf) Color(0x3364748B) else Color(0x22475569)
+    } else {
+        if (isTopHalf) Color(0xFFE2E8F0) else Color(0xFFCBD5E1)
+    }
+
+    val textColor = when {
+        isAlert -> if (isTopHalf) Color(0xFFDC2626) else Color(0xFFB91C1C)
+        isDark -> if (isTopHalf) Color(0xFFF8FAFC) else Color(0xFFCBD5E1)
+        else -> if (isTopHalf) Color(0xFF0F172A) else Color(0xFF334155)
+    }
+
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .height(halfHeight)
+            .clip(shape)
+            .background(bgBrush)
+            .border(BorderStroke(0.5.dp, borderColor), shape)
+            .padding(horizontal = 6.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = text,
+            style = MaterialTheme.typography.labelMedium.copy(
+                fontSize = if (isTopHalf) 12.5.sp else 11.5.sp,
+                letterSpacing = 0.1.sp
+            ),
+            fontFamily = banglaFont,
+            fontWeight = if (isTopHalf) FontWeight.Bold else FontWeight.SemiBold,
+            color = textColor,
+            textAlign = TextAlign.Center,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
+    }
 }

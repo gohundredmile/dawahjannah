@@ -87,6 +87,7 @@ import com.example.data.model.SalatConfiguration
 import com.example.data.model.SalatPlaceInfo
 import com.example.util.CalendarHelper
 import com.example.util.PrayerCalculator
+import com.example.ui.theme.IslamicGold
 import java.util.Locale
 
 sealed class SalatDialogTarget {

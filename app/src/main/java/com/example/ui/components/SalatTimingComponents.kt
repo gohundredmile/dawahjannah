@@ -540,15 +540,6 @@ fun SalatTimingVerticalCard(
                 .then(cardBgModifier)
                 .padding(horizontal = 13.dp, vertical = 9.dp)
         ) {
-            // Ethereal living wave in glass mode (without harsh stroke line)
-            if (!isHighlighted && isGlassMode) {
-                GlassWaveBackground(
-                    modifier = Modifier.matchParentSize(),
-                    isDark = isDark,
-                    tint = tagColor
-                )
-            }
-
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -698,14 +689,6 @@ fun ForbiddenTimeVerticalCard(
                 .background(crimsonGradient)
                 .padding(horizontal = 13.dp, vertical = 9.dp)
         ) {
-            if (isGlassMode) {
-                GlassWaveBackground(
-                    modifier = Modifier.matchParentSize(),
-                    isDark = true,
-                    tint = Color(0xFFFDA4AF)
-                )
-            }
-
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,

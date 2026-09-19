@@ -473,38 +473,12 @@ internal fun HtcFlipDigitCard(
         modifier = modifier.padding(horizontal = 1.dp),
         contentAlignment = Alignment.Center
     ) {
-        // Multi-card Stack Layer Effect at the Bottom (stacked flap deck)
-        Column(
-            modifier = Modifier
-                .width(44.dp)
-                .height(58.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Bottom
-        ) {
-            // Under-layer 2
-            Box(
-                modifier = Modifier
-                    .width(38.dp)
-                    .height(1.dp)
-                    .background(Color(0xFFD1D5DB), RoundedCornerShape(bottomStart = 2.dp, bottomEnd = 2.dp))
-            )
-            // Under-layer 1
-            Box(
-                modifier = Modifier
-                    .width(41.dp)
-                    .height(1.dp)
-                    .background(Color(0xFFE2E8F0), RoundedCornerShape(bottomStart = 3.dp, bottomEnd = 3.dp))
-            )
-        }
-
-        // Main Flap Card Assembly
+        // Main Flap Card Assembly - Sleek translucent frosted glass tile
         Box(
             modifier = Modifier
                 .size(width = 44.dp, height = 55.dp)
-                .shadow(elevation = 2.dp, shape = RoundedCornerShape(6.dp))
-                .clip(RoundedCornerShape(6.dp))
-                .background(Color(0xFF1E2229))
-                .border(BorderStroke(1.dp, Color(0xFFCBD5E1)), RoundedCornerShape(6.dp))
+                .clip(RoundedCornerShape(7.dp))
+                .background(Color(0x18000000))
         ) {
             // BASE LAYER:
             // Top half displays the NEW digit (revealed when old flap falls down)
@@ -513,12 +487,12 @@ internal fun HtcFlipDigitCard(
 
             Column(modifier = Modifier.fillMaxSize()) {
                 DigitHalf(digits = displayedDigits, isTopHalf = true, clockFont = clockFont, fontFamily = fontFamily)
-                // Center Horizontal Split Groove
+                // Center Horizontal Split Groove (subtle hairline seam)
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(1.dp)
-                        .background(Color(0xFF334155))
+                        .height(0.8.dp)
+                        .background(Color(0x33475569))
                 )
                 DigitHalf(digits = bottomBaseDigits, isTopHalf = false, clockFont = clockFont, fontFamily = fontFamily)
             }
@@ -640,15 +614,17 @@ private fun DigitHalf(
             .background(
                 Brush.verticalGradient(
                     if (isTopHalf) {
-                        listOf(Color(0xFFFFFFFF), Color(0xFFF3F4F6))
+                        listOf(
+                            Color.White.copy(alpha = 0.65f),
+                            Color.White.copy(alpha = 0.40f)
+                        )
                     } else {
-                        listOf(Color(0xFFEEF1F4), Color(0xFFE2E8F0))
+                        listOf(
+                            Color.White.copy(alpha = 0.40f),
+                            Color(0xFFE2E8F0).copy(alpha = 0.45f)
+                        )
                     }
                 )
-            )
-            .border(
-                BorderStroke(0.7.dp, if (isTopHalf) Color(0xFFD1D5DB) else Color(0xFFCBD5E1)),
-                shape
             ),
         contentAlignment = if (isTopHalf) Alignment.TopCenter else Alignment.BottomCenter
     ) {
@@ -1056,49 +1032,13 @@ internal fun HtcFlipSalatTileCard(
             ),
         contentAlignment = Alignment.Center
     ) {
-        // Multi-card Stack Layer Deck at the Bottom (HTC Sense multi-flap deck effect)
-        Column(
-            modifier = Modifier
-                .fillMaxWidth(0.96f)
-                .height(58.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Bottom
-        ) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth(0.92f)
-                    .height(1.dp)
-                    .background(
-                        if (isDark) Color(0x33475569) else Color(0xFFCBD5E1),
-                        RoundedCornerShape(bottomStart = 2.dp, bottomEnd = 2.dp)
-                    )
-            )
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth(0.96f)
-                    .height(1.dp)
-                    .background(
-                        if (isDark) Color(0x4464748B) else Color(0xFFE2E8F0),
-                        RoundedCornerShape(bottomStart = 3.dp, bottomEnd = 3.dp)
-                    )
-            )
-        }
-
-        // Main Flap Card Assembly - Minimal near-to-vanish border & modern styling
+        // Main Flap Card Assembly - Sleek translucent frosted glass tile
         Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(55.dp)
-                .shadow(elevation = 1.5.dp, shape = RoundedCornerShape(6.dp))
-                .clip(RoundedCornerShape(6.dp))
-                .background(if (isDark) Color(0xFF1E242C) else Color(0xFFFFFFFF))
-                .border(
-                    BorderStroke(
-                        0.5.dp,
-                        if (isDark) Color(0x3364748B) else Color(0xFFCBD5E1)
-                    ),
-                    RoundedCornerShape(6.dp)
-                )
+                .clip(RoundedCornerShape(8.dp))
+                .background(if (isDark) Color(0x18000000) else Color(0x12000000))
         ) {
             // BASE LAYER:
             // Top half displays the NEW info (revealed when old flap falls down)
@@ -1113,12 +1053,12 @@ internal fun HtcFlipSalatTileCard(
                     isDark = isDark,
                     banglaFont = banglaFont
                 )
-                // Center Horizontal Split Seam / Groove
+                // Center Horizontal Split Seam / Groove (subtle hairline)
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(1.dp)
-                        .background(if (isDark) Color(0xFF334155) else Color(0xFFCBD5E1))
+                        .height(0.8.dp)
+                        .background(if (isDark) Color(0x3364748B) else Color(0x2894A3B8))
                 )
                 SalatTileHalf(
                     text = bottomBaseInfo.salatInfo,
@@ -1153,7 +1093,7 @@ internal fun HtcFlipSalatTileCard(
                         banglaFont = banglaFont
                     )
                     // Dynamic shadow overlay during downward fold
-                    val shadowAlpha = (p1 * 0.55f).coerceIn(0f, 0.55f)
+                    val shadowAlpha = (p1 * 0.40f).coerceIn(0f, 0.40f)
                     Box(
                         modifier = Modifier
                             .fillMaxSize()
@@ -1184,7 +1124,7 @@ internal fun HtcFlipSalatTileCard(
                         banglaFont = banglaFont
                     )
                     // Dynamic shadow fading away as card lands flat in place
-                    val shadowAlpha = ((1f - p2) * 0.55f).coerceIn(0f, 0.55f)
+                    val shadowAlpha = ((1f - p2) * 0.40f).coerceIn(0f, 0.40f)
                     Box(
                         modifier = Modifier
                             .fillMaxSize()
@@ -1193,26 +1133,6 @@ internal fun HtcFlipSalatTileCard(
                     )
                 }
             }
-
-            // Minimalist Left & Right Micro Hinge Clips (vanishing/minimal edge)
-            Box(
-                modifier = Modifier
-                    .align(Alignment.CenterStart)
-                    .size(width = 2.dp, height = 7.dp)
-                    .background(
-                        if (isDark) Color(0xFF64748B) else Color(0xFF94A3B8),
-                        RoundedCornerShape(topEnd = 1.dp, bottomEnd = 1.dp)
-                    )
-            )
-            Box(
-                modifier = Modifier
-                    .align(Alignment.CenterEnd)
-                    .size(width = 2.dp, height = 7.dp)
-                    .background(
-                        if (isDark) Color(0xFF64748B) else Color(0xFF94A3B8),
-                        RoundedCornerShape(topStart = 1.dp, bottomStart = 1.dp)
-                    )
-            )
         }
     }
 }
@@ -1239,22 +1159,16 @@ private fun SalatTileHalf(
 
     val bgBrush = if (isDark) {
         if (isTopHalf) {
-            Brush.verticalGradient(listOf(Color(0xFF252B35), Color(0xFF1E232B)))
+            Brush.verticalGradient(listOf(Color.White.copy(alpha = 0.16f), Color.White.copy(alpha = 0.08f)))
         } else {
-            Brush.verticalGradient(listOf(Color(0xFF1B2028), Color(0xFF151920)))
+            Brush.verticalGradient(listOf(Color.White.copy(alpha = 0.08f), Color.White.copy(alpha = 0.04f)))
         }
     } else {
         if (isTopHalf) {
-            Brush.verticalGradient(listOf(Color(0xFFFFFFFF), Color(0xFFF8FAFC)))
+            Brush.verticalGradient(listOf(Color.White.copy(alpha = 0.65f), Color.White.copy(alpha = 0.40f)))
         } else {
-            Brush.verticalGradient(listOf(Color(0xFFF1F5F9), Color(0xFFE2E8F0)))
+            Brush.verticalGradient(listOf(Color.White.copy(alpha = 0.40f), Color(0xFFF1F5F9).copy(alpha = 0.45f)))
         }
-    }
-
-    val borderColor = if (isDark) {
-        if (isTopHalf) Color(0x3364748B) else Color(0x22475569)
-    } else {
-        if (isTopHalf) Color(0xFFE2E8F0) else Color(0xFFCBD5E1)
     }
 
     val textColor = when {
@@ -1269,7 +1183,6 @@ private fun SalatTileHalf(
             .height(halfHeight)
             .clip(shape)
             .background(bgBrush)
-            .border(BorderStroke(0.5.dp, borderColor), shape)
             .padding(horizontal = 6.dp),
         contentAlignment = Alignment.Center
     ) {

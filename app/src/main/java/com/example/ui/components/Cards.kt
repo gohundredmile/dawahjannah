@@ -131,42 +131,27 @@ fun HeaderTimeDateCard(
     val amPm = amPmFormat.format(currentTime)
 
     val isDark = isSystemInDarkTheme()
-    val bgBrush = GlassEffects.glassBackgroundBrush(isDark = isDark, tint = Color(0xFFF0FDF4))
-    val borderBrush = GlassEffects.glassBorderBrush(isDark = isDark, accentColor = Color(0xFF10B981))
 
-    Surface(
+    PureGlassCard(
         modifier = modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(18.dp))
             .clickable(onClick = onClick)
-            .shadow(
-                elevation = 2.5.dp,
-                shape = RoundedCornerShape(18.dp),
-                ambientColor = if (isDark) Color.Black.copy(alpha = 0.5f) else Color(0xFF0F172A).copy(alpha = 0.08f)
-            )
-            .border(BorderStroke(1.2.dp, borderBrush), RoundedCornerShape(18.dp))
             .testTag("header_time_date_card"),
         shape = RoundedCornerShape(18.dp),
-        color = Color.Transparent
+        tint = Color(0xFFF0FDF4),
+        accentBorderColor = Color(0xFF10B981),
+        borderWidth = 1.0.dp,
+        elevation = 2.dp,
+        isDark = isDark,
+        showWaveEffect = true
     ) {
-        Box(
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(bgBrush)
+                .padding(horizontal = 10.dp, vertical = 7.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            GlassTopHighlight(
-                modifier = Modifier.align(Alignment.TopCenter),
-                isDark = isDark,
-                opacity = 0.9f
-            )
-
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 10.dp, vertical = 7.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                // Digital Clock
+            // Digital Clock
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.Center
@@ -285,7 +270,6 @@ fun HeaderTimeDateCard(
                 )
             }
         }
-    }
 }
 
 @Composable
@@ -479,96 +463,75 @@ fun QuickActionCard(
     onClick: () -> Unit
 ) {
     val isDark = isSystemInDarkTheme()
-    val bgBrush = GlassEffects.glassBackgroundBrush(isDark = isDark, tint = iconTint)
-    val borderBrush = GlassEffects.glassBorderBrush(isDark = isDark, accentColor = iconTint)
 
-    Surface(
-        modifier = modifier
-            .clip(RoundedCornerShape(16.dp))
-            .clickable { onClick() }
-            .shadow(
-                elevation = 2.dp,
-                shape = RoundedCornerShape(16.dp),
-                ambientColor = if (isDark) Color.Black.copy(alpha = 0.4f) else iconTint.copy(alpha = 0.12f)
-            )
-            .border(BorderStroke(1.2.dp, borderBrush), RoundedCornerShape(16.dp)),
+    PureGlassCard(
+        modifier = modifier.clickable { onClick() },
         shape = RoundedCornerShape(16.dp),
-        color = Color.Transparent
+        tint = iconTint,
+        accentBorderColor = iconTint,
+        borderWidth = 1.0.dp,
+        elevation = 2.dp,
+        isDark = isDark,
+        showWaveEffect = true
     ) {
-        Box(
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(bgBrush)
-                .padding(horizontal = 4.dp, vertical = 8.dp)
+                .padding(horizontal = 4.dp, vertical = 8.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
         ) {
-            GlassTopHighlight(
-                modifier = Modifier.align(Alignment.TopCenter),
-                isDark = isDark,
-                opacity = 0.85f
-            )
-
-            Column(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
-            ) {
-                // Compact eye-catchy squircle icon badge
-                Box(
-                    modifier = Modifier
-                        .size(30.dp)
-                        .background(
-                            Brush.radialGradient(
-                                listOf(
-                                    iconTint.copy(alpha = if (isDark) 0.32f else 0.22f),
-                                    iconTint.copy(alpha = if (isDark) 0.16f else 0.10f)
-                                )
-                            ),
-                            shape = RoundedCornerShape(9.dp)
-                        )
-                        .border(
-                            width = 1.dp,
-                            color = iconTint.copy(alpha = if (isDark) 0.50f else 0.35f),
-                            shape = RoundedCornerShape(9.dp)
+            // Glowing circular icon badge without harsh box border
+            Box(
+                modifier = Modifier
+                    .size(30.dp)
+                    .background(
+                        Brush.radialGradient(
+                            listOf(
+                                iconTint.copy(alpha = if (isDark) 0.35f else 0.22f),
+                                iconTint.copy(alpha = if (isDark) 0.14f else 0.08f)
+                            )
                         ),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = icon,
-                        contentDescription = null,
-                        tint = iconTint,
-                        modifier = Modifier.size(17.dp)
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(5.dp))
-
-                Text(
-                    text = value,
-                    style = MaterialTheme.typography.labelMedium.copy(
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.Bold,
-                        letterSpacing = (-0.1).sp
+                        shape = CircleShape
                     ),
-                    fontFamily = LocalBanglaFontFamily.current,
-                    color = if (isDark) Color(0xFFF8FAFC) else Color(0xFF0F172A),
-                    maxLines = 1,
-                    textAlign = TextAlign.Center
-                )
-
-                Spacer(modifier = Modifier.height(2.dp))
-
-                Text(
-                    text = title,
-                    style = MaterialTheme.typography.labelSmall.copy(
-                        fontSize = 10.sp,
-                        fontWeight = FontWeight.SemiBold
-                    ),
-                    fontFamily = LocalBanglaFontFamily.current,
-                    color = if (isDark) Color(0xFFCBD5E1) else Color(0xFF334155),
-                    maxLines = 1,
-                    textAlign = TextAlign.Center
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    tint = iconTint,
+                    modifier = Modifier.size(17.dp)
                 )
             }
+
+            Spacer(modifier = Modifier.height(5.dp))
+
+            Text(
+                text = value,
+                style = MaterialTheme.typography.labelMedium.copy(
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Bold,
+                    letterSpacing = (-0.1).sp
+                ),
+                fontFamily = LocalBanglaFontFamily.current,
+                color = if (isDark) Color(0xFFF8FAFC) else Color(0xFF0F172A),
+                maxLines = 1,
+                textAlign = TextAlign.Center
+            )
+
+            Spacer(modifier = Modifier.height(2.dp))
+
+            Text(
+                text = title,
+                style = MaterialTheme.typography.labelSmall.copy(
+                    fontSize = 10.sp,
+                    fontWeight = FontWeight.SemiBold
+                ),
+                fontFamily = LocalBanglaFontFamily.current,
+                color = if (isDark) Color(0xFFCBD5E1) else Color(0xFF334155),
+                maxLines = 1,
+                textAlign = TextAlign.Center
+            )
         }
     }
 }

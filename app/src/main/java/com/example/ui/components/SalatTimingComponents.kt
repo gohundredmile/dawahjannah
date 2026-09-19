@@ -32,17 +32,23 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material.icons.filled.AccessTime
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Bedtime
 import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.FavoriteBorder
+import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.MyLocation
+import androidx.compose.material.icons.filled.NightsStay
 import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Tune
+import androidx.compose.material.icons.filled.WbSunny
+import androidx.compose.material.icons.filled.WbTwilight
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -180,7 +186,8 @@ fun SalatTimingsSection(
             accentBorderColor = if (salatConfig.isGpsEnabled) Color(0xFF0284C7) else IslamicGold,
             borderWidth = 1.2.dp,
             elevation = 2.dp,
-            isDark = isDark
+            isDark = isDark,
+            showWaveEffect = true
         ) {
             Column(
                 modifier = Modifier
@@ -196,20 +203,26 @@ fun SalatTimingsSection(
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier.weight(1f)
                     ) {
-                        Surface(
-                            color = if (salatConfig.isGpsEnabled) Color(0xFF0284C7).copy(alpha = if (isDark) 0.25f else 0.16f) else MaterialTheme.colorScheme.primary.copy(alpha = if (isDark) 0.25f else 0.14f),
-                            border = BorderStroke(1.dp, (if (salatConfig.isGpsEnabled) Color(0xFF0284C7) else MaterialTheme.colorScheme.primary).copy(alpha = 0.45f)),
-                            shape = CircleShape,
-                            modifier = Modifier.size(34.dp)
+                        Box(
+                            modifier = Modifier
+                                .size(34.dp)
+                                .background(
+                                    Brush.radialGradient(
+                                        listOf(
+                                            (if (salatConfig.isGpsEnabled) Color(0xFF0284C7) else MaterialTheme.colorScheme.primary).copy(alpha = if (isDark) 0.35f else 0.22f),
+                                            (if (salatConfig.isGpsEnabled) Color(0xFF0284C7) else MaterialTheme.colorScheme.primary).copy(alpha = if (isDark) 0.12f else 0.06f)
+                                        )
+                                    ),
+                                    shape = CircleShape
+                                ),
+                            contentAlignment = Alignment.Center
                         ) {
-                            Box(contentAlignment = Alignment.Center) {
-                                Icon(
-                                    imageVector = if (salatConfig.isGpsEnabled) Icons.Default.MyLocation else Icons.Default.LocationOn,
-                                    contentDescription = "Location",
-                                    tint = if (salatConfig.isGpsEnabled) Color(0xFF0284C7) else MaterialTheme.colorScheme.primary,
-                                    modifier = Modifier.size(18.dp)
-                                )
-                            }
+                            Icon(
+                                imageVector = if (salatConfig.isGpsEnabled) Icons.Default.MyLocation else Icons.Default.LocationOn,
+                                contentDescription = "Location",
+                                tint = if (salatConfig.isGpsEnabled) Color(0xFF0284C7) else MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(18.dp)
+                            )
                         }
 
                         Spacer(modifier = Modifier.width(10.dp))
@@ -480,6 +493,15 @@ fun SalatTimingVerticalCard(
     }
 
     val isDark = isSystemInDarkTheme()
+    val prayerIcon = when (prayer.id) {
+        "fajr" -> Icons.Default.WbTwilight
+        "dhuhr" -> Icons.Default.WbSunny
+        "asr" -> Icons.Default.LightMode
+        "maghrib" -> Icons.Default.NightsStay
+        "isha" -> Icons.Default.Bedtime
+        else -> Icons.Default.AccessTime
+    }
+
     val glassBorderBrush = if (isHighlighted) {
         Brush.verticalGradient(
             listOf(
@@ -516,8 +538,16 @@ fun SalatTimingVerticalCard(
             modifier = Modifier
                 .fillMaxWidth()
                 .then(cardBgModifier)
-                .padding(horizontal = 14.dp, vertical = 9.5.dp)
+                .padding(horizontal = 12.dp, vertical = 9.dp)
         ) {
+            if (!isHighlighted) {
+                GlassWaveBackground(
+                    modifier = Modifier.matchParentSize(),
+                    isDark = isDark,
+                    tint = tagColor
+                )
+            }
+
             GlassTopHighlight(
                 modifier = Modifier.align(Alignment.TopCenter),
                 isDark = if (isHighlighted) false else isDark,
@@ -529,56 +559,73 @@ fun SalatTimingVerticalCard(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Left Side: Dot indicator + Wakt Name + Live/English badge in one line
+                // Left Side: Soft circular ambient glow badge + Wakt Name + Seamless status
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.weight(1f, fill = false)
                 ) {
+                    // Soft, circular ambient glow badge (CircleShape with radial gradient tint)
                     Box(
                         modifier = Modifier
-                            .size(8.dp)
-                            .clip(CircleShape)
-                            .background(if (isHighlighted) Color(0xFFFEF08A) else tagColor)
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
+                            .size(28.dp)
+                            .background(
+                                Brush.radialGradient(
+                                    listOf(
+                                        (if (isHighlighted) Color.White else tagColor).copy(alpha = if (isDark) 0.38f else 0.24f),
+                                        (if (isHighlighted) Color.White else tagColor).copy(alpha = if (isDark) 0.12f else 0.05f)
+                                    )
+                                ),
+                                shape = CircleShape
+                            ),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = prayerIcon,
+                            contentDescription = null,
+                            tint = if (isHighlighted) Color(0xFFFEF08A) else (if (isDark) tagColor.copy(alpha = 0.95f) else tagColor),
+                            modifier = Modifier.size(15.dp)
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.width(9.dp))
+
                     Text(
                         text = prayer.nameBn,
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         color = if (isHighlighted) Color.White else (if (isDark) Color(0xFFF8FAFC) else Color(0xFF0F172A)),
-                        fontSize = 16.sp
+                        fontSize = 15.5.sp
                     )
-                    Spacer(modifier = Modifier.width(6.dp))
+
+                    Spacer(modifier = Modifier.width(7.dp))
+
                     if (isHighlighted) {
-                        Surface(
-                            color = Color.White.copy(alpha = 0.25f),
-                            border = BorderStroke(0.8.dp, Color.White.copy(alpha = 0.5f)),
-                            shape = RoundedCornerShape(6.dp)
+                        // Soft seamless pill without harsh rectangle box outline
+                        Box(
+                            modifier = Modifier
+                                .background(
+                                    Color.White.copy(alpha = 0.22f),
+                                    shape = RoundedCornerShape(12.dp)
+                                )
+                                .padding(horizontal = 7.dp, vertical = 2.dp)
                         ) {
                             Text(
                                 text = "চলমান",
                                 color = Color.White,
-                                fontSize = 10.5.sp,
-                                fontWeight = FontWeight.Bold,
-                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.Bold
                             )
                         }
                     } else {
-                        Surface(
-                            color = tagColor.copy(alpha = if (isDark) 0.22f else 0.12f),
-                            border = BorderStroke(0.8.dp, tagColor.copy(alpha = if (isDark) 0.5f else 0.35f)),
-                            shape = RoundedCornerShape(6.dp)
-                        ) {
-                            Text(
-                                text = prayer.nameEn,
-                                modifier = Modifier.padding(horizontal = 5.dp, vertical = 1.5.dp),
-                                style = MaterialTheme.typography.labelSmall,
-                                fontWeight = FontWeight.Bold,
-                                color = if (isDark) tagColor.copy(alpha = 0.95f) else tagColor,
-                                fontSize = 9.5.sp,
-                                letterSpacing = 0.5.sp
-                            )
-                        }
+                        // Clean typography without harsh rectangle box outline
+                        Text(
+                            text = prayer.nameEn,
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = if (isDark) tagColor.copy(alpha = 0.90f) else tagColor.copy(alpha = 0.85f),
+                            fontSize = 9.5.sp,
+                            letterSpacing = 0.5.sp
+                        )
                     }
                 }
 
@@ -654,8 +701,14 @@ fun ForbiddenTimeVerticalCard(
             modifier = Modifier
                 .fillMaxWidth()
                 .background(crimsonGradient)
-                .padding(horizontal = 14.dp, vertical = 9.5.dp)
+                .padding(horizontal = 12.dp, vertical = 9.dp)
         ) {
+            GlassWaveBackground(
+                modifier = Modifier.matchParentSize(),
+                isDark = true,
+                tint = Color(0xFFFDA4AF)
+            )
+
             GlassTopHighlight(
                 modifier = Modifier.align(Alignment.TopCenter),
                 isDark = false,
@@ -667,36 +720,59 @@ fun ForbiddenTimeVerticalCard(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Left Side: Dot + Title + Tag in one line
+                // Left Side: Soft circular ambient glow + Title + Soft tag in one line
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.weight(1f, fill = false)
                 ) {
+                    // Soft, circular ambient glow badge (CircleShape with radial gradient tint)
                     Box(
                         modifier = Modifier
-                            .size(8.dp)
-                            .clip(CircleShape)
-                            .background(Color(0xFFFEF08A))
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
+                            .size(28.dp)
+                            .background(
+                                Brush.radialGradient(
+                                    listOf(
+                                        Color.White.copy(alpha = 0.35f),
+                                        Color.White.copy(alpha = 0.08f)
+                                    )
+                                ),
+                                shape = CircleShape
+                            ),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.AccessTime,
+                            contentDescription = null,
+                            tint = Color(0xFFFEF08A),
+                            modifier = Modifier.size(15.dp)
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.width(9.dp))
+
                     Text(
                         text = "সালাতের নিষিদ্ধ সময়",
                         color = Color.White,
                         fontWeight = FontWeight.Bold,
-                        fontSize = 15.5.sp
+                        fontSize = 15.sp
                     )
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Surface(
-                        color = Color.White.copy(alpha = 0.22f),
-                        border = BorderStroke(0.8.dp, Color.White.copy(alpha = 0.45f)),
-                        shape = RoundedCornerShape(6.dp)
+
+                    Spacer(modifier = Modifier.width(7.dp))
+
+                    // Soft seamless pill without harsh rectangle border
+                    Box(
+                        modifier = Modifier
+                            .background(
+                                Color.White.copy(alpha = 0.22f),
+                                shape = RoundedCornerShape(12.dp)
+                            )
+                            .padding(horizontal = 6.dp, vertical = 2.dp)
                     ) {
                         Text(
                             text = "৩টি সময়",
                             color = Color.White,
                             fontSize = 9.5.sp,
-                            fontWeight = FontWeight.Bold,
-                            modifier = Modifier.padding(horizontal = 5.dp, vertical = 2.dp)
+                            fontWeight = FontWeight.Bold
                         )
                     }
                 }
@@ -705,17 +781,19 @@ fun ForbiddenTimeVerticalCard(
                 Row(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Surface(
-                        color = Color(0xFF450A0A).copy(alpha = 0.75f),
-                        shape = RoundedCornerShape(8.dp),
-                        border = BorderStroke(0.8.dp, Color(0xFFFCA5A5).copy(alpha = 0.3f))
+                    Box(
+                        modifier = Modifier
+                            .background(
+                                Color(0xFF450A0A).copy(alpha = 0.70f),
+                                shape = RoundedCornerShape(12.dp)
+                            )
+                            .padding(horizontal = 7.dp, vertical = 2.5.dp)
                     ) {
                         Text(
                             text = "নিষিদ্ধ সময়সূচী",
                             fontSize = 10.5.sp,
                             color = Color(0xFFFECDD3),
-                            fontWeight = FontWeight.Bold,
-                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                            fontWeight = FontWeight.Bold
                         )
                     }
                     Spacer(modifier = Modifier.width(5.dp))

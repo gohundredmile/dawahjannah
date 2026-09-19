@@ -307,11 +307,10 @@ fun SalatTimingsSection(
                             }
                         }
 
-                        // Place & Settings Button
+                        // Place & Settings Button - Seamless Translucent Glass Pill without harsh white box outline
                         Surface(
-                            color = MaterialTheme.colorScheme.surface,
+                            color = MaterialTheme.colorScheme.primary.copy(alpha = if (isDark) 0.18f else 0.10f),
                             shape = RoundedCornerShape(12.dp),
-                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.2f)),
                             modifier = Modifier.clickable { showConfigDialog = true }
                         ) {
                             Row(
@@ -321,7 +320,7 @@ fun SalatTimingsSection(
                                 Icon(
                                     imageVector = Icons.Default.Tune,
                                     contentDescription = "Configure",
-                                    tint = MaterialTheme.colorScheme.onSurface,
+                                    tint = MaterialTheme.colorScheme.primary,
                                     modifier = Modifier.size(15.dp)
                                 )
                                 Spacer(modifier = Modifier.width(4.dp))
@@ -329,7 +328,7 @@ fun SalatTimingsSection(
                                     text = "স্থান পরিবর্তন",
                                     fontSize = 11.5.sp,
                                     fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.onSurface
+                                    color = MaterialTheme.colorScheme.primary
                                 )
                             }
                         }
@@ -466,7 +465,7 @@ fun SalatTimingVerticalCard(
     )
 
     val tagColor = when {
-        isHighlighted -> Color.White
+        isHighlighted -> Color(0xFFEA580C)
         prayer.id == "fajr" -> Color(0xFF0284C7)
         prayer.id == "dhuhr" -> Color(0xFFD97706)
         prayer.id == "asr" -> Color(0xFFEA580C)
@@ -490,29 +489,35 @@ fun SalatTimingVerticalCard(
 
     val cardShape = RoundedCornerShape(16.dp)
 
+    // Soft seamless border without harsh white box outline
     val cardBorder = if (isHighlighted) {
-        BorderStroke(
-            1.2.dp,
-            Brush.verticalGradient(
-                listOf(
-                    Color.White.copy(alpha = 0.65f),
-                    Color.White.copy(alpha = 0.25f),
-                    Color(0xFFFEF08A).copy(alpha = 0.45f)
-                )
-            )
-        )
-    } else if (isGlassMode) {
-        BorderStroke(1.1.dp, GlassEffects.glassBorderBrush(isDark = isDark, accentColor = tagColor))
+        BorderStroke(1.0.dp, Color(0xFFFEF08A).copy(alpha = 0.45f))
     } else {
-        BorderStroke(1.dp, tagColor.copy(alpha = if (isDark) 0.35f else 0.22f))
+        BorderStroke(0.8.dp, tagColor.copy(alpha = if (isDark) 0.35f else 0.22f))
     }
 
+    // Translucent glass background letting wallpaper breathe through seamlessly without harsh solid white box
     val cardBgModifier = if (isHighlighted) {
         Modifier.background(activeBrush)
     } else if (isGlassMode) {
-        Modifier.background(GlassEffects.glassBackgroundBrush(isDark = isDark, tint = tagColor))
+        Modifier.background(
+            Brush.verticalGradient(
+                listOf(
+                    (if (isDark) Color(0xFF1E293B) else Color(0xFFF8FAFC)).copy(alpha = if (isDark) 0.65f else 0.55f),
+                    tagColor.copy(alpha = if (isDark) 0.08f else 0.04f),
+                    (if (isDark) Color(0xFF0F172A) else Color(0xFFF1F5F9)).copy(alpha = if (isDark) 0.70f else 0.60f)
+                )
+            )
+        )
     } else {
-        Modifier.background(if (isDark) Color(0xFF1E293B) else Color.White)
+        Modifier.background(
+            Brush.verticalGradient(
+                listOf(
+                    if (isDark) Color(0xFF1E293B) else Color(0xFFF8FAFC),
+                    if (isDark) Color(0xFF0F172A) else Color(0xFFF1F5F9)
+                )
+            )
+        )
     }
 
     Surface(
@@ -520,9 +525,9 @@ fun SalatTimingVerticalCard(
             .fillMaxWidth()
             .clip(cardShape)
             .shadow(
-                elevation = if (isHighlighted) 3.5.dp else if (isGlassMode) 1.5.dp else 1.dp,
+                elevation = if (isHighlighted) 3.0.dp else if (isGlassMode) 1.5.dp else 1.dp,
                 shape = cardShape,
-                ambientColor = if (isHighlighted) Color(0xFFEA580C).copy(alpha = 0.4f) else if (isDark) Color.Black.copy(alpha = 0.30f) else Color(0xFF0F172A).copy(alpha = 0.06f)
+                ambientColor = if (isHighlighted) Color(0xFFEA580C).copy(alpha = 0.4f) else if (isDark) Color.Black.copy(alpha = 0.25f) else Color(0xFF0F172A).copy(alpha = 0.05f)
             )
             .border(cardBorder, cardShape)
             .clickable(onClick = onClick),
@@ -544,14 +549,6 @@ fun SalatTimingVerticalCard(
                 )
             }
 
-            if (isGlassMode || isHighlighted) {
-                GlassTopHighlight(
-                    modifier = Modifier.align(Alignment.TopCenter),
-                    isDark = if (isHighlighted) false else isDark,
-                    opacity = if (isHighlighted) 0.85f else 0.65f
-                )
-            }
-
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -569,8 +566,8 @@ fun SalatTimingVerticalCard(
                             .background(
                                 Brush.radialGradient(
                                     colors = listOf(
-                                        (if (isHighlighted) Color.White else tagColor).copy(alpha = if (isHighlighted) 0.35f else if (isDark) 0.30f else 0.20f),
-                                        (if (isHighlighted) Color.White else tagColor).copy(alpha = if (isHighlighted) 0.12f else if (isDark) 0.10f else 0.05f),
+                                        (if (isHighlighted) Color(0xFFFEF08A) else tagColor).copy(alpha = if (isHighlighted) 0.35f else if (isDark) 0.30f else 0.22f),
+                                        (if (isHighlighted) Color(0xFFFEF08A) else tagColor).copy(alpha = if (isHighlighted) 0.12f else if (isDark) 0.12f else 0.06f),
                                         Color.Transparent
                                     )
                                 ),
@@ -599,18 +596,18 @@ fun SalatTimingVerticalCard(
                     Spacer(modifier = Modifier.width(7.dp))
 
                     if (isHighlighted) {
-                        // Soft seamless pill without harsh rectangle box outline
+                        // Soft seamless pill without harsh white box outline
                         Box(
                             modifier = Modifier
                                 .background(
-                                    Color.White.copy(alpha = 0.22f),
-                                    shape = RoundedCornerShape(12.dp)
+                                    Color(0xFFFEF08A).copy(alpha = 0.22f),
+                                    shape = CircleShape
                                 )
-                                .padding(horizontal = 7.dp, vertical = 2.dp)
+                                .padding(horizontal = 8.dp, vertical = 2.dp)
                         ) {
                             Text(
                                 text = "চলমান",
-                                color = Color.White,
+                                color = Color(0xFFFEF08A),
                                 fontSize = 10.sp,
                                 fontWeight = FontWeight.Bold
                             )
@@ -679,24 +676,18 @@ fun ForbiddenTimeVerticalCard(
     val isGlassMode = effectMode == ScreenEffectMode.GLASS
     val cardShape = RoundedCornerShape(16.dp)
 
+    // Soft seamless crimson border without harsh white box outline
+    val cardBorder = BorderStroke(
+        0.9.dp,
+        Color(0xFFFDA4AF).copy(alpha = if (isDark) 0.35f else 0.25f)
+    )
+
     Surface(
         modifier = modifier
             .fillMaxWidth()
             .clip(cardShape)
-            .shadow(2.5.dp, cardShape, ambientColor = Color(0xFFDC2626).copy(alpha = 0.4f))
-            .border(
-                BorderStroke(
-                    1.2.dp,
-                    Brush.verticalGradient(
-                        listOf(
-                            Color.White.copy(alpha = 0.55f),
-                            Color.White.copy(alpha = 0.20f),
-                            Color(0xFFFDA4AF).copy(alpha = 0.35f)
-                        )
-                    )
-                ),
-                cardShape
-            )
+            .shadow(2.0.dp, cardShape, ambientColor = Color(0xFFDC2626).copy(alpha = 0.35f))
+            .border(cardBorder, cardShape)
             .clickable(onClick = onClick),
         shape = cardShape,
         color = Color.Transparent
@@ -715,12 +706,6 @@ fun ForbiddenTimeVerticalCard(
                 )
             }
 
-            GlassTopHighlight(
-                modifier = Modifier.align(Alignment.TopCenter),
-                isDark = false,
-                opacity = 0.75f
-            )
-
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -738,8 +723,8 @@ fun ForbiddenTimeVerticalCard(
                             .background(
                                 Brush.radialGradient(
                                     listOf(
-                                        Color.White.copy(alpha = 0.35f),
-                                        Color.White.copy(alpha = 0.10f),
+                                        Color(0xFFFDA4AF).copy(alpha = 0.35f),
+                                        Color(0xFFFDA4AF).copy(alpha = 0.12f),
                                         Color.Transparent
                                     )
                                 ),
@@ -766,18 +751,18 @@ fun ForbiddenTimeVerticalCard(
 
                     Spacer(modifier = Modifier.width(7.dp))
 
-                    // Soft seamless pill without harsh rectangle border
+                    // Soft seamless circular pill without harsh white rectangle border
                     Box(
                         modifier = Modifier
                             .background(
-                                Color.White.copy(alpha = 0.22f),
-                                shape = RoundedCornerShape(12.dp)
+                                Color(0xFFFDA4AF).copy(alpha = 0.22f),
+                                shape = CircleShape
                             )
-                            .padding(horizontal = 6.dp, vertical = 2.dp)
+                            .padding(horizontal = 7.dp, vertical = 2.dp)
                     ) {
                         Text(
                             text = "৩টি সময়",
-                            color = Color.White,
+                            color = Color(0xFFFFF1F2),
                             fontSize = 9.5.sp,
                             fontWeight = FontWeight.Bold
                         )
@@ -791,10 +776,10 @@ fun ForbiddenTimeVerticalCard(
                     Box(
                         modifier = Modifier
                             .background(
-                                Color(0xFF450A0A).copy(alpha = 0.70f),
-                                shape = RoundedCornerShape(12.dp)
+                                Color(0xFF4C0519).copy(alpha = 0.55f),
+                                shape = CircleShape
                             )
-                            .padding(horizontal = 7.dp, vertical = 2.5.dp)
+                            .padding(horizontal = 8.dp, vertical = 2.5.dp)
                     ) {
                         Text(
                             text = "নিষিদ্ধ সময়সূচী",

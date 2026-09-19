@@ -249,33 +249,19 @@ fun GlassWaveBackground(
         wave1Path.lineTo(w, h)
         wave1Path.close()
 
-        val waveAlpha = if (isDark) 0.10f else 0.15f
+        // Soft wave ribbon volume (without harsh stroke line)
+        val waveAlpha = if (isDark) 0.08f else 0.12f
         drawPath(
             path = wave1Path,
             brush = Brush.verticalGradient(
                 colors = listOf(
                     waveColor.copy(alpha = waveAlpha),
-                    highlightColor.copy(alpha = waveAlpha * 0.8f),
+                    highlightColor.copy(alpha = waveAlpha * 0.7f),
                     Color.Transparent
                 ),
                 startY = wave1BaseY - wave1Amp,
                 endY = h
             )
-        )
-
-        // Wave crest shimmer line
-        drawPath(
-            path = wave1Crest,
-            brush = Brush.horizontalGradient(
-                colors = listOf(
-                    Color.Transparent,
-                    highlightColor.copy(alpha = if (isDark) 0.22f else 0.45f),
-                    waveColor.copy(alpha = if (isDark) 0.30f else 0.50f),
-                    highlightColor.copy(alpha = if (isDark) 0.22f else 0.45f),
-                    Color.Transparent
-                )
-            ),
-            style = Stroke(width = 1.2.dp.toPx(), cap = StrokeCap.Round)
         )
 
         // 2. Harmonic Counter-Flow Wave Ribbon

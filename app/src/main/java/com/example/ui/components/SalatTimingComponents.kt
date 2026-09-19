@@ -91,6 +91,7 @@ import com.example.data.model.PRESET_SALAT_PLACES
 import com.example.data.model.PrayerTimeItem
 import com.example.data.model.SalatConfiguration
 import com.example.data.model.SalatPlaceInfo
+import com.example.data.model.ScreenEffectMode
 import com.example.util.CalendarHelper
 import com.example.util.PrayerCalculator
 import com.example.ui.theme.IslamicGold
@@ -464,24 +465,6 @@ fun SalatTimingVerticalCard(
         )
     )
 
-    val nonActiveBg = when (prayer.id) {
-        "fajr" -> Color(0xFFF0F9FF)
-        "dhuhr" -> Color(0xFFFEFCE8)
-        "asr" -> Color(0xFFFFF7ED)
-        "maghrib" -> Color(0xFFFFF1F2)
-        "isha" -> Color(0xFFF8FAFC)
-        else -> Color.White
-    }
-
-    val nonActiveBorder = when (prayer.id) {
-        "fajr" -> Color(0xFFBAE6FD)
-        "dhuhr" -> Color(0xFFFDE047)
-        "asr" -> Color(0xFFFDBA74)
-        "maghrib" -> Color(0xFFFECDD3)
-        "isha" -> Color(0xFFCBD5E1)
-        else -> Color(0xFFE2E8F0)
-    }
-
     val tagColor = when {
         isHighlighted -> Color.White
         prayer.id == "fajr" -> Color(0xFF0284C7)
@@ -493,6 +476,9 @@ fun SalatTimingVerticalCard(
     }
 
     val isDark = isSystemInDarkTheme()
+    val effectMode = LocalScreenEffectMode.current
+    val isGlassMode = effectMode == ScreenEffectMode.GLASS
+
     val prayerIcon = when (prayer.id) {
         "fajr" -> Icons.Default.WbTwilight
         "dhuhr" -> Icons.Default.WbSunny
@@ -502,45 +488,55 @@ fun SalatTimingVerticalCard(
         else -> Icons.Default.AccessTime
     }
 
-    val glassBorderBrush = if (isHighlighted) {
-        Brush.verticalGradient(
-            listOf(
-                Color.White.copy(alpha = 0.65f),
-                Color.White.copy(alpha = 0.25f),
-                Color(0xFFFEF08A).copy(alpha = 0.45f)
+    val cardShape = RoundedCornerShape(16.dp)
+
+    val cardBorder = if (isHighlighted) {
+        BorderStroke(
+            1.2.dp,
+            Brush.verticalGradient(
+                listOf(
+                    Color.White.copy(alpha = 0.65f),
+                    Color.White.copy(alpha = 0.25f),
+                    Color(0xFFFEF08A).copy(alpha = 0.45f)
+                )
             )
         )
+    } else if (isGlassMode) {
+        BorderStroke(1.1.dp, GlassEffects.glassBorderBrush(isDark = isDark, accentColor = tagColor))
     } else {
-        GlassEffects.glassBorderBrush(isDark = isDark, accentColor = tagColor)
+        BorderStroke(1.dp, tagColor.copy(alpha = if (isDark) 0.35f else 0.22f))
     }
 
     val cardBgModifier = if (isHighlighted) {
         Modifier.background(activeBrush)
-    } else {
+    } else if (isGlassMode) {
         Modifier.background(GlassEffects.glassBackgroundBrush(isDark = isDark, tint = tagColor))
+    } else {
+        Modifier.background(if (isDark) Color(0xFF1E293B) else Color.White)
     }
 
     Surface(
         modifier = modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(15.dp))
+            .clip(cardShape)
             .shadow(
-                elevation = if (isHighlighted) 3.5.dp else 1.5.dp,
-                shape = RoundedCornerShape(15.dp),
-                ambientColor = if (isHighlighted) Color(0xFFEA580C).copy(alpha = 0.4f) else Color.Black.copy(alpha = 0.08f)
+                elevation = if (isHighlighted) 3.5.dp else if (isGlassMode) 1.5.dp else 1.dp,
+                shape = cardShape,
+                ambientColor = if (isHighlighted) Color(0xFFEA580C).copy(alpha = 0.4f) else if (isDark) Color.Black.copy(alpha = 0.30f) else Color(0xFF0F172A).copy(alpha = 0.06f)
             )
-            .border(BorderStroke(1.2.dp, glassBorderBrush), RoundedCornerShape(15.dp))
+            .border(cardBorder, cardShape)
             .clickable(onClick = onClick),
-        shape = RoundedCornerShape(15.dp),
+        shape = cardShape,
         color = Color.Transparent
     ) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .then(cardBgModifier)
-                .padding(horizontal = 12.dp, vertical = 9.dp)
+                .padding(horizontal = 13.dp, vertical = 9.dp)
         ) {
-            if (!isHighlighted) {
+            // Ethereal living wave in glass mode (without harsh stroke line)
+            if (!isHighlighted && isGlassMode) {
                 GlassWaveBackground(
                     modifier = Modifier.matchParentSize(),
                     isDark = isDark,
@@ -548,31 +544,34 @@ fun SalatTimingVerticalCard(
                 )
             }
 
-            GlassTopHighlight(
-                modifier = Modifier.align(Alignment.TopCenter),
-                isDark = if (isHighlighted) false else isDark,
-                opacity = if (isHighlighted) 0.85f else 0.75f
-            )
+            if (isGlassMode || isHighlighted) {
+                GlassTopHighlight(
+                    modifier = Modifier.align(Alignment.TopCenter),
+                    isDark = if (isHighlighted) false else isDark,
+                    opacity = if (isHighlighted) 0.85f else 0.65f
+                )
+            }
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Left Side: Soft circular ambient glow badge + Wakt Name + Seamless status
+                // Left Side: Soft circular ambient glow badge (CircleShape with radial gradient tint) + Wakt Name + Seamless status
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.weight(1f, fill = false)
                 ) {
-                    // Soft, circular ambient glow badge (CircleShape with radial gradient tint)
+                    // Soft, circular ambient glow (CircleShape with radial gradient tint) that integrates seamlessly into the glass card
                     Box(
                         modifier = Modifier
-                            .size(28.dp)
+                            .size(32.dp)
                             .background(
                                 Brush.radialGradient(
-                                    listOf(
-                                        (if (isHighlighted) Color.White else tagColor).copy(alpha = if (isDark) 0.38f else 0.24f),
-                                        (if (isHighlighted) Color.White else tagColor).copy(alpha = if (isDark) 0.12f else 0.05f)
+                                    colors = listOf(
+                                        (if (isHighlighted) Color.White else tagColor).copy(alpha = if (isHighlighted) 0.35f else if (isDark) 0.30f else 0.20f),
+                                        (if (isHighlighted) Color.White else tagColor).copy(alpha = if (isHighlighted) 0.12f else if (isDark) 0.10f else 0.05f),
+                                        Color.Transparent
                                     )
                                 ),
                                 shape = CircleShape
@@ -583,7 +582,7 @@ fun SalatTimingVerticalCard(
                             imageVector = prayerIcon,
                             contentDescription = null,
                             tint = if (isHighlighted) Color(0xFFFEF08A) else (if (isDark) tagColor.copy(alpha = 0.95f) else tagColor),
-                            modifier = Modifier.size(15.dp)
+                            modifier = Modifier.size(17.dp)
                         )
                     }
 
@@ -675,11 +674,16 @@ fun ForbiddenTimeVerticalCard(
         )
     )
 
+    val isDark = isSystemInDarkTheme()
+    val effectMode = LocalScreenEffectMode.current
+    val isGlassMode = effectMode == ScreenEffectMode.GLASS
+    val cardShape = RoundedCornerShape(16.dp)
+
     Surface(
         modifier = modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(15.dp))
-            .shadow(2.5.dp, RoundedCornerShape(15.dp), ambientColor = Color(0xFFDC2626).copy(alpha = 0.4f))
+            .clip(cardShape)
+            .shadow(2.5.dp, cardShape, ambientColor = Color(0xFFDC2626).copy(alpha = 0.4f))
             .border(
                 BorderStroke(
                     1.2.dp,
@@ -691,23 +695,25 @@ fun ForbiddenTimeVerticalCard(
                         )
                     )
                 ),
-                RoundedCornerShape(15.dp)
+                cardShape
             )
             .clickable(onClick = onClick),
-        shape = RoundedCornerShape(15.dp),
+        shape = cardShape,
         color = Color.Transparent
     ) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .background(crimsonGradient)
-                .padding(horizontal = 12.dp, vertical = 9.dp)
+                .padding(horizontal = 13.dp, vertical = 9.dp)
         ) {
-            GlassWaveBackground(
-                modifier = Modifier.matchParentSize(),
-                isDark = true,
-                tint = Color(0xFFFDA4AF)
-            )
+            if (isGlassMode) {
+                GlassWaveBackground(
+                    modifier = Modifier.matchParentSize(),
+                    isDark = true,
+                    tint = Color(0xFFFDA4AF)
+                )
+            }
 
             GlassTopHighlight(
                 modifier = Modifier.align(Alignment.TopCenter),
@@ -725,15 +731,16 @@ fun ForbiddenTimeVerticalCard(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.weight(1f, fill = false)
                 ) {
-                    // Soft, circular ambient glow badge (CircleShape with radial gradient tint)
+                    // Soft, circular ambient glow badge (CircleShape with radial gradient tint) that integrates seamlessly
                     Box(
                         modifier = Modifier
-                            .size(28.dp)
+                            .size(32.dp)
                             .background(
                                 Brush.radialGradient(
                                     listOf(
                                         Color.White.copy(alpha = 0.35f),
-                                        Color.White.copy(alpha = 0.08f)
+                                        Color.White.copy(alpha = 0.10f),
+                                        Color.Transparent
                                     )
                                 ),
                                 shape = CircleShape
@@ -744,7 +751,7 @@ fun ForbiddenTimeVerticalCard(
                             imageVector = Icons.Default.AccessTime,
                             contentDescription = null,
                             tint = Color(0xFFFEF08A),
-                            modifier = Modifier.size(15.dp)
+                            modifier = Modifier.size(17.dp)
                         )
                     }
 

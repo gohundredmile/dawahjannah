@@ -27,6 +27,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.draw.shadow
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.BookmarkBorder
 import androidx.compose.material.icons.filled.ContentCopy
@@ -289,6 +290,32 @@ fun IslamicHeaderCover(
     onClickCard: () -> Unit = {}
 ) {
     val isDark = isSystemInDarkTheme()
+    val context = LocalContext.current
+    val prefs = remember { context.getSharedPreferences("app_ui_prefs", Context.MODE_PRIVATE) }
+
+    val wallpapers = remember {
+        listOf(
+            R.drawable.img_islamic_header_wallpaper,
+            R.drawable.img_islamic_header_medina,
+            R.drawable.img_ramadan_moon_bg,
+            R.drawable.img_sehri_iftar_bg
+        )
+    }
+    val wallpaperNames = remember {
+        listOf(
+            "গোধূলি মসজিদ",
+            "মদীনা মুনাওয়ারা",
+            "রমজান ও চাঁদ",
+            "ইসলামিক আর্চ"
+        )
+    }
+
+    var currentWallpaperIndex by remember {
+        mutableStateOf(prefs.getInt("selected_header_wallpaper_idx", 0).coerceIn(0, wallpapers.size - 1))
+    }
+
+    val selectedWallpaperRes = wallpapers[currentWallpaperIndex]
+
     Card(
         modifier = Modifier
             .fillMaxWidth(),
@@ -309,8 +336,30 @@ fun IslamicHeaderCover(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(GlassEffects.emeraldHeaderGlassBrush())
         ) {
+            // Outstanding Islamic Wallpaper Background
+            Image(
+                painter = painterResource(id = selectedWallpaperRes),
+                contentDescription = "ইসলামিক ওয়ালপেপার",
+                contentScale = ContentScale.Crop,
+                modifier = Modifier.matchParentSize()
+            )
+
+            // Deep Emerald & Night Twilight Atmospheric Scrim: perfectly enhances depth and text clarity
+            Box(
+                modifier = Modifier
+                    .matchParentSize()
+                    .background(
+                        Brush.verticalGradient(
+                            listOf(
+                                (if (isDark) Color(0xFF021C16) else Color(0xFF04382A)).copy(alpha = 0.72f),
+                                (if (isDark) Color(0xFF01140E) else Color(0xFF022C22)).copy(alpha = 0.46f),
+                                (if (isDark) Color(0xFF010E0A) else Color(0xFF032B20)).copy(alpha = 0.78f)
+                            )
+                        )
+                    )
+            )
+
             GlassTopHighlight(
                 modifier = Modifier.align(Alignment.TopCenter),
                 isDark = false,
@@ -326,17 +375,50 @@ fun IslamicHeaderCover(
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween,
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp)
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 4.dp)
                 ) {
-                    Column {
-                        Text(
-                            text = "আস-সালামু আলাইকুম",
-                            style = MaterialTheme.typography.titleLarge.copy(fontSize = 19.sp),
-                            fontFamily = LocalBanglaFontFamily.current,
-                            fontWeight = FontWeight.Bold,
-                            letterSpacing = 0.3.sp,
-                            color = Color.White
-                        )
+                    Text(
+                        text = "আস-সালামু আলাইকুম",
+                        style = MaterialTheme.typography.titleLarge.copy(fontSize = 19.sp),
+                        fontFamily = LocalBanglaFontFamily.current,
+                        fontWeight = FontWeight.Bold,
+                        letterSpacing = 0.3.sp,
+                        color = Color.White
+                    )
+
+                    // Interactive Islamic Wallpaper Switcher Pill
+                    Surface(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(20.dp))
+                            .clickable {
+                                currentWallpaperIndex = (currentWallpaperIndex + 1) % wallpapers.size
+                                prefs.edit().putInt("selected_header_wallpaper_idx", currentWallpaperIndex).apply()
+                            },
+                        shape = RoundedCornerShape(20.dp),
+                        color = Color.Black.copy(alpha = 0.32f),
+                        border = BorderStroke(0.8.dp, IslamicGoldLight.copy(alpha = 0.50f))
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.5.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.AutoAwesome,
+                                contentDescription = "ওয়ালপেপার পরিবর্তন",
+                                tint = IslamicGoldLight,
+                                modifier = Modifier.size(13.dp)
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = wallpaperNames[currentWallpaperIndex],
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Medium,
+                                fontFamily = LocalBanglaFontFamily.current,
+                                color = Color.White
+                            )
+                        }
                     }
                 }
 

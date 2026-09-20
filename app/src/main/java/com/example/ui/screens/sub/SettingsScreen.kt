@@ -1,5 +1,7 @@
 package com.example.ui.screens.sub
 
+import com.example.ui.components.WallpaperSettingsSection
+
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.expandVertically
@@ -85,11 +87,20 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import java.util.Locale
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Remove
+import com.example.data.model.AsrJuristicMethod
 import com.example.data.model.BanglaFont
 import com.example.data.model.BanglaFontWeight
 import com.example.data.model.EnglishFont
 import com.example.data.model.FlipClockFont
 import com.example.data.model.FontSizeScale
+import com.example.data.model.HighLatitudeRule
+import com.example.data.model.PrayerCalculationMethod
+import com.example.data.model.SalatConfiguration
 import com.example.data.model.ScreenEffectMode
 import com.example.data.model.ThemeMode
 import com.example.data.model.ThemeStyle
@@ -130,6 +141,9 @@ fun SettingsScreen(viewModel: MainViewModel) {
 
     var isThemeExpanded by remember { mutableStateOf(true) }
     var isFontsExpanded by remember { mutableStateOf(false) }
+    var isSalatExpanded by remember { mutableStateOf(false) }
+
+    val salatConfig by viewModel.salatConfig.collectAsState()
 
     val themeNameBn = when (currentThemeStyle) {
         ThemeStyle.EMERALD_JANNAH -> "এমেরাল্ড জান্নাহ"
@@ -597,6 +611,14 @@ fun SettingsScreen(viewModel: MainViewModel) {
             Spacer(modifier = Modifier.height(16.dp))
         }
 
+        // 1.1 ISLAMIC WALLPAPER & GOOGLE DRIVE STORAGE (COLLAPSIBLE)
+        item {
+            WallpaperSettingsSection(
+                isExpandedDefault = false
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+        }
+
         // 2. CONSOLIDATED FONTS & TYPOGRAPHY WITH BANGLA SCALING (COLLAPSIBLE)
         item {
             CollapsibleSettingHeader(
@@ -892,46 +914,360 @@ fun SettingsScreen(viewModel: MainViewModel) {
             Spacer(modifier = Modifier.height(16.dp))
         }
 
-        // 4. JURISTIC CALCULATION (HANAFI / SHAFI'I)
+        // 4. SALAT CALCULATION METHODS & JURISTIC SCHOOLS (COLLAPSIBLE)
         item {
-            SettingSectionHeader(title = "নামাজের মাযহাবি হিসাব পদ্ধতি", icon = Icons.Default.Schedule)
-            Spacer(modifier = Modifier.height(8.dp))
+            val salatBadgeText = "${salatConfig.calculationMethod.titleBn.split(",").firstOrNull() ?: salatConfig.calculationMethod.titleBn} • ${if (salatConfig.isHanafiAsr) "হানাফী" else "শাফেয়ী"}"
 
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.15f))
+            CollapsibleSettingHeader(
+                title = "ওয়াক্ত ও নামাজের সময়সূচী গণনা পদ্ধতি",
+                icon = Icons.Default.Schedule,
+                badgeText = salatBadgeText,
+                isExpanded = isSalatExpanded,
+                onToggle = { isSalatExpanded = !isSalatExpanded }
+            )
+
+            AnimatedVisibility(
+                visible = isSalatExpanded,
+                enter = expandVertically() + fadeIn(),
+                exit = shrinkVertically() + fadeOut()
             ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(14.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            text = if (isHanafiAsr) "হানাফি মাযহাব (আসরের মিসলে আওয়াল/সানি)" else "শাফেয়ী / মালেকী / হাম্বলী মাযহাব",
-                            style = MaterialTheme.typography.bodyMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                        Text(
-                            text = if (isHanafiAsr) "আসরের ওয়াক্ত বস্তুর ছায়া দ্বিগুণ হওয়ার পর শুরু হয়।" else "আসরের ওয়াক্ত বস্তুর ছায়া সমপরিমাণ হওয়ার পর শুরু হয়।",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    Spacer(modifier = Modifier.height(10.dp))
 
-                    Switch(
-                        checked = isHanafiAsr,
-                        onCheckedChange = { viewModel.setHanafiAsr(it) },
-                        colors = SwitchDefaults.colors(
-                            checkedThumbColor = MaterialTheme.colorScheme.primary,
-                            checkedTrackColor = MaterialTheme.colorScheme.primaryContainer
-                        )
-                    )
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(16.dp),
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.15f))
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(14.dp),
+                            verticalArrangement = Arrangement.spacedBy(14.dp)
+                        ) {
+                            // Explanation of the Basis
+                            Surface(
+                                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.08f),
+                                shape = RoundedCornerShape(12.dp),
+                                border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.25f)),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(12.dp),
+                                    verticalAlignment = Alignment.Top
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Info,
+                                        contentDescription = "Basis",
+                                        tint = MaterialTheme.colorScheme.primary,
+                                        modifier = Modifier
+                                            .size(20.dp)
+                                            .padding(top = 2.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Column(modifier = Modifier.weight(1f)) {
+                                        Text(
+                                            text = "ওয়াক্ত নির্ধারণের ভিত্তি (Calculation Basis):",
+                                            fontWeight = FontWeight.Bold,
+                                            fontSize = 13.sp,
+                                            color = MaterialTheme.colorScheme.primary
+                                        )
+                                        Spacer(modifier = Modifier.height(3.dp))
+                                        Text(
+                                            text = "আন্তর্জাতিক জ্যোতির্বৈজ্ঞানিক সমীকরণ (Solar Position Algorithm - Jean Meeus) অনুসারে সূর্যের বিষুবীয় অবস্থান ও জেনিথ কোণের ভিত্তিতে ওয়াক্ত গণনা করা হয়। বাংলাদেশে ইসলামিক ফাউন্ডেশন এবং গুগল (Google Search) করাচি মানদণ্ড (Karachi Method - ফজর ১৮°, এশা ১৮°) ও হানাফী আসর অনুসরণ করে।",
+                                            fontSize = 11.5.sp,
+                                            lineHeight = 16.sp,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                    }
+                                }
+                            }
+
+                            // International Calculation Methods
+                            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(
+                                        text = "আন্তর্জাতিক মানদণ্ড নির্বাচন করুন:",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.primary
+                                    )
+                                    Text(
+                                        text = "বর্তমান: ${salatConfig.calculationMethod.name}",
+                                        fontSize = 11.sp,
+                                        color = MaterialTheme.colorScheme.primary,
+                                        fontWeight = FontWeight.SemiBold
+                                    )
+                                }
+
+                                PrayerCalculationMethod.entries.forEach { method ->
+                                    val isSelected = salatConfig.calculationMethod == method
+                                    Surface(
+                                        color = if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.12f) else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f),
+                                        shape = RoundedCornerShape(12.dp),
+                                        border = BorderStroke(
+                                            width = if (isSelected) 1.5.dp else 1.dp,
+                                            color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)
+                                        ),
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .clickable { viewModel.setCalculationMethod(method) }
+                                    ) {
+                                        Row(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .padding(horizontal = 12.dp, vertical = 10.dp),
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.SpaceBetween
+                                        ) {
+                                            Column(modifier = Modifier.weight(1f)) {
+                                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                                    Text(
+                                                        text = method.titleBn,
+                                                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.SemiBold,
+                                                        fontSize = 13.sp,
+                                                        color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
+                                                    )
+                                                    if (method == PrayerCalculationMethod.KARACHI) {
+                                                        Spacer(modifier = Modifier.width(6.dp))
+                                                        Surface(
+                                                            color = MaterialTheme.colorScheme.primary,
+                                                            shape = RoundedCornerShape(4.dp)
+                                                        ) {
+                                                            Text(
+                                                                text = "বাংলাদেশ / গুগল",
+                                                                color = Color.White,
+                                                                fontSize = 9.sp,
+                                                                fontWeight = FontWeight.Bold,
+                                                                modifier = Modifier.padding(horizontal = 5.dp, vertical = 1.dp)
+                                                            )
+                                                        }
+                                                    }
+                                                }
+                                                Spacer(modifier = Modifier.height(2.dp))
+                                                Text(
+                                                    text = "ফজর ${method.fajrAngle}° • এশা ${if ((method.ishaAngle ?: 0.0) > 0) "${method.ishaAngle}°" else "${method.ishaIntervalMinutes} মি. পর"} • ${method.descriptionBn}",
+                                                    fontSize = 11.sp,
+                                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                                    lineHeight = 15.sp
+                                                )
+                                            }
+
+                                            if (isSelected) {
+                                                Box(
+                                                    modifier = Modifier
+                                                        .size(22.dp)
+                                                        .clip(CircleShape)
+                                                        .background(MaterialTheme.colorScheme.primary),
+                                                    contentAlignment = Alignment.Center
+                                                ) {
+                                                    Icon(
+                                                        imageVector = Icons.Default.Check,
+                                                        contentDescription = "Selected",
+                                                        tint = Color.White,
+                                                        modifier = Modifier.size(14.dp)
+                                                    )
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+
+                            // Asr Juristic School
+                            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                Text(
+                                    text = "আসরের মাযহাবী মানদণ্ড (Asr Juristic Method):",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
+                                    val isHanafi = salatConfig.isHanafiAsr
+                                    // Hanafi
+                                    Surface(
+                                        color = if (isHanafi) MaterialTheme.colorScheme.primary.copy(alpha = 0.12f) else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f),
+                                        shape = RoundedCornerShape(12.dp),
+                                        border = BorderStroke(
+                                            width = if (isHanafi) 1.5.dp else 1.dp,
+                                            color = if (isHanafi) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)
+                                        ),
+                                        modifier = Modifier
+                                            .weight(1f)
+                                            .clickable { viewModel.setAsrJuristicMethod(AsrJuristicMethod.HANAFI) }
+                                    ) {
+                                        Column(modifier = Modifier.padding(10.dp)) {
+                                            Row(
+                                                modifier = Modifier.fillMaxWidth(),
+                                                horizontalArrangement = Arrangement.SpaceBetween,
+                                                verticalAlignment = Alignment.CenterVertically
+                                            ) {
+                                                Text(
+                                                    text = "হানাফী মাযহাব",
+                                                    fontWeight = FontWeight.Bold,
+                                                    fontSize = 12.5.sp,
+                                                    color = if (isHanafi) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
+                                                )
+                                                if (isHanafi) {
+                                                    Icon(
+                                                        imageVector = Icons.Default.Check,
+                                                        contentDescription = null,
+                                                        tint = MaterialTheme.colorScheme.primary,
+                                                        modifier = Modifier.size(15.dp)
+                                                    )
+                                                }
+                                            }
+                                            Spacer(modifier = Modifier.height(2.dp))
+                                            Text(
+                                                text = "ছায়া দ্বিগুণ হলে আসর শুরু (মিসলে সানি)",
+                                                fontSize = 10.5.sp,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                            )
+                                        }
+                                    }
+
+                                    // Shafi'i / Standard
+                                    Surface(
+                                        color = if (!isHanafi) MaterialTheme.colorScheme.primary.copy(alpha = 0.12f) else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f),
+                                        shape = RoundedCornerShape(12.dp),
+                                        border = BorderStroke(
+                                            width = if (!isHanafi) 1.5.dp else 1.dp,
+                                            color = if (!isHanafi) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)
+                                        ),
+                                        modifier = Modifier
+                                            .weight(1f)
+                                            .clickable { viewModel.setAsrJuristicMethod(AsrJuristicMethod.STANDARD) }
+                                    ) {
+                                        Column(modifier = Modifier.padding(10.dp)) {
+                                            Row(
+                                                modifier = Modifier.fillMaxWidth(),
+                                                horizontalArrangement = Arrangement.SpaceBetween,
+                                                verticalAlignment = Alignment.CenterVertically
+                                            ) {
+                                                Text(
+                                                    text = "শাফেয়ী / সাধারণ",
+                                                    fontWeight = FontWeight.Bold,
+                                                    fontSize = 12.5.sp,
+                                                    color = if (!isHanafi) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
+                                                )
+                                                if (!isHanafi) {
+                                                    Icon(
+                                                        imageVector = Icons.Default.Check,
+                                                        contentDescription = null,
+                                                        tint = MaterialTheme.colorScheme.primary,
+                                                        modifier = Modifier.size(15.dp)
+                                                    )
+                                                }
+                                            }
+                                            Spacer(modifier = Modifier.height(2.dp))
+                                            Text(
+                                                text = "ছায়া এক গুণ হলে আসর শুরু (মিসলে আওয়াল)",
+                                                fontSize = 10.5.sp,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+
+                            // High Latitude Rule
+                            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                                Text(
+                                    text = "উচ্চ অক্ষাংশ সমন্বয় পদ্ধতি (High Latitude Rule):",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                                LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                                    items(HighLatitudeRule.entries.toTypedArray()) { rule ->
+                                        val isRuleSelected = salatConfig.highLatitudeRule == rule
+                                        FilterChip(
+                                            selected = isRuleSelected,
+                                            onClick = { viewModel.setHighLatitudeRule(rule) },
+                                            label = { Text(rule.titleBn, fontSize = 11.5.sp) },
+                                            colors = FilterChipDefaults.filterChipColors(
+                                                selectedContainerColor = MaterialTheme.colorScheme.primary,
+                                                selectedLabelColor = Color.White
+                                            )
+                                        )
+                                    }
+                                }
+                            }
+
+                            // Minute Adjustment Slider / Buttons
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = "স্থানীয় মসজিদের সাথে মিনিট সমন্বয়",
+                                        fontWeight = FontWeight.SemiBold,
+                                        fontSize = 13.sp,
+                                        color = MaterialTheme.colorScheme.onSurface
+                                    )
+                                    Text(
+                                        text = "বর্তমান অফসেট: ${if (salatConfig.manualOffsetMinutes > 0) "+" else ""}${salatConfig.manualOffsetMinutes} মিনিট",
+                                        fontSize = 11.sp,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    IconButton(
+                                        onClick = { viewModel.setSalatManualOffset((salatConfig.manualOffsetMinutes - 1).coerceAtLeast(-15)) },
+                                        modifier = Modifier.size(32.dp)
+                                    ) {
+                                        Icon(Icons.Default.Remove, contentDescription = "Minus", modifier = Modifier.size(16.dp))
+                                    }
+
+                                    Text(
+                                        text = "${salatConfig.manualOffsetMinutes}m",
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 13.sp,
+                                        modifier = Modifier.padding(horizontal = 4.dp)
+                                    )
+
+                                    IconButton(
+                                        onClick = { viewModel.setSalatManualOffset((salatConfig.manualOffsetMinutes + 1).coerceAtMost(15)) },
+                                        modifier = Modifier.size(32.dp)
+                                    ) {
+                                        Icon(Icons.Default.Add, contentDescription = "Plus", modifier = Modifier.size(16.dp))
+                                    }
+                                }
+                            }
+
+                            // Reset to Standard Button
+                            OutlinedButton(
+                                onClick = { viewModel.resetSalatPreferencesToStandard() },
+                                modifier = Modifier.fillMaxWidth(),
+                                shape = RoundedCornerShape(10.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Refresh,
+                                    contentDescription = "Reset",
+                                    modifier = Modifier.size(16.dp)
+                                )
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text(
+                                    text = "ডিফল্ট মানদণ্ড (করাচি ও হানাফী) সেট করুন",
+                                    fontSize = 12.sp
+                                )
+                            }
+                        }
+                    }
                 }
             }
             Spacer(modifier = Modifier.height(16.dp))

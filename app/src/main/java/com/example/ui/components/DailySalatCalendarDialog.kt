@@ -203,7 +203,11 @@ fun DailySalatCalendarDialog(
                     locationNameBn = salatConfig.placeNameBn,
                     locationNameEn = salatConfig.placeNameEn,
                     isGpsLocation = salatConfig.isGpsEnabled,
-                    manualOffsetMinutes = salatConfig.manualOffsetMinutes
+                    manualOffsetMinutes = salatConfig.manualOffsetMinutes,
+                    calculationMethod = salatConfig.calculationMethod,
+                    asrMethod = salatConfig.asrMethod,
+                    highLatitudeRule = salatConfig.highLatitudeRule,
+                    timezoneOffsetHours = salatConfig.timezoneOffsetHours
                 )
 
                 val fajrTime = prayerStatus.prayerList.find { it.id == "fajr" }?.startFormattedBn ?: "০৪:২৯"
@@ -604,7 +608,11 @@ private fun DayDetailSalatScheduleView(
             locationNameBn = salatConfig.placeNameBn,
             locationNameEn = salatConfig.placeNameEn,
             isGpsLocation = salatConfig.isGpsEnabled,
-            manualOffsetMinutes = salatConfig.manualOffsetMinutes
+            manualOffsetMinutes = salatConfig.manualOffsetMinutes,
+            calculationMethod = salatConfig.calculationMethod,
+            asrMethod = salatConfig.asrMethod,
+            highLatitudeRule = salatConfig.highLatitudeRule,
+            timezoneOffsetHours = salatConfig.timezoneOffsetHours
         )
     }
 

@@ -482,6 +482,10 @@ fun HomeScreen(
                 onCustomPlace = { nameBn, nameEn, lat, lng -> viewModel.setCustomSalatLocation(nameBn, nameEn, lat, lng) },
                 onSetManualOffset = { offset -> viewModel.setSalatManualOffset(offset) },
                 onToggleHanafiAsr = { isHanafi -> viewModel.setHanafiAsr(isHanafi) },
+                onSelectCalculationMethod = { method -> viewModel.setCalculationMethod(method) },
+                onSelectAsrMethod = { asr -> viewModel.setAsrJuristicMethod(asr) },
+                onSelectHighLatitudeRule = { rule -> viewModel.setHighLatitudeRule(rule) },
+                onResetSalatPreferences = { viewModel.resetSalatPreferencesToStandard() },
                 onClearGpsMessage = { viewModel.clearGpsMessage() }
             )
         }

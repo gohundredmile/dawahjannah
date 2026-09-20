@@ -28,6 +28,7 @@ import com.example.data.local.entity.BookmarkEntity
 import com.example.data.local.entity.ChecklistRecord
 import com.example.data.local.entity.ScratchpadNote
 import com.example.data.model.AllahNameItem
+import com.example.data.model.AsrJuristicMethod
 import com.example.data.model.AuroraWallpaperConfig
 import com.example.data.model.AuroraWavePreset
 import com.example.data.model.BanglaFont
@@ -41,9 +42,11 @@ import com.example.data.model.EnglishFont
 import com.example.data.model.FlipClockFont
 import com.example.data.model.FontSizeScale
 import com.example.data.model.HealthDuaItem
+import com.example.data.model.HighLatitudeRule
 import com.example.data.model.IslamicLifeCardItem
 import com.example.data.model.IslamicLifeSection
 import com.example.data.model.PRESET_SALAT_PLACES
+import com.example.data.model.PrayerCalculationMethod
 import com.example.data.model.PrimaryFontPreference
 import com.example.data.model.RoutineItem
 import com.example.data.model.SalatConfiguration
@@ -233,6 +236,35 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    fun setPrayerCalculationMethod(method: PrayerCalculationMethod) {
+        viewModelScope.launch {
+            repository.setCalculationMethod(method)
+        }
+    }
+
+    fun setCalculationMethod(method: PrayerCalculationMethod) = setPrayerCalculationMethod(method)
+
+    fun setAsrJuristicMethod(method: AsrJuristicMethod) {
+        viewModelScope.launch {
+            repository.setAsrJuristicMethod(method)
+        }
+    }
+
+    fun setHighLatitudeRule(rule: HighLatitudeRule) {
+        viewModelScope.launch {
+            repository.setHighLatitudeRule(rule)
+        }
+    }
+
+    fun resetSalatCalculationPreferences() {
+        viewModelScope.launch {
+            repository.resetSalatPreferences()
+            _gpsStatusMessage.value = "নামাজের সময়সূচি ডিফল্ট (করাচি মানদণ্ড ও হানাফী) হিসেবে রিসেট হয়েছে"
+        }
+    }
+
+    fun resetSalatPreferencesToStandard() = resetSalatCalculationPreferences()
+
     fun trackCurrentLocationWithGps() {
         val app = getApplication<Application>()
         val hasFine = ContextCompat.checkSelfPermission(app, android.Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
@@ -314,21 +346,24 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     val prayerStatus = combine(
         _currentDate,
-        repository.hanafiAsrFlow,
         _prayerNotificationSettings,
         repository.salatConfigFlow
-    ) { date, isHanafi, notifs, config ->
+    ) { date, notifs, config ->
         val cal = Calendar.getInstance().apply { time = date }
         PrayerCalculator.calculatePrayers(
             cal = cal,
-            isHanafiAsr = isHanafi,
+            isHanafiAsr = config.isHanafiAsr,
             notificationSettings = notifs,
             latitude = config.latitude,
             longitude = config.longitude,
             locationNameBn = config.placeNameBn,
             locationNameEn = config.placeNameEn,
             isGpsLocation = config.isGpsEnabled,
-            manualOffsetMinutes = config.manualOffsetMinutes
+            manualOffsetMinutes = config.manualOffsetMinutes,
+            calculationMethod = config.calculationMethod,
+            asrMethod = config.asrMethod,
+            highLatitudeRule = config.highLatitudeRule,
+            timezoneOffsetHours = config.timezoneOffsetHours
         )
     }.stateIn(
         viewModelScope,

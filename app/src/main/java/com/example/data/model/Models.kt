@@ -318,13 +318,153 @@ data class SalatPlaceInfo(
     val timezoneOffsetHours: Double = 6.0
 )
 
+enum class PrayerCalculationMethod(
+    val id: String,
+    val titleBn: String,
+    val titleEn: String,
+    val fajrAngle: Double,
+    val ishaAngle: Double?, // null if interval
+    val ishaIntervalMinutes: Int? = null,
+    val maghribAngle: Double? = null, // null if sunset (-0.8333)
+    val descriptionBn: String
+) {
+    KARACHI(
+        id = "karachi",
+        titleBn = "University of Islamic Sciences, Karachi",
+        titleEn = "University of Islamic Sciences, Karachi",
+        fajrAngle = 18.0,
+        ishaAngle = 18.0,
+        descriptionBn = "বাংলাদেশ, পাকিস্তান, ভারত ও আফগানিস্তানে সর্বাধিক অনুসৃত মানদণ্ড (ফজর ১৮°, এশা ১৮°)"
+    ),
+    MUSLIM_WORLD_LEAGUE(
+        id = "mwl",
+        titleBn = "Muslim World League",
+        titleEn = "Muslim World League",
+        fajrAngle = 18.0,
+        ishaAngle = 17.0,
+        descriptionBn = "ইউরোপ, দূরপ্রাচ্য ও আমেরিকার বিভিন্ন অঞ্চলে অনুসৃত (ফজর ১৮°, এশা ১৭°)"
+    ),
+    EGYPTIAN(
+        id = "egyptian",
+        titleBn = "Egyptian General Authority of Survey",
+        titleEn = "Egyptian General Authority of Survey",
+        fajrAngle = 19.5,
+        ishaAngle = 17.5,
+        descriptionBn = "মিশর, আফ্রিকা, সিরিয়া, ইরাক, লেবানন ও মালয়েশিয়ায় অনুসৃত (ফজর ১৯.৫°, এশা ১৭.৫°)"
+    ),
+    ISNA(
+        id = "isna",
+        titleBn = "Islamic Society of North America",
+        titleEn = "Islamic Society of North America",
+        fajrAngle = 15.0,
+        ishaAngle = 15.0,
+        descriptionBn = "উত্তর আমেরিকা—যুক্তরাষ্ট্র ও কানাডায় প্রচলিত (ফজর ১৫°, এশা ১৫°)"
+    ),
+    SHIA_ITHNA_ASHARI(
+        id = "shia_qum",
+        titleBn = "Shia Ithna Ashari, Leva Research Institute, Qum",
+        titleEn = "Shia Ithna Ashari, Leva Research Institute, Qum",
+        fajrAngle = 16.0,
+        ishaAngle = 14.0,
+        maghribAngle = 4.0,
+        descriptionBn = "শিয়া ইথনা আশারি, লেভা গবেষণা ইনস্টিটিউট, কোম (ফজর ১৬°, মাগরিব ৪°, এশা ১৪°)"
+    ),
+    UMM_AL_QURA(
+        id = "makkah",
+        titleBn = "Umm al-Qura, Makkah",
+        titleEn = "Umm al-Qura, Makkah",
+        fajrAngle = 18.5,
+        ishaAngle = null,
+        ishaIntervalMinutes = 90,
+        descriptionBn = "মক্কা মুকাররমা ও আরব উপদ্বীপে প্রচলিত (ফজর ১৮.৫°, এশা মাগরিবের ৯০ মিনিট পর)"
+    ),
+    TEHRAN_GEOPHYSICS(
+        id = "tehran",
+        titleBn = "Institute of Geophysics, University of Tehran",
+        titleEn = "Institute of Geophysics, University of Tehran",
+        fajrAngle = 17.7,
+        ishaAngle = 14.0,
+        maghribAngle = 4.5,
+        descriptionBn = "ইনস্টিটিউট অব জিওফিজিক্স, তেহরান বিশ্ববিদ্যালয় (ফজর ১৭.৭°, মাগরিব ৪.৫°, এশা ১৪°)"
+    ),
+    ISLAMIC_FOUNDATION_BD(
+        id = "ifb",
+        titleBn = "Islamic Foundation Bangladesh",
+        titleEn = "Islamic Foundation Bangladesh",
+        fajrAngle = 18.0,
+        ishaAngle = 18.0,
+        descriptionBn = "ইসলামিক ফাউন্ডেশন বাংলাদেশ সরকারি মানদণ্ড (ফজর ১৮°, এশা ১৮°)"
+    ),
+    GULF_DUBAI(
+        id = "dubai",
+        titleBn = "Dubai / Gulf Region (Awqaf)",
+        titleEn = "Dubai / Gulf Region (Awqaf)",
+        fajrAngle = 18.2,
+        ishaAngle = null,
+        ishaIntervalMinutes = 90,
+        descriptionBn = "দুবাই ও উপসাগরীয় আওকাফ মানদণ্ড (ফজর ১৮.২°, এশা ৯০ মিনিট পর)"
+    );
+
+    companion object {
+        fun fromId(id: String?): PrayerCalculationMethod {
+            return entries.find { it.id.equals(id, ignoreCase = true) } ?: KARACHI
+        }
+    }
+}
+
+enum class AsrJuristicMethod(
+    val id: String,
+    val titleBn: String,
+    val titleEn: String,
+    val shadowMultiplier: Double,
+    val descriptionBn: String
+) {
+    HANAFI(
+        id = "hanafi",
+        titleBn = "Hanafi Juristic (হানাফী মাযহাব)",
+        titleEn = "Hanafi Juristic",
+        shadowMultiplier = 2.0,
+        descriptionBn = "আসরের ওয়াক্ত বস্তুর মূল ছায়া ছাড়া দ্বিগুণ (মিসলে সানি) হলে শুরু হয়।"
+    ),
+    STANDARD(
+        id = "standard",
+        titleBn = "Standard (শাফেয়ী, মালেকী, হাম্বলী)",
+        titleEn = "Standard (Shafi'i, Maliki, Hanbali)",
+        shadowMultiplier = 1.0,
+        descriptionBn = "আসরের ওয়াক্ত বস্তুর মূল ছায়া ছাড়া সমপরিমাণ (মিসলে আওয়াল) হলে শুরু হয়।"
+    );
+
+    companion object {
+        fun fromId(id: String?): AsrJuristicMethod {
+            return if (id?.equals("standard", ignoreCase = true) == true) STANDARD else HANAFI
+        }
+    }
+}
+
+enum class HighLatitudeRule(val id: String, val titleBn: String, val titleEn: String) {
+    ANGLE_BASED("angle_based", "কোণভিত্তিক বিভাজন (Angle-Based / Night Portion)", "Angle-Based / Night Portion"),
+    MIDNIGHT("midnight", "অর্ধরাত্রি নীতি (Midnight Rule)", "Midnight Rule"),
+    ONE_SEVENTH("one_seventh", "রাতের এক-সপ্তমাংশ (One-Seventh Rule)", "One-Seventh Rule"),
+    NONE("none", "কোনো সমন্বয় ছাড়া (Exact Sun Altitude)", "None");
+
+    companion object {
+        fun fromId(id: String?): HighLatitudeRule {
+            return entries.find { it.id.equals(id, ignoreCase = true) } ?: ANGLE_BASED
+        }
+    }
+}
+
 data class SalatConfiguration(
     val placeNameBn: String = "ঢাকা, বাংলাদেশ",
     val placeNameEn: String = "Dhaka, Bangladesh",
     val latitude: Double = 23.8103,
     val longitude: Double = 90.4125,
+    val timezoneOffsetHours: Double = 6.0,
     val isGpsEnabled: Boolean = false,
     val isHanafiAsr: Boolean = true,
+    val calculationMethod: PrayerCalculationMethod = PrayerCalculationMethod.KARACHI,
+    val asrMethod: AsrJuristicMethod = AsrJuristicMethod.HANAFI,
+    val highLatitudeRule: HighLatitudeRule = HighLatitudeRule.ANGLE_BASED,
     val manualOffsetMinutes: Int = 0
 )
 

@@ -1,9 +1,21 @@
 package com.example.util
 
+import com.example.data.model.AsrJuristicMethod
 import com.example.data.model.ForbiddenTimeInfo
+import com.example.data.model.HighLatitudeRule
+import com.example.data.model.PrayerCalculationMethod
 import com.example.data.model.PrayerTimeItem
 import java.util.Calendar
 import java.util.Locale
+import kotlin.math.abs
+import kotlin.math.acos
+import kotlin.math.asin
+import kotlin.math.atan
+import kotlin.math.atan2
+import kotlin.math.cos
+import kotlin.math.floor
+import kotlin.math.sin
+import kotlin.math.tan
 
 object PrayerCalculator {
 
@@ -21,17 +33,21 @@ object PrayerCalculator {
         val longitude: Double = 90.4125,
         val isGpsLocation: Boolean = false,
         val isHanafiAsr: Boolean = true,
-        val sunriseTimeFormatted: String = "০৫:৪২",
-        val sunsetTimeFormatted: String = "০৬:১১",
+        val calculationMethod: PrayerCalculationMethod = PrayerCalculationMethod.KARACHI,
+        val asrMethod: AsrJuristicMethod = AsrJuristicMethod.HANAFI,
+        val highLatitudeRule: HighLatitudeRule = HighLatitudeRule.ANGLE_BASED,
+        val calculationBasisSummaryBn: String = "University of Islamic Sciences, Karachi (১৮°/১৮°) • হানাফী",
+        val sunriseTimeFormatted: String = "০৫:৪৬",
+        val sunsetTimeFormatted: String = "০৫:৫৭",
         val dayProgressFraction: Float = 0.5f,
-        val nextSehriFormatted: String = "০৪:২৫",
-        val nextIftarFormatted: String = "০৬:১১",
+        val nextSehriFormatted: String = "০৪:৩১",
+        val nextIftarFormatted: String = "০৫:৫৭",
         val iftarRemainingHMS: String = "০১:১৮:৪৩",
-        val duhaTimeFormatted: String = "০৫:৫৮ - ১১:৫১",
-        val zawalStartTimeFormatted: String = "১১:৫৯",
-        val awwabinTimeFormatted: String = "মাগরিবের পর - ০৭:২৭",
-        val tahajjudTimeFormatted: String = "ইশার পর - ০৪:২৫",
-        val lastThirdOfNightFormatted: String = "০১:০১",
+        val duhaTimeFormatted: String = "০৬:০১ - ১১:৪০",
+        val zawalStartTimeFormatted: String = "১১:৪০",
+        val awwabinTimeFormatted: String = "মাগরিবের পর - ০৭:১৩",
+        val tahajjudTimeFormatted: String = "ইশার পর - ০৪:৩১",
+        val lastThirdOfNightFormatted: String = "০১:১৮",
         val presentPrayerNameBn: String = "এশা",
         val presentNofolNameBn: String = "তাহাজ্জুদ",
         val remainingHours: Int = 0,
@@ -39,6 +55,10 @@ object PrayerCalculator {
         val remainingSeconds: Int = 0
     )
 
+    /**
+     * Calculates prayer times using precise Jean Meeus / NOAA astronomical solar equations
+     * combined with standard international Islamic calculation conventions.
+     */
     fun calculatePrayers(
         cal: Calendar = Calendar.getInstance(),
         isHanafiAsr: Boolean = true,
@@ -48,7 +68,11 @@ object PrayerCalculator {
         locationNameBn: String = "ঢাকা, বাংলাদেশ",
         locationNameEn: String = "Dhaka, Bangladesh",
         isGpsLocation: Boolean = false,
-        manualOffsetMinutes: Int = 0
+        manualOffsetMinutes: Int = 0,
+        calculationMethod: PrayerCalculationMethod = PrayerCalculationMethod.KARACHI,
+        asrMethod: AsrJuristicMethod = if (isHanafiAsr) AsrJuristicMethod.HANAFI else AsrJuristicMethod.STANDARD,
+        highLatitudeRule: HighLatitudeRule = HighLatitudeRule.ANGLE_BASED,
+        timezoneOffsetHours: Double? = null
     ): PrayerStatus {
         val currentHour = cal.get(Calendar.HOUR_OF_DAY)
         val currentMinute = cal.get(Calendar.MINUTE)
@@ -56,42 +80,146 @@ object PrayerCalculator {
         val currentTotalMinutes = currentHour * 60 + currentMinute
         val currentTotalSeconds = currentHour * 3600 + currentMinute * 60 + currentSecond
 
-        // Seasonal calculation baseline for Dhaka / Subcontinent region
-        // Reference values aligned to user's standard table:
-        // Fajr: 4:24 AM - 5:41 AM
-        // Sunrise forbidden: 05:41 - 05:56 (5:41 AM - 5:56 AM)
-        // Zawal forbidden: 11:47 - 11:57 (11:47 AM - 11:57 AM)
-        // Johr: 11:57 AM - 3:26 PM
-        // Asr: 3:26 PM - 6:14 PM
-        // Sunset forbidden: 17:59 - 18:14 (5:59 PM - 6:14 PM)
-        // Maghrib: 6:14 PM - 7:30 PM
-        // Isha: 7:30 PM - 4:24 AM
+        // 1. Julian Day (Jean Meeus Astronomical Algorithms)
+        val year = cal.get(Calendar.YEAR)
+        val month = cal.get(Calendar.MONTH) + 1 // 1..12
+        val day = cal.get(Calendar.DAY_OF_MONTH)
 
-        val dayOfYear = cal.get(Calendar.DAY_OF_YEAR)
-        // Geographic offset calculation relative to Dhaka standard meridian (90.4125° E, 23.8103° N)
-        // 1 degree longitude = ~4 minutes time difference
-        val geoLongitudeOffset = -(((longitude - 90.4125) * 4.0).toInt())
-        val geoLatitudeOffset = (((latitude - 23.8103) * 1.5) * Math.sin(2 * Math.PI * (dayOfYear - 80) / 365.25)).toInt()
-        val totalGeoOffset = geoLongitudeOffset + geoLatitudeOffset + manualOffsetMinutes
+        var y = year
+        var m = month
+        if (m <= 2) {
+            y -= 1
+            m += 12
+        }
+        val a = floor(y / 100.0)
+        val b = 2.0 - a + floor(a / 4.0)
+        val jd = floor(365.25 * (y + 4716)) + floor(30.6001 * (m + 1)) + day + b - 1524.5
 
-        // Slight seasonal variation offset centered around early September (day ~ 247)
-        val daysFromReference = dayOfYear - 247
-        val seasonalOffset = (15 * Math.sin(2 * Math.PI * daysFromReference / 365.25)).toInt()
+        // Days since J2000.0 epoch (2000 January 1.5)
+        val d0 = jd - 2451545.0
 
-        val fajrMin = 4 * 60 + 24 + seasonalOffset + totalGeoOffset
-        val sunriseMin = 5 * 60 + 41 + seasonalOffset + totalGeoOffset
+        // Mean Anomaly (degrees)
+        val g = ((357.529 + 0.98560028 * d0) % 360.0 + 360.0) % 360.0
+        val gRad = Math.toRadians(g)
+
+        // Mean Longitude (degrees)
+        val q = ((280.459 + 0.98564736 * d0) % 360.0 + 360.0) % 360.0
+
+        // Ecliptic Longitude L (degrees)
+        val l = ((q + 1.915 * sin(gRad) + 0.020 * sin(2.0 * gRad)) % 360.0 + 360.0) % 360.0
+        val lRad = Math.toRadians(l)
+
+        // Obliquity of Ecliptic e (degrees)
+        val e = 23.439 - 0.00000036 * d0
+        val eRad = Math.toRadians(e)
+
+        // Declination delta (radians & degrees)
+        val sinDelta = sin(eRad) * sin(lRad)
+        val deltaRad = asin(sinDelta)
+
+        // Right Ascension RA (hours)
+        val raDeg = Math.toDegrees(atan2(cos(eRad) * sin(lRad), cos(lRad)))
+        var raHours = raDeg / 15.0
+        while (raHours < 0.0) raHours += 24.0
+        while (raHours >= 24.0) raHours -= 24.0
+
+        // Equation of Time EqT (hours)
+        var eqt = (q / 15.0) - raHours
+        while (eqt > 12.0) eqt -= 24.0
+        while (eqt < -12.0) eqt += 24.0
+
+        // Timezone in hours
+        val tzHours = timezoneOffsetHours ?: (cal.timeZone.getOffset(cal.timeInMillis) / 3600000.0)
+
+        // Solar Noon (hours from local midnight)
+        val solarNoonHours = 12.0 + tzHours - (longitude / 15.0) - eqt
+
+        val phiRad = Math.toRadians(latitude)
+
+        // Hour Angle function for a given solar altitude angle in degrees
+        fun hourAngle(altitudeDeg: Double): Double? {
+            val altRad = Math.toRadians(altitudeDeg)
+            val cosW = (sin(altRad) - sin(phiRad) * sin(deltaRad)) / (cos(phiRad) * cos(deltaRad))
+            if (cosW > 1.0 || cosW < -1.0) {
+                return null // Altitude not reached (polar day/night)
+            }
+            return Math.toDegrees(acos(cosW)) / 15.0
+        }
+
+        // Sunrise & Sunset: Standard altitude -0.8333° (atmospheric refraction + solar disc semi-diameter)
+        val wSun = hourAngle(-0.8333) ?: 6.0
+        val sunriseHours = solarNoonHours - wSun
+        val sunsetHours = solarNoonHours + wSun
+
+        // Night length in hours
+        val nightHours = ((24.0 - sunsetHours) + sunriseHours).coerceAtLeast(4.0)
+
+        // Fajr Time
+        val fajrAngle = calculationMethod.fajrAngle
+        val wFajr = hourAngle(-fajrAngle)
+        val fajrHours = if (wFajr != null) {
+            solarNoonHours - wFajr
+        } else {
+            when (highLatitudeRule) {
+                HighLatitudeRule.ANGLE_BASED -> sunriseHours - (fajrAngle / 60.0) * nightHours
+                HighLatitudeRule.MIDNIGHT -> sunriseHours - 0.5 * nightHours
+                HighLatitudeRule.ONE_SEVENTH -> sunriseHours - (nightHours / 7.0)
+                HighLatitudeRule.NONE -> sunriseHours - 1.5
+            }
+        }
+
+        // Asr Time: Sun altitude when shadow equals noon shadow + shadowFactor * object height
+        val actualShadowFactor = if (asrMethod == AsrJuristicMethod.HANAFI || isHanafiAsr) 2.0 else 1.0
+        val altAsrRad = atan(1.0 / (actualShadowFactor + tan(abs(phiRad - deltaRad))))
+        val altAsrDeg = Math.toDegrees(altAsrRad)
+        val wAsr = hourAngle(altAsrDeg) ?: (wSun * 0.58)
+        val asrHours = solarNoonHours + wAsr
+
+        // Maghrib Time: Standard sunset, or twilight angle (e.g. Shia Qum 4°, Tehran 4.5°)
+        val maghribHours = if (calculationMethod.maghribAngle != null) {
+            val wMaghrib = hourAngle(-calculationMethod.maghribAngle)
+            if (wMaghrib != null) solarNoonHours + wMaghrib else sunsetHours
+        } else {
+            sunsetHours
+        }
+
+        // Isha Time: Angle-based (Karachi, MWL, Egypt, ISNA, etc.) or Fixed Interval (Makkah 90 min)
+        val ishaHours = if (calculationMethod.ishaIntervalMinutes != null) {
+            maghribHours + (calculationMethod.ishaIntervalMinutes.toDouble() / 60.0)
+        } else {
+            val ishaAngle = calculationMethod.ishaAngle ?: 18.0
+            val wIsha = hourAngle(-ishaAngle)
+            if (wIsha != null) {
+                solarNoonHours + wIsha
+            } else {
+                when (highLatitudeRule) {
+                    HighLatitudeRule.ANGLE_BASED -> maghribHours + (ishaAngle / 60.0) * nightHours
+                    HighLatitudeRule.MIDNIGHT -> maghribHours + 0.5 * nightHours
+                    HighLatitudeRule.ONE_SEVENTH -> maghribHours + (nightHours / 7.0)
+                    HighLatitudeRule.NONE -> maghribHours + 1.5
+                }
+            }
+        }
+
+        // Convert calculated times to minute integers from midnight, applying fine-tuning offset
+        val fajrMin = Math.round(fajrHours * 60.0).toInt() + manualOffsetMinutes
+        val sunriseMin = Math.round(sunriseHours * 60.0).toInt() + manualOffsetMinutes
         val sunriseEndMin = sunriseMin + 15
 
-        val dhuhrMin = 11 * 60 + 57 + totalGeoOffset
-        val zawalStartMin = dhuhrMin - 10
+        val dhuhrMin = Math.round(solarNoonHours * 60.0).toInt() + manualOffsetMinutes
+        val zawalStartMin = dhuhrMin - 12
 
-        val asrMin = (if (isHanafiAsr) 15 * 60 + 26 - (seasonalOffset / 2) else 15 * 60 + 5 - (seasonalOffset / 2)) + totalGeoOffset
+        val asrMin = Math.round(asrHours * 60.0).toInt() + manualOffsetMinutes
 
-        val maghribMin = 18 * 60 + 14 - seasonalOffset + totalGeoOffset
+        val sunsetMin = floor(sunsetHours * 60.0).toInt() + manualOffsetMinutes
+        val maghribMin = if (calculationMethod.maghribAngle != null) {
+            Math.round(maghribHours * 60.0).toInt() + manualOffsetMinutes
+        } else {
+            sunsetMin
+        }
         val sunsetStartMin = maghribMin - 15
 
-        val ishaMin = 19 * 60 + 30 - seasonalOffset + totalGeoOffset
-        val tahajjudMin = 2 * 60 + 45 + seasonalOffset + totalGeoOffset
+        val ishaMin = Math.round(ishaHours * 60.0).toInt() + manualOffsetMinutes
 
         fun format12Hour(totalMins: Int): String {
             val normalized = ((totalMins % 1440) + 1440) % 1440
@@ -340,12 +468,12 @@ object PrayerCalculator {
         val iftarSStr = String.format(Locale.US, "%02d", iftarS)
         val iftarRemainingHMS = "${CalendarHelper.toBanglaNumber(iftarHStr)}:${CalendarHelper.toBanglaNumber(iftarMStr)}:${CalendarHelper.toBanglaNumber(iftarSStr)}"
 
-        // Nafl Prayers
-        val duhaStart = sunriseMin + 17
-        val duhaEnd = dhuhrMin - 8
+        // Nafl Prayers: Duha / Chasht begins 15 mins after sunrise, ends 12 mins before zawal
+        val duhaStart = sunriseMin + 15
+        val duhaEnd = dhuhrMin - 12
         val duhaFormatted = "${format24HourBn(duhaStart)} - ${format24HourBn(duhaEnd)}"
-        val zawalStartFormatted = format24HourBn(dhuhrMin)
-        val awwabinFormatted = "মাগরিবের পর - ${format24HourBn(maghribMin + 76)}"
+        val zawalStartFormatted = format24HourBn(zawalStartMin)
+        val awwabinFormatted = "মাগরিবের পর - ${format24HourBn(ishaMin)}"
         val tahajjudFormatted = "ইশার পর - ${format24HourBn(fajrMin)}"
 
         // Last third of night calculation
@@ -372,10 +500,10 @@ object PrayerCalculator {
             currentTotalMinutes in sunriseMin until sunriseEndMin -> {
                 Pair("সূর্যোদয়", "সালাত নিষিদ্ধ")
             }
-            currentTotalMinutes in sunriseEndMin until (dhuhrMin - 15) -> {
+            currentTotalMinutes in sunriseEndMin until zawalStartMin -> {
                 Pair("চাশত", "সালাতুত দুহা")
             }
-            currentTotalMinutes in (dhuhrMin - 15) until dhuhrMin -> {
+            currentTotalMinutes in zawalStartMin until dhuhrMin -> {
                 Pair("জাওয়াল", "সালাত নিষিদ্ধ")
             }
             currentTotalMinutes in dhuhrMin until asrMin -> {
@@ -396,6 +524,8 @@ object PrayerCalculator {
             }
         }
 
+        val calculationBasisSummary = "${calculationMethod.titleBn} (${calculationMethod.fajrAngle.toInt()}°/${calculationMethod.ishaAngle?.toInt() ?: "${calculationMethod.ishaIntervalMinutes}মি."}°) • ${if (actualShadowFactor == 2.0) "হানাফী (মিসলে সানি)" else "শাফেয়ী/আদর্শ (মিসলে আওয়াল)"}"
+
         return PrayerStatus(
             activePrayer = activePrayer,
             nextPrayer = nextPrayer,
@@ -409,7 +539,11 @@ object PrayerCalculator {
             latitude = latitude,
             longitude = longitude,
             isGpsLocation = isGpsLocation,
-            isHanafiAsr = isHanafiAsr,
+            isHanafiAsr = actualShadowFactor == 2.0,
+            calculationMethod = calculationMethod,
+            asrMethod = if (actualShadowFactor == 2.0) AsrJuristicMethod.HANAFI else AsrJuristicMethod.STANDARD,
+            highLatitudeRule = highLatitudeRule,
+            calculationBasisSummaryBn = calculationBasisSummary,
             sunriseTimeFormatted = sunriseFormattedBn,
             sunsetTimeFormatted = sunsetFormattedBn,
             dayProgressFraction = dayProgress,
@@ -429,4 +563,3 @@ object PrayerCalculator {
         )
     }
 }
-

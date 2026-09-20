@@ -57,6 +57,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.collectAsState
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
+import com.example.util.WallpaperManager
+import java.io.File
 import kotlinx.coroutines.delay
 import java.text.SimpleDateFormat
 import java.util.Calendar
@@ -291,30 +296,13 @@ fun IslamicHeaderCover(
 ) {
     val isDark = isSystemInDarkTheme()
     val context = LocalContext.current
-    val prefs = remember { context.getSharedPreferences("app_ui_prefs", Context.MODE_PRIVATE) }
+    val wallpaperState by WallpaperManager.configState.collectAsState()
 
-    val wallpapers = remember {
-        listOf(
-            R.drawable.img_islamic_header_wallpaper,
-            R.drawable.img_islamic_header_medina,
-            R.drawable.img_ramadan_moon_bg,
-            R.drawable.img_sehri_iftar_bg
-        )
-    }
-    val wallpaperNames = remember {
-        listOf(
-            "গোধূলি মসজিদ",
-            "মদীনা মুনাওয়ারা",
-            "রমজান ও চাঁদ",
-            "ইসলামিক আর্চ"
-        )
-    }
-
-    var currentWallpaperIndex by remember {
-        mutableStateOf(prefs.getInt("selected_header_wallpaper_idx", 0).coerceIn(0, wallpapers.size - 1))
-    }
-
-    val selectedWallpaperRes = wallpapers[currentWallpaperIndex]
+    val isCustomActive = wallpaperState.isCustomEnabled &&
+            wallpaperState.cachedFilePath != null &&
+            File(wallpaperState.cachedFilePath!!).exists()
+    val customFile = if (isCustomActive) File(wallpaperState.cachedFilePath!!) else null
+    val selectedBuiltIn = WallpaperManager.getSelectedBuiltInWallpaper()
 
     Card(
         modifier = Modifier
@@ -337,13 +325,25 @@ fun IslamicHeaderCover(
             modifier = Modifier
                 .fillMaxWidth()
         ) {
-            // Outstanding Islamic Wallpaper Background
-            Image(
-                painter = painterResource(id = selectedWallpaperRes),
-                contentDescription = "ইসলামিক ওয়ালপেপার",
-                contentScale = ContentScale.Crop,
-                modifier = Modifier.matchParentSize()
-            )
+            // Outstanding Islamic Wallpaper Background: Cached Google Drive or Built-in
+            if (isCustomActive && customFile != null) {
+                AsyncImage(
+                    model = ImageRequest.Builder(context)
+                        .data(customFile)
+                        .crossfade(true)
+                        .build(),
+                    contentDescription = "কাস্টম গুগল ড্রাইভ ওয়ালপেপার",
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.matchParentSize()
+                )
+            } else {
+                Image(
+                    painter = painterResource(id = selectedBuiltIn.resId),
+                    contentDescription = selectedBuiltIn.nameBn,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.matchParentSize()
+                )
+            }
 
             // Deep Emerald & Night Twilight Atmospheric Scrim: perfectly enhances depth and text clarity
             Box(
@@ -393,8 +393,7 @@ fun IslamicHeaderCover(
                         modifier = Modifier
                             .clip(RoundedCornerShape(20.dp))
                             .clickable {
-                                currentWallpaperIndex = (currentWallpaperIndex + 1) % wallpapers.size
-                                prefs.edit().putInt("selected_header_wallpaper_idx", currentWallpaperIndex).apply()
+                                WallpaperManager.cycleNextWallpaper(context)
                             },
                         shape = RoundedCornerShape(20.dp),
                         color = Color.Black.copy(alpha = 0.32f),
@@ -412,7 +411,7 @@ fun IslamicHeaderCover(
                             )
                             Spacer(modifier = Modifier.width(4.dp))
                             Text(
-                                text = wallpaperNames[currentWallpaperIndex],
+                                text = if (isCustomActive) "গুগল ড্রাইভ" else selectedBuiltIn.nameBn,
                                 fontSize = 11.sp,
                                 fontWeight = FontWeight.Medium,
                                 fontFamily = LocalBanglaFontFamily.current,

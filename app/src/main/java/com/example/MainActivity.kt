@@ -2,6 +2,7 @@ package com.example
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
@@ -61,6 +62,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        com.example.util.WallpaperManager.init(this)
         enableEdgeToEdge()
 
         setContent {
@@ -136,6 +138,7 @@ class MainActivity : ComponentActivity() {
                                     onOpenAppSettings = { viewModel.openSettings(AppTab.HOME) }
                                 )
                             } else if (!(currentTab == AppTab.MORE && currentMoreSub != MoreSubScreen.MAIN)) {
+                                val canGoBackToHome = currentTab == AppTab.TASBIH || currentTab == AppTab.DUA || currentTab == AppTab.FAVORITE
                                 DawahTopAppBar(
                                     title = when (currentTab) {
                                         AppTab.DUA -> "মাসনুন দোয়া"
@@ -145,6 +148,8 @@ class MainActivity : ComponentActivity() {
                                         AppTab.MORE -> "ইসলামী জীবন"
                                         else -> "দা'ওয়াহ টু জান্নাহ্"
                                     },
+                                    canNavigateBack = canGoBackToHome,
+                                    onNavigateBack = { viewModel.selectTab(AppTab.HOME) },
                                     actions = {
                                         IconButton(onClick = { viewModel.openFontMenu() }) {
                                             Icon(
@@ -169,6 +174,10 @@ class MainActivity : ComponentActivity() {
                             )
                         }
                     ) { innerPadding ->
+                        val canGoBackToHome = currentTab == AppTab.TASBIH || currentTab == AppTab.DUA || currentTab == AppTab.FAVORITE
+                        BackHandler(enabled = canGoBackToHome) {
+                            viewModel.selectTab(AppTab.HOME)
+                        }
                         Box(
                             modifier = Modifier.fillMaxSize()
                         ) {

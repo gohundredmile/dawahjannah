@@ -44,10 +44,12 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.FavoriteBorder
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.LightMode
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.MyLocation
 import androidx.compose.material.icons.filled.NightsStay
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Tune
@@ -90,8 +92,11 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.core.content.ContextCompat
+import com.example.data.model.AsrJuristicMethod
 import com.example.data.model.ForbiddenTimeInfo
+import com.example.data.model.HighLatitudeRule
 import com.example.data.model.PRESET_SALAT_PLACES
+import com.example.data.model.PrayerCalculationMethod
 import com.example.data.model.PrayerTimeItem
 import com.example.data.model.SalatConfiguration
 import com.example.data.model.SalatPlaceInfo
@@ -116,6 +121,10 @@ fun SalatTimingsSection(
     onCustomPlace: (String, String, Double, Double) -> Unit = { _, _, _, _ -> },
     onSetManualOffset: (Int) -> Unit = {},
     onToggleHanafiAsr: (Boolean) -> Unit = {},
+    onSelectCalculationMethod: (PrayerCalculationMethod) -> Unit = {},
+    onSelectAsrMethod: (AsrJuristicMethod) -> Unit = {},
+    onSelectHighLatitudeRule: (HighLatitudeRule) -> Unit = {},
+    onResetSalatPreferences: () -> Unit = {},
     onClearGpsMessage: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
@@ -258,12 +267,25 @@ fun SalatTimingsSection(
                                 }
                             }
 
+                            val methodShortName = when (salatConfig.calculationMethod) {
+                                PrayerCalculationMethod.KARACHI -> "করাচি মানদণ্ড"
+                                PrayerCalculationMethod.ISLAMIC_FOUNDATION_BD -> "ইসলামিক ফাউন্ডেশন"
+                                PrayerCalculationMethod.MUSLIM_WORLD_LEAGUE -> "মুসলিম লীগ"
+                                PrayerCalculationMethod.EGYPTIAN -> "মিশরীয় জরিপ"
+                                PrayerCalculationMethod.ISNA -> "ISNA"
+                                PrayerCalculationMethod.UMM_AL_QURA -> "উম্মুল কুরা"
+                                PrayerCalculationMethod.GULF_DUBAI -> "উপসাগরীয়"
+                                PrayerCalculationMethod.SHIA_ITHNA_ASHARI -> "লেভা/কোম"
+                                PrayerCalculationMethod.TEHRAN_GEOPHYSICS -> "তেহরান"
+                            }
+
                             Text(
-                                text = "${String.format(Locale.US, "%.2f°N, %.2f°E", salatConfig.latitude, salatConfig.longitude)} • ${if (salatConfig.isHanafiAsr) "হানাফী আসর" else "শাফেয়ী আসর"}${if (salatConfig.manualOffsetMinutes != 0) " (${if (salatConfig.manualOffsetMinutes > 0) "+" else ""}${salatConfig.manualOffsetMinutes} মি.)" else ""}",
+                                text = "${String.format(Locale.US, "%.2f°N, %.2f°E", salatConfig.latitude, salatConfig.longitude)} • $methodShortName • ${if (salatConfig.isHanafiAsr) "হানাফী" else "শাফেয়ী"}${if (salatConfig.manualOffsetMinutes != 0) " (${if (salatConfig.manualOffsetMinutes > 0) "+" else ""}${salatConfig.manualOffsetMinutes} মি.)" else ""}",
                                 style = MaterialTheme.typography.bodySmall,
                                 fontWeight = FontWeight.Medium,
                                 color = if (isDark) Color(0xFFCBD5E1) else Color(0xFF475569),
-                                fontSize = 11.5.sp
+                                fontSize = 11.sp,
+                                maxLines = 1
                             )
                         }
                     }
@@ -429,6 +451,10 @@ fun SalatTimingsSection(
             },
             onSetOffset = onSetManualOffset,
             onToggleHanafi = onToggleHanafiAsr,
+            onSelectCalculationMethod = onSelectCalculationMethod,
+            onSelectAsrMethod = onSelectAsrMethod,
+            onSelectHighLatitudeRule = onSelectHighLatitudeRule,
+            onResetSalatPreferences = onResetSalatPreferences,
             onTrackGps = {
                 showConfigDialog = false
                 val hasFine = ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
@@ -839,6 +865,10 @@ fun SalatConfigDialog(
     onCustomPlace: (String, String, Double, Double) -> Unit,
     onSetOffset: (Int) -> Unit,
     onToggleHanafi: (Boolean) -> Unit,
+    onSelectCalculationMethod: (PrayerCalculationMethod) -> Unit = {},
+    onSelectAsrMethod: (AsrJuristicMethod) -> Unit = {},
+    onSelectHighLatitudeRule: (HighLatitudeRule) -> Unit = {},
+    onResetSalatPreferences: () -> Unit = {},
     onTrackGps: () -> Unit
 ) {
     var searchQuery by remember { mutableStateOf("") }
@@ -1198,7 +1228,7 @@ fun SalatConfigDialog(
                         }
                     }
 
-                    // 3. Juristic School (Asr Calculation) & Time Offset Settings
+                    // 3. Calculation Method & Basis, Juristic School & Time Offset Settings
                     Surface(
                         color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f),
                         shape = RoundedCornerShape(16.dp),
@@ -1208,42 +1238,278 @@ fun SalatConfigDialog(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(14.dp),
-                            verticalArrangement = Arrangement.spacedBy(10.dp)
+                            verticalArrangement = Arrangement.spacedBy(14.dp)
                         ) {
                             Text(
-                                text = "ওয়াক্ত হিসাবের নিয়ম ও ফাইন-টিউনিং",
+                                text = "ওয়াক্ত হিসাবের মানদণ্ড ও নিয়মাবলী",
                                 fontWeight = FontWeight.Bold,
-                                fontSize = 13.5.sp,
+                                fontSize = 15.sp,
                                 color = MaterialTheme.colorScheme.primary
                             )
 
-                            // Hanafi / Shafi'i Asr Toggle
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
+                            // Basis Information Banner
+                            Surface(
+                                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.08f),
+                                shape = RoundedCornerShape(12.dp),
+                                border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.25f)),
+                                modifier = Modifier.fillMaxWidth()
                             ) {
-                                Column(modifier = Modifier.weight(1f)) {
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(12.dp),
+                                    verticalAlignment = Alignment.Top
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Info,
+                                        contentDescription = "Info",
+                                        tint = MaterialTheme.colorScheme.primary,
+                                        modifier = Modifier
+                                            .size(20.dp)
+                                            .padding(top = 2.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Column(modifier = Modifier.weight(1f)) {
+                                        Text(
+                                            text = "ওয়াক্ত নির্ধারণের জ্যোতির্বৈজ্ঞানিক ভিত্তি",
+                                            fontWeight = FontWeight.Bold,
+                                            fontSize = 12.5.sp,
+                                            color = MaterialTheme.colorScheme.primary
+                                        )
+                                        Spacer(modifier = Modifier.height(3.dp))
+                                        Text(
+                                            text = "সূর্যের জেনিথ কোণ (Zenith Angle) ও বিষুবীয় স্থানাঙ্কের (Solar Declination & Equation of Time) আন্তর্জাতিক জ্যাঁ মিউস (Jean Meeus) সূত্রের ভিত্তিতে সময় গণনা করা হয়। বাংলাদেশ ও উপমহাদেশের নির্ভরযোগ্য ইসলামিক পঞ্জিকা এবং গুগল সার্চে 'University of Islamic Sciences, Karachi' এবং হানাফী আসর মানদণ্ড অনুসৃত হয়।",
+                                            fontSize = 11.5.sp,
+                                            lineHeight = 16.sp,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                    }
+                                }
+                            }
+
+                            // International Calculation Methods
+                            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
                                     Text(
-                                        text = "আসর ওয়াক্ত হিসাব পদ্ধতি",
+                                        text = "আন্তর্জাতিক গণনা পদ্ধতি (Calculation Method)",
                                         fontWeight = FontWeight.SemiBold,
                                         fontSize = 13.sp,
                                         color = MaterialTheme.colorScheme.onSurface
                                     )
                                     Text(
-                                        text = if (currentConfig.isHanafiAsr) "হানাফী মাযহাব (ছায়া দ্বিগুণ হলে আসর শুরু)" else "শাফেয়ী/মালেকী/হাম্বলী (ছায়া এক গুণ হলে আসর)",
-                                        fontSize = 11.sp,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        text = "নির্বাচিত: ${currentConfig.calculationMethod.name}",
+                                        fontSize = 10.5.sp,
+                                        color = MaterialTheme.colorScheme.primary,
+                                        fontWeight = FontWeight.Bold
                                     )
                                 }
 
-                                Switch(
-                                    checked = currentConfig.isHanafiAsr,
-                                    onCheckedChange = { onToggleHanafi(it) },
-                                    colors = SwitchDefaults.colors(
-                                        checkedThumbColor = MaterialTheme.colorScheme.primary
-                                    )
+                                PrayerCalculationMethod.entries.forEach { method ->
+                                    val isSelected = currentConfig.calculationMethod == method
+                                    Surface(
+                                        color = if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.12f) else MaterialTheme.colorScheme.surface,
+                                        shape = RoundedCornerShape(12.dp),
+                                        border = BorderStroke(
+                                            width = if (isSelected) 1.5.dp else 1.dp,
+                                            color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
+                                        ),
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .clickable { onSelectCalculationMethod(method) }
+                                    ) {
+                                        Row(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .padding(horizontal = 12.dp, vertical = 9.dp),
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.SpaceBetween
+                                        ) {
+                                            Column(modifier = Modifier.weight(1f)) {
+                                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                                    Text(
+                                                        text = method.titleBn,
+                                                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.SemiBold,
+                                                        fontSize = 13.sp,
+                                                        color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
+                                                    )
+                                                    if (method == PrayerCalculationMethod.KARACHI) {
+                                                        Spacer(modifier = Modifier.width(6.dp))
+                                                        Surface(
+                                                            color = MaterialTheme.colorScheme.primary,
+                                                            shape = RoundedCornerShape(4.dp)
+                                                        ) {
+                                                            Text(
+                                                                text = "বাংলাদেশ/গুগল",
+                                                                color = Color.White,
+                                                                fontSize = 9.sp,
+                                                                fontWeight = FontWeight.Bold,
+                                                                modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp)
+                                                            )
+                                                        }
+                                                    }
+                                                }
+                                                Spacer(modifier = Modifier.height(2.dp))
+                                                Text(
+                                                    text = "ফজর ${method.fajrAngle}° • এশা ${if ((method.ishaAngle ?: 0.0) > 0) "${method.ishaAngle}°" else "${method.ishaIntervalMinutes} মি. পর"} • ${method.descriptionBn}",
+                                                    fontSize = 11.sp,
+                                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                                    lineHeight = 15.sp
+                                                )
+                                            }
+
+                                            if (isSelected) {
+                                                Box(
+                                                    modifier = Modifier
+                                                        .size(22.dp)
+                                                        .clip(CircleShape)
+                                                        .background(MaterialTheme.colorScheme.primary),
+                                                    contentAlignment = Alignment.Center
+                                                ) {
+                                                    Icon(
+                                                        imageVector = Icons.Default.Check,
+                                                        contentDescription = "Selected",
+                                                        tint = Color.White,
+                                                        modifier = Modifier.size(14.dp)
+                                                    )
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+
+                            // Asr Juristic Method
+                            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                                Text(
+                                    text = "আসরের মাযহাবী মানদণ্ড (Asr Juristic Method)",
+                                    fontWeight = FontWeight.SemiBold,
+                                    fontSize = 13.sp,
+                                    color = MaterialTheme.colorScheme.onSurface
                                 )
+
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
+                                    val isHanafi = currentConfig.isHanafiAsr
+                                    // Hanafi Chip/Card
+                                    Surface(
+                                        color = if (isHanafi) MaterialTheme.colorScheme.primary.copy(alpha = 0.12f) else MaterialTheme.colorScheme.surface,
+                                        shape = RoundedCornerShape(12.dp),
+                                        border = BorderStroke(
+                                            width = if (isHanafi) 1.5.dp else 1.dp,
+                                            color = if (isHanafi) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
+                                        ),
+                                        modifier = Modifier
+                                            .weight(1f)
+                                            .clickable {
+                                                onToggleHanafi(true)
+                                                onSelectAsrMethod(AsrJuristicMethod.HANAFI)
+                                            }
+                                    ) {
+                                        Column(modifier = Modifier.padding(10.dp)) {
+                                            Row(
+                                                modifier = Modifier.fillMaxWidth(),
+                                                horizontalArrangement = Arrangement.SpaceBetween,
+                                                verticalAlignment = Alignment.CenterVertically
+                                            ) {
+                                                Text(
+                                                    text = "হানাফী মাযহাব",
+                                                    fontWeight = FontWeight.Bold,
+                                                    fontSize = 12.5.sp,
+                                                    color = if (isHanafi) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
+                                                )
+                                                if (isHanafi) {
+                                                    Icon(
+                                                        imageVector = Icons.Default.Check,
+                                                        contentDescription = null,
+                                                        tint = MaterialTheme.colorScheme.primary,
+                                                        modifier = Modifier.size(15.dp)
+                                                    )
+                                                }
+                                            }
+                                            Spacer(modifier = Modifier.height(2.dp))
+                                            Text(
+                                                text = "ছায়া দ্বিগুণ হলে আসর (মিসলে সানি)",
+                                                fontSize = 10.5.sp,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                            )
+                                        }
+                                    }
+
+                                    // Shafi'i / Standard Chip/Card
+                                    Surface(
+                                        color = if (!isHanafi) MaterialTheme.colorScheme.primary.copy(alpha = 0.12f) else MaterialTheme.colorScheme.surface,
+                                        shape = RoundedCornerShape(12.dp),
+                                        border = BorderStroke(
+                                            width = if (!isHanafi) 1.5.dp else 1.dp,
+                                            color = if (!isHanafi) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
+                                        ),
+                                        modifier = Modifier
+                                            .weight(1f)
+                                            .clickable {
+                                                onToggleHanafi(false)
+                                                onSelectAsrMethod(AsrJuristicMethod.STANDARD)
+                                            }
+                                    ) {
+                                        Column(modifier = Modifier.padding(10.dp)) {
+                                            Row(
+                                                modifier = Modifier.fillMaxWidth(),
+                                                horizontalArrangement = Arrangement.SpaceBetween,
+                                                verticalAlignment = Alignment.CenterVertically
+                                            ) {
+                                                Text(
+                                                    text = "শাফেয়ী / সাধারণ",
+                                                    fontWeight = FontWeight.Bold,
+                                                    fontSize = 12.5.sp,
+                                                    color = if (!isHanafi) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
+                                                )
+                                                if (!isHanafi) {
+                                                    Icon(
+                                                        imageVector = Icons.Default.Check,
+                                                        contentDescription = null,
+                                                        tint = MaterialTheme.colorScheme.primary,
+                                                        modifier = Modifier.size(15.dp)
+                                                    )
+                                                }
+                                            }
+                                            Spacer(modifier = Modifier.height(2.dp))
+                                            Text(
+                                                text = "ছায়া এক গুণ হলে আসর (মিসলে আওয়াল)",
+                                                fontSize = 10.5.sp,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+
+                            // High Latitude Rule
+                            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                                Text(
+                                    text = "উচ্চ অক্ষাংশ সমন্বয় (High Latitude Rule)",
+                                    fontWeight = FontWeight.SemiBold,
+                                    fontSize = 13.sp,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                                LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                                    items(HighLatitudeRule.entries.toTypedArray()) { rule ->
+                                        val isRuleSelected = currentConfig.highLatitudeRule == rule
+                                        FilterChip(
+                                            selected = isRuleSelected,
+                                            onClick = { onSelectHighLatitudeRule(rule) },
+                                            label = { Text(rule.titleBn, fontSize = 11.5.sp) },
+                                            colors = FilterChipDefaults.filterChipColors(
+                                                selectedContainerColor = MaterialTheme.colorScheme.primary,
+                                                selectedLabelColor = Color.White
+                                            )
+                                        )
+                                    }
+                                }
                             }
 
                             // Minute Adjustment Slider / Buttons
@@ -1288,6 +1554,24 @@ fun SalatConfigDialog(
                                         Icon(Icons.Default.Add, contentDescription = "Plus", modifier = Modifier.size(16.dp))
                                     }
                                 }
+                            }
+
+                            // Reset to Standard Button
+                            OutlinedButton(
+                                onClick = onResetSalatPreferences,
+                                modifier = Modifier.fillMaxWidth(),
+                                shape = RoundedCornerShape(10.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Refresh,
+                                    contentDescription = "Reset",
+                                    modifier = Modifier.size(16.dp)
+                                )
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text(
+                                    text = "ডিফল্ট মানদণ্ড (করাচি ও হানাফী) সেট করুন",
+                                    fontSize = 12.sp
+                                )
                             }
                         }
                     }

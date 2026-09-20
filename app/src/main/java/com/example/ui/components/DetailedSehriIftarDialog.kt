@@ -170,7 +170,11 @@ fun DetailedSehriIftarDialog(
             latitude = salatConfig.latitude,
             longitude = salatConfig.longitude,
             locationNameBn = salatConfig.placeNameBn,
-            manualOffsetMinutes = salatConfig.manualOffsetMinutes
+            manualOffsetMinutes = salatConfig.manualOffsetMinutes,
+            calculationMethod = salatConfig.calculationMethod,
+            asrMethod = salatConfig.asrMethod,
+            highLatitudeRule = salatConfig.highLatitudeRule,
+            timezoneOffsetHours = salatConfig.timezoneOffsetHours
         )
     }
 
@@ -199,7 +203,11 @@ fun DetailedSehriIftarDialog(
                 latitude = salatConfig.latitude,
                 longitude = salatConfig.longitude,
                 locationNameBn = salatConfig.placeNameBn,
-                manualOffsetMinutes = salatConfig.manualOffsetMinutes
+                manualOffsetMinutes = salatConfig.manualOffsetMinutes,
+                calculationMethod = salatConfig.calculationMethod,
+                asrMethod = salatConfig.asrMethod,
+                highLatitudeRule = salatConfig.highLatitudeRule,
+                timezoneOffsetHours = salatConfig.timezoneOffsetHours
             )
             val sMins = st.prayerList.firstOrNull { it.id == "fajr" }?.timeMinutesFromMidnight ?: (4 * 60 + 20)
             val iMins = st.prayerList.firstOrNull { it.id == "maghrib" }?.timeMinutesFromMidnight ?: (18 * 60 + 15)

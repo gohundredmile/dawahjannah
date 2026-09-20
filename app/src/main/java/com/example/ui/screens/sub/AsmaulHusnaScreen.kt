@@ -34,6 +34,8 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.AutoAwesome
+import androidx.compose.material.icons.filled.Bookmark
+import androidx.compose.material.icons.filled.BookmarkBorder
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Search
@@ -78,18 +80,23 @@ import com.example.util.CalendarHelper
 fun AsmaulHusnaScreen(viewModel: MainViewModel) {
     val searchQuery by viewModel.asmaulHusnaSearch.collectAsState()
     val namesList by viewModel.filteredAsmaulHusna.collectAsState()
+    val bookmarkedIds by viewModel.bookmarkedIds.collectAsState()
     var selectedName by remember { mutableStateOf<AllahNameItem?>(null) }
 
     if (selectedName != null) {
+        val currentSelected = selectedName!!
+        val isBookmarked = bookmarkedIds.contains("allah_name_${currentSelected.number}")
         AllahNameDetailView(
-            item = selectedName!!,
+            item = currentSelected,
+            isBookmarked = isBookmarked,
+            onToggleBookmark = { viewModel.toggleBookmark(currentSelected) },
             onBack = { selectedName = null },
             onSelectNext = {
-                val nextIdx = (selectedName!!.number % AsmaulHusnaData.names.size)
+                val nextIdx = (currentSelected.number % AsmaulHusnaData.names.size)
                 selectedName = AsmaulHusnaData.names[nextIdx]
             },
             onSelectPrev = {
-                val prevIdx = if (selectedName!!.number <= 1) AsmaulHusnaData.names.size - 1 else selectedName!!.number - 2
+                val prevIdx = if (currentSelected.number <= 1) AsmaulHusnaData.names.size - 1 else currentSelected.number - 2
                 selectedName = AsmaulHusnaData.names[prevIdx]
             }
         )
@@ -175,8 +182,11 @@ fun AsmaulHusnaScreen(viewModel: MainViewModel) {
                 contentPadding = PaddingValues(top = 6.dp, bottom = 24.dp)
             ) {
                 items(namesList, key = { it.number }) { item ->
+                    val isBookmarked = bookmarkedIds.contains("allah_name_${item.number}")
                     AllahNameListItemRow(
                         item = item,
+                        isBookmarked = isBookmarked,
+                        onToggleBookmark = { viewModel.toggleBookmark(item) },
                         onClick = { selectedName = item }
                     )
                 }
@@ -188,6 +198,8 @@ fun AsmaulHusnaScreen(viewModel: MainViewModel) {
 @Composable
 private fun AllahNameListItemRow(
     item: AllahNameItem,
+    isBookmarked: Boolean = false,
+    onToggleBookmark: () -> Unit = {},
     onClick: () -> Unit
 ) {
     Card(
@@ -254,9 +266,11 @@ private fun AllahNameListItemRow(
 
                 Spacer(modifier = Modifier.height(6.dp))
 
-                // Fojilot action pill
+                // Fojilot action pill + Bookmark action
                 Row(
-                    verticalAlignment = Alignment.CenterVertically
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Surface(
                         shape = RoundedCornerShape(6.dp),
@@ -270,6 +284,18 @@ private fun AllahNameListItemRow(
                             modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
                         )
                     }
+
+                    IconButton(
+                        onClick = onToggleBookmark,
+                        modifier = Modifier.size(28.dp)
+                    ) {
+                        Icon(
+                            imageVector = if (isBookmarked) Icons.Default.Bookmark else Icons.Default.BookmarkBorder,
+                            contentDescription = "বুকমার্ক",
+                            tint = if (isBookmarked) IslamicGold else MaterialTheme.colorScheme.outline,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
                 }
             }
         }
@@ -279,6 +305,8 @@ private fun AllahNameListItemRow(
 @Composable
 fun AllahNameDetailView(
     item: AllahNameItem,
+    isBookmarked: Boolean = false,
+    onToggleBookmark: () -> Unit = {},
     onBack: () -> Unit,
     onSelectNext: () -> Unit,
     onSelectPrev: () -> Unit
@@ -322,6 +350,21 @@ fun AllahNameDetailView(
                 }
 
                 Row(verticalAlignment = Alignment.CenterVertically) {
+                    IconButton(onClick = {
+                        onToggleBookmark()
+                        Toast.makeText(
+                            context,
+                            if (isBookmarked) "বুকমার্ক থেকে সরানো হয়েছে" else "বুকমার্কে যুক্ত করা হয়েছে",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }) {
+                        Icon(
+                            imageVector = if (isBookmarked) Icons.Default.Bookmark else Icons.Default.BookmarkBorder,
+                            contentDescription = "Bookmark",
+                            tint = if (isBookmarked) IslamicGold else MaterialTheme.colorScheme.primary
+                        )
+                    }
+
                     IconButton(onClick = {
                         val shareText = """
                             |আসমাউল হুসনা: ${item.pronunciationBn} (${item.arabicName})

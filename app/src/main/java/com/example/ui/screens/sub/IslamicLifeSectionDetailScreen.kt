@@ -30,6 +30,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AutoAwesome
+import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.BookmarkBorder
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
@@ -58,6 +59,7 @@ import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -77,15 +79,19 @@ import com.example.ui.components.DawahTopAppBar
 import com.example.ui.components.LocalFontScaleController
 import com.example.ui.theme.IslamicGold
 import com.example.ui.theme.LocalArabicFontFamily
+import com.example.ui.theme.LocalBanglaFontFamily
+import com.example.ui.viewmodel.MainViewModel
 import com.example.util.CalendarHelper
 
 @Composable
 fun IslamicLifeSectionDetailScreen(
     section: IslamicLifeSection,
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    viewModel: MainViewModel? = null
 ) {
     BackHandler(onBack = onBack)
     val context = LocalContext.current
+    val bookmarkedIds: Set<String> = viewModel?.bookmarkedIds?.collectAsState(initial = emptySet<String>())?.value ?: emptySet()
 
     val sectionIcon = when (section.id) {
         "ruqyah_shariah_special" -> Icons.Default.Healing
@@ -653,7 +659,11 @@ fun IslamicLifeSectionDetailScreen(
                         item = item,
                         index = displayIndex,
                         fontScale = fontScale,
-                        isAuroraActive = showAurora
+                        isAuroraActive = showAurora,
+                        isBookmarked = bookmarkedIds.contains(item.id),
+                        onToggleBookmark = {
+                            viewModel?.toggleBookmark(item, section.titleBn)
+                        }
                     )
                 }
             }
@@ -671,7 +681,9 @@ private fun IslamicLifeDetailCard(
     item: IslamicLifeCardItem,
     index: Int,
     fontScale: Float = 1.0f,
-    isAuroraActive: Boolean = false
+    isAuroraActive: Boolean = false,
+    isBookmarked: Boolean = false,
+    onToggleBookmark: () -> Unit = {}
 ) {
     val context = LocalContext.current
     val itemSubtitle = item.subtitleBn.ifBlank { item.repetitionOrTimeBn }
@@ -739,6 +751,25 @@ private fun IslamicLifeDetailCard(
                 }
 
                 Row(verticalAlignment = Alignment.CenterVertically) {
+                    IconButton(
+                        onClick = {
+                            onToggleBookmark()
+                            Toast.makeText(
+                                context,
+                                if (isBookmarked) "বুকমার্ক থেকে সরানো হয়েছে" else "বুকমার্কে যুক্ত করা হয়েছে",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        },
+                        modifier = Modifier.size(36.dp)
+                    ) {
+                        Icon(
+                            imageVector = if (isBookmarked) Icons.Default.Bookmark else Icons.Default.BookmarkBorder,
+                            contentDescription = "বুকমার্ক",
+                            tint = if (isBookmarked) IslamicGold else MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+
                     IconButton(
                         onClick = {
                             val copyPayload = buildString {

@@ -8,6 +8,7 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -28,6 +29,9 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
+import com.example.R
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -527,11 +531,39 @@ fun SalatTimingVerticalCard(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .then(cardBgModifier)
-                .padding(horizontal = 13.dp, vertical = 9.dp)
+                .clip(cardShape)
+                .then(if (!isHighlighted) cardBgModifier else Modifier)
         ) {
+            if (isHighlighted) {
+                Image(
+                    painter = painterResource(id = R.drawable.img_islamic_header_wallpaper),
+                    contentDescription = null,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.matchParentSize()
+                )
+                Box(
+                    modifier = Modifier
+                        .matchParentSize()
+                        .background(
+                            Brush.horizontalGradient(
+                                listOf(
+                                    Color(0xFFC2410C).copy(alpha = 0.88f),
+                                    Color(0xFFEA580C).copy(alpha = 0.80f),
+                                    Color(0xFFB45309).copy(alpha = 0.86f)
+                                )
+                            )
+                        )
+                )
+                GlassTopHighlight(
+                    modifier = Modifier.align(Alignment.TopCenter),
+                    isDark = false,
+                    opacity = 0.45f
+                )
+            }
             Row(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 13.dp, vertical = 9.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -644,129 +676,154 @@ fun ForbiddenTimeVerticalCard(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val crimsonGradient = Brush.horizontalGradient(
-        listOf(
-            Color(0xFFE11D48),
-            Color(0xFFBE123C),
-            Color(0xFF881337)
-        )
-    )
-
     val isDark = isSystemInDarkTheme()
-    val effectMode = LocalScreenEffectMode.current
-    val isGlassMode = effectMode == ScreenEffectMode.GLASS
-    val cardShape = RoundedCornerShape(16.dp)
+    val cardShape = RoundedCornerShape(18.dp)
 
-    // Soft seamless crimson border without harsh white box outline
+    // Radiant Islamic border
     val cardBorder = BorderStroke(
-        0.9.dp,
-        Color(0xFFFDA4AF).copy(alpha = if (isDark) 0.35f else 0.25f)
+        1.2.dp,
+        Brush.horizontalGradient(
+            listOf(
+                Color(0xFFFDE047).copy(alpha = if (isDark) 0.60f else 0.50f),
+                Color(0xFFE11D48).copy(alpha = if (isDark) 0.50f else 0.35f),
+                Color(0xFFF59E0B).copy(alpha = if (isDark) 0.65f else 0.50f)
+            )
+        )
     )
 
     Surface(
         modifier = modifier
             .fillMaxWidth()
-            .clickable(onClick = onClick),
+            .clickable(onClick = onClick)
+            .shadow(elevation = 3.dp, shape = cardShape),
         shape = cardShape,
         color = Color.Transparent,
-        border = cardBorder,
-        shadowElevation = 1.dp
+        border = cardBorder
     ) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(crimsonGradient)
-                .padding(horizontal = 13.dp, vertical = 9.dp)
+                .clip(cardShape)
         ) {
+            // Outstanding Islamic Wallpaper Background
+            Image(
+                painter = painterResource(id = R.drawable.img_ramadan_moon_bg),
+                contentDescription = "সালাতের নিষিদ্ধ সময় ব্যাকগ্রাউন্ড",
+                contentScale = ContentScale.Crop,
+                modifier = Modifier.matchParentSize()
+            )
+
+            // Deep Atmospheric Velvet Twilight Scrim Overlay
+            Box(
+                modifier = Modifier
+                    .matchParentSize()
+                    .background(
+                        Brush.horizontalGradient(
+                            listOf(
+                                (if (isDark) Color(0xFF0F172A) else Color(0xFF1E1B4B)).copy(alpha = 0.82f),
+                                (if (isDark) Color(0xFF1E1B4B) else Color(0xFF312E81)).copy(alpha = 0.72f),
+                                (if (isDark) Color(0xFF3B0715) else Color(0xFF4C0519)).copy(alpha = 0.85f)
+                            )
+                        )
+                    )
+            )
+
+            // Specular glass top shimmer highlight
+            GlassTopHighlight(
+                modifier = Modifier.align(Alignment.TopCenter),
+                isDark = isDark,
+                opacity = 0.6f
+            )
+
             Row(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 14.dp, vertical = 11.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Left Side: Soft circular ambient glow + Title + Soft tag in one line
+                // Left Side: Soft circular ambient glow + Title + Subtitle + Soft tag
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.weight(1f, fill = false)
                 ) {
-                    // Soft, circular ambient glow badge (CircleShape with radial gradient tint) that integrates seamlessly
-                    Box(
-                        modifier = Modifier
-                            .size(32.dp)
-                            .background(
-                                Brush.radialGradient(
-                                    listOf(
-                                        Color(0xFFFDA4AF).copy(alpha = 0.35f),
-                                        Color(0xFFFDA4AF).copy(alpha = 0.12f),
-                                        Color.Transparent
-                                    )
-                                ),
-                                shape = CircleShape
-                            ),
-                        contentAlignment = Alignment.Center
+                    Surface(
+                        shape = CircleShape,
+                        color = Color(0xFFE11D48).copy(alpha = 0.30f),
+                        border = BorderStroke(1.dp, Color(0xFFFDA4AF).copy(alpha = 0.65f)),
+                        modifier = Modifier.size(36.dp)
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.AccessTime,
-                            contentDescription = null,
-                            tint = Color(0xFFFEF08A),
-                            modifier = Modifier.size(17.dp)
-                        )
+                        Box(contentAlignment = Alignment.Center) {
+                            Icon(
+                                imageVector = Icons.Default.AccessTime,
+                                contentDescription = null,
+                                tint = Color(0xFFFEF08A),
+                                modifier = Modifier.size(19.dp)
+                            )
+                        }
                     }
 
-                    Spacer(modifier = Modifier.width(9.dp))
+                    Spacer(modifier = Modifier.width(10.dp))
 
-                    Text(
-                        text = "সালাতের নিষিদ্ধ সময়",
-                        color = Color.White,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 15.sp
-                    )
-
-                    Spacer(modifier = Modifier.width(7.dp))
-
-                    // Soft seamless circular pill without harsh white rectangle border
-                    Box(
-                        modifier = Modifier
-                            .background(
-                                Color(0xFFFDA4AF).copy(alpha = 0.22f),
-                                shape = CircleShape
+                    Column {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(
+                                text = "সালাতের নিষিদ্ধ সময়",
+                                color = Color.White,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 15.sp
                             )
-                            .padding(horizontal = 7.dp, vertical = 2.dp)
-                    ) {
+
+                            Spacer(modifier = Modifier.width(8.dp))
+
+                            // Soft seamless pill tag
+                            Surface(
+                                shape = RoundedCornerShape(10.dp),
+                                color = Color(0xFFE11D48).copy(alpha = 0.45f),
+                                border = BorderStroke(0.8.dp, Color(0xFFFDA4AF).copy(alpha = 0.55f))
+                            ) {
+                                Text(
+                                    text = "৩টি সময়",
+                                    color = Color(0xFFFFF1F2),
+                                    fontSize = 9.5.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    modifier = Modifier.padding(horizontal = 7.dp, vertical = 2.dp)
+                                )
+                            }
+                        }
                         Text(
-                            text = "৩টি সময়",
-                            color = Color(0xFFFFF1F2),
-                            fontSize = 9.5.sp,
-                            fontWeight = FontWeight.Bold
+                            text = "সূর্যোদয়, দ্বিপ্রহর ও সূর্যাস্তের নিষিদ্ধ ওয়াক্ত",
+                            color = Color(0xFFCBD5E1),
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Medium
                         )
                     }
                 }
 
-                // Right Side: Warning or guide text + Chevron
-                Row(
-                    verticalAlignment = Alignment.CenterVertically
+                // Right Side: Guide text + Chevron Arrow marked glass pill
+                Surface(
+                    shape = RoundedCornerShape(20.dp),
+                    color = Color.Black.copy(alpha = 0.38f),
+                    border = BorderStroke(0.9.dp, Color(0xFFFDA4AF).copy(alpha = 0.55f))
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .background(
-                                Color(0xFF4C0519).copy(alpha = 0.55f),
-                                shape = CircleShape
-                            )
-                            .padding(horizontal = 8.dp, vertical = 2.5.dp)
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
                     ) {
                         Text(
                             text = "নিষিদ্ধ সময়সূচী",
                             fontSize = 10.5.sp,
-                            color = Color(0xFFFECDD3),
+                            color = Color(0xFFFEF08A),
                             fontWeight = FontWeight.Bold
                         )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Icon(
+                            imageVector = Icons.Default.ChevronRight,
+                            contentDescription = "বিস্তারিত",
+                            tint = Color.White,
+                            modifier = Modifier.size(16.dp)
+                        )
                     }
-                    Spacer(modifier = Modifier.width(5.dp))
-                    Icon(
-                        imageVector = Icons.Default.ChevronRight,
-                        contentDescription = "বিস্তারিত",
-                        tint = Color.White,
-                        modifier = Modifier.size(16.dp)
-                    )
                 }
             }
         }

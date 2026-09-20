@@ -23,6 +23,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AutoAwesome
+import androidx.compose.material.icons.filled.Bookmark
+import androidx.compose.material.icons.filled.BookmarkBorder
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.FindReplace
 import androidx.compose.material.icons.filled.FormatQuote
@@ -66,6 +68,7 @@ fun SurahBaqarahLastTwoScreen(
     val banglaFont = LocalBanglaFontFamily.current
 
     val dynamicSections by viewModel.islamicLifeSections.collectAsState()
+    val bookmarkedIds by viewModel.bookmarkedIds.collectAsState()
     val baqarahItems = dynamicSections.firstOrNull { it.id == "surah_baqarah_last_2" }?.items
         ?: IslamicLifeData.sections.firstOrNull { it.id == "surah_baqarah_last_2" }?.items
     val ayat285 = baqarahItems?.getOrNull(0)
@@ -158,12 +161,24 @@ fun SurahBaqarahLastTwoScreen(
             val a285Arabic = ayat285?.arabicText ?: "آمَنَ الرَّسُولُ بِمَا أُنزِلَ إِلَيْهِ مِن رَّبِّهِ وَالْمُؤْمِنُونَ ۚ كُلٌّ آمَنَ بِاللَّهِ وَمَلَائِكَتِهِ وَكُتُبِهِ وَرُسُلِهِ لَا نُفَرِّقُ بَيْنَ أَحَدٍ مِّن رُّسُلِهِ ۚ وَقَالُوا سَمِعْنَا وَأَطَعْنَا ۖ غُفْرَانَكَ رَبَّنَا وَإِلَيْكَ الْمَصِيرُ ﴿٢٨٥﴾"
             val a285Pronun = ayat285?.pronunciationBn ?: "আ-মানাররাছূলু বিমাউনঝিলা ইলাইহি মির রাব্বিহী ওয়াল মু’মিনূনা কুল্লুন আ-মানা বিল্লাহি ওয়া মালাইকাতিহী ওয়া কুতুবিহী ওয়া রুছুলিহী লা-নুফাররিকুবাইনা আহাদিম মির রুছুলিহী ওয়া কা-লূ ছামি‘না ওয়াআতা‘না গুফরা-নাকা রাব্বানা-ওয়া ইলাইকাল মাসীর।"
             val a285Meaning = ayat285?.meaningBn ?: "রাসূল তার নিকট তার রবের পক্ষ থেকে নাযিলকৃত বিষয়ের প্রতি ঈমান এনেছে, আর মুমিনগণও। প্রত্যেকে ঈমান এনেছে আল্লাহর উপর, তাঁর ফেরেশতাকুল, কিতাবসমূহ ও তাঁর রাসূলগণের উপর, আমরা তাঁর রাসূলগণের কারও মধ্যে তারতম্য করি না। আর তারা বলে, আমরা শুনলাম এবং মানলাম। হে আমাদের রব! আমরা আপনারই ক্ষমা প্রার্থনা করি, আর আপনার দিকেই প্রত্যাবর্তনস্থল।"
+            val isA285Bookmarked = ayat285?.let { bookmarkedIds.contains(it.id) } ?: false
 
             BaqarahAyatCard(
                 ayatNumber = a285Title,
                 arabicText = a285Arabic,
                 pronunciation = a285Pronun,
                 meaning = a285Meaning,
+                isBookmarked = isA285Bookmarked,
+                onToggleBookmark = {
+                    ayat285?.let {
+                        viewModel.toggleBookmark(it, "সূরা বাকারার শেষ দুই আয়াত")
+                        Toast.makeText(
+                            context,
+                            if (isA285Bookmarked) "বুকমার্ক থেকে সরানো হয়েছে" else "বুকমার্কে যুক্ত করা হয়েছে",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                },
                 onCopy = {
                     val textToCopy = "$a285Title\n\nমূল আরবীঃ\n$a285Arabic\n\nউচ্চারণঃ\n$a285Pronun\n\nঅনুবাদঃ\n$a285Meaning"
                     val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
@@ -176,15 +191,27 @@ fun SurahBaqarahLastTwoScreen(
         // Ayat 286 Card
         item {
             val a286Title = ayat286?.titleBn ?: "সূরা আল বাকারাহ - ২:২৮৬"
-            val a286Arabic = ayat286?.arabicText ?: "لَا يُكَلِّفُ اللَّهُ نَفْسًا إِلَّا وُسْعَهَا ۚ لَهَا مَا كَسَبَتْ وَعَلَيْهَا مَا اكْتَسَبَتْ ۗ رَبَّنَا لَا تُؤَاخِذْنَا إِن نَّسِينَا أَوْ أَخْطَأْنَا ۚ رَبَّنَا وَلَا تَحْمِلْ عَلَيْنَا إِصْرًا كَمَا حَمَلْتَهُ عَلَى الَّذِينَ مِن قَبْلِنَا ۚ رَبَّنَا وَلَا تُحَمِّلْنَا مَا لَا طَاقَةَ لَنَا بِهِ ۖ وَاعْفُ عَنَّا وَاغْفِرْ لَنَا وَارْحَمْنَا ۚ أَنتَ مَوْلَانَا فَانصُرْنَا عَلَى الْقَوْمِ الْكَافِرِينَ ﴿٢٨٦﴾"
+            val a286Arabic = ayat286?.arabicText ?: "لَا يُكَلِّفُ اللَّهُ نَفْسًا إِلَّا وُسْعَهَا ۚ لَهَا مَا كَسَبَتْ وَعَلَيْهَا مَا اكْتَسَبَتْ ۗ رَبَّنَا لَا تُؤَاخِذْنَا إِن نَّسِينَا أَوْ أَخْطَأْنَا ۚ رَبَّنَا وَلَا تَحْمِلْ عَلَيْنَا إِصْرًا كَمَا حَمَلْتَهُ عَلَى الَّذِينَ مِن قَبْلِنَا ۚ رَبَّنَا وَلَا تُحَمِّلْنَا مَا لَا طَاقَةَ লানা-বিহী ۖ وَاعْفُ عَنَّا وَاغْفِرْ لَنَا وَارْحَمْنَا ۚ أَنتَ مَوْلَانَا فَانصُرْنَا عَلَى الْقَوْمِ الْكَافِرِينَ ﴿٢٨٦﴾"
             val a286Pronun = ayat286?.pronunciationBn ?: "লা-ইউকালিলফুল্লা-হু নাফছান ইল্লা-উছ‘আহা-লাহা-মা কাছাবাত ওয়া ‘আলাইহা-মাকতাছাবাত রাব্বানা-লা-তুআ-খিযনা ইন নাছীনা-আও আখতা’না-রাব্বানা ওয়ালা-তাহমিল ‘আলাইনা-ইসরান কামা-হামালতাহূ আলাল্লাযীনা মিন কাবলিনা-রাব্বানা-ওয়ালা তুহাম্মিলনা-মা-লা-তা-কাতা লানা-বিহী ওয়া‘ফু‘আন্না-ওয়াগফিরলানা-ওয়ারহামনা-আনতা মাওলা-না-ফানসুরনা-‘আলাল কাওমিল কা-ফিরীন।"
             val a286Meaning = ayat286?.meaningBn ?: "\"আল্লাহ কোন ব্যক্তির উপর তার সাধ্যের অতিরিক্ত কিছু আরোপ করেন না, সে ভাল যা করেছে সে তার সওয়াব পাবে এবং স্বীয় মন্দ কৃতকর্মের জন্য সে নিজেই নিগ্রহ ভোগ করবে। হে আমাদের প্রতিপালক! আমরা যদি ভুলে যাই কিংবা ভুল করি, তাহলে আমাদেরকে পাকড়াও করো না, হে আমাদের প্রতিপালক! আমাদের আগের লোকেদের উপর যেমন গুরু-দায়িত্ব অর্পণ করেছিলে, আমাদের উপর তেমন দায়িত্ব অর্পণ করো না; হে আমাদের প্রতিপালক! যে ভার বহনের ক্ষমতা আমাদের নেই, এমন ভার আমাদের উপর চাপিয়ে দিও না, (ভুল-ত্রুটি উপেক্ষা করে) আমাদেরকে রেহাই দাও, আমাদেরকে ক্ষমা কর এবং আমাদের প্রতি দয়া কর; তুমিই আমাদের প্রতিপালক, কাজেই আমাদেরকে কাফিরদের উপর জয়যুক্ত কর।\""
+            val isA286Bookmarked = ayat286?.let { bookmarkedIds.contains(it.id) } ?: false
 
             BaqarahAyatCard(
                 ayatNumber = a286Title,
                 arabicText = a286Arabic,
                 pronunciation = a286Pronun,
                 meaning = a286Meaning,
+                isBookmarked = isA286Bookmarked,
+                onToggleBookmark = {
+                    ayat286?.let {
+                        viewModel.toggleBookmark(it, "সূরা বাকারার শেষ দুই আয়াত")
+                        Toast.makeText(
+                            context,
+                            if (isA286Bookmarked) "বুকমার্ক থেকে সরানো হয়েছে" else "বুকমার্কে যুক্ত করা হয়েছে",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                },
                 onCopy = {
                     val textToCopy = "$a286Title\n\nমূল আরবীঃ\n$a286Arabic\n\nউচ্চারণঃ\n$a286Pronun\n\nঅনুবাদঃ\n$a286Meaning"
                     val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
@@ -364,6 +391,8 @@ private fun BaqarahAyatCard(
     arabicText: String,
     pronunciation: String,
     meaning: String,
+    isBookmarked: Boolean = false,
+    onToggleBookmark: () -> Unit = {},
     onCopy: () -> Unit
 ) {
     val banglaFont = LocalBanglaFontFamily.current
@@ -401,16 +430,30 @@ private fun BaqarahAyatCard(
                     )
                 }
 
-                IconButton(
-                    onClick = onCopy,
-                    modifier = Modifier.size(36.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.ContentCopy,
-                        contentDescription = "কপি করুন",
-                        tint = IslamicGold,
-                        modifier = Modifier.size(20.dp)
-                    )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    IconButton(
+                        onClick = onToggleBookmark,
+                        modifier = Modifier.size(36.dp)
+                    ) {
+                        Icon(
+                            imageVector = if (isBookmarked) Icons.Default.Bookmark else Icons.Default.BookmarkBorder,
+                            contentDescription = "বুকমার্ক",
+                            tint = if (isBookmarked) IslamicGold else MaterialTheme.colorScheme.outline,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+
+                    IconButton(
+                        onClick = onCopy,
+                        modifier = Modifier.size(36.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.ContentCopy,
+                            contentDescription = "কপি করুন",
+                            tint = IslamicGold,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
                 }
             }
 

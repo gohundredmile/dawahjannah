@@ -12,9 +12,19 @@ data class ChecklistRecord(
     val scorePercentage: Int = 0
 )
 
-@Entity(tableName = "dua_bookmarks")
+@Entity(tableName = "app_bookmarks")
 data class BookmarkEntity(
-    @PrimaryKey val duaId: String,
+    @PrimaryKey val id: String,
+    val type: String = "DUA", // DUA, ISLAMIC_LIFE, DUROOD, HEALTH_DUA, ALLAH_NAME, GENERAL
+    val titleBn: String = "",
+    val subtitleBn: String = "",
+    val categoryBn: String = "মাসনুন দোয়া",
+    val arabicText: String = "",
+    val pronunciationBn: String = "",
+    val meaningBn: String = "",
+    val detailsBn: String = "",
+    val referenceBn: String = "",
+    val targetScreen: String = "",
     val bookmarkedAt: Long = System.currentTimeMillis()
 )
 

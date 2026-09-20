@@ -22,6 +22,8 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Bookmark
+import androidx.compose.material.icons.filled.BookmarkBorder
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Healing
 import androidx.compose.material.icons.filled.Share
@@ -57,6 +59,7 @@ fun HealthDuaScreen(
 ) {
     val selectedCategory by viewModel.healthCategoryFilter.collectAsState()
     val list by viewModel.filteredHealthDuas.collectAsState()
+    val bookmarkedIds by viewModel.bookmarkedIds.collectAsState()
 
     Column(modifier = Modifier.fillMaxSize()) {
         Row(
@@ -106,7 +109,13 @@ fun HealthDuaScreen(
             }
 
             items(list, key = { it.id }) { item ->
-                HealthDuaCard(item = item, context = context)
+                val isBookmarked = bookmarkedIds.contains(item.id)
+                HealthDuaCard(
+                    item = item,
+                    context = context,
+                    isBookmarked = isBookmarked,
+                    onToggleBookmark = { viewModel.toggleBookmark(item) }
+                )
                 Spacer(modifier = Modifier.height(12.dp))
             }
         }
@@ -114,7 +123,12 @@ fun HealthDuaScreen(
 }
 
 @Composable
-private fun HealthDuaCard(item: HealthDuaItem, context: Context) {
+private fun HealthDuaCard(
+    item: HealthDuaItem,
+    context: Context,
+    isBookmarked: Boolean = false,
+    onToggleBookmark: () -> Unit = {}
+) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
@@ -144,7 +158,26 @@ private fun HealthDuaCard(item: HealthDuaItem, context: Context) {
                     )
                 }
 
-                Row {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    IconButton(
+                        onClick = {
+                            onToggleBookmark()
+                            Toast.makeText(
+                                context,
+                                if (isBookmarked) "বুকমার্ক থেকে সরানো হয়েছে" else "বুকমার্কে যুক্ত করা হয়েছে",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        },
+                        modifier = Modifier.size(32.dp)
+                    ) {
+                        Icon(
+                            imageVector = if (isBookmarked) Icons.Default.Bookmark else Icons.Default.BookmarkBorder,
+                            contentDescription = "Bookmark",
+                            tint = if (isBookmarked) IslamicGold else MaterialTheme.colorScheme.outline,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+
                     IconButton(
                         onClick = {
                             val text = """

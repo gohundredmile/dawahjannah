@@ -40,6 +40,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.ui.theme.IslamicGold
+import com.example.util.CalendarHelper
 
 /**
  * Data representation for an app feature.
@@ -126,7 +127,7 @@ fun TopFeaturesSection(
                                 border = BorderStroke(0.8.dp, if (isDark) Color(0xFF38BDF8).copy(alpha = 0.4f) else MaterialTheme.colorScheme.primary.copy(alpha = 0.35f))
                             ) {
                                 Text(
-                                    text = "৮টি সেবা",
+                                    text = "${CalendarHelper.toBanglaNumber(topFeatures.size)}টি সেবা",
                                     fontSize = 10.sp,
                                     fontWeight = FontWeight.Bold,
                                     color = if (isDark) Color(0xFF38BDF8) else MaterialTheme.colorScheme.primary,
@@ -176,37 +177,31 @@ fun TopFeaturesSection(
 
             Spacer(modifier = Modifier.height(14.dp))
 
-            // Two Lines of Feature Icons (4 in first row, 4 in second row)
-            val firstRow = topFeatures.take(4)
-            val secondRow = topFeatures.drop(4).take(4)
+            // Grid of Feature Icons (Clean rows: 3 per row for 9 items, 4 per row for 8 items)
+            val chunkSize = if (topFeatures.size % 3 == 0) 3 else 4
+            val rows = topFeatures.chunked(chunkSize)
 
-            // Line 1
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                firstRow.forEach { item ->
-                    FeatureIconCell(
-                        item = item,
-                        isDark = isDark,
-                        modifier = Modifier.weight(1f)
-                    )
+            rows.forEachIndexed { rowIndex, rowItems ->
+                if (rowIndex > 0) {
+                    Spacer(modifier = Modifier.height(12.dp))
                 }
-            }
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            // Line 2
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                secondRow.forEach { item ->
-                    FeatureIconCell(
-                        item = item,
-                        isDark = isDark,
-                        modifier = Modifier.weight(1f)
-                    )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    rowItems.forEach { item ->
+                        FeatureIconCell(
+                            item = item,
+                            isDark = isDark,
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+                    val emptySlots = chunkSize - rowItems.size
+                    if (emptySlots > 0) {
+                        repeat(emptySlots) {
+                            Spacer(modifier = Modifier.weight(1f))
+                        }
+                    }
                 }
             }
         }

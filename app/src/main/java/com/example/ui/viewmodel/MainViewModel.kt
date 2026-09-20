@@ -24,6 +24,7 @@ import com.example.data.datasource.WisdomApiService
 import com.example.data.remote.GitHubReleaseInfo
 import com.example.data.remote.GitHubUpdateManager
 import com.example.data.remote.RemoteContentBundle
+import com.example.data.local.entity.BookmarkEntity
 import com.example.data.local.entity.ChecklistRecord
 import com.example.data.local.entity.ScratchpadNote
 import com.example.data.model.AllahNameItem
@@ -34,6 +35,7 @@ import com.example.data.model.BanglaFontWeight
 import com.example.data.model.DailyInspiration
 import com.example.data.model.DailyWisdomState
 import com.example.data.model.DuaItem
+import com.example.data.model.DuroodAmolItem
 import com.example.data.model.DuroodItem
 import com.example.data.model.EnglishFont
 import com.example.data.model.FlipClockFont
@@ -84,7 +86,8 @@ enum class AppTab(val index: Int, val titleBn: String) {
     DUA(1, "মাসনুন\u00A0দোয়া"),
     ROUTINE(2, "২৪ঘণ্টা\u00A0আমল"),
     TASBIH(3, "তাসবিহ"),
-    MORE(4, "ইসলামী\u00A0জীবন")
+    FAVORITE(4, "প্রিয়"),
+    MORE(5, "ইসলামী\u00A0জীবন")
 }
 
 enum class MoreSubScreen(val titleBn: String) {
@@ -360,6 +363,24 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         emptyList()
     )
 
+    val allBookmarks: StateFlow<List<BookmarkEntity>> = repository.getAllBookmarks().stateIn(
+        viewModelScope,
+        SharingStarted.WhileSubscribed(5000),
+        emptyList()
+    )
+
+    val bookmarkedIds: StateFlow<Set<String>> = repository.getBookmarkedIds()
+        .map { it.toSet() }
+        .stateIn(
+            viewModelScope,
+            SharingStarted.WhileSubscribed(5000),
+            emptySet()
+        )
+
+    fun isBookmarked(id: String): Boolean {
+        return bookmarkedIds.value.contains(id)
+    }
+
     fun setDuaSearchQuery(query: String) {
         _duaSearchQuery.value = query
     }
@@ -368,7 +389,155 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         _selectedDuaCategory.value = category
     }
 
+    fun toggleBookmark(dua: DuaItem) {
+        val isCurrentlyBookmarked = bookmarkedIds.value.contains(dua.id)
+        val entity = BookmarkEntity(
+            id = dua.id,
+            type = "DUA",
+            titleBn = dua.titleBn,
+            subtitleBn = dua.categoryNameBn,
+            categoryBn = "মাসনুন দোয়া",
+            arabicText = dua.arabicText,
+            pronunciationBn = dua.pronunciationBn,
+            meaningBn = dua.meaningBn,
+            detailsBn = dua.virtuesBn,
+            referenceBn = dua.reference,
+            targetScreen = "DUA"
+        )
+        viewModelScope.launch {
+            repository.toggleBookmark(entity, isCurrentlyBookmarked)
+        }
+    }
+
+    fun toggleBookmark(item: IslamicLifeCardItem, sectionTitle: String = "ইসলামী জীবন") {
+        val isCurrentlyBookmarked = bookmarkedIds.value.contains(item.id)
+        val entity = BookmarkEntity(
+            id = item.id,
+            type = "ISLAMIC_LIFE",
+            titleBn = item.titleBn,
+            subtitleBn = item.subtitleBn.ifBlank { item.repetitionOrTimeBn },
+            categoryBn = sectionTitle,
+            arabicText = item.arabicText,
+            pronunciationBn = item.pronunciationBn,
+            meaningBn = item.meaningBn,
+            detailsBn = if (item.detailsBn.isNotBlank()) item.detailsBn else item.fojilotBn,
+            referenceBn = item.referenceBn,
+            targetScreen = "ISLAMIC_LIFE"
+        )
+        viewModelScope.launch {
+            repository.toggleBookmark(entity, isCurrentlyBookmarked)
+        }
+    }
+
+    fun toggleBookmark(item: HealthDuaItem) {
+        val isCurrentlyBookmarked = bookmarkedIds.value.contains(item.id)
+        val entity = BookmarkEntity(
+            id = item.id,
+            type = "HEALTH_DUA",
+            titleBn = item.titleBn,
+            subtitleBn = item.ailmentCategoryBn,
+            categoryBn = "রোগ নিরাময় ও শিফা",
+            arabicText = item.arabicText,
+            pronunciationBn = item.pronunciationBn,
+            meaningBn = item.meaningBn,
+            detailsBn = item.amalMethodBn,
+            referenceBn = item.reference,
+            targetScreen = "HEALTH_DUAS"
+        )
+        viewModelScope.launch {
+            repository.toggleBookmark(entity, isCurrentlyBookmarked)
+        }
+    }
+
+    fun toggleBookmark(item: DuroodItem, sectionTitle: String = "দরূদ ও আমল") {
+        val isCurrentlyBookmarked = bookmarkedIds.value.contains(item.id)
+        val entity = BookmarkEntity(
+            id = item.id,
+            type = "DUROOD",
+            titleBn = item.titleBn,
+            subtitleBn = "দরূদ শরীফ",
+            categoryBn = sectionTitle,
+            arabicText = item.arabicText,
+            pronunciationBn = item.pronunciationBn,
+            meaningBn = item.meaningBn,
+            detailsBn = item.virtuesRewardBn.ifBlank { item.backgroundStoryBn },
+            referenceBn = item.reference,
+            targetScreen = "DUROOD_AMOL"
+        )
+        viewModelScope.launch {
+            repository.toggleBookmark(entity, isCurrentlyBookmarked)
+        }
+    }
+
+    fun toggleBookmark(item: DuroodAmolItem) {
+        val isCurrentlyBookmarked = bookmarkedIds.value.contains(item.id)
+        val entity = BookmarkEntity(
+            id = item.id,
+            type = "DUROOD",
+            titleBn = item.titleBn,
+            subtitleBn = item.serialNoBn,
+            categoryBn = "দরূদ ও আমল",
+            arabicText = item.arabicText,
+            pronunciationBn = item.pronunciationBn,
+            meaningBn = item.meaningBn,
+            detailsBn = item.virtuesBn.ifBlank { item.notesBn },
+            referenceBn = item.referenceBn,
+            targetScreen = "DUROOD_AMOL"
+        )
+        viewModelScope.launch {
+            repository.toggleBookmark(entity, isCurrentlyBookmarked)
+        }
+    }
+
+    fun toggleBookmark(item: AllahNameItem) {
+        val id = "allah_name_${item.number}"
+        val isCurrentlyBookmarked = bookmarkedIds.value.contains(id)
+        val entity = BookmarkEntity(
+            id = id,
+            type = "ALLAH_NAME",
+            titleBn = "${item.pronunciationBn} (${item.meaningBn})",
+            subtitleBn = "আল্লাহ্‌র পবিত্র নাম #${CalendarHelper.toBanglaNumber(item.number)}",
+            categoryBn = "আসমাউল হুসনা",
+            arabicText = item.arabicName,
+            pronunciationBn = item.pronunciationBn,
+            meaningBn = item.meaningBn,
+            detailsBn = buildString {
+                if (item.fojilotBn.isNotBlank()) appendLine(item.fojilotBn)
+                if (item.spiritualReflectionBn.isNotBlank()) appendLine(item.spiritualReflectionBn)
+                if (item.amolBn.isNotBlank()) appendLine(item.amolBn)
+            }.trim(),
+            referenceBn = "তিরমিযী ও সহীহ হাদিস",
+            targetScreen = "NAMES_OF_ALLAH"
+        )
+        viewModelScope.launch {
+            repository.toggleBookmark(entity, isCurrentlyBookmarked)
+        }
+    }
+
+    fun toggleBookmark(entity: BookmarkEntity) {
+        val isCurrentlyBookmarked = bookmarkedIds.value.contains(entity.id)
+        viewModelScope.launch {
+            repository.toggleBookmark(entity, isCurrentlyBookmarked)
+        }
+    }
+
+    fun removeBookmarkById(id: String) {
+        viewModelScope.launch {
+            repository.removeBookmark(id)
+        }
+    }
+
     fun toggleBookmark(duaId: String, currentStatus: Boolean) {
+        val dua = (downloadedDuas.value + DuaVaultData.duas).find { it.id == duaId }
+        if (dua != null) {
+            toggleBookmark(dua)
+            return
+        }
+        val lifeItem = _islamicLifeSections.value.flatMap { it.items }.find { it.id == duaId }
+        if (lifeItem != null) {
+            toggleBookmark(lifeItem)
+            return
+        }
         viewModelScope.launch {
             repository.toggleBookmark(duaId, currentStatus)
         }

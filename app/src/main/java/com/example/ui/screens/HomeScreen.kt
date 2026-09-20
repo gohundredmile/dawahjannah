@@ -216,12 +216,25 @@ fun HomeScreen(
                 isTopEight = true,
                 onClickAction = { viewModel.selectTab(AppTab.ROUTINE) }
             ),
-            // ৯. আল্লাহর ৯৯ নাম
+            // ৯. তাসবিহ
+            HomeFeatureItem(
+                id = "tasbih",
+                serialNumberBn = "০৯",
+                titleBn = "৯. তাসবিহ",
+                shortTitleBn = "তাসবিহ",
+                subtitleBn = "ডিজিটাল তাসবিহ কাউন্টার, তাসবিহ তালিকা ও জিকির",
+                categoryBn = "দো‘আ ও যিকির",
+                icon = Icons.Default.TouchApp,
+                iconColor = IslamicGold,
+                isTopEight = true,
+                onClickAction = { viewModel.selectTab(AppTab.TASBIH) }
+            ),
+            // ১০. আল্লাহর ৯৯ নাম
             HomeFeatureItem(
                 id = "names_of_allah",
-                serialNumberBn = "০৯",
-                titleBn = "৯. আল্লাহর ৯৯ নাম",
-                shortTitleBn = "৯. আল্লাহর ৯৯ নাম",
+                serialNumberBn = "১০",
+                titleBn = "১০. আল্লাহর ৯৯ নাম",
+                shortTitleBn = "আল্লাহর ৯৯ নাম",
                 subtitleBn = "আসমাউল হুসনা, বাংলা অর্থ, গুরুত্ব ও প্রয়োজনভিত্তিক খাস আমল",
                 categoryBn = "আল্লাহর নাম",
                 icon = Icons.Default.Star,
@@ -230,11 +243,11 @@ fun HomeScreen(
                     showAllahNamesOptionsDialog = true
                 }
             ),
-            // ১০. রুকিয়াহ
+            // ১১. রুকিয়াহ
             HomeFeatureItem(
                 id = "ruqyah",
-                serialNumberBn = "১০",
-                titleBn = "১০. রুকিয়াহ",
+                serialNumberBn = "১১",
+                titleBn = "১১. রুকিয়াহ",
                 shortTitleBn = "রুকিয়াহ",
                 subtitleBn = "বদনজর, যাদু-টোনা, রোগব্যাধি ও শয়তানের অনিষ্ট থেকে সহীহ শিফা",
                 categoryBn = "সুরক্ষা ও শিফা",
@@ -248,11 +261,11 @@ fun HomeScreen(
                     }
                 }
             ),
-            // ১১. সালাত ও দোয়া
+            // ১২. সালাত ও দোয়া
             HomeFeatureItem(
                 id = "salat_and_dua",
-                serialNumberBn = "১১",
-                titleBn = "১১. সালাত ও দোয়া",
+                serialNumberBn = "১২",
+                titleBn = "১২. সালাত ও দোয়া",
                 shortTitleBn = "সালাত ও দোয়া",
                 subtitleBn = "সিজদা, কুনুত, সালামের পূর্বে ও ৫ ওয়াক্ত সালাতের সহীহ দো‘আ",
                 categoryBn = "সালাত ও দো‘আ",
@@ -266,11 +279,11 @@ fun HomeScreen(
                     }
                 }
             ),
-            // ১২. সকাল - সন্ধার দোয়া
+            // ১৩. সকাল - সন্ধ্যার দোয়া
             HomeFeatureItem(
                 id = "morning_evening_dua",
-                serialNumberBn = "১২",
-                titleBn = "১২. সকাল - সন্ধ্যার দোয়া",
+                serialNumberBn = "১৩",
+                titleBn = "১৩. সকাল - সন্ধ্যার দোয়া",
                 shortTitleBn = "সকাল-সন্ধ্যা",
                 subtitleBn = "ফজর ও মাগরিব পরবর্তী শ্রেষ্ঠ সহীহ মাসনূন যিকর ও সুরক্ষার আমল",
                 categoryBn = "দো‘আ ও যিকির",
@@ -284,11 +297,11 @@ fun HomeScreen(
                     }
                 }
             ),
-            // ১৩. জুম্মাবারের আমল
+            // ১৪. জুম্মাবারের আমল
             HomeFeatureItem(
                 id = "jummah_amal",
-                serialNumberBn = "১৩",
-                titleBn = "১৩. জুম্মাবারের আমল",
+                serialNumberBn = "১৪",
+                titleBn = "১৪. জুম্মাবারের আমল",
                 shortTitleBn = "জুম্মার আমল",
                 subtitleBn = "জুমার দিনের ৫টি শ্রেষ্ঠ সুন্নাত, সূরা কাহাফ ও সা’আতুল ইজাবাহ",
                 categoryBn = "বিশেষ আমল",
@@ -302,11 +315,11 @@ fun HomeScreen(
                     }
                 }
             ),
-            // ১৪. তওবা ও ইস্তিগফার
+            // ১৫. তওবা ও ইস্তিগফার
             HomeFeatureItem(
                 id = "tawbah_istighfar",
-                serialNumberBn = "১৪",
-                titleBn = "১৪. তওবা ও ইস্তিগফার",
+                serialNumberBn = "১৫",
+                titleBn = "১৫. তওবা ও ইস্তিগফার",
                 shortTitleBn = "তওবা-ইস্তিগফার",
                 subtitleBn = "সাইয়্যেদুল ইস্তিগফার, গুনাহ মাফের ৪টি শর্ত ও সংকট মুক্তির আমল",
                 categoryBn = "ক্ষমা ও আমল",
@@ -321,11 +334,11 @@ fun HomeScreen(
                     }
                 }
             ),
-            // ১৫. দুরুদ শরিফের আমল
+            // ১৬. দুরুদ শরিফের আমল
             HomeFeatureItem(
                 id = "durood_amol",
-                serialNumberBn = "১৫",
-                titleBn = "১৫. দুরুদ শরিফের আমল",
+                serialNumberBn = "১৬",
+                titleBn = "১৬. দুরুদ শরিফের আমল",
                 shortTitleBn = "দুরুদ শরিফ",
                 subtitleBn = "দরূদে ইব্রাহীম, তাজ, নারিয়া ও বরকতময় দরূদের সুবিশাল সংকলন",
                 categoryBn = "দরূদ ও মহব্বত",
@@ -336,11 +349,11 @@ fun HomeScreen(
                     viewModel.navigateToMoreSubScreen(MoreSubScreen.DUROOD_AMOL)
                 }
             ),
-            // ১৬. আরবী ফন্ট সমাধান টুল
+            // ১৭. আরবী ফন্ট সমাধান টুল
             HomeFeatureItem(
                 id = "arabic_font_tool",
-                serialNumberBn = "১৬",
-                titleBn = "১৬. আরবী ফন্ট সমাধান টুল",
+                serialNumberBn = "১৭",
+                titleBn = "১৭. আরবী ফন্ট সমাধান টুল",
                 shortTitleBn = "আরবী ফন্ট টুল",
                 subtitleBn = "ভাঙ্গা শব্দ ও ভুল হরকত সনাক্তকরণ ও বিশুদ্ধ আরবী ফন্ট কনভার্টার",
                 categoryBn = "ইসলামিক টুলস",
@@ -351,11 +364,11 @@ fun HomeScreen(
                     viewModel.navigateToMoreSubScreen(MoreSubScreen.AYAT_DETECTOR_SOLVER)
                 }
             ),
-            // ১৭. ইসমে আজম
+            // ১৮. ইসমে আজম
             HomeFeatureItem(
                 id = "isme_azam",
-                serialNumberBn = "১৭",
-                titleBn = "১৭. ইসমে আজম",
+                serialNumberBn = "১৮",
+                titleBn = "১৮. ইসমে আজম",
                 shortTitleBn = "ইসমে আজম",
                 subtitleBn = "দো‘আ কবুলের শ্রেষ্ঠ ইসমে আজম, সহীহ হাদিসের আমল ও নিয়মাবলী",
                 categoryBn = "দো‘আ কবুল",
@@ -439,10 +452,10 @@ fun HomeScreen(
             }
         }
 
-        // 2.5 টপ ফিচার (Top Features Section - 8 items in 2 lines + 'আরও / More')
+        // 2.5 টপ ফিচার (Top Features Section - 9 items in 3x3 grid + 'আরও / More')
         item {
             TopFeaturesSection(
-                topFeatures = allAppFeatures.take(8),
+                topFeatures = allAppFeatures.take(9),
                 onOpenAllFeatures = { showAllFeaturesDialog = true }
             )
         }

@@ -21,6 +21,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Bookmark
+import androidx.compose.material.icons.filled.BookmarkBorder
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.Card
@@ -32,6 +34,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -50,6 +54,7 @@ fun DuroodScreen(
     context: Context = LocalContext.current
 ) {
     val items = viewModel.duroodList
+    val bookmarkedIds by viewModel.bookmarkedIds.collectAsState()
 
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
@@ -71,14 +76,32 @@ fun DuroodScreen(
         }
 
         items(items, key = { it.id }) { item ->
-            DuroodCard(item = item, context = context)
+            val isBookmarked = bookmarkedIds.contains(item.id)
+            DuroodCard(
+                item = item,
+                isBookmarked = isBookmarked,
+                onToggleBookmark = {
+                    viewModel.toggleBookmark(item, "দরূদ ও ইস্তিগফার")
+                    Toast.makeText(
+                        context,
+                        if (isBookmarked) "বুকমার্ক থেকে সরানো হয়েছে" else "বুকমার্কে যুক্ত করা হয়েছে",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                },
+                context = context
+            )
             Spacer(modifier = Modifier.height(12.dp))
         }
     }
 }
 
 @Composable
-private fun DuroodCard(item: DuroodItem, context: Context) {
+private fun DuroodCard(
+    item: DuroodItem,
+    isBookmarked: Boolean = false,
+    onToggleBookmark: () -> Unit = {},
+    context: Context
+) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
@@ -103,7 +126,19 @@ private fun DuroodCard(item: DuroodItem, context: Context) {
                     modifier = Modifier.weight(1f)
                 )
 
-                Row {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    IconButton(
+                        onClick = onToggleBookmark,
+                        modifier = Modifier.size(32.dp)
+                    ) {
+                        Icon(
+                            imageVector = if (isBookmarked) Icons.Default.Bookmark else Icons.Default.BookmarkBorder,
+                            contentDescription = "বুকমার্ক",
+                            tint = if (isBookmarked) IslamicGold else MaterialTheme.colorScheme.outline,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+
                     IconButton(
                         onClick = {
                             val text = """

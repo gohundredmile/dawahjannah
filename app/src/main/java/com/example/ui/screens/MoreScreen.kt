@@ -85,7 +85,8 @@ fun MoreScreen(
             section?.let {
                 IslamicLifeSectionDetailScreen(
                     section = it,
-                    onBack = { viewModel.navigateBackToMore() }
+                    onBack = { viewModel.navigateBackToMore() },
+                    viewModel = viewModel
                 )
             }
         } else {

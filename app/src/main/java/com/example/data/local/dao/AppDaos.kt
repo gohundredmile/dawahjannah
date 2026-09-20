@@ -27,17 +27,20 @@ interface ChecklistDao {
 
 @Dao
 interface BookmarkDao {
-    @Query("SELECT duaId FROM dua_bookmarks")
+    @Query("SELECT * FROM app_bookmarks ORDER BY bookmarkedAt DESC")
+    fun getAllBookmarks(): Flow<List<BookmarkEntity>>
+
+    @Query("SELECT id FROM app_bookmarks")
     fun getAllBookmarkedIds(): Flow<List<String>>
 
-    @Query("SELECT EXISTS(SELECT 1 FROM dua_bookmarks WHERE duaId = :duaId)")
-    fun isBookmarked(duaId: String): Flow<Boolean>
+    @Query("SELECT EXISTS(SELECT 1 FROM app_bookmarks WHERE id = :id)")
+    fun isBookmarked(id: String): Flow<Boolean>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun addBookmark(bookmark: BookmarkEntity)
 
-    @Query("DELETE FROM dua_bookmarks WHERE duaId = :duaId")
-    suspend fun removeBookmark(duaId: String)
+    @Query("DELETE FROM app_bookmarks WHERE id = :id")
+    suspend fun removeBookmark(id: String)
 }
 
 @Dao

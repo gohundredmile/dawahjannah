@@ -44,6 +44,7 @@ import com.example.ui.components.HomeIslamicTopAppBar
 import com.example.ui.components.LiveAuroraWallpaperBackground
 import com.example.ui.components.LocalFontScaleController
 import com.example.ui.components.LocalScreenEffectMode
+import com.example.ui.screens.FavoriteScreen
 import com.example.ui.screens.HomeScreen
 import com.example.ui.screens.MasnunDuaScreen
 import com.example.ui.screens.MoreScreen
@@ -140,6 +141,7 @@ class MainActivity : ComponentActivity() {
                                         AppTab.DUA -> "মাসনুন দোয়া"
                                         AppTab.ROUTINE -> "২৪ ঘণ্টার সুন্নাত আমল"
                                         AppTab.TASBIH -> "ডিজিটাল তাসবিহ ও জিকির"
+                                        AppTab.FAVORITE -> "প্রিয় দু'আ ও আমল (বুকমার্ক)"
                                         AppTab.MORE -> "ইসলামী জীবন"
                                         else -> "দা'ওয়াহ টু জান্নাহ্"
                                     },
@@ -184,6 +186,10 @@ class MainActivity : ComponentActivity() {
                                     contentPadding = innerPadding
                                 )
                                 AppTab.TASBIH -> TasbihScreen(
+                                    viewModel = viewModel,
+                                    contentPadding = innerPadding
+                                )
+                                AppTab.FAVORITE -> FavoriteScreen(
                                     viewModel = viewModel,
                                     contentPadding = innerPadding
                                 )

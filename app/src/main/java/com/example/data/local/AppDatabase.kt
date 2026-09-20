@@ -13,7 +13,7 @@ import com.example.data.local.entity.ScratchpadNote
 
 @Database(
     entities = [ChecklistRecord::class, BookmarkEntity::class, ScratchpadNote::class],
-    version = 1,
+    version = 2,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {

@@ -134,13 +134,34 @@ class AppRepository(private val context: Context) {
     }
 
     // BOOKMARKS
+    fun getAllBookmarks(): Flow<List<BookmarkEntity>> = bookmarkDao.getAllBookmarks()
+
+    fun getBookmarkedIds(): Flow<List<String>> = bookmarkDao.getAllBookmarkedIds()
+
+    // Backwards compatibility for existing dua bookmark flow
     fun getBookmarkedDuaIds(): Flow<List<String>> = bookmarkDao.getAllBookmarkedIds()
+
+    suspend fun addBookmark(bookmark: BookmarkEntity) {
+        bookmarkDao.addBookmark(bookmark)
+    }
+
+    suspend fun removeBookmark(id: String) {
+        bookmarkDao.removeBookmark(id)
+    }
+
+    suspend fun toggleBookmark(bookmark: BookmarkEntity, isCurrentlyBookmarked: Boolean) {
+        if (isCurrentlyBookmarked) {
+            bookmarkDao.removeBookmark(bookmark.id)
+        } else {
+            bookmarkDao.addBookmark(bookmark.copy(bookmarkedAt = System.currentTimeMillis()))
+        }
+    }
 
     suspend fun toggleBookmark(duaId: String, isBookmarked: Boolean) {
         if (isBookmarked) {
             bookmarkDao.removeBookmark(duaId)
         } else {
-            bookmarkDao.addBookmark(BookmarkEntity(duaId = duaId))
+            bookmarkDao.addBookmark(BookmarkEntity(id = duaId))
         }
     }
 

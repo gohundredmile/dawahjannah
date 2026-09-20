@@ -29,6 +29,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.AccessTime
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.automirrored.filled.ArrowForwardIos
 import androidx.compose.material.icons.filled.FontDownload
@@ -41,6 +42,7 @@ import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.TouchApp
 import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material.icons.outlined.AccessTime
+import androidx.compose.material.icons.outlined.BookmarkBorder
 import androidx.compose.material.icons.outlined.CheckCircleOutline
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.MenuBook
@@ -688,22 +690,6 @@ fun DawahBottomNavigationBar(
             )
 
             NavigationBarItem(
-                selected = currentTab == AppTab.DUA,
-                onClick = { onTabSelected(AppTab.DUA) },
-                alwaysShowLabel = true,
-                icon = {
-                    Icon(
-                        imageVector = if (currentTab == AppTab.DUA) Icons.Filled.MenuBook else Icons.Outlined.MenuBook,
-                        contentDescription = "Masnun Dua"
-                    )
-                },
-                label = {
-                    BottomTabItemLabel(AppTab.DUA.titleBn, currentTab == AppTab.DUA)
-                },
-                colors = navItemColors
-            )
-
-            NavigationBarItem(
                 selected = currentTab == AppTab.ROUTINE,
                 onClick = { onTabSelected(AppTab.ROUTINE) },
                 alwaysShowLabel = true,
@@ -715,22 +701,6 @@ fun DawahBottomNavigationBar(
                 },
                 label = {
                     BottomTabItemLabel(AppTab.ROUTINE.titleBn, currentTab == AppTab.ROUTINE)
-                },
-                colors = navItemColors
-            )
-
-            NavigationBarItem(
-                selected = currentTab == AppTab.TASBIH,
-                onClick = { onTabSelected(AppTab.TASBIH) },
-                alwaysShowLabel = true,
-                icon = {
-                    Icon(
-                        imageVector = if (currentTab == AppTab.TASBIH) Icons.Filled.TouchApp else Icons.Outlined.TouchApp,
-                        contentDescription = "Tasbih"
-                    )
-                },
-                label = {
-                    BottomTabItemLabel(AppTab.TASBIH.titleBn, currentTab == AppTab.TASBIH)
                 },
                 colors = navItemColors
             )

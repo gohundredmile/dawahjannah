@@ -42,6 +42,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.AutoAwesome
+import androidx.compose.material.icons.filled.Bookmark
+import androidx.compose.material.icons.filled.BookmarkBorder
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.ContentCopy
@@ -66,6 +68,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
@@ -114,6 +117,7 @@ fun DuroodAmolFullScreen(
     var selectedTabIndex by rememberSaveable { mutableIntStateOf(0) }
     var isSearchActive by rememberSaveable { mutableStateOf(false) }
     var searchQuery by rememberSaveable { mutableStateOf("") }
+    val bookmarkedIds by viewModel.bookmarkedIds.collectAsState()
 
     // Repetition counter map for each card
     val cardCounters = remember { mutableStateMapOf<String, Int>() }
@@ -430,6 +434,7 @@ fun DuroodAmolFullScreen(
                     }
 
                     items(items, key = { it.id }) { item ->
+                        val isBookmarked = bookmarkedIds.contains(item.id)
                         DuroodCard(
                             item = item,
                             fontScale = fontScale,
@@ -442,7 +447,9 @@ fun DuroodAmolFullScreen(
                             onResetCounter = {
                                 cardCounters[item.id] = 0
                             },
-                            context = context
+                            context = context,
+                            isBookmarked = isBookmarked,
+                            onToggleBookmark = { viewModel.toggleBookmark(item) }
                         )
                         Spacer(modifier = Modifier.height(14.dp))
                     }
@@ -492,6 +499,7 @@ fun DuroodAmolFullScreen(
                     }
 
                     items(items, key = { it.id }) { item ->
+                        val isBookmarked = bookmarkedIds.contains(item.id)
                         DuroodCard(
                             item = item,
                             fontScale = fontScale,
@@ -504,7 +512,9 @@ fun DuroodAmolFullScreen(
                             onResetCounter = {
                                 cardCounters[item.id] = 0
                             },
-                            context = context
+                            context = context,
+                            isBookmarked = isBookmarked,
+                            onToggleBookmark = { viewModel.toggleBookmark(item) }
                         )
                         Spacer(modifier = Modifier.height(14.dp))
                     }
@@ -532,6 +542,7 @@ fun DuroodAmolFullScreen(
                     }
 
                     items(items, key = { it.id }) { item ->
+                        val isBookmarked = bookmarkedIds.contains(item.id)
                         DuroodCard(
                             item = item,
                             fontScale = fontScale,
@@ -544,7 +555,9 @@ fun DuroodAmolFullScreen(
                             onResetCounter = {
                                 cardCounters[item.id] = 0
                             },
-                            context = context
+                            context = context,
+                            isBookmarked = isBookmarked,
+                            onToggleBookmark = { viewModel.toggleBookmark(item) }
                         )
                         Spacer(modifier = Modifier.height(14.dp))
                     }
@@ -572,6 +585,7 @@ fun DuroodAmolFullScreen(
                     }
 
                     items(items, key = { it.id }) { item ->
+                        val isBookmarked = bookmarkedIds.contains(item.id)
                         DuroodCard(
                             item = item,
                             fontScale = fontScale,
@@ -584,7 +598,9 @@ fun DuroodAmolFullScreen(
                             onResetCounter = {
                                 cardCounters[item.id] = 0
                             },
-                            context = context
+                            context = context,
+                            isBookmarked = isBookmarked,
+                            onToggleBookmark = { viewModel.toggleBookmark(item) }
                         )
                         Spacer(modifier = Modifier.height(14.dp))
                     }
@@ -808,7 +824,9 @@ private fun DuroodCard(
     counter: Int,
     onIncrementCounter: () -> Unit,
     onResetCounter: () -> Unit,
-    context: Context
+    context: Context,
+    isBookmarked: Boolean = false,
+    onToggleBookmark: () -> Unit = {}
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -855,6 +873,26 @@ private fun DuroodCard(
                     fontFamily = LocalAppFontFamily.current,
                     modifier = Modifier.weight(1f)
                 )
+
+                // Bookmark Action Button
+                IconButton(
+                    onClick = {
+                        onToggleBookmark()
+                        Toast.makeText(
+                            context,
+                            if (isBookmarked) "বুকমার্ক থেকে সরানো হয়েছে" else "বুকমার্কে যুক্ত করা হয়েছে",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    },
+                    modifier = Modifier.size(36.dp)
+                ) {
+                    Icon(
+                        imageVector = if (isBookmarked) Icons.Default.Bookmark else Icons.Default.BookmarkBorder,
+                        contentDescription = "বুকমার্ক",
+                        tint = if (isBookmarked) IslamicGold else Color(0xFF059669),
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
 
                 // Copy Action Button
                 IconButton(

@@ -71,6 +71,8 @@ class AppRepository(private val context: Context) {
         val KEY_AURORA_PARTICLES = booleanPreferencesKey("aurora_particles")
         val KEY_AURORA_CONTOURS = booleanPreferencesKey("aurora_contours")
         val KEY_AURORA_RAYS = booleanPreferencesKey("aurora_rays")
+        val KEY_EXPLORE_FEATURE_ORDER = stringPreferencesKey("explore_feature_order")
+        val KEY_EXPLORE_SORT_MODE = stringPreferencesKey("explore_sort_mode")
     }
 
     fun getTodayDateString(): String {
@@ -508,6 +510,34 @@ class AppRepository(private val context: Context) {
     suspend fun setAuroraParticles(show: Boolean) {
         context.dataStore.edit { prefs ->
             prefs[KEY_AURORA_PARTICLES] = show
+        }
+    }
+
+    // EXPLORE FEATURE CUSTOMIZATION & RELOCATION
+    val exploreFeatureOrderFlow: Flow<String> = context.dataStore.data.map { prefs ->
+        prefs[KEY_EXPLORE_FEATURE_ORDER] ?: ""
+    }
+
+    val exploreSortModeFlow: Flow<String> = context.dataStore.data.map { prefs ->
+        prefs[KEY_EXPLORE_SORT_MODE] ?: "DEFAULT"
+    }
+
+    suspend fun setExploreFeatureOrder(orderCsv: String) {
+        context.dataStore.edit { prefs ->
+            prefs[KEY_EXPLORE_FEATURE_ORDER] = orderCsv
+        }
+    }
+
+    suspend fun setExploreSortMode(mode: String) {
+        context.dataStore.edit { prefs ->
+            prefs[KEY_EXPLORE_SORT_MODE] = mode
+        }
+    }
+
+    suspend fun resetExploreOrder() {
+        context.dataStore.edit { prefs ->
+            prefs.remove(KEY_EXPLORE_FEATURE_ORDER)
+            prefs[KEY_EXPLORE_SORT_MODE] = "DEFAULT"
         }
     }
 }

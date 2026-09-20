@@ -1062,6 +1062,37 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch { repository.setAuroraParticles(show) }
     }
 
+    // EXPLORE FEATURE CUSTOMIZATION & RELOCATION
+    val exploreFeatureOrder: StateFlow<String> = repository.exploreFeatureOrderFlow.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = ""
+    )
+
+    val exploreSortMode: StateFlow<String> = repository.exploreSortModeFlow.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = "DEFAULT"
+    )
+
+    fun saveExploreFeatureOrder(orderedIds: List<String>) {
+        viewModelScope.launch {
+            repository.setExploreFeatureOrder(orderedIds.joinToString(","))
+        }
+    }
+
+    fun setExploreSortMode(mode: String) {
+        viewModelScope.launch {
+            repository.setExploreSortMode(mode)
+        }
+    }
+
+    fun resetExploreOrder() {
+        viewModelScope.launch {
+            repository.resetExploreOrder()
+        }
+    }
+
     // IN-APP PUSH UPDATE & GITHUB RELEASES ENGINE
     private val _updateAlertMessage = MutableStateFlow<String?>(null)
     val updateAlertMessage = _updateAlertMessage.asStateFlow()

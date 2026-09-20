@@ -34,6 +34,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowForwardIos
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Stars
+import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -76,6 +77,9 @@ import com.example.ui.theme.IslamicGold
 @Composable
 fun AllFeaturesDialog(
     features: List<HomeFeatureItem>,
+    defaultFeatures: List<HomeFeatureItem> = features,
+    currentSortMode: String = "DEFAULT",
+    onUpdateOrder: (List<String>, String) -> Unit = { _, _ -> },
     onDismiss: () -> Unit
 ) {
     Dialog(
@@ -88,6 +92,7 @@ fun AllFeaturesDialog(
         val isDark = isSystemInDarkTheme()
         var searchQuery by remember { mutableStateOf("") }
         var selectedCategory by remember { mutableStateOf("সবগুলো") }
+        var showCustomizeDialog by remember { mutableStateOf(false) }
 
         val categories = remember {
             listOf("সবগুলো", "সালাত ও সময়", "দো‘আ ও আমল", "জীবন ও টুলস")
@@ -213,26 +218,60 @@ fun AllFeaturesDialog(
                                 )
                             }
                             Text(
-                                text = "দা'ওয়াহ টু জান্নাহর ১৭টি প্রিমিয়াম বিভাগ",
+                                text = "দা'ওয়াহ টু জান্নাহর ${features.size}টি প্রিমিয়াম বিভাগ ও আমল",
                                 fontSize = 11.5.sp,
                                 color = if (isDark) Color(0xFFD1D5DB) else MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
                     }
 
-                    // Count Badge
-                    Surface(
-                        shape = RoundedCornerShape(12.dp),
-                        color = IslamicGold.copy(alpha = if (isDark) 0.2f else 0.15f),
-                        border = BorderStroke(1.dp, IslamicGold.copy(alpha = 0.65f))
+                    // Action Buttons Row: [সাজান / কাস্টমাইজ] + [কাউন্ট ব্যাজ]
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        Text(
-                            text = "${features.size}টি ফিচার",
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = if (isDark) IslamicGold else Color(0xFF92400E),
-                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp)
-                        )
+                        Surface(
+                            shape = RoundedCornerShape(12.dp),
+                            color = if (isDark) Color(0xFF0F4737) else Color(0xFFCEECE6),
+                            border = BorderStroke(1.dp, if (isDark) Color(0xFF2DD4BF) else Color(0xFF14B8A6)),
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(12.dp))
+                                .clickable { showCustomizeDialog = true }
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = 9.dp, vertical = 6.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Tune,
+                                    contentDescription = "সাজান",
+                                    tint = if (isDark) Color(0xFF5EEAD4) else Color(0xFF0F4E3E),
+                                    modifier = Modifier.size(14.dp)
+                                )
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text(
+                                    text = "সাজান",
+                                    fontSize = 11.5.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = if (isDark) Color(0xFF5EEAD4) else Color(0xFF0F4E3E)
+                                )
+                            }
+                        }
+
+                        // Count Badge
+                        Surface(
+                            shape = RoundedCornerShape(12.dp),
+                            color = IslamicGold.copy(alpha = if (isDark) 0.2f else 0.15f),
+                            border = BorderStroke(1.dp, IslamicGold.copy(alpha = 0.65f))
+                        ) {
+                            Text(
+                                text = "${features.size}টি ফিচার",
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = if (isDark) IslamicGold else Color(0xFF92400E),
+                                modifier = Modifier.padding(horizontal = 9.dp, vertical = 6.dp)
+                            )
+                        }
                     }
                 }
 
@@ -379,6 +418,18 @@ fun AllFeaturesDialog(
                     }
                 }
             }
+        }
+
+        if (showCustomizeDialog) {
+            CustomizeExploreDialog(
+                initialFeatures = features,
+                defaultFeatures = defaultFeatures,
+                currentSortMode = currentSortMode,
+                onSaveOrder = { orderIds, mode ->
+                    onUpdateOrder(orderIds, mode)
+                },
+                onDismiss = { showCustomizeDialog = false }
+            )
         }
     }
 }

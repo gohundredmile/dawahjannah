@@ -102,9 +102,9 @@ fun AllFeaturesDialog(
             features.filter { item ->
                 val matchesCategory = when (selectedCategory) {
                     "সবগুলো" -> true
-                    "সালাত ও সময়" -> item.categoryBn.contains("সালাত") || item.categoryBn.contains("সময়") || item.categoryBn.contains("রমজান")
+                    "সালাত ও সময়" -> item.categoryBn.contains("সালাত") || item.categoryBn.contains("সময়") || item.categoryBn.contains("রমজান") || item.categoryBn.contains("রমাদান") || item.categoryBn.contains("সিয়াম")
                     "দো‘আ ও আমল" -> item.categoryBn.contains("দো‘আ") || item.categoryBn.contains("আমল") || item.categoryBn.contains("দরূদ") || item.categoryBn.contains("ক্ষমা")
-                    "জীবন ও টুলস" -> item.categoryBn.contains("টুলস") || item.categoryBn.contains("নাম") || item.categoryBn.contains("সুরক্ষা") || item.categoryBn.contains("ক্যালেন্ডার")
+                    "জীবন ও টুলস" -> item.categoryBn.contains("টুলস") || item.categoryBn.contains("নাম") || item.categoryBn.contains("সুরক্ষা") || item.categoryBn.contains("ক্যালেন্ডার") || item.categoryBn.contains("জ্ঞান")
                     else -> true
                 }
                 val matchesQuery = searchQuery.isBlank() ||

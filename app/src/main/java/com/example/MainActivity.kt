@@ -6,11 +6,6 @@ import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.EnterTransition
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
@@ -27,15 +22,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Density
 import com.example.data.model.FontSizeScale
-import com.example.ui.components.AppOpeningSplashScreen
 import com.example.ui.components.AuroraThemesModal
 import com.example.ui.components.BanglaFontSettingsDialog
 import com.example.ui.components.DawahBottomNavigationBar
@@ -81,7 +73,6 @@ class MainActivity : ComponentActivity() {
             val auroraConfig by viewModel.auroraConfig.collectAsState()
             val currentTab by viewModel.currentTab.collectAsState()
             val currentMoreSub by viewModel.moreSubScreen.collectAsState()
-            var showWelcomeSplash by remember { mutableStateOf(true) }
 
             val baseDensity = LocalDensity.current
             val adjustedDensity = Density(
@@ -231,19 +222,6 @@ class MainActivity : ComponentActivity() {
                                 onDismiss = { viewModel.closeThemeModal() }
                             )
                         }
-                    }
-
-                    // Full-Screen Immersive Welcome / Splash Screen Overlay
-                    // Placed outside Scaffold so TopBar & BottomBar are completely hidden
-                    AnimatedVisibility(
-                        visible = showWelcomeSplash,
-                        enter = EnterTransition.None,
-                        exit = fadeOut(animationSpec = tween(500)),
-                        modifier = Modifier.fillMaxSize()
-                    ) {
-                        AppOpeningSplashScreen(
-                            onFinish = { showWelcomeSplash = false }
-                        )
                     }
                     }
                 }

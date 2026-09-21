@@ -34,6 +34,7 @@ import androidx.compose.material.icons.filled.SelfImprovement
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.TouchApp
 import androidx.compose.material.icons.filled.VolumeOff
+import androidx.compose.material.icons.filled.VolumeUp
 import androidx.compose.material.icons.filled.WbSunny
 import androidx.compose.material.icons.filled.WorkspacePremium
 import androidx.compose.material3.Card
@@ -83,13 +84,16 @@ import com.example.ui.theme.IslamicGold
 import com.example.ui.viewmodel.AppTab
 import com.example.ui.viewmodel.MainViewModel
 import com.example.ui.viewmodel.MoreSubScreen
+import androidx.compose.ui.platform.LocalContext
 import com.example.util.CalendarHelper
+import com.example.util.NamazModeManager
 
 @Composable
 fun HomeScreen(
     viewModel: MainViewModel,
     contentPadding: PaddingValues
 ) {
+    val context = LocalContext.current
     val tripleCalendar by viewModel.tripleCalendar.collectAsState()
     val prayerStatus by viewModel.prayerStatus.collectAsState()
     val wisdomState by viewModel.wisdomState.collectAsState()
@@ -119,7 +123,9 @@ fun HomeScreen(
     val exploreSortMode by viewModel.exploreSortMode.collectAsState()
 
     // Full 21 Features list with default order matching user's specimen
-    val allAppFeatures = remember(prayerStatus, salatConfig, scorecardCompletedCount, scorecardStreak) {
+    val allAppFeatures = remember(prayerStatus, salatConfig, scorecardCompletedCount, scorecardStreak, showNamazModeDialog) {
+        val isNamazModeActiveNow = NamazModeManager.isNamazModeActive(context)
+        val namazMinutesLeft = NamazModeManager.getRemainingMinutes(context)
         listOf(
             // ১. তাসবিহ
             HomeFeatureItem(
@@ -205,10 +211,14 @@ fun HomeScreen(
                 serialNumberBn = "০৭",
                 titleBn = "৭. নামাজ মোড",
                 shortTitleBn = "নামাজ মোড",
-                subtitleBn = "নামাজে মোবাইল স্বয়ংক্রিয় সাইলেন্ট মোড ও ওয়াক্ত রিমাইন্ডার",
+                subtitleBn = if (isNamazModeActiveNow) {
+                    "নামাজ মোড সক্রিয় (ফোন সাইলেন্ট • বাকি ${CalendarHelper.toBanglaNumber(namazMinutesLeft)} মি.)"
+                } else {
+                    "নামাজে মোবাইল স্বয়ংক্রিয় সাইলেন্ট মোড ও ওয়াক্ত রিমাইন্ডার"
+                },
                 categoryBn = "সালাত ও সময়",
-                icon = Icons.Default.VolumeOff,
-                iconColor = Color(0xFFE11D48),
+                icon = if (isNamazModeActiveNow) Icons.Default.VolumeOff else Icons.Default.VolumeUp,
+                iconColor = if (isNamazModeActiveNow) IslamicGold else Color(0xFFE11D48),
                 isTopEight = true,
                 onClickAction = { showNamazModeDialog = true }
             ),

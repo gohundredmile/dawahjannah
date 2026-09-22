@@ -117,7 +117,10 @@ fun MoreScreen(
     } else {
         val dynamicSections by viewModel.islamicLifeSections.collectAsState()
         val visibleSections = remember(dynamicSections) {
-            dynamicSections.filterNot { ExcludedIslamicLifeTopics.isExcluded(it.titleBn) }
+            val nonExcluded = dynamicSections.filterNot { ExcludedIslamicLifeTopics.isExcluded(it.titleBn) }
+            val ismeAzamSections = nonExcluded.filter { it.id == "isme_azam" || it.id == "hadith_isme_azam" }
+            val otherSections = nonExcluded.filterNot { it.id == "isme_azam" || it.id == "hadith_isme_azam" }
+            ismeAzamSections + otherSections
         }
         val salamSec = viewModel.getIslamicLifeSection("salam_before")
         val farzSec = viewModel.getIslamicLifeSection("farz_after")
@@ -161,6 +164,44 @@ fun MoreScreen(
                     }
                 }
                 Spacer(modifier = Modifier.height(16.dp))
+            }
+
+            // Featured: Isme Azam (★★★ইসমে আজম★★★) - Start with this heading as requested
+            val ismeAzamSec = viewModel.getIslamicLifeSection("isme_azam")
+            item {
+                val countBn = CalendarHelper.toBanglaNumber(ismeAzamSec?.items?.size ?: 12)
+                MoreFeatureItem(
+                    title = "★★★ইসমে আজম★★★",
+                    subtitle = "ইসমে আজম কি? ★★★ হাদিসে বর্ণীত সঠিক ইসমে আজম ও ইসমে আজমের ফজিলত",
+                    icon = Icons.Default.Star,
+                    iconTint = IslamicGold,
+                    badge = "${countBn}টি সহীহ আমল • শ্রেষ্ঠ দোয়া",
+                    onClick = {
+                        (viewModel.getIslamicLifeSection("isme_azam") ?: IslamicLifeData.sections.find { it.id == "isme_azam" })?.let {
+                            viewModel.openIslamicLifeSection(it)
+                        }
+                    }
+                )
+                Spacer(modifier = Modifier.height(10.dp))
+            }
+
+            // Featured: Hadith Isme Azam (★★★ হাদিসে বর্ণীত সঠিক ইসমে আজম)
+            val hadithIsmeSec = viewModel.getIslamicLifeSection("hadith_isme_azam")
+            item {
+                val countBn = CalendarHelper.toBanglaNumber(hadithIsmeSec?.items?.size ?: 10)
+                MoreFeatureItem(
+                    title = "★★★ হাদিসে বর্ণীত সঠিক ইসমে আজম",
+                    subtitle = "ইসমে আজম কি? ৩টি বিশুদ্ধ হাদীসে বর্ণিত ইসমে আযম, উচ্চারণ, অর্থ ও ফজিলত",
+                    icon = Icons.Default.AutoAwesome,
+                    iconTint = IslamicGold,
+                    badge = "${countBn}টি সহীহ হাদিস • নতুন সংকলন",
+                    onClick = {
+                        (viewModel.getIslamicLifeSection("hadith_isme_azam") ?: viewModel.getIslamicLifeSection("isme_azam") ?: IslamicLifeData.sections.find { it.id == "hadith_isme_azam" || it.id == "isme_azam" })?.let {
+                            viewModel.openIslamicLifeSection(it)
+                        }
+                    }
+                )
+                Spacer(modifier = Modifier.height(10.dp))
             }
 
             // Featured: Ruqyah Special (★★★রুকিয়াহ - Ruqyah★★★)
@@ -361,23 +402,6 @@ fun MoreScreen(
                     badge = "বিশেষ আমল • নতুন",
                     onClick = {
                         (viewModel.getIslamicLifeSection("night_awaken") ?: IslamicLifeData.sections.find { it.id == "night_awaken" })?.let {
-                            viewModel.openIslamicLifeSection(it)
-                        }
-                    }
-                )
-                Spacer(modifier = Modifier.height(10.dp))
-            }
-
-            // Featured: Isme Azam (★★★ইসমে আজম★★★)
-            item {
-                MoreFeatureItem(
-                    title = "★★★ইসমে আজম★★★",
-                    subtitle = "ইসমে আজম কি? হাদিসে বর্ণিত সঠিক ইসমে আজম ও ইসমে আজমের ফজিলত",
-                    icon = Icons.Default.Star,
-                    iconTint = IslamicGold,
-                    badge = "শ্রেষ্ঠ দোয়া • নতুন",
-                    onClick = {
-                        (viewModel.getIslamicLifeSection("isme_azam") ?: IslamicLifeData.sections.find { it.id == "isme_azam" })?.let {
                             viewModel.openIslamicLifeSection(it)
                         }
                     }

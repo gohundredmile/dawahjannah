@@ -166,24 +166,11 @@ fun HomeScreen(
                 isTopEight = true,
                 onClickAction = { showTripleCalendarDialog = true }
             ),
-            // ৪. আর্টিকেলস
-            HomeFeatureItem(
-                id = "articles",
-                serialNumberBn = "০৪",
-                titleBn = "৪. আর্টিকেলস",
-                shortTitleBn = "আর্টিকেলস",
-                subtitleBn = "নির্ভরযোগ্য ইসলামিক প্রবন্ধ, মাসআলা ও জীবনবিধান",
-                categoryBn = "ইসলামিক জ্ঞান",
-                icon = Icons.Default.Article,
-                iconColor = Color(0xFFEA580C),
-                isTopEight = true,
-                onClickAction = { viewModel.selectTab(AppTab.MORE) }
-            ),
-            // ৫. রমাদান
+            // ৪. রমাদান
             HomeFeatureItem(
                 id = "ramadan_schedule",
-                serialNumberBn = "০৫",
-                titleBn = "৫. রমাদান",
+                serialNumberBn = "০৪",
+                titleBn = "৪. রমাদান",
                 shortTitleBn = "রমাদান",
                 subtitleBn = "লাইভ চাঁদ দেখা, ৩০ দিনের রোজা, তারাবীহ ও হিজরি ক্যালেন্ডার",
                 categoryBn = "সিয়াম ও রমাদান",
@@ -192,11 +179,11 @@ fun HomeScreen(
                 isTopEight = true,
                 onClickAction = { showRamadanSchedule = true }
             ),
-            // ৬. নামাজ গাইড
+            // ৫. নামাজ গাইড
             HomeFeatureItem(
                 id = "namaz_guide",
-                serialNumberBn = "০৬",
-                titleBn = "৬. নামাজ গাইড",
+                serialNumberBn = "০৫",
+                titleBn = "৫. নামাজ গাইড",
                 shortTitleBn = "নামাজ গাইড",
                 subtitleBn = "সহীহ সালাত শিক্ষা, ওয়াক্ত, সঠিক রাকাত ও ধারাবাহিক নিয়মাবলী",
                 categoryBn = "সালাত ও সময়",
@@ -205,11 +192,11 @@ fun HomeScreen(
                 isTopEight = true,
                 onClickAction = { showNamazGuideDialog = true }
             ),
-            // ৭. নামাজ মোড
+            // ৬. নামাজ মোড
             HomeFeatureItem(
                 id = "namaz_mode",
-                serialNumberBn = "০৭",
-                titleBn = "৭. নামাজ মোড",
+                serialNumberBn = "০৬",
+                titleBn = "৬. নামাজ মোড",
                 shortTitleBn = "নামাজ মোড",
                 subtitleBn = if (isNamazModeActiveNow) {
                     "নামাজ মোড সক্রিয় (ফোন সাইলেন্ট • বাকি ${CalendarHelper.toBanglaNumber(namazMinutesLeft)} মি.)"
@@ -222,11 +209,11 @@ fun HomeScreen(
                 isTopEight = true,
                 onClickAction = { showNamazModeDialog = true }
             ),
-            // ৮. ট্র্যাকার
+            // ৭. ট্র্যাকার
             HomeFeatureItem(
                 id = "tracker",
-                serialNumberBn = "০৮",
-                titleBn = "৮. ট্র্যাকার",
+                serialNumberBn = "০৭",
+                titleBn = "৭. ট্র্যাকার",
                 shortTitleBn = "ট্র্যাকার",
                 subtitleBn = "আজকের স্কোরকার্ড: ${CalendarHelper.toBanglaNumber(scorecardCompletedCount)}/${CalendarHelper.toBanglaNumber(scorecardTotal)} সম্পন্ন • ${CalendarHelper.toBanglaNumber(scorecardStreak)} দিন স্ট্রিক",
                 categoryBn = "আমল ট্র্যাকার",
@@ -235,17 +222,31 @@ fun HomeScreen(
                 isTopEight = true,
                 onClickAction = { viewModel.openScorecard() }
             ),
-            // ৯. সেহেরি ও ইফতারের সময়
+            // ৮. সেহেরি ও ইফতারের সময়
             HomeFeatureItem(
                 id = "sehri_iftar",
-                serialNumberBn = "০৯",
-                titleBn = "৯. সেহেরি ও ইফতারের সময়",
+                serialNumberBn = "০৮",
+                titleBn = "৮. সেহেরি ও ইফতারের সময়",
                 shortTitleBn = "সেহেরি-ইফতার",
                 subtitleBn = "প্রতিদিনের সেহরি, সূর্যোদয় ও ইফতারের পূর্ণাঙ্গ সময়সূচী",
                 categoryBn = "সিয়াম ও রমাদান",
                 icon = Icons.Default.NightsStay,
                 iconColor = Color(0xFF8B5CF6),
+                isTopEight = true,
                 onClickAction = { showDetailedSehriIftar = true }
+            ),
+            // ৯. আর্টিকেলস
+            HomeFeatureItem(
+                id = "articles",
+                serialNumberBn = "০৯",
+                titleBn = "৯. আর্টিকেলস",
+                shortTitleBn = "আর্টিকেলস",
+                subtitleBn = "নির্ভরযোগ্য ইসলামিক প্রবন্ধ, মাসআলা ও জীবনবিধান",
+                categoryBn = "ইসলামিক জ্ঞান",
+                icon = Icons.Default.Article,
+                iconColor = Color(0xFFEA580C),
+                isTopEight = false,
+                onClickAction = { viewModel.selectTab(AppTab.MORE) }
             ),
             // ১০. সালাতের সময়সূচী
             HomeFeatureItem(
@@ -516,7 +517,7 @@ fun HomeScreen(
         // 2.5 টপ ফিচার (Top Features Section - 8 items in 2x4 grid as per specimen + 'আরও / More')
         item {
             TopFeaturesSection(
-                topFeatures = orderedAppFeatures.take(8),
+                topFeatures = orderedAppFeatures.filter { it.id != "articles" }.take(8),
                 onOpenAllFeatures = { showAllFeaturesDialog = true }
             )
         }

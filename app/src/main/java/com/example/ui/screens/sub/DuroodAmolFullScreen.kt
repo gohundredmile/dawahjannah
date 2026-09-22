@@ -20,6 +20,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -105,7 +106,7 @@ import kotlinx.coroutines.launch
 import kotlin.math.cos
 import kotlin.math.sin
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun DuroodAmolFullScreen(
     viewModel: MainViewModel,
@@ -191,161 +192,181 @@ fun DuroodAmolFullScreen(
                 }
             )
 
-            // User Friendly Quick Controls Banner (Mirroring Tawba Istighfar controls banner)
-            Surface(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 4.dp),
-                shape = RoundedCornerShape(12.dp),
-                color = Color.White.copy(alpha = 0.88f),
-                border = BorderStroke(1.dp, IslamicGold.copy(alpha = 0.3f))
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 12.dp, vertical = 6.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            imageVector = Icons.Default.AutoAwesome,
-                            contentDescription = null,
-                            tint = IslamicGold,
-                            modifier = Modifier.size(16.dp)
-                        )
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Text(
-                            text = "লাইভ অরোরা: চালু",
-                            style = MaterialTheme.typography.labelSmall,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                    }
-
-                    Surface(
-                        shape = RoundedCornerShape(6.dp),
-                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
-                    ) {
-                        Text(
-                            text = "হরফের আকার: ${(fontScale * 100).toInt()}%",
-                            style = MaterialTheme.typography.labelSmall,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-                        )
-                    }
-                }
-            }
-
-            // COLLAPSIBLE SEARCH BAR
-            AnimatedVisibility(visible = isSearchActive) {
-                Surface(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 4.dp),
-                    color = Color.White.copy(alpha = 0.95f),
-                    shape = RoundedCornerShape(12.dp),
-                    border = BorderStroke(1.dp, Color(0xFFE5E7EB))
-                ) {
-                    OutlinedTextField(
-                        value = searchQuery,
-                        onValueChange = { searchQuery = it },
-                        placeholder = {
-                            Text(
-                                text = "দরূদের নাম বা ফজিলত খুঁজুন (যেমন: তাজ, নারিয়া, শিফা)...",
-                                fontSize = 13.sp,
-                                fontFamily = LocalAppFontFamily.current
-                            )
-                        },
-                        singleLine = true,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 12.dp, vertical = 6.dp),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = Color(0xFF10B981),
-                            unfocusedBorderColor = Color(0xFFD1D5DB)
-                        ),
-                        shape = RoundedCornerShape(12.dp),
-                        trailingIcon = {
-                            if (searchQuery.isNotEmpty()) {
-                                IconButton(onClick = { searchQuery = "" }) {
-                                    Icon(imageVector = Icons.Default.Close, contentDescription = "মুছুন", tint = Color.Gray)
-                                }
-                            }
-                        }
-                    )
-                }
-            }
-
-            // SCROLLABLE TABS (Distinct Tabs / Sections)
-            ScrollableTabRow(
-                selectedTabIndex = selectedTabIndex,
-                edgePadding = 12.dp,
-                containerColor = Color.Transparent,
-                divider = {},
-                indicator = {}
-            ) {
-                tabs.forEachIndexed { index, tab ->
-                    val isSelected = selectedTabIndex == index
-                    Tab(
-                        selected = isSelected,
-                        onClick = {
-                            selectedTabIndex = index
-                            coroutineScope.launch {
-                                listState.scrollToItem(0)
-                            }
-                        },
-                        modifier = Modifier.padding(vertical = 6.dp, horizontal = 3.dp)
-                    ) {
-                        Surface(
-                            shape = RoundedCornerShape(20.dp),
-                            color = if (isSelected) MaterialTheme.colorScheme.primary else Color.White.copy(alpha = 0.8f),
-                            border = BorderStroke(
-                                1.dp,
-                                if (isSelected) MaterialTheme.colorScheme.primary else Color(0xFF10B981).copy(alpha = 0.25f)
-                            ),
-                            shadowElevation = if (isSelected) 3.dp else 0.dp
-                        ) {
-                            Row(
-                                modifier = Modifier.padding(horizontal = 14.dp, vertical = 7.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Text(
-                                    text = tab.tabTitleBn,
-                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                                    color = if (isSelected) Color.White else Color(0xFF374151),
-                                    fontSize = 13.sp,
-                                    fontFamily = LocalAppFontFamily.current
-                                )
-                                Spacer(modifier = Modifier.width(5.dp))
-                                Surface(
-                                    shape = RoundedCornerShape(10.dp),
-                                    color = if (isSelected) Color.White.copy(alpha = 0.25f) else Color(0xFFF3F4F6)
-                                ) {
-                                    Text(
-                                        text = tab.badgeBn,
-                                        fontSize = 10.sp,
-                                        fontWeight = FontWeight.SemiBold,
-                                        color = if (isSelected) Color.White else MaterialTheme.colorScheme.primary,
-                                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
-                                        fontFamily = LocalAppFontFamily.current
-                                    )
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-
             // LIST CONTENT FOR THE ACTIVE TAB
             val activeTab = tabs[selectedTabIndex]
 
             LazyColumn(
                 state = listState,
                 modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(16.dp)
+                contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 24.dp)
             ) {
+                // User Friendly Quick Controls Banner (Mirroring Tawba Istighfar controls banner)
+                item {
+                    Spacer(modifier = Modifier.height(6.dp))
+                    Surface(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(12.dp),
+                        color = Color.White.copy(alpha = 0.88f),
+                        border = BorderStroke(1.dp, IslamicGold.copy(alpha = 0.3f))
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 12.dp, vertical = 6.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(
+                                    imageVector = Icons.Default.AutoAwesome,
+                                    contentDescription = null,
+                                    tint = IslamicGold,
+                                    modifier = Modifier.size(16.dp)
+                                )
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text(
+                                    text = "লাইভ অরোরা: চালু",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                            }
+
+                            Surface(
+                                shape = RoundedCornerShape(6.dp),
+                                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
+                            ) {
+                                Text(
+                                    text = "হরফের আকার: ${(fontScale * 100).toInt()}%",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                )
+                            }
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(4.dp))
+                }
+
+                // COLLAPSIBLE SEARCH BAR
+                if (isSearchActive) {
+                    item {
+                        Surface(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 4.dp),
+                            color = Color.White.copy(alpha = 0.95f),
+                            shape = RoundedCornerShape(12.dp),
+                            border = BorderStroke(1.dp, Color(0xFFE5E7EB))
+                        ) {
+                            OutlinedTextField(
+                                value = searchQuery,
+                                onValueChange = { searchQuery = it },
+                                placeholder = {
+                                    Text(
+                                        text = "দরূদের নাম বা ফজিলত খুঁজুন (যেমন: তাজ, নারিয়া, শিফা)...",
+                                        fontSize = 13.sp,
+                                        fontFamily = LocalAppFontFamily.current
+                                    )
+                                },
+                                singleLine = true,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 12.dp, vertical = 6.dp),
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    focusedBorderColor = Color(0xFF10B981),
+                                    unfocusedBorderColor = Color(0xFFD1D5DB)
+                                ),
+                                shape = RoundedCornerShape(12.dp),
+                                trailingIcon = {
+                                    if (searchQuery.isNotEmpty()) {
+                                        IconButton(onClick = { searchQuery = "" }) {
+                                            Icon(imageVector = Icons.Default.Close, contentDescription = "মুছুন", tint = Color.Gray)
+                                        }
+                                    }
+                                }
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(4.dp))
+                    }
+                }
+
+                // STICKY TABS HEADER: Freezes at top during scroll!
+                stickyHeader(key = "durood_category_tabs") {
+                    Surface(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 4.dp),
+                        shape = RoundedCornerShape(14.dp),
+                        color = MaterialTheme.colorScheme.surface,
+                        shadowElevation = 4.dp,
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.15f))
+                    ) {
+                        ScrollableTabRow(
+                            selectedTabIndex = selectedTabIndex,
+                            edgePadding = 8.dp,
+                            containerColor = Color.Transparent,
+                            divider = {},
+                            indicator = {}
+                        ) {
+                            tabs.forEachIndexed { index, tab ->
+                                val isSelected = selectedTabIndex == index
+                                Tab(
+                                    selected = isSelected,
+                                    onClick = {
+                                        selectedTabIndex = index
+                                        coroutineScope.launch {
+                                            listState.scrollToItem(0)
+                                        }
+                                    },
+                                    modifier = Modifier.padding(vertical = 6.dp, horizontal = 2.dp)
+                                ) {
+                                    Surface(
+                                        shape = RoundedCornerShape(20.dp),
+                                        color = if (isSelected) MaterialTheme.colorScheme.primary else Color.White.copy(alpha = 0.8f),
+                                        border = BorderStroke(
+                                            1.dp,
+                                            if (isSelected) MaterialTheme.colorScheme.primary else Color(0xFF10B981).copy(alpha = 0.25f)
+                                        ),
+                                        shadowElevation = if (isSelected) 3.dp else 0.dp
+                                    ) {
+                                        Row(
+                                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Text(
+                                                text = tab.tabTitleBn,
+                                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                                color = if (isSelected) Color.White else Color(0xFF374151),
+                                                fontSize = 13.sp,
+                                                fontFamily = LocalAppFontFamily.current
+                                            )
+                                            Spacer(modifier = Modifier.width(5.dp))
+                                            Surface(
+                                                shape = RoundedCornerShape(10.dp),
+                                                color = if (isSelected) Color.White.copy(alpha = 0.25f) else Color(0xFFF3F4F6)
+                                            ) {
+                                                Text(
+                                                    text = tab.badgeBn,
+                                                    fontSize = 10.sp,
+                                                    fontWeight = FontWeight.SemiBold,
+                                                    color = if (isSelected) Color.White else MaterialTheme.colorScheme.primary,
+                                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                                                    fontFamily = LocalAppFontFamily.current
+                                                )
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                item {
+                    Spacer(modifier = Modifier.height(10.dp))
+                }
                 // TAB 0: আকর্ষণ ও ১০০০ আমল (৪টি আত্মিক বিষয়, মিরাকেল দুআ ও জুমার ১০০০ আমল)
                 if (activeTab == DuroodTabCategory.SPECIAL_ATTRACTION) {
                     item {

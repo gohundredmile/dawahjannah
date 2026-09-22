@@ -6,6 +6,7 @@ import android.content.Context
 import android.content.Intent
 import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -18,15 +19,19 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.BookmarkBorder
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -36,6 +41,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -48,6 +56,7 @@ import com.example.data.model.DuroodItem
 import com.example.ui.theme.IslamicGold
 import com.example.ui.viewmodel.MainViewModel
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun DuroodScreen(
     viewModel: MainViewModel,
@@ -55,6 +64,17 @@ fun DuroodScreen(
 ) {
     val items = viewModel.duroodList
     val bookmarkedIds by viewModel.bookmarkedIds.collectAsState()
+
+    val categoryTabs = listOf("সকল বিষয়", "দরূদ শরীফ", "ইস্তিগফার ও তওবা")
+    var selectedCategory by remember { mutableStateOf("সকল বিষয়") }
+
+    val filteredItems = items.filter { item ->
+        when (selectedCategory) {
+            "দরূদ শরীফ" -> item.id in listOf("durood_ibrahim", "durood_nariya", "short_durood")
+            "ইস্তিগফার ও তওবা" -> item.id in listOf("sayyidul_istighfar", "yunus_dua")
+            else -> true
+        }
+    }
 
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
@@ -72,10 +92,67 @@ fun DuroodScreen(
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(8.dp))
         }
 
-        items(items, key = { it.id }) { item ->
+        // Sticky Category Tabs (Freezes at the top during scroll)
+        stickyHeader(key = "durood_category_tabs") {
+            Surface(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 4.dp),
+                color = MaterialTheme.colorScheme.surface,
+                shadowElevation = 4.dp,
+                shape = RoundedCornerShape(12.dp),
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.15f))
+            ) {
+                LazyRow(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 8.dp, vertical = 6.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    items(categoryTabs) { tab ->
+                        val isSelected = selectedCategory == tab
+                        FilterChip(
+                            selected = isSelected,
+                            onClick = { selectedCategory = tab },
+                            label = {
+                                Text(
+                                    text = tab,
+                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                                    fontSize = 13.sp
+                                )
+                            },
+                            leadingIcon = if (isSelected) {
+                                {
+                                    Icon(
+                                        imageVector = Icons.Default.Check,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                }
+                            } else null,
+                            shape = RoundedCornerShape(10.dp),
+                            colors = FilterChipDefaults.filterChipColors(
+                                selectedContainerColor = MaterialTheme.colorScheme.primary,
+                                selectedLabelColor = MaterialTheme.colorScheme.onPrimary,
+                                containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                                labelColor = MaterialTheme.colorScheme.onSurfaceVariant
+                            ),
+                            border = FilterChipDefaults.filterChipBorder(
+                                enabled = true,
+                                selected = isSelected,
+                                borderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f),
+                                selectedBorderColor = MaterialTheme.colorScheme.primary
+                            )
+                        )
+                    }
+                }
+            }
+        }
+
+        items(filteredItems, key = { it.id }) { item ->
             val isBookmarked = bookmarkedIds.contains(item.id)
             DuroodCard(
                 item = item,

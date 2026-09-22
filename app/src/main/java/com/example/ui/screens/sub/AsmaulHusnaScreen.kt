@@ -9,6 +9,7 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -24,6 +25,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -36,6 +38,7 @@ import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.BookmarkBorder
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Search
@@ -45,6 +48,8 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -76,12 +81,26 @@ import com.example.ui.theme.IslamicGold
 import com.example.ui.viewmodel.MainViewModel
 import com.example.util.CalendarHelper
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun AsmaulHusnaScreen(viewModel: MainViewModel) {
     val searchQuery by viewModel.asmaulHusnaSearch.collectAsState()
     val namesList by viewModel.filteredAsmaulHusna.collectAsState()
     val bookmarkedIds by viewModel.bookmarkedIds.collectAsState()
     var selectedName by remember { mutableStateOf<AllahNameItem?>(null) }
+
+    val rangeTabs = listOf("সকল (৯৯)", "১–২৫", "২৬–৫০", "৫১–৭৫", "৭৬–৯৯")
+    var selectedRangeFilter by remember { mutableStateOf("সকল (৯৯)") }
+
+    val rangeFilteredNames = remember(namesList, selectedRangeFilter) {
+        when (selectedRangeFilter) {
+            "১–২৫" -> namesList.filter { it.number in 1..25 }
+            "২৬–৫০" -> namesList.filter { it.number in 26..50 }
+            "৫১–৭৫" -> namesList.filter { it.number in 51..75 }
+            "৭৬–৯৯" -> namesList.filter { it.number in 76..99 }
+            else -> namesList
+        }
+    }
 
     if (selectedName != null) {
         val currentSelected = selectedName!!
@@ -101,95 +120,163 @@ fun AsmaulHusnaScreen(viewModel: MainViewModel) {
             }
         )
     } else {
-        Column(modifier = Modifier.fillMaxSize()) {
+        LazyColumn(
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(top = 8.dp, bottom = 24.dp)
+        ) {
             // Search field
-            OutlinedTextField(
-                value = searchQuery,
-                onValueChange = { viewModel.setAsmaulHusnaSearch(it) },
-                placeholder = { Text("নাম, অর্থ বা ফজিলত খুঁজুন...") },
-                leadingIcon = {
-                    Icon(
-                        imageVector = Icons.Default.Search,
-                        contentDescription = "Search",
-                        tint = MaterialTheme.colorScheme.primary
-                    )
-                },
-                trailingIcon = {
-                    if (searchQuery.isNotEmpty()) {
-                        IconButton(onClick = { viewModel.setAsmaulHusnaSearch("") }) {
-                            Icon(imageVector = Icons.Default.Clear, contentDescription = "Clear")
+            item {
+                OutlinedTextField(
+                    value = searchQuery,
+                    onValueChange = { viewModel.setAsmaulHusnaSearch(it) },
+                    placeholder = { Text("নাম, অর্থ বা ফজিলত খুঁজুন...") },
+                    leadingIcon = {
+                        Icon(
+                            imageVector = Icons.Default.Search,
+                            contentDescription = "Search",
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                    },
+                    trailingIcon = {
+                        if (searchQuery.isNotEmpty()) {
+                            IconButton(onClick = { viewModel.setAsmaulHusnaSearch("") }) {
+                                Icon(imageVector = Icons.Default.Clear, contentDescription = "Clear")
+                            }
                         }
-                    }
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 8.dp),
-                shape = RoundedCornerShape(14.dp),
-                singleLine = true,
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = MaterialTheme.colorScheme.primary,
-                    unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
-                )
-            )
-
-            // Header summary
-            Surface(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 4.dp),
-                shape = RoundedCornerShape(12.dp),
-                color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f)
-            ) {
-                Row(
+                    },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 12.dp, vertical = 8.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+                        .padding(horizontal = 16.dp, vertical = 6.dp),
+                    shape = RoundedCornerShape(14.dp),
+                    singleLine = true,
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = MaterialTheme.colorScheme.primary,
+                        unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
+                    )
+                )
+            }
+
+            // Header summary
+            item {
+                Surface(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 4.dp),
+                    shape = RoundedCornerShape(12.dp),
+                    color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f)
                 ) {
-                    Column {
-                        Text(
-                            text = "আসমাউল হুসনা (আল্লাহ্‌র ৯৯টি নাম) বাংলা অর্থ সহ ফজিলত",
-                            style = MaterialTheme.typography.labelMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                        Text(
-                            text = "যেকোনো নামের কার্ডে স্পর্শ করে বিস্তারিত ফজিলত ও আমল দেখুন",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            fontSize = 11.sp
-                        )
-                    }
-                    Surface(
-                        color = MaterialTheme.colorScheme.primary,
-                        shape = RoundedCornerShape(8.dp)
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 12.dp, vertical = 8.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(
-                            text = "${CalendarHelper.toBanglaNumber(namesList.size)} টি",
-                            style = MaterialTheme.typography.labelSmall,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.White,
-                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-                        )
+                        Column {
+                            Text(
+                                text = "আসমাউল হুসনা (আল্লাহ্‌র ৯৯টি নাম) বাংলা অর্থ সহ ফজিলত",
+                                style = MaterialTheme.typography.labelMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                            Text(
+                                text = "যেকোনো নামের কার্ডে স্পর্শ করে বিস্তারিত ফজিলত ও আমল দেখুন",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                fontSize = 11.sp
+                            )
+                        }
+                        Surface(
+                            color = MaterialTheme.colorScheme.primary,
+                            shape = RoundedCornerShape(8.dp)
+                        ) {
+                            Text(
+                                text = "${CalendarHelper.toBanglaNumber(namesList.size)} টি",
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White,
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                            )
+                        }
+                    }
+                }
+            }
+
+            // Sticky Category / Range Tabs (Freezes at the top during scroll)
+            stickyHeader(key = "asma_ranges_tabs") {
+                Surface(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 6.dp),
+                    color = MaterialTheme.colorScheme.surface,
+                    shadowElevation = 4.dp,
+                    shape = RoundedCornerShape(12.dp),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.15f))
+                ) {
+                    LazyRow(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 8.dp, vertical = 6.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        items(rangeTabs) { tab ->
+                            val isSelected = selectedRangeFilter == tab
+                            val count = when (tab) {
+                                "১–২৫" -> namesList.count { it.number in 1..25 }
+                                "২৬–৫০" -> namesList.count { it.number in 26..50 }
+                                "৫১–৭৫" -> namesList.count { it.number in 51..75 }
+                                "৭৬–৯৯" -> namesList.count { it.number in 76..99 }
+                                else -> namesList.size
+                            }
+                            val displayLabel = if (tab == "সকল (৯৯)") tab else "$tab (${CalendarHelper.toBanglaNumber(count)})"
+
+                            FilterChip(
+                                selected = isSelected,
+                                onClick = { selectedRangeFilter = tab },
+                                label = {
+                                    Text(
+                                        text = displayLabel,
+                                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                                        fontSize = 13.sp
+                                    )
+                                },
+                                leadingIcon = if (isSelected) {
+                                    {
+                                        Icon(
+                                            imageVector = Icons.Default.Check,
+                                            contentDescription = null,
+                                            modifier = Modifier.size(16.dp)
+                                        )
+                                    }
+                                } else null,
+                                shape = RoundedCornerShape(10.dp),
+                                colors = FilterChipDefaults.filterChipColors(
+                                    selectedContainerColor = MaterialTheme.colorScheme.primary,
+                                    selectedLabelColor = MaterialTheme.colorScheme.onPrimary,
+                                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                                    labelColor = MaterialTheme.colorScheme.onSurfaceVariant
+                                ),
+                                border = FilterChipDefaults.filterChipBorder(
+                                    enabled = true,
+                                    selected = isSelected,
+                                    borderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f),
+                                    selectedBorderColor = MaterialTheme.colorScheme.primary
+                                )
+                            )
+                        }
                     }
                 }
             }
 
             // Names List with Specimen Screenshot Layout
-            LazyColumn(
-                modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(top = 6.dp, bottom = 24.dp)
-            ) {
-                items(namesList, key = { it.number }) { item ->
-                    val isBookmarked = bookmarkedIds.contains("allah_name_${item.number}")
-                    AllahNameListItemRow(
-                        item = item,
-                        isBookmarked = isBookmarked,
-                        onToggleBookmark = { viewModel.toggleBookmark(item) },
-                        onClick = { selectedName = item }
-                    )
-                }
+            items(rangeFilteredNames, key = { it.number }) { item ->
+                val isBookmarked = bookmarkedIds.contains("allah_name_${item.number}")
+                AllahNameListItemRow(
+                    item = item,
+                    isBookmarked = isBookmarked,
+                    onToggleBookmark = { viewModel.toggleBookmark(item) },
+                    onClick = { selectedName = item }
+                )
             }
         }
     }

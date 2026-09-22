@@ -6,6 +6,12 @@ import com.example.data.model.IslamicLifeSection
 object IslamicLifeData {
 
     val sections: List<IslamicLifeSection> = listOf(
+        // ★★★ইসমে আজম★★★
+        IsmeAzamData.section,
+
+        // ★★★ হাদিসে বর্ণীত সঠিক ইসমে আজম
+        HadithIsmeAzamData.section,
+
         // ★★★রুকিয়াহ - Ruqyah★★★
         RuqyahShariahData.section,
 
@@ -29,9 +35,6 @@ object IslamicLifeData {
 
         // ★★★৫ ওয়াক্ত সালাত শেষে দো‘আ সমুহ★★★
         FiveWaqtAfterSalatData.section,
-
-        // ★★★ইসমে আজম★★★
-        IsmeAzamData.section,
 
         // ★যদি রাত্রে ঘুম ভেঙ্গে যায় অতঃপর নিচের বাক্যগুলো পাঠ করবেন★
         NightAwakenDuaData.section,

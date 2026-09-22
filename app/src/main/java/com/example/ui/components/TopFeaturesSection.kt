@@ -59,6 +59,33 @@ data class HomeFeatureItem(
 )
 
 /**
+ * Extension property to retrieve the clean feature title without numeric prefixes (e.g. "১. তাসবিহ" -> "তাসবিহ").
+ */
+val HomeFeatureItem.cleanTitleBn: String
+    get() {
+        val raw = this.titleBn.trim()
+        val regex = Regex("^[০-৯0-9]+[.\\-\\s]+\\s*")
+        return raw.replace(regex, "").ifBlank { this.shortTitleBn }
+    }
+
+/**
+ * Renumbers a list of features dynamically according to their current sequence:
+ * - serialNumberBn becomes "০১", "০২", "০৩" ...
+ * - titleBn becomes "১. [ফিচারের নাম]", "২. [ফিচারের নাম]" ...
+ */
+fun List<HomeFeatureItem>.renumberedFeatures(): List<HomeFeatureItem> {
+    return this.mapIndexed { index, item ->
+        val pos = index + 1
+        val numBn = com.example.util.CalendarHelper.toBanglaNumber(pos)
+        val serialBn = if (pos < 10) "০$numBn" else numBn
+        item.copy(
+            serialNumberBn = serialBn,
+            titleBn = "$numBn. ${item.cleanTitleBn}"
+        )
+    }
+}
+
+/**
  * 'টপ ফিচার' (Top Features) section on the Home Screen.
  * Displays 8 primary features in two rows (4 icons per row)
  * with a stylish 'আরও / More' text affordance in the header

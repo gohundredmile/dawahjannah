@@ -67,6 +67,7 @@ import com.example.ui.components.DailyWisdomSection
 import com.example.ui.components.DateTimeMasterCard
 import com.example.ui.components.DetailedSehriIftarDialog
 import com.example.ui.components.HomeFeatureItem
+import com.example.ui.components.renumberedFeatures
 import com.example.ui.components.IslamicHeaderCover
 import com.example.ui.components.NamazGuideDialog
 import com.example.ui.components.NamazModeDialog
@@ -439,12 +440,13 @@ fun HomeScreen(
     }
 
     val orderedAppFeatures = remember(allAppFeatures, exploreFeatureOrder, exploreSortMode) {
-        if (exploreFeatureOrder.isBlank() || exploreSortMode == "DEFAULT") {
+        val sortedList = if (exploreFeatureOrder.isBlank() || exploreSortMode == "DEFAULT") {
             allAppFeatures
         } else {
             val orderMap = exploreFeatureOrder.split(",").mapIndexed { index, id -> id to index }.toMap()
             allAppFeatures.sortedBy { orderMap[it.id] ?: 999 }
         }
+        sortedList.renumberedFeatures()
     }
 
     LazyColumn(

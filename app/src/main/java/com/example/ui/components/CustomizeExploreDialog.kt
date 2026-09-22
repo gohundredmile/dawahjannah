@@ -83,7 +83,7 @@ fun CustomizeExploreDialog(
     onSaveOrder: (List<String>, String) -> Unit,
     onDismiss: () -> Unit
 ) {
-    var itemsList by remember(initialFeatures) { mutableStateOf(initialFeatures) }
+    var itemsList by remember(initialFeatures) { mutableStateOf(initialFeatures.renumberedFeatures()) }
     var selectedSortMode by remember(currentSortMode) { mutableStateOf(currentSortMode) }
     val isDark = isSystemInDarkTheme()
 
@@ -108,18 +108,20 @@ fun CustomizeExploreDialog(
                 val mutable = itemsList.toMutableList()
                 val moved = mutable.removeAt(currentIdx)
                 mutable.add(currentIdx + 1, moved)
-                itemsList = mutable
+                val renumbered = mutable.renumberedFeatures()
+                itemsList = renumbered
                 dragOffsetY -= step
                 selectedSortMode = "CUSTOM"
-                onSaveOrder(mutable.map { it.id }, "CUSTOM")
+                onSaveOrder(renumbered.map { it.id }, "CUSTOM")
             } else if (dragOffsetY < -threshold && currentIdx > 0) {
                 val mutable = itemsList.toMutableList()
                 val moved = mutable.removeAt(currentIdx)
                 mutable.add(currentIdx - 1, moved)
-                itemsList = mutable
+                val renumbered = mutable.renumberedFeatures()
+                itemsList = renumbered
                 dragOffsetY += step
                 selectedSortMode = "CUSTOM"
-                onSaveOrder(mutable.map { it.id }, "CUSTOM")
+                onSaveOrder(renumbered.map { it.id }, "CUSTOM")
             }
 
             // Auto-scroll list if dragging near top or bottom visible boundaries
@@ -245,21 +247,24 @@ fun CustomizeExploreDialog(
                                     selectedSortMode = modeKey
                                     when (modeKey) {
                                         "DEFAULT" -> {
-                                            itemsList = defaultFeatures
-                                            onSaveOrder(defaultFeatures.map { it.id }, "DEFAULT")
+                                            val def = defaultFeatures.renumberedFeatures()
+                                            itemsList = def
+                                            onSaveOrder(def.map { it.id }, "DEFAULT")
                                         }
                                         "ASCENDING" -> {
-                                            val sorted = itemsList.sortedBy { it.cleanTitleBn }
+                                            val sorted = itemsList.sortedBy { it.cleanTitleBn }.renumberedFeatures()
                                             itemsList = sorted
                                             onSaveOrder(sorted.map { it.id }, "ASCENDING")
                                         }
                                         "DESCENDING" -> {
-                                            val sorted = itemsList.sortedByDescending { it.cleanTitleBn }
+                                            val sorted = itemsList.sortedByDescending { it.cleanTitleBn }.renumberedFeatures()
                                             itemsList = sorted
                                             onSaveOrder(sorted.map { it.id }, "DESCENDING")
                                         }
                                         "CUSTOM" -> {
-                                            onSaveOrder(itemsList.map { it.id }, "CUSTOM")
+                                            val custom = itemsList.renumberedFeatures()
+                                            itemsList = custom
+                                            onSaveOrder(custom.map { it.id }, "CUSTOM")
                                         }
                                     }
                                 }
@@ -334,6 +339,7 @@ fun CustomizeExploreDialog(
                             onDragEnd = {
                                 draggingItemId = null
                                 dragOffsetY = 0f
+                                itemsList = itemsList.renumberedFeatures()
                             },
                             onMoveUp = {
                                 if (index > 0) {
@@ -341,9 +347,10 @@ fun CustomizeExploreDialog(
                                     val temp = mutable[index]
                                     mutable[index] = mutable[index - 1]
                                     mutable[index - 1] = temp
-                                    itemsList = mutable
+                                    val renumbered = mutable.renumberedFeatures()
+                                    itemsList = renumbered
                                     selectedSortMode = "CUSTOM"
-                                    onSaveOrder(mutable.map { it.id }, "CUSTOM")
+                                    onSaveOrder(renumbered.map { it.id }, "CUSTOM")
                                 }
                             },
                             onMoveDown = {
@@ -352,9 +359,10 @@ fun CustomizeExploreDialog(
                                     val temp = mutable[index]
                                     mutable[index] = mutable[index + 1]
                                     mutable[index + 1] = temp
-                                    itemsList = mutable
+                                    val renumbered = mutable.renumberedFeatures()
+                                    itemsList = renumbered
                                     selectedSortMode = "CUSTOM"
-                                    onSaveOrder(mutable.map { it.id }, "CUSTOM")
+                                    onSaveOrder(renumbered.map { it.id }, "CUSTOM")
                                 }
                             }
                         )
@@ -428,31 +436,49 @@ private fun CustomizeFeatureCard(
                 .padding(horizontal = 14.dp, vertical = 10.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Left: Feature Icon Container
-            Surface(
-                shape = RoundedCornerShape(12.dp),
-                color = if (isDark) Color(0x26FFFFFF) else item.iconColor.copy(alpha = 0.12f),
-                border = BorderStroke(1.dp, item.iconColor.copy(alpha = if (isDark) 0.5f else 0.35f)),
-                modifier = Modifier.size(42.dp)
-            ) {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
+            // Left: Feature Icon Container with Number Badge
+            Box(contentAlignment = Alignment.BottomEnd) {
+                Surface(
+                    shape = RoundedCornerShape(12.dp),
+                    color = if (isDark) Color(0x26FFFFFF) else item.iconColor.copy(alpha = 0.12f),
+                    border = BorderStroke(1.dp, item.iconColor.copy(alpha = if (isDark) 0.5f else 0.35f)),
+                    modifier = Modifier.size(44.dp)
                 ) {
-                    Icon(
-                        imageVector = item.icon,
-                        contentDescription = item.cleanTitleBn,
-                        tint = item.iconColor,
-                        modifier = Modifier.size(24.dp)
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = item.icon,
+                            contentDescription = item.cleanTitleBn,
+                            tint = item.iconColor,
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
+                }
+
+                // Serial Number Badge
+                Surface(
+                    shape = RoundedCornerShape(5.dp),
+                    color = if (isDark) Color(0xFF0F172A) else Color(0xFFF1F5F9),
+                    border = BorderStroke(0.8.dp, IslamicGold.copy(alpha = 0.7f)),
+                    modifier = Modifier.padding(end = 1.dp, bottom = 1.dp)
+                ) {
+                    Text(
+                        text = item.serialNumberBn,
+                        fontSize = 9.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = if (isDark) IslamicGold else Color(0xFF92400E),
+                        modifier = Modifier.padding(horizontal = 3.dp, vertical = 0.5.dp)
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.width(14.dp))
+            Spacer(modifier = Modifier.width(12.dp))
 
             // Center: Bengali Title
             Text(
-                text = item.cleanTitleBn,
+                text = item.titleBn,
                 fontSize = 15.sp,
                 fontWeight = FontWeight.Bold,
                 color = if (isDark) Color(0xFFF1F5F9) else Color(0xFF0F172A),
@@ -532,9 +558,3 @@ private fun CustomizeFeatureCard(
         }
     }
 }
-
-/**
- * Extension property to retrieve the clean feature title without numeric prefixes (e.g. "১. ট্র্যাকার" -> "ট্র্যাকার").
- */
-val HomeFeatureItem.cleanTitleBn: String
-    get() = if (shortTitleBn.isNotBlank()) shortTitleBn else titleBn.replace(Regex("^[০-৯\\d]+\\.\\s*"), "")

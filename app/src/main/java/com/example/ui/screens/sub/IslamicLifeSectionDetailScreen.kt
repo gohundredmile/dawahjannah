@@ -7,6 +7,9 @@ import android.content.Intent
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
@@ -17,6 +20,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -27,6 +31,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -61,12 +66,15 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontFamily
@@ -173,6 +181,51 @@ fun IslamicLifeSectionDetailScreen(
     var showAurora by remember(section.id) { mutableStateOf(isDuaRichSection) }
     val fontController = LocalFontScaleController.current
     val fontScale = fontController?.scale ?: 1.0f
+
+    val listState = rememberLazyListState()
+
+    val readingProgressFraction by remember {
+        derivedStateOf {
+            val layoutInfo = listState.layoutInfo
+            val totalItems = layoutInfo.totalItemsCount
+            if (totalItems <= 1) {
+                0f
+            } else {
+                val visibleItems = layoutInfo.visibleItemsInfo
+                if (visibleItems.isEmpty()) {
+                    0f
+                } else {
+                    val lastItem = visibleItems.last()
+                    val firstItem = visibleItems.first()
+                    if (lastItem.index >= totalItems - 1) {
+                        val viewportHeight = layoutInfo.viewportEndOffset - layoutInfo.viewportStartOffset
+                        val bottomOffset = lastItem.offset + lastItem.size
+                        if (bottomOffset <= viewportHeight) {
+                            1f
+                        } else {
+                            val progress = (lastItem.index.toFloat() / (totalItems - 1).toFloat())
+                            progress.coerceIn(0f, 1f)
+                        }
+                    } else {
+                        val itemFraction = if (firstItem.size > 0) {
+                            (-firstItem.offset.toFloat() / firstItem.size.toFloat()).coerceIn(0f, 1f)
+                        } else 0f
+                        val progress = (firstItem.index.toFloat() + itemFraction) / (totalItems - 1).toFloat()
+                        progress.coerceIn(0f, 1f)
+                    }
+                }
+            }
+        }
+    }
+
+    val animatedProgress by animateFloatAsState(
+        targetValue = readingProgressFraction,
+        animationSpec = spring(stiffness = Spring.StiffnessLow),
+        label = "readingProgress"
+    )
+
+    val progressPercent = (animatedProgress * 100).toInt().coerceIn(0, 100)
+    val progressPercentBn = CalendarHelper.toBanglaNumber(progressPercent)
 
     val categoryFilters = remember(section.id) {
         when (section.id) {
@@ -479,6 +532,28 @@ fun IslamicLifeSectionDetailScreen(
                 }
             )
 
+            // Sticky Hairline Reading Progress Bar at the very top
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(3.5.dp)
+                    .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f))
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth(animatedProgress.coerceIn(0f, 1f))
+                        .fillMaxHeight()
+                        .background(
+                            Brush.horizontalGradient(
+                                colors = listOf(
+                                    MaterialTheme.colorScheme.primary,
+                                    IslamicGold
+                                )
+                            )
+                        )
+                )
+            }
+
             // User Friendly Quick Controls Banner (Font Scale & Aurora Status)
             if (isDuaRichSection) {
                 Surface(
@@ -529,6 +604,7 @@ fun IslamicLifeSectionDetailScreen(
             }
 
         LazyColumn(
+            state = listState,
             modifier = Modifier.fillMaxSize(),
             contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 0.dp, bottom = 24.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
@@ -688,68 +764,149 @@ fun IslamicLifeSectionDetailScreen(
                 }
             }
 
-            // Quick Category Filters (Sticky Tab mechanism: freezes at top when reached during scroll)
-            if (categoryFilters.isNotEmpty()) {
-                stickyHeader(key = "section_category_tabs") {
-                    Surface(
+            // Sticky Reading Progress Bar & Category Filters (Freezes at the top during scroll)
+            stickyHeader(key = "sticky_reading_progress_and_tabs") {
+                Surface(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 4.dp),
+                    color = MaterialTheme.colorScheme.surface.copy(alpha = 0.96f),
+                    shadowElevation = 4.dp,
+                    shape = RoundedCornerShape(14.dp),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.15f))
+                ) {
+                    Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(vertical = 4.dp),
-                        color = MaterialTheme.colorScheme.surface,
-                        shadowElevation = 4.dp,
-                        shape = RoundedCornerShape(14.dp),
-                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.15f))
+                            .padding(horizontal = 12.dp, vertical = 8.dp)
                     ) {
-                        LazyRow(
+                        // Visual Reading Progress Bar & Indicator
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.weight(1f, fill = false)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.MenuBook,
+                                    contentDescription = null,
+                                    tint = if (progressPercent >= 100) Color(0xFF059669) else IslamicGold,
+                                    modifier = Modifier.size(16.dp)
+                                )
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text(
+                                    text = "পঠন অগ্রগতি",
+                                    style = MaterialTheme.typography.labelMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                            }
+
+                            Surface(
+                                shape = RoundedCornerShape(6.dp),
+                                color = if (progressPercent >= 100) Color(0xFF059669).copy(alpha = 0.15f)
+                                else if (progressPercent > 0) MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
+                                else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f)
+                            ) {
+                                Text(
+                                    text = when {
+                                        progressPercent >= 100 -> "সম্পূর্ণ পঠিত ✓"
+                                        progressPercent > 0 -> "$progressPercentBn% পঠিত"
+                                        else -> "শুরু করুন (০%)"
+                                    },
+                                    style = MaterialTheme.typography.labelSmall,
+                                    fontWeight = FontWeight.Bold,
+                                    color = if (progressPercent >= 100) Color(0xFF059669)
+                                    else if (progressPercent > 0) MaterialTheme.colorScheme.primary
+                                    else MaterialTheme.colorScheme.onSurfaceVariant,
+                                    modifier = Modifier.padding(horizontal = 7.dp, vertical = 2.5.dp)
+                                )
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(6.dp))
+
+                        // Linear Progress Bar with animated track & fill
+                        Box(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(horizontal = 8.dp, vertical = 6.dp),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                .height(5.dp)
+                                .clip(RoundedCornerShape(3.dp))
+                                .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
                         ) {
-                            items(categoryFilters) { cat ->
-                            val isSelected = selectedCategoryFilter == cat
-                            val count = getItemsForCategory(cat).size
-                            val displayLabel = if (count > 0) "$cat (${CalendarHelper.toBanglaNumber(count)})" else cat
-
-                            FilterChip(
-                                selected = isSelected,
-                                onClick = { selectedCategoryFilter = cat },
-                                label = {
-                                    Text(
-                                        text = displayLabel,
-                                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                                        fontSize = 13.sp
-                                    )
-                                },
-                                leadingIcon = if (isSelected) {
-                                    {
-                                        Icon(
-                                            imageVector = Icons.Default.Check,
-                                            contentDescription = null,
-                                            modifier = Modifier.size(16.dp)
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth(animatedProgress.coerceIn(0f, 1f))
+                                    .fillMaxHeight()
+                                    .clip(RoundedCornerShape(3.dp))
+                                    .background(
+                                        Brush.horizontalGradient(
+                                            colors = listOf(
+                                                MaterialTheme.colorScheme.primary,
+                                                IslamicGold
+                                            )
                                         )
-                                    }
-                                } else null,
-                                shape = RoundedCornerShape(10.dp),
-                                colors = FilterChipDefaults.filterChipColors(
-                                    selectedContainerColor = MaterialTheme.colorScheme.primary,
-                                    selectedLabelColor = MaterialTheme.colorScheme.onPrimary,
-                                    selectedLeadingIconColor = MaterialTheme.colorScheme.onPrimary,
-                                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
-                                    labelColor = MaterialTheme.colorScheme.onSurface
-                                ),
-                                border = FilterChipDefaults.filterChipBorder(
-                                    enabled = true,
-                                    selected = isSelected,
-                                    borderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f),
-                                    selectedBorderColor = MaterialTheme.colorScheme.primary
-                                )
+                                    )
                             )
+                        }
+
+                        // Quick Category Filters (if present)
+                        if (categoryFilters.isNotEmpty()) {
+                            Spacer(modifier = Modifier.height(8.dp))
+                            LazyRow(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 2.dp),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                items(categoryFilters) { cat ->
+                                    val isSelected = selectedCategoryFilter == cat
+                                    val count = getItemsForCategory(cat).size
+                                    val displayLabel = if (count > 0) "$cat (${CalendarHelper.toBanglaNumber(count)})" else cat
+
+                                    FilterChip(
+                                        selected = isSelected,
+                                        onClick = { selectedCategoryFilter = cat },
+                                        label = {
+                                            Text(
+                                                text = displayLabel,
+                                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                                                fontSize = 13.sp
+                                            )
+                                        },
+                                        leadingIcon = if (isSelected) {
+                                            {
+                                                Icon(
+                                                    imageVector = Icons.Default.Check,
+                                                    contentDescription = null,
+                                                    modifier = Modifier.size(16.dp)
+                                                )
+                                            }
+                                        } else null,
+                                        shape = RoundedCornerShape(10.dp),
+                                        colors = FilterChipDefaults.filterChipColors(
+                                            selectedContainerColor = MaterialTheme.colorScheme.primary,
+                                            selectedLabelColor = MaterialTheme.colorScheme.onPrimary,
+                                            selectedLeadingIconColor = MaterialTheme.colorScheme.onPrimary,
+                                            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                                            labelColor = MaterialTheme.colorScheme.onSurface
+                                        ),
+                                        border = FilterChipDefaults.filterChipBorder(
+                                            enabled = true,
+                                            selected = isSelected,
+                                            borderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f),
+                                            selectedBorderColor = MaterialTheme.colorScheme.primary
+                                        )
+                                    )
+                                }
+                            }
                         }
                     }
                 }
             }
-        }
 
         // Section Items Full List
             if (filteredItems.isEmpty()) {
@@ -777,6 +934,7 @@ fun IslamicLifeSectionDetailScreen(
                     IslamicLifeDetailCard(
                         item = item,
                         index = displayIndex,
+                        totalCount = section.items.size,
                         fontScale = fontScale,
                         isAuroraActive = showAurora,
                         isBookmarked = bookmarkedIds.contains(item.id),
@@ -799,6 +957,7 @@ fun IslamicLifeSectionDetailScreen(
 private fun IslamicLifeDetailCard(
     item: IslamicLifeCardItem,
     index: Int,
+    totalCount: Int = 0,
     fontScale: Float = 1.0f,
     isAuroraActive: Boolean = false,
     isBookmarked: Boolean = false,
@@ -848,6 +1007,22 @@ private fun IslamicLifeDetailCard(
                                 style = MaterialTheme.typography.labelMedium,
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.onPrimary
+                            )
+                        }
+                    }
+
+                    if (totalCount > 1) {
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Surface(
+                            shape = RoundedCornerShape(8.dp),
+                            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.65f)
+                        ) {
+                            Text(
+                                text = "${CalendarHelper.toBanglaNumber(index)}/${CalendarHelper.toBanglaNumber(totalCount)}",
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 4.dp)
                             )
                         }
                     }

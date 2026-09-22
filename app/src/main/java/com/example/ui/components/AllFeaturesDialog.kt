@@ -94,12 +94,16 @@ fun AllFeaturesDialog(
         var selectedCategory by remember { mutableStateOf("সবগুলো") }
         var showCustomizeDialog by remember { mutableStateOf(false) }
 
+        val effectiveFeatures = remember(features) {
+            features.renumberedFeatures()
+        }
+
         val categories = remember {
             listOf("সবগুলো", "সালাত ও সময়", "দো‘আ ও আমল", "জীবন ও টুলস")
         }
 
-        val filteredFeatures = remember(searchQuery, selectedCategory, features) {
-            features.filter { item ->
+        val filteredFeatures = remember(searchQuery, selectedCategory, effectiveFeatures) {
+            effectiveFeatures.filter { item ->
                 val matchesCategory = when (selectedCategory) {
                     "সবগুলো" -> true
                     "সালাত ও সময়" -> item.categoryBn.contains("সালাত") || item.categoryBn.contains("সময়") || item.categoryBn.contains("রমজান") || item.categoryBn.contains("রমাদান") || item.categoryBn.contains("সিয়াম")
@@ -422,8 +426,8 @@ fun AllFeaturesDialog(
 
         if (showCustomizeDialog) {
             CustomizeExploreDialog(
-                initialFeatures = features,
-                defaultFeatures = defaultFeatures,
+                initialFeatures = effectiveFeatures,
+                defaultFeatures = defaultFeatures.renumberedFeatures(),
                 currentSortMode = currentSortMode,
                 onSaveOrder = { orderIds, mode ->
                     onUpdateOrder(orderIds, mode)

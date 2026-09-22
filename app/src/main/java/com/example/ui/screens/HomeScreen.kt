@@ -209,12 +209,12 @@ fun HomeScreen(
                 isTopEight = true,
                 onClickAction = { showNamazModeDialog = true }
             ),
-            // ৭. ট্র্যাকার
+            // ৭. আমল ট্র্যাকার
             HomeFeatureItem(
                 id = "tracker",
                 serialNumberBn = "০৭",
-                titleBn = "৭. ট্র্যাকার",
-                shortTitleBn = "ট্র্যাকার",
+                titleBn = "৭. আমল ট্র্যাকার",
+                shortTitleBn = "আমল ট্র্যাকার",
                 subtitleBn = "আজকের স্কোরকার্ড: ${CalendarHelper.toBanglaNumber(scorecardCompletedCount)}/${CalendarHelper.toBanglaNumber(scorecardTotal)} সম্পন্ন • ${CalendarHelper.toBanglaNumber(scorecardStreak)} দিন স্ট্রিক",
                 categoryBn = "আমল ট্র্যাকার",
                 icon = Icons.Default.CheckCircle,
@@ -235,12 +235,12 @@ fun HomeScreen(
                 isTopEight = true,
                 onClickAction = { showDetailedSehriIftar = true }
             ),
-            // ৯. আর্টিকেলস
+            // ৯. ইসলামী জীবন
             HomeFeatureItem(
                 id = "articles",
                 serialNumberBn = "০৯",
-                titleBn = "৯. আর্টিকেলস",
-                shortTitleBn = "আর্টিকেলস",
+                titleBn = "৯. ইসলামী জীবন",
+                shortTitleBn = "ইসলামী জীবন",
                 subtitleBn = "নির্ভরযোগ্য ইসলামিক প্রবন্ধ, মাসআলা ও জীবনবিধান",
                 categoryBn = "ইসলামিক জ্ঞান",
                 icon = Icons.Default.Article,

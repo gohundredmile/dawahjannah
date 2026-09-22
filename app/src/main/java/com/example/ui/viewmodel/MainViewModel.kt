@@ -89,7 +89,7 @@ enum class AppTab(val index: Int, val titleBn: String) {
     DUA(1, "মাসনুন\u00A0দোয়া"),
     ROUTINE(2, "২৪ঘণ্টা\u00A0আমল"),
     TASBIH(3, "তাসবিহ"),
-    FAVORITE(4, "প্রিয়"),
+    FAVORITE(4, "ফেভারিট"),
     MORE(5, "ইসলামী\u00A0জীবন")
 }
 

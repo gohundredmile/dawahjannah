@@ -660,19 +660,18 @@ fun DawahBottomNavigationBar(
                 Text(
                     text = text.replace(" ", "\u00A0"),
                     style = MaterialTheme.typography.labelSmall.copy(
-                        fontSize = 10.sp,
-                        letterSpacing = (-0.35).sp,
-                        lineHeight = 11.sp
+                        fontSize = 11.sp
                     ),
                     fontFamily = LocalBanglaFontFamily.current,
                     maxLines = 1,
                     softWrap = false,
-                    overflow = TextOverflow.Ellipsis,
+                    overflow = TextOverflow.Visible,
                     textAlign = androidx.compose.ui.text.style.TextAlign.Center,
                     fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
                 )
             }
 
+            // ১. হোম
             NavigationBarItem(
                 selected = currentTab == AppTab.HOME,
                 onClick = { onTabSelected(AppTab.HOME) },
@@ -680,15 +679,16 @@ fun DawahBottomNavigationBar(
                 icon = {
                     Icon(
                         imageVector = if (currentTab == AppTab.HOME) Icons.Filled.Home else Icons.Outlined.Home,
-                        contentDescription = "Home"
+                        contentDescription = "হোম"
                     )
                 },
                 label = {
-                    BottomTabItemLabel(AppTab.HOME.titleBn, currentTab == AppTab.HOME)
+                    BottomTabItemLabel("হোম", currentTab == AppTab.HOME)
                 },
                 colors = navItemColors
             )
 
+            // ২. ২৪ঘণ্টা আমল
             NavigationBarItem(
                 selected = currentTab == AppTab.ROUTINE,
                 onClick = { onTabSelected(AppTab.ROUTINE) },
@@ -696,7 +696,7 @@ fun DawahBottomNavigationBar(
                 icon = {
                     Icon(
                         imageVector = if (currentTab == AppTab.ROUTINE) Icons.Filled.AccessTime else Icons.Outlined.AccessTime,
-                        contentDescription = "24h Routine"
+                        contentDescription = "২৪ঘণ্টা আমল"
                     )
                 },
                 label = {
@@ -705,6 +705,24 @@ fun DawahBottomNavigationBar(
                 colors = navItemColors
             )
 
+            // ৩. ফেভারিট (বুকমার্ক ও সংরক্ষিত আমল)
+            NavigationBarItem(
+                selected = currentTab == AppTab.FAVORITE,
+                onClick = { onTabSelected(AppTab.FAVORITE) },
+                alwaysShowLabel = true,
+                icon = {
+                    Icon(
+                        imageVector = if (currentTab == AppTab.FAVORITE) Icons.Filled.Bookmark else Icons.Outlined.BookmarkBorder,
+                        contentDescription = "ফেভারিট"
+                    )
+                },
+                label = {
+                    BottomTabItemLabel(AppTab.FAVORITE.titleBn, currentTab == AppTab.FAVORITE)
+                },
+                colors = navItemColors
+            )
+
+            // ৪. ইসলামী জীবন
             NavigationBarItem(
                 selected = currentTab == AppTab.MORE,
                 onClick = { onTabSelected(AppTab.MORE) },
@@ -712,7 +730,7 @@ fun DawahBottomNavigationBar(
                 icon = {
                     Icon(
                         imageVector = if (currentTab == AppTab.MORE) Icons.Filled.MoreHoriz else Icons.Outlined.MoreHoriz,
-                        contentDescription = "More"
+                        contentDescription = "ইসলামী জীবন"
                     )
                 },
                 label = {

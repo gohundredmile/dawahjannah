@@ -129,17 +129,17 @@ class MainActivity : ComponentActivity() {
                                     onOpenAppSettings = { viewModel.openSettings(AppTab.HOME) }
                                 )
                             } else if (!(currentTab == AppTab.MORE && currentMoreSub != MoreSubScreen.MAIN)) {
-                                val canGoBackToHome = currentTab == AppTab.TASBIH || currentTab == AppTab.DUA || currentTab == AppTab.FAVORITE
+                                val showTopBarBack = currentTab == AppTab.TASBIH || currentTab == AppTab.DUA
                                 DawahTopAppBar(
                                     title = when (currentTab) {
                                         AppTab.DUA -> "মাসনুন দোয়া"
                                         AppTab.ROUTINE -> "২৪ ঘণ্টার সুন্নাত আমল"
                                         AppTab.TASBIH -> "ডিজিটাল তাসবিহ ও জিকির"
-                                        AppTab.FAVORITE -> "প্রিয় দু'আ ও আমল (বুকমার্ক)"
+                                        AppTab.FAVORITE -> "ফেভারিট (বুকমার্ক)"
                                         AppTab.MORE -> "ইসলামী জীবন"
                                         else -> "দা'ওয়াহ টু জান্নাহ্"
                                     },
-                                    canNavigateBack = canGoBackToHome,
+                                    canNavigateBack = showTopBarBack,
                                     onNavigateBack = { viewModel.selectTab(AppTab.HOME) },
                                     actions = {
                                         IconButton(onClick = { viewModel.openFontMenu() }) {

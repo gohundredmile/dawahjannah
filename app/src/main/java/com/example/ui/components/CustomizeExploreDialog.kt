@@ -4,6 +4,9 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
+import androidx.compose.foundation.gestures.scrollBy
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -21,6 +24,7 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -40,18 +44,25 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import androidx.compose.ui.zIndex
 import com.example.ui.theme.IslamicGold
+import kotlinx.coroutines.launch
 
 /**
  * 'এক্সপ্লোর কাস্টমাইজ করুন' (Customize Explore & Relocate Feature Icons)
@@ -61,7 +72,7 @@ import com.example.ui.theme.IslamicGold
  * - 'আইটেমসমূহ' list of feature cards with:
  *     - Feature icon
  *     - Bengali title
- *     - Reorder controls: Drag Handle (=), Move Up (^), Move Down (v)
+ *     - Reorder controls: Drag with finger on Handle (=) or card, Move Up (^), Move Down (v)
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -75,6 +86,59 @@ fun CustomizeExploreDialog(
     var itemsList by remember(initialFeatures) { mutableStateOf(initialFeatures) }
     var selectedSortMode by remember(currentSortMode) { mutableStateOf(currentSortMode) }
     val isDark = isSystemInDarkTheme()
+
+    val lazyListState = rememberLazyListState()
+    val coroutineScope = rememberCoroutineScope()
+    val density = LocalDensity.current
+
+    // Drag-to-reorder state
+    var draggingItemId by remember { mutableStateOf<String?>(null) }
+    var dragOffsetY by remember { mutableStateOf(0f) }
+    var measuredItemHeightPx by remember { mutableStateOf(0f) }
+    val fallbackStepPx = with(density) { 76.dp.toPx() }
+
+    fun handleDragDelta(itemId: String, deltaY: Float) {
+        dragOffsetY += deltaY
+        val currentIdx = itemsList.indexOfFirst { it.id == itemId }
+        if (currentIdx != -1) {
+            val step = if (measuredItemHeightPx > 0f) measuredItemHeightPx else fallbackStepPx
+            val threshold = step * 0.5f
+
+            if (dragOffsetY > threshold && currentIdx < itemsList.size - 1) {
+                val mutable = itemsList.toMutableList()
+                val moved = mutable.removeAt(currentIdx)
+                mutable.add(currentIdx + 1, moved)
+                itemsList = mutable
+                dragOffsetY -= step
+                selectedSortMode = "CUSTOM"
+                onSaveOrder(mutable.map { it.id }, "CUSTOM")
+            } else if (dragOffsetY < -threshold && currentIdx > 0) {
+                val mutable = itemsList.toMutableList()
+                val moved = mutable.removeAt(currentIdx)
+                mutable.add(currentIdx - 1, moved)
+                itemsList = mutable
+                dragOffsetY += step
+                selectedSortMode = "CUSTOM"
+                onSaveOrder(mutable.map { it.id }, "CUSTOM")
+            }
+
+            // Auto-scroll list if dragging near top or bottom visible boundaries
+            val visibleItems = lazyListState.layoutInfo.visibleItemsInfo
+            if (visibleItems.isNotEmpty()) {
+                val firstVisible = visibleItems.first().index
+                val lastVisible = visibleItems.last().index
+                if (deltaY < 0 && currentIdx <= firstVisible + 1) {
+                    coroutineScope.launch {
+                        lazyListState.scrollBy(deltaY)
+                    }
+                } else if (deltaY > 0 && currentIdx >= lastVisible - 1) {
+                    coroutineScope.launch {
+                        lazyListState.scrollBy(deltaY)
+                    }
+                }
+            }
+        }
+    }
 
     Dialog(
         onDismissRequest = onDismiss,
@@ -149,7 +213,7 @@ fun CustomizeExploreDialog(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(bottom = 20.dp),
+                        .padding(bottom = 18.dp),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     sortOptions.forEach { (modeKey, labelBn) ->
@@ -217,27 +281,60 @@ fun CustomizeExploreDialog(
                     }
                 }
 
-                // 3. Section Subheader: "আইটেমসমূহ"
-                Text(
-                    text = "আইটেমসমূহ",
-                    fontSize = 15.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    color = if (isDark) Color(0xFFCBD5E1) else Color(0xFF334155),
-                    modifier = Modifier.padding(bottom = 12.dp)
-                )
+                // 3. Section Subheader: "আইটেমসমূহ" with hint
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 10.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "আইটেমসমূহ",
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = if (isDark) Color(0xFFCBD5E1) else Color(0xFF334155)
+                    )
+                    Text(
+                        text = "আঙুল দিয়ে টেনে বা তীর দিয়ে সাজান",
+                        fontSize = 11.5.sp,
+                        fontWeight = FontWeight.Normal,
+                        color = if (isDark) Color(0xFF94A3B8) else Color(0xFF64748B)
+                    )
+                }
 
                 // 4. Feature Items Reorderable List
                 LazyColumn(
+                    state = lazyListState,
                     modifier = Modifier.fillMaxSize(),
                     verticalArrangement = Arrangement.spacedBy(10.dp),
                     contentPadding = PaddingValues(bottom = 24.dp)
                 ) {
                     itemsIndexed(itemsList, key = { _, item -> item.id }) { index, item ->
+                        val isDragging = draggingItemId == item.id
                         CustomizeFeatureCard(
                             item = item,
                             index = index,
                             totalCount = itemsList.size,
                             isDark = isDark,
+                            isDragging = isDragging,
+                            dragOffsetY = if (isDragging) dragOffsetY else 0f,
+                            onMeasureHeight = { h ->
+                                if (measuredItemHeightPx == 0f) {
+                                    measuredItemHeightPx = h + with(density) { 10.dp.toPx() }
+                                }
+                            },
+                            onDragStart = {
+                                draggingItemId = item.id
+                                dragOffsetY = 0f
+                            },
+                            onDragDelta = { delta ->
+                                handleDragDelta(item.id, delta)
+                            },
+                            onDragEnd = {
+                                draggingItemId = null
+                                dragOffsetY = 0f
+                            },
                             onMoveUp = {
                                 if (index > 0) {
                                     val mutable = itemsList.toMutableList()
@@ -272,7 +369,7 @@ fun CustomizeExploreDialog(
  * Individual Feature Row Card strictly following the specimen attachment.
  * - Left: Colorful distinct feature icon
  * - Center: Bengali feature title
- * - Right: Action controls [= Drag handle] [^ Move Up] [v Move Down]
+ * - Right: Action controls [= Drag handle (draggable with finger)] [^ Move Up] [v Move Down]
  */
 @Composable
 private fun CustomizeFeatureCard(
@@ -280,18 +377,50 @@ private fun CustomizeFeatureCard(
     index: Int,
     totalCount: Int,
     isDark: Boolean,
+    isDragging: Boolean,
+    dragOffsetY: Float,
+    onMeasureHeight: (Float) -> Unit,
+    onDragStart: () -> Unit,
+    onDragDelta: (Float) -> Unit,
+    onDragEnd: () -> Unit,
     onMoveUp: () -> Unit,
     onMoveDown: () -> Unit
 ) {
     Surface(
         shape = RoundedCornerShape(16.dp),
-        color = if (isDark) Color(0xFF10281E) else Color(0xFFEEF3F6),
+        color = if (isDragging) {
+            if (isDark) Color(0xFF1B3D2F) else Color(0xFFE2F7ED)
+        } else {
+            if (isDark) Color(0xFF10281E) else Color(0xFFEEF3F6)
+        },
         border = BorderStroke(
-            1.dp,
-            if (isDark) Color(0x334ADE80) else Color(0xFFE2E8F0)
+            if (isDragging) 1.8.dp else 1.dp,
+            if (isDragging) IslamicGold else (if (isDark) Color(0x334ADE80) else Color(0xFFE2E8F0))
         ),
-        shadowElevation = 0.5.dp,
-        modifier = Modifier.fillMaxWidth()
+        shadowElevation = if (isDragging) 16.dp else 0.5.dp,
+        modifier = Modifier
+            .fillMaxWidth()
+            .zIndex(if (isDragging) 10f else 1f)
+            .graphicsLayer {
+                translationY = dragOffsetY
+                scaleX = if (isDragging) 1.03f else 1f
+                scaleY = if (isDragging) 1.03f else 1f
+            }
+            .onGloballyPositioned { coords ->
+                onMeasureHeight(coords.size.height.toFloat())
+            }
+            .pointerInput(item.id) {
+                // Long press anywhere on the card to drag
+                detectDragGesturesAfterLongPress(
+                    onDragStart = { onDragStart() },
+                    onDrag = { change, dragAmount ->
+                        change.consume()
+                        onDragDelta(dragAmount.y)
+                    },
+                    onDragEnd = { onDragEnd() },
+                    onDragCancel = { onDragEnd() }
+                )
+            }
     ) {
         Row(
             modifier = Modifier
@@ -337,17 +466,30 @@ private fun CustomizeFeatureCard(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(4.dp)
             ) {
-                // Drag / Equal Handle Icon
+                // Drag Handle Icon - Single-touch immediate dragging with finger
                 Box(
                     modifier = Modifier
-                        .size(32.dp),
+                        .size(40.dp)
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(if (isDragging) IslamicGold.copy(alpha = 0.2f) else Color.Transparent)
+                        .pointerInput(item.id) {
+                            detectDragGestures(
+                                onDragStart = { onDragStart() },
+                                onDrag = { change, dragAmount ->
+                                    change.consume()
+                                    onDragDelta(dragAmount.y)
+                                },
+                                onDragEnd = { onDragEnd() },
+                                onDragCancel = { onDragEnd() }
+                            )
+                        },
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         imageVector = Icons.Default.DragHandle,
-                        contentDescription = "পুনর্বিন্যাস হ্যান্ডেল",
-                        tint = if (isDark) Color(0xFF94A3B8) else Color(0xFF64748B),
-                        modifier = Modifier.size(20.dp)
+                        contentDescription = "আঙুল দিয়ে টেনে পুনর্বিন্যাস করুন",
+                        tint = if (isDragging) IslamicGold else (if (isDark) Color(0xFF94A3B8) else Color(0xFF64748B)),
+                        modifier = Modifier.size(22.dp)
                     )
                 }
 

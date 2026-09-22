@@ -21,6 +21,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Bookmark
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
@@ -229,13 +230,14 @@ fun MasnunDuaScreen(
             }
         }
 
-        // Clean Information and Total Count Indicator Bar
+        // Clean Information and Total Count Indicator Bar with Quran & Sahih Hadith Verification
         Surface(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 8.dp, vertical = 3.dp),
             shape = RoundedCornerShape(10.dp),
-            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f)
+            color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.22f),
+            border = BorderStroke(0.7.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.25f))
         ) {
             Row(
                 modifier = Modifier
@@ -244,16 +246,27 @@ fun MasnunDuaScreen(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.CheckCircle,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(13.dp)
+                    )
+                    Text(
+                        text = "সহীহ কুরআন ও হাদীস ভিত্তিক সংকলন",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.primary,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
                 Text(
-                    text = "মোট দোয়া: ${CalendarHelper.toBanglaNumber(duas.size)} টি",
+                    text = "মোট: ${CalendarHelper.toBanglaNumber(duas.size)} টি দোয়া",
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurface,
-                    fontWeight = FontWeight.Bold
-                )
-                Text(
-                    text = "বিশুদ্ধ ও প্রামাণ্য হাদিস সংকলন",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.primary,
                     fontWeight = FontWeight.SemiBold
                 )
             }

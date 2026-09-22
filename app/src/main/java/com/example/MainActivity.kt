@@ -42,11 +42,17 @@ import com.example.ui.screens.HomeScreen
 import com.example.ui.screens.MasnunDuaScreen
 import com.example.ui.screens.MoreScreen
 import com.example.ui.screens.RoutineScreen
+import com.example.ui.screens.sub.AsmaulHusnaScreen
+import com.example.ui.screens.sub.AyatDetectorAndSolverScreen
+import com.example.ui.screens.sub.QiblaCompassScreen
 import com.example.ui.screens.sub.TasbihScreen
+import com.example.ui.screens.tools.ExplainAyahCameraScreen
+import com.example.ui.screens.tools.ToolsScreen
 import com.example.ui.theme.DawahTheme
 import com.example.ui.viewmodel.AppTab
 import com.example.ui.viewmodel.MainViewModel
 import com.example.ui.viewmodel.MoreSubScreen
+import com.example.ui.viewmodel.ToolsSubScreen
 
 class MainActivity : ComponentActivity() {
 
@@ -73,6 +79,7 @@ class MainActivity : ComponentActivity() {
             val auroraConfig by viewModel.auroraConfig.collectAsState()
             val currentTab by viewModel.currentTab.collectAsState()
             val currentMoreSub by viewModel.moreSubScreen.collectAsState()
+            val currentToolsSub by viewModel.toolsSubScreen.collectAsState()
 
             val baseDensity = LocalDensity.current
             val adjustedDensity = Density(
@@ -128,19 +135,28 @@ class MainActivity : ComponentActivity() {
                                     onOpenThemeModal = { viewModel.openThemeModal() },
                                     onOpenAppSettings = { viewModel.openSettings(AppTab.HOME) }
                                 )
+                            } else if (currentTab == AppTab.TOOLS && currentToolsSub == ToolsSubScreen.EXPLAIN_AYAH_CAMERA) {
+                                // ExplainAyahCameraScreen has its own full-screen immersive viewfinder & top controls
                             } else if (!(currentTab == AppTab.MORE && currentMoreSub != MoreSubScreen.MAIN)) {
-                                val showTopBarBack = currentTab == AppTab.TASBIH || currentTab == AppTab.DUA
+                                val showTopBarBack = currentTab == AppTab.TASBIH || currentTab == AppTab.DUA || (currentTab == AppTab.TOOLS && currentToolsSub != ToolsSubScreen.MAIN)
                                 DawahTopAppBar(
                                     title = when (currentTab) {
                                         AppTab.DUA -> "মাসনুন দোয়া"
                                         AppTab.ROUTINE -> "২৪ ঘণ্টার সুন্নাত আমল"
                                         AppTab.TASBIH -> "ডিজিটাল তাসবিহ ও জিকির"
                                         AppTab.FAVORITE -> "ফেভারিট (বুকমার্ক)"
+                                        AppTab.TOOLS -> if (currentToolsSub == ToolsSubScreen.MAIN) "ইসলামিক টুলস ও ল্যাব" else currentToolsSub.titleBn
                                         AppTab.MORE -> "ইসলামী জীবন"
                                         else -> "দা'ওয়াহ টু জান্নাহ্"
                                     },
                                     canNavigateBack = showTopBarBack,
-                                    onNavigateBack = { viewModel.selectTab(AppTab.HOME) },
+                                    onNavigateBack = {
+                                        if (currentTab == AppTab.TOOLS && currentToolsSub != ToolsSubScreen.MAIN) {
+                                            viewModel.navigateBackToTools()
+                                        } else {
+                                            viewModel.selectTab(AppTab.HOME)
+                                        }
+                                    },
                                     actions = {
                                         IconButton(onClick = { viewModel.openFontMenu() }) {
                                             Icon(
@@ -154,20 +170,28 @@ class MainActivity : ComponentActivity() {
                             }
                         },
                         bottomBar = {
-                            DawahBottomNavigationBar(
-                                currentTab = currentTab,
-                                onTabSelected = { tab ->
-                                    viewModel.selectTab(tab)
-                                    if (tab == AppTab.MORE) {
-                                        viewModel.navigateBackToMore()
+                            if (!(currentTab == AppTab.TOOLS && currentToolsSub == ToolsSubScreen.EXPLAIN_AYAH_CAMERA)) {
+                                DawahBottomNavigationBar(
+                                    currentTab = currentTab,
+                                    onTabSelected = { tab ->
+                                        viewModel.selectTab(tab)
+                                        if (tab == AppTab.TOOLS) {
+                                            viewModel.navigateBackToTools()
+                                        } else if (tab == AppTab.MORE) {
+                                            viewModel.navigateBackToMore()
+                                        }
                                     }
-                                }
-                            )
+                                )
+                            }
                         }
                     ) { innerPadding ->
-                        val canGoBackToHome = currentTab == AppTab.TASBIH || currentTab == AppTab.DUA || currentTab == AppTab.FAVORITE
+                        val canGoBackToHome = currentTab == AppTab.TASBIH || currentTab == AppTab.DUA || currentTab == AppTab.FAVORITE || (currentTab == AppTab.TOOLS && currentToolsSub == ToolsSubScreen.MAIN)
                         BackHandler(enabled = canGoBackToHome) {
                             viewModel.selectTab(AppTab.HOME)
+                        }
+                        val canGoBackToTools = currentTab == AppTab.TOOLS && currentToolsSub != ToolsSubScreen.MAIN
+                        BackHandler(enabled = canGoBackToTools) {
+                            viewModel.navigateBackToTools()
                         }
                         Box(
                             modifier = Modifier.fillMaxSize()
@@ -193,6 +217,35 @@ class MainActivity : ComponentActivity() {
                                     viewModel = viewModel,
                                     contentPadding = innerPadding
                                 )
+                                AppTab.TOOLS -> {
+                                    when (currentToolsSub) {
+                                        ToolsSubScreen.MAIN -> ToolsScreen(
+                                            onOpenExplainAyahCamera = { viewModel.openExplainAyahCamera() },
+                                            onOpenAyatDetector = { viewModel.navigateToToolsSubScreen(ToolsSubScreen.AYAT_DETECTOR_SOLVER) },
+                                            onOpenQibla = { viewModel.navigateToToolsSubScreen(ToolsSubScreen.QIBLA) },
+                                            onOpenTasbih = { viewModel.navigateToToolsSubScreen(ToolsSubScreen.TASBIH) },
+                                            onOpenNamesOfAllah = { viewModel.navigateToToolsSubScreen(ToolsSubScreen.NAMES_OF_ALLAH) },
+                                            contentPadding = innerPadding
+                                        )
+                                        ToolsSubScreen.EXPLAIN_AYAH_CAMERA -> ExplainAyahCameraScreen(
+                                            onNavigateBack = { viewModel.navigateBackToTools() }
+                                        )
+                                        ToolsSubScreen.AYAT_DETECTOR_SOLVER -> AyatDetectorAndSolverScreen(
+                                            viewModel = viewModel
+                                        )
+                                        ToolsSubScreen.QIBLA -> QiblaCompassScreen(
+                                            viewModel = viewModel,
+                                            onBack = { viewModel.navigateBackToTools() }
+                                        )
+                                        ToolsSubScreen.TASBIH -> TasbihScreen(
+                                            viewModel = viewModel,
+                                            contentPadding = innerPadding
+                                        )
+                                        ToolsSubScreen.NAMES_OF_ALLAH -> AsmaulHusnaScreen(
+                                            viewModel = viewModel
+                                        )
+                                    }
+                                }
                                 AppTab.MORE -> MoreScreen(
                                     viewModel = viewModel,
                                     contentPadding = innerPadding

@@ -32,6 +32,7 @@ import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.automirrored.filled.ArrowForwardIos
+import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.FontDownload
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.FormatSize
@@ -43,6 +44,7 @@ import androidx.compose.material.icons.filled.TouchApp
 import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material.icons.outlined.AccessTime
 import androidx.compose.material.icons.outlined.BookmarkBorder
+import androidx.compose.material.icons.outlined.Build
 import androidx.compose.material.icons.outlined.CheckCircleOutline
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.MenuBook
@@ -722,19 +724,19 @@ fun DawahBottomNavigationBar(
                 colors = navItemColors
             )
 
-            // ৪. ইসলামী জীবন
+            // ৪. টুলস (নতুন ট্যাব)
             NavigationBarItem(
-                selected = currentTab == AppTab.MORE,
-                onClick = { onTabSelected(AppTab.MORE) },
+                selected = currentTab == AppTab.TOOLS,
+                onClick = { onTabSelected(AppTab.TOOLS) },
                 alwaysShowLabel = true,
                 icon = {
                     Icon(
-                        imageVector = if (currentTab == AppTab.MORE) Icons.Filled.MoreHoriz else Icons.Outlined.MoreHoriz,
-                        contentDescription = "ইসলামী জীবন"
+                        imageVector = if (currentTab == AppTab.TOOLS) Icons.Filled.Build else Icons.Outlined.Build,
+                        contentDescription = "টুলস"
                     )
                 },
                 label = {
-                    BottomTabItemLabel(AppTab.MORE.titleBn, currentTab == AppTab.MORE)
+                    BottomTabItemLabel(AppTab.TOOLS.titleBn, currentTab == AppTab.TOOLS)
                 },
                 colors = navItemColors
             )

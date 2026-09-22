@@ -90,7 +90,17 @@ enum class AppTab(val index: Int, val titleBn: String) {
     ROUTINE(2, "২৪ঘণ্টা\u00A0আমল"),
     TASBIH(3, "তাসবিহ"),
     FAVORITE(4, "ফেভারিট"),
-    MORE(5, "ইসলামী\u00A0জীবন")
+    TOOLS(5, "টুলস"),
+    MORE(6, "ইসলামী\u00A0জীবন")
+}
+
+enum class ToolsSubScreen(val titleBn: String) {
+    MAIN("টুলস"),
+    EXPLAIN_AYAH_CAMERA("Explain This Ayah ক্যামেরা"),
+    AYAT_DETECTOR_SOLVER("আয়াত ও হাদীস শুদ্ধিকরণ ল্যাব"),
+    QIBLA("ক্বিবলা কম্পাস"),
+    TASBIH("ডিজিটাল তাসবীহ"),
+    NAMES_OF_ALLAH("আসমাউল হুসনা")
 }
 
 enum class MoreSubScreen(val titleBn: String) {
@@ -129,6 +139,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val _moreSubScreen = MutableStateFlow(MoreSubScreen.MAIN)
     val moreSubScreen: StateFlow<MoreSubScreen> = _moreSubScreen.asStateFlow()
 
+    private val _toolsSubScreen = MutableStateFlow(ToolsSubScreen.MAIN)
+    val toolsSubScreen: StateFlow<ToolsSubScreen> = _toolsSubScreen.asStateFlow()
+
     private val _selectedIslamicSection = MutableStateFlow<IslamicLifeSection?>(null)
     val selectedIslamicSection: StateFlow<IslamicLifeSection?> = _selectedIslamicSection.asStateFlow()
 
@@ -139,6 +152,20 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             autoSelectCurrentRoutineTimeSlot()
         }
         _currentTab.value = tab
+    }
+
+    fun navigateToToolsSubScreen(sub: ToolsSubScreen) {
+        _toolsSubScreen.value = sub
+        _currentTab.value = AppTab.TOOLS
+    }
+
+    fun openExplainAyahCamera() {
+        _toolsSubScreen.value = ToolsSubScreen.EXPLAIN_AYAH_CAMERA
+        _currentTab.value = AppTab.TOOLS
+    }
+
+    fun navigateBackToTools() {
+        _toolsSubScreen.value = ToolsSubScreen.MAIN
     }
 
     fun navigateToMoreSubScreen(sub: MoreSubScreen) {

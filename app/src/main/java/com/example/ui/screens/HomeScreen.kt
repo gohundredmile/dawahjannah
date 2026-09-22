@@ -1,6 +1,7 @@
 package com.example.ui.screens
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -12,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -20,6 +22,7 @@ import androidx.compose.material.icons.filled.AccessTime
 import androidx.compose.material.icons.filled.Article
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Brightness2
+import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Explore
@@ -30,6 +33,7 @@ import androidx.compose.material.icons.filled.LocalFireDepartment
 import androidx.compose.material.icons.filled.MenuBook
 import androidx.compose.material.icons.filled.Mosque
 import androidx.compose.material.icons.filled.NightsStay
+import androidx.compose.material.icons.filled.PhotoCamera
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.SelfImprovement
 import androidx.compose.material.icons.filled.Star
@@ -83,6 +87,7 @@ import com.example.ui.components.SehriIftarSummaryCard
 import com.example.ui.components.TopFeaturesSection
 import com.example.ui.components.TripleCalendarDialog
 import com.example.ui.theme.IslamicGold
+import com.example.ui.theme.LocalBanglaFontFamily
 import com.example.ui.viewmodel.AppTab
 import com.example.ui.viewmodel.MainViewModel
 import com.example.ui.viewmodel.MoreSubScreen
@@ -237,18 +242,18 @@ fun HomeScreen(
                 isTopEight = true,
                 onClickAction = { showDetailedSehriIftar = true }
             ),
-            // ৯. ইসলামী জীবন
+            // ৯. ইসলামিক টুলস ও ল্যাব
             HomeFeatureItem(
-                id = "articles",
+                id = "tools",
                 serialNumberBn = "০৯",
-                titleBn = "৯. ইসলামী জীবন",
-                shortTitleBn = "ইসলামী জীবন",
-                subtitleBn = "নির্ভরযোগ্য ইসলামিক প্রবন্ধ, মাসআলা ও জীবনবিধান",
-                categoryBn = "ইসলামিক জ্ঞান",
-                icon = Icons.Default.Article,
-                iconColor = Color(0xFFEA580C),
-                isTopEight = false,
-                onClickAction = { viewModel.selectTab(AppTab.MORE) }
+                titleBn = "৯. ইসলামিক টুলস ও ল্যাব",
+                shortTitleBn = "টুলস",
+                subtitleBn = "Explain This Ayah ক্যামেরা, শুদ্ধিকরণ ল্যাব ও ক্বিবলা কম্পাস",
+                categoryBn = "স্মার্ট টুলস",
+                icon = Icons.Default.Build,
+                iconColor = Color(0xFF0D9488),
+                isTopEight = true,
+                onClickAction = { viewModel.selectTab(AppTab.TOOLS) }
             ),
             // ১০. সালাতের সময়সূচী
             HomeFeatureItem(
@@ -528,6 +533,82 @@ fun HomeScreen(
                         viewModel.selectTab(AppTab.TASBIH)
                     }
                 )
+            }
+        }
+
+        // 2.3 Explain This Ayah ক্যামেরা Highlight Card
+        item {
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 12.dp, vertical = 5.dp)
+                    .clickable { viewModel.openExplainAyahCamera() },
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.28f)
+                ),
+                border = BorderStroke(1.2.dp, IslamicGold.copy(alpha = 0.65f))
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(14.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Surface(
+                        shape = RoundedCornerShape(12.dp),
+                        color = IslamicGold.copy(alpha = 0.2f),
+                        border = BorderStroke(1.dp, IslamicGold),
+                        modifier = Modifier.size(46.dp)
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Icon(
+                                imageVector = Icons.Default.PhotoCamera,
+                                contentDescription = "Explain This Ayah",
+                                tint = IslamicGold,
+                                modifier = Modifier.size(26.dp)
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.width(12.dp))
+
+                    Column(modifier = Modifier.weight(1f)) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(
+                                text = "Explain This Ayah ক্যামেরা",
+                                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                                fontFamily = LocalBanglaFontFamily.current,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Surface(
+                                shape = RoundedCornerShape(4.dp),
+                                color = Color(0xFF059669)
+                            ) {
+                                Text(
+                                    text = "AI স্মার্ট",
+                                    style = MaterialTheme.typography.labelSmall.copy(
+                                        fontSize = 10.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = Color.White
+                                    ),
+                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                                    fontFamily = LocalBanglaFontFamily.current
+                                )
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(3.dp))
+
+                        Text(
+                            text = "কুরআনের যেকোনো পাতার ওপর ক্যামেরা তাক করুন — অর্থ, তফসির, শানে নুযূল ও অডিও তিলাওয়াত জানুন",
+                            style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.5.sp),
+                            fontFamily = LocalBanglaFontFamily.current,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
             }
         }
 

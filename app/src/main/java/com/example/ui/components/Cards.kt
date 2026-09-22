@@ -30,11 +30,13 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.BookmarkBorder
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.FontDownload
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.MenuBook
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.NotificationsOff
 import androidx.compose.material.icons.filled.Settings
@@ -80,6 +82,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.R
@@ -88,6 +91,7 @@ import com.example.data.model.DuaItem
 import com.example.data.model.ForbiddenTimeInfo
 import com.example.data.model.PrayerTimeItem
 import com.example.data.model.RoutineItem
+import com.example.ui.theme.ArabicFontFamily
 import com.example.ui.theme.IslamicGold
 import com.example.ui.theme.IslamicGoldLight
 import com.example.ui.theme.IslamicIvory
@@ -937,7 +941,7 @@ fun DuaCard(
                 .fillMaxWidth()
                 .padding(horizontal = 12.dp, vertical = 12.dp)
         ) {
-            // Header with Category Badge and Actions
+            // Header with Category Badge, Source Badge, and Actions
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
@@ -959,6 +963,42 @@ fun DuaCard(
                             modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
                         )
                     }
+
+                    // Authenticity & Source Badge (Quran / Sahih Hadith / Sunan)
+                    val isQuranSource = dua.reference.contains("কুরআন") || dua.reference.contains("সূরা") || dua.titleBn.contains("সূরা")
+                    val isBukhariMuslim = dua.reference.contains("বুখারী") || dua.reference.contains("মুসলিম")
+                    val sourceBadgeText = when {
+                        isQuranSource -> "আল-কুরআন"
+                        isBukhariMuslim -> "সহীহাইন"
+                        dua.reference.contains("তিরমিযী") || dua.reference.contains("দাঊদ") || dua.reference.contains("দাউদ") || dua.reference.contains("নাসাঈ") || dua.reference.contains("ইবন মাজাহ") -> "সুনান গ্রন্থ"
+                        else -> "সহীহ হাদিস"
+                    }
+
+                    Surface(
+                        color = if (isQuranSource) MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.85f) else MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.75f),
+                        shape = RoundedCornerShape(12.dp),
+                        border = BorderStroke(0.6.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.padding(horizontal = 7.dp, vertical = 3.dp),
+                            horizontalArrangement = Arrangement.spacedBy(3.dp)
+                        ) {
+                            Icon(
+                                imageVector = if (isQuranSource) Icons.Default.MenuBook else Icons.Default.CheckCircle,
+                                contentDescription = null,
+                                tint = if (isQuranSource) MaterialTheme.colorScheme.onTertiaryContainer else MaterialTheme.colorScheme.onSecondaryContainer,
+                                modifier = Modifier.size(12.dp)
+                            )
+                            Text(
+                                text = sourceBadgeText,
+                                style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.5.sp),
+                                fontWeight = FontWeight.SemiBold,
+                                color = if (isQuranSource) MaterialTheme.colorScheme.onTertiaryContainer else MaterialTheme.colorScheme.onSecondaryContainer
+                            )
+                        }
+                    }
+
                     if (dua.id.startsWith("dua_remote_")) {
                         Surface(
                             color = MaterialTheme.colorScheme.tertiaryContainer,
@@ -1072,26 +1112,27 @@ fun DuaCard(
 
             Spacer(modifier = Modifier.height(10.dp))
 
-            // Arabic text in soft highlighted container
+            // Arabic text in soft highlighted container with ArabicFontFamily (Amiri)
             Surface(
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp),
+                shape = RoundedCornerShape(14.dp),
                 color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.12f),
-                border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.20f))
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.22f))
             ) {
                 Text(
                     text = dua.arabicText,
-                    style = MaterialTheme.typography.titleMedium.copy(
-                        fontFamily = FontFamily.Default,
-                        lineHeight = 32.sp,
-                        fontSize = 18.sp
+                    style = MaterialTheme.typography.titleLarge.copy(
+                        fontFamily = ArabicFontFamily,
+                        lineHeight = 40.sp,
+                        fontSize = 22.sp,
+                        textDirection = TextDirection.ContentOrRtl
                     ),
-                    fontWeight = FontWeight.SemiBold,
+                    fontWeight = FontWeight.Medium,
                     color = MaterialTheme.colorScheme.onSurface,
                     textAlign = TextAlign.Center,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(14.dp)
+                        .padding(horizontal = 14.dp, vertical = 16.dp)
                 )
             }
 
@@ -1140,7 +1181,7 @@ fun DuaCard(
                                         modifier = Modifier.size(17.dp)
                                     )
                                     Text(
-                                        text = "ফজিলত ও উপকারিতা:",
+                                        text = "বিশুদ্ধ ফজিলত ও উপকারিতা:",
                                         style = MaterialTheme.typography.labelMedium,
                                         fontWeight = FontWeight.Bold,
                                         color = MaterialTheme.colorScheme.primary
@@ -1181,7 +1222,7 @@ fun DuaCard(
                                 )
                                 Column {
                                     Text(
-                                        text = "রেফারেন্স ও সনদ সূত্র:",
+                                        text = "দলিল ও প্রামাণ্য হাদীস সূত্র:",
                                         style = MaterialTheme.typography.labelSmall,
                                         fontWeight = FontWeight.Bold,
                                         color = MaterialTheme.colorScheme.primary
@@ -1193,6 +1234,41 @@ fun DuaCard(
                                         lineHeight = 17.sp
                                     )
                                 }
+                            }
+                        }
+                    }
+
+                    // Scholarly Analysis & Clarification Notes (if present)
+                    val containsScholarlyNote = dua.virtuesBn.contains("[বিঃদ্রঃ") ||
+                            dua.reference.contains("[বিঃদ্রঃ") ||
+                            dua.reference.contains("তাহক্বীক") ||
+                            dua.reference.contains("দুর্বল")
+                    if (containsScholarlyNote) {
+                        Surface(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(top = 6.dp),
+                            shape = RoundedCornerShape(10.dp),
+                            color = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.25f),
+                            border = BorderStroke(0.8.dp, MaterialTheme.colorScheme.error.copy(alpha = 0.35f))
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Info,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.error,
+                                    modifier = Modifier.size(14.dp)
+                                )
+                                Text(
+                                    text = "মুহাদ্দিসীনগণের তাহক্বীক ও বিশুদ্ধতার পর্যালোচনা সম্বলিত",
+                                    style = MaterialTheme.typography.labelSmall.copy(fontSize = 11.sp),
+                                    color = MaterialTheme.colorScheme.onErrorContainer,
+                                    fontWeight = FontWeight.SemiBold
+                                )
                             }
                         }
                     }

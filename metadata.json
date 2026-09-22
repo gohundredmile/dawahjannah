@@ -1,6 +1,6 @@
 {
   "name": "দা'ওয়াহ টু জান্নাহ্",
-  "description": "Comprehensive offline Islamic companion with prayer times, 24h Sunnah routine, Daily Light & Inspiration, Islamic Life collapsible guides, 99 Names of Allah with virtues and detail cards, Masnun Dua vault, and spiritual checklist.",
+  "description": "Comprehensive Islamic companion with 'Explain This Ayah' AI camera scanner, authentic Tafsir & word-by-word meanings, Islamic Tools Hub, 24h Sunnah routine, prayer times, 99 Names of Allah, and verified Masnun Dua.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

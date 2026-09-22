@@ -27,6 +27,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
@@ -156,8 +157,26 @@ fun RoutineScreen(
     }
 
     val listState = rememberLazyListState()
+    val filterRowState = rememberLazyListState()
     val coroutineScope = rememberCoroutineScope()
     var isBannerCollapsed by rememberSaveable { mutableStateOf(false) }
+
+    // Auto-navigate to current time section on tab entry
+    val currentWaqtSlotId = remember { viewModel.getCurrentRoutineTimeSlotId() }
+    val currentWaqtSlotTitle = remember(currentWaqtSlotId) {
+        RoutineData.timeSlots.find { it.id == currentWaqtSlotId }?.titleBn ?: ""
+    }
+
+    LaunchedEffect(Unit) {
+        viewModel.autoSelectCurrentRoutineTimeSlot()
+    }
+
+    LaunchedEffect(selectedSlot) {
+        val targetIndex = RoutineData.timeSlots.indexOfFirst { it.id == selectedSlot }
+        if (targetIndex >= 0) {
+            filterRowState.animateScrollToItem((targetIndex - 1).coerceAtLeast(0))
+        }
+    }
 
     Column(
         modifier = Modifier
@@ -232,16 +251,64 @@ fun RoutineScreen(
             }
         }
 
-        // Horizontal Phase / Time Slot Filter Bar
-        Row(
+        // Quick Jump to Current Waqt Indicator (if user browsed away to another section)
+        if (selectedSlot != currentWaqtSlotId && searchQuery.isEmpty() && currentWaqtSlotTitle.isNotEmpty()) {
+            Surface(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 8.dp, vertical = 2.dp)
+                    .clickable {
+                        viewModel.setRoutineTimeSlotFilter(currentWaqtSlotId)
+                        coroutineScope.launch {
+                            listState.animateScrollToItem(0)
+                        }
+                    },
+                shape = RoundedCornerShape(10.dp),
+                color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.50f),
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.25f))
+            ) {
+                Row(
+                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Default.AccessTime,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(15.dp)
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = "বর্তমান সময়: $currentWaqtSlotTitle",
+                            style = MaterialTheme.typography.labelMedium.copy(fontSize = 12.sp),
+                            color = MaterialTheme.colorScheme.onPrimaryContainer,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    }
+                    Text(
+                        text = "আমলে যান ➔",
+                        style = MaterialTheme.typography.labelSmall.copy(fontSize = 11.sp),
+                        color = MaterialTheme.colorScheme.primary,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
+        }
+
+        // Horizontal Phase / Time Slot Filter Bar (Auto-scrollable LazyRow)
+        LazyRow(
+            state = filterRowState,
             modifier = Modifier
                 .fillMaxWidth()
-                .horizontalScroll(rememberScrollState())
                 .padding(horizontal = 8.dp, vertical = 3.dp),
-            horizontalArrangement = Arrangement.spacedBy(6.dp)
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+            contentPadding = PaddingValues(horizontal = 2.dp)
         ) {
-            RoutineData.timeSlots.forEach { slot ->
+            items(RoutineData.timeSlots, key = { it.id }) { slot ->
                 val isSelected = selectedSlot == slot.id
+                val isCurrentWaqt = slot.id == currentWaqtSlotId
                 FilterChip(
                     selected = isSelected,
                     onClick = {
@@ -251,16 +318,41 @@ fun RoutineScreen(
                         }
                     },
                     label = {
-                        Text(
-                            text = slot.titleBn,
-                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
-                        )
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(
+                                text = slot.titleBn,
+                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
+                            )
+                            if (isCurrentWaqt) {
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Surface(
+                                    shape = RoundedCornerShape(4.dp),
+                                    color = if (isSelected) Color.White.copy(alpha = 0.28f) else MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
+                                ) {
+                                    Text(
+                                        text = "এখন",
+                                        style = MaterialTheme.typography.labelSmall.copy(fontSize = 9.5.sp, fontWeight = FontWeight.Bold),
+                                        color = if (isSelected) Color.White else MaterialTheme.colorScheme.primary,
+                                        modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp)
+                                    )
+                                }
+                            }
+                        }
                     },
                     leadingIcon = if (isSelected) {
                         {
                             Icon(
-                                imageVector = Icons.Default.CheckCircle,
+                                imageVector = if (isCurrentWaqt) Icons.Default.AccessTime else Icons.Default.CheckCircle,
                                 contentDescription = null,
+                                modifier = Modifier.size(16.dp)
+                            )
+                        }
+                    } else if (isCurrentWaqt) {
+                        {
+                            Icon(
+                                imageVector = Icons.Default.AccessTime,
+                                contentDescription = "বর্তমান ওয়াক্ত",
+                                tint = MaterialTheme.colorScheme.primary,
                                 modifier = Modifier.size(16.dp)
                             )
                         }
@@ -274,7 +366,7 @@ fun RoutineScreen(
                     ),
                     shape = RoundedCornerShape(12.dp),
                     border = FilterChipDefaults.filterChipBorder(
-                        borderColor = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline.copy(alpha = 0.2f),
+                        borderColor = if (isSelected) MaterialTheme.colorScheme.primary else if (isCurrentWaqt) MaterialTheme.colorScheme.primary.copy(alpha = 0.6f) else MaterialTheme.colorScheme.outline.copy(alpha = 0.2f),
                         selectedBorderColor = MaterialTheme.colorScheme.primary,
                         enabled = true,
                         selected = isSelected

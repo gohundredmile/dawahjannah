@@ -22,6 +22,7 @@ import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Brightness2
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Explore
 import androidx.compose.material.icons.filled.FindReplace
 import androidx.compose.material.icons.filled.Healing
 import androidx.compose.material.icons.filled.HistoryToggleOff
@@ -435,6 +436,20 @@ fun HomeScreen(
                         viewModel.openIslamicLifeSection(it)
                     }
                 }
+            ),
+            // ২২. ক্বিবলা কম্পাস
+            HomeFeatureItem(
+                id = "qibla_compass",
+                serialNumberBn = "২২",
+                titleBn = "২২. ক্বিবলা কম্পাস",
+                shortTitleBn = "ক্বিবলা কম্পাস",
+                subtitleBn = "ম্যাগনেটিক ও এক্সিলারোমিটার সেন্সরে কাবা শরিফের নির্ভুল দিক ও দূরত্ব",
+                categoryBn = "ইসলামিক টুলস",
+                icon = Icons.Default.Explore,
+                iconColor = Color(0xFF059669),
+                onClickAction = {
+                    viewModel.openQibla()
+                }
             )
         )
     }
@@ -550,7 +565,8 @@ fun HomeScreen(
                 onSelectAsrMethod = { asr -> viewModel.setAsrJuristicMethod(asr) },
                 onSelectHighLatitudeRule = { rule -> viewModel.setHighLatitudeRule(rule) },
                 onResetSalatPreferences = { viewModel.resetSalatPreferencesToStandard() },
-                onClearGpsMessage = { viewModel.clearGpsMessage() }
+                onClearGpsMessage = { viewModel.clearGpsMessage() },
+                onOpenQibla = { viewModel.openQibla() }
             )
         }
 

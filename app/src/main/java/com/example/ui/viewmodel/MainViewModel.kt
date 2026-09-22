@@ -104,7 +104,8 @@ enum class MoreSubScreen(val titleBn: String) {
     SCRATCHPAD("ব্যক্তিগত দোয়া জার্নাল"),
     SETTINGS("সেটিংস ও অ্যাপ থিম"),
     AYAT_DETECTOR_SOLVER("আয়াত ও হাদীস শুদ্ধিকরণ (Detector & Solver)"),
-    ISLAMIC_LIFE_SECTION_DETAIL("ইসলামী জীবন অধ্যায়")
+    ISLAMIC_LIFE_SECTION_DETAIL("ইসলামী জীবন অধ্যায়"),
+    QIBLA("ক্বিবলা কম্পাস (Qibla Direction)")
 }
 
 data class TasbihState(
@@ -134,6 +135,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private var previousTabBeforeSettings: AppTab? = null
 
     fun selectTab(tab: AppTab) {
+        if (tab == AppTab.ROUTINE) {
+            autoSelectCurrentRoutineTimeSlot()
+        }
         _currentTab.value = tab
     }
 
@@ -150,6 +154,12 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     fun openSettings(fromTab: AppTab = AppTab.HOME) {
         previousTabBeforeSettings = fromTab
         _moreSubScreen.value = MoreSubScreen.SETTINGS
+        _currentTab.value = AppTab.MORE
+    }
+
+    fun openQibla(fromTab: AppTab = AppTab.HOME) {
+        previousTabBeforeSettings = fromTab
+        _moreSubScreen.value = MoreSubScreen.QIBLA
         _currentTab.value = AppTab.MORE
     }
 
@@ -708,6 +718,75 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     fun setRoutineSearchQuery(query: String) {
         _routineSearchQuery.value = query
+    }
+
+    /**
+     * Determines the appropriate 24-hour routine timeSlotId based on current time
+     * and live astronomical prayer status (e.g. at 12:00 noon -> "dhuhr_waqt").
+     */
+    fun getCurrentRoutineTimeSlotId(cal: Calendar = Calendar.getInstance()): String {
+        val totalMinutes = cal.get(Calendar.HOUR_OF_DAY) * 60 + cal.get(Calendar.MINUTE)
+        val prayers = prayerStatus.value.prayerList
+        val fajrMin = prayers.find { it.id == "fajr" }?.timeMinutesFromMidnight ?: (4 * 60 + 30)
+        val dhuhrMin = prayers.find { it.id == "dhuhr" }?.timeMinutesFromMidnight ?: (12 * 60)
+        val asrMin = prayers.find { it.id == "asr" }?.timeMinutesFromMidnight ?: (16 * 60 + 15)
+        val maghribMin = prayers.find { it.id == "maghrib" }?.timeMinutesFromMidnight ?: (18 * 60 + 15)
+        val ishaMin = prayers.find { it.id == "isha" }?.timeMinutesFromMidnight ?: (20 * 60)
+
+        return when {
+            // Late night: Tahajjud (03:00 AM until Fajr)
+            totalMinutes in (3 * 60) until fajrMin -> "last_part_night" // ১৫. তাহাজ্জুদ
+
+            // Fajr period: Wake up, Wudu & Fajr prayer (from Fajr until Fajr + 75m / sunrise end)
+            totalMinutes in fajrMin until (fajrMin + 75) -> "before_fajr" // ১. ঘুম থেকে ওঠার পর
+
+            // Morning after Fajr: Morning adhkar (from ~Fajr+75 to 7:30 AM)
+            totalMinutes in (fajrMin + 75) until (7 * 60 + 30) -> "after_fajr" // ২. ফজরের পর (সকাল)
+
+            // Morning Quran session (7:30 AM - 9:30 AM)
+            totalMinutes in (7 * 60 + 30) until (9 * 60 + 30) -> "morning_quran" // ৩. সকালের কুরআন
+
+            // Workplace / Daily business & ethics (9:30 AM until Dhuhr preparation ~11:45 AM)
+            totalMinutes in (9 * 60 + 30) until (dhuhrMin - 15) -> "daily_work" // ৪. কাজের মধ্যে আমল
+
+            // Dhuhr prayer time (11:45 AM / 12:00 PM until 2:00 PM)
+            totalMinutes in (dhuhrMin - 15) until (dhuhrMin + 120) -> "dhuhr_waqt" // ৫. যোহরের সময়
+
+            // Afternoon study & Islamic education (2:00 PM until Asr start)
+            totalMinutes in (dhuhrMin + 120) until asrMin -> "noon_education" // ৬. ইসলামিক শিক্ষা
+
+            // Asr prayer time (Asr start until Asr + 60 mins)
+            totalMinutes in asrMin until (asrMin + 60) -> "asr_waqt" // ৭. আসরের সময়
+
+            // Evening adhkar before sunset (Asr + 60 mins until Maghrib)
+            totalMinutes in (asrMin + 60) until maghribMin -> "after_asr" // ৮. সন্ধ্যার আমল
+
+            // Maghrib prayer & family time (Maghrib until Maghrib + 60 mins)
+            totalMinutes in maghribMin until (maghribMin + 60) -> "after_maghrib" // ৯. মাগরিবের পর
+
+            // Extra Quran / preferred surahs (Maghrib + 60 mins until Isha)
+            totalMinutes in (maghribMin + 60) until ishaMin -> "extra_quran" // ১০. পছন্দের সূরা
+
+            // Isha prayer time (Isha start until Isha + 90 mins / ~9:30-10:00 PM)
+            totalMinutes in ishaMin until (ishaMin + 90) -> "isha_waqt" // ১১. এশার সময়
+
+            // Night deeds before sleep (Isha + 90 mins until 11:00 PM)
+            totalMinutes in (ishaMin + 90) until (23 * 60) -> "before_sleep" // ১২. রাতের আমল
+
+            // Bedtime duas (11:00 PM - 11:45 PM)
+            totalMinutes in (23 * 60) until (23 * 60 + 45) -> "bedtime_dua" // ১৩. শয়নের দোয়া
+
+            // Special Duas & Istighfar (11:45 PM - 00:30 AM)
+            totalMinutes >= (23 * 60 + 45) || totalMinutes < (0 * 60 + 30) -> "special_duas" // ১৪. বিশেষ দোয়া
+
+            // Night sleep (00:30 AM - 03:00 AM)
+            else -> "sleep_bedtime" // ১৬. ঘুম
+        }
+    }
+
+    fun autoSelectCurrentRoutineTimeSlot() {
+        val slotId = getCurrentRoutineTimeSlotId()
+        _routineTimeSlotFilter.value = slotId
     }
 
     val filteredRoutineList = combine(

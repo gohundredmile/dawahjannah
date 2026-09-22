@@ -22,6 +22,7 @@ import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.BookmarkBorder
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.EditNote
+import androidx.compose.material.icons.filled.Explore
 import androidx.compose.material.icons.filled.FindReplace
 import androidx.compose.material.icons.filled.Healing
 import androidx.compose.material.icons.filled.MenuBook
@@ -58,6 +59,7 @@ import com.example.ui.screens.sub.DuroodAmolFullScreen
 import com.example.ui.screens.sub.DuroodScreen
 import com.example.ui.screens.sub.HealthDuaScreen
 import com.example.ui.screens.sub.IslamicLifeSectionDetailScreen
+import com.example.ui.screens.sub.QiblaCompassScreen
 import com.example.ui.screens.sub.ScratchpadScreen
 import com.example.ui.screens.sub.SettingsScreen
 import com.example.ui.screens.sub.TasbihScreen
@@ -77,6 +79,11 @@ fun MoreScreen(
     if (currentSubScreen != MoreSubScreen.MAIN) {
         if (currentSubScreen == MoreSubScreen.DUROOD_AMOL) {
             DuroodAmolFullScreen(
+                viewModel = viewModel,
+                onBack = { viewModel.navigateBackToMore() }
+            )
+        } else if (currentSubScreen == MoreSubScreen.QIBLA) {
+            QiblaCompassScreen(
                 viewModel = viewModel,
                 onBack = { viewModel.navigateBackToMore() }
             )
@@ -439,6 +446,19 @@ fun MoreScreen(
                             viewModel.openIslamicLifeSection(it)
                         }
                     }
+                )
+                Spacer(modifier = Modifier.height(10.dp))
+            }
+
+            // Featured: Qibla Direction Finder (Compass)
+            item {
+                MoreFeatureItem(
+                    title = "ক্বিবলা কম্পাস (Qibla Direction)",
+                    subtitle = "ম্যাগনেটোমিটার ও এক্সিলারোমিটার সেন্সর চালিত নির্ভুল কাবা দিক ও দূরত্ব নির্দেশক",
+                    icon = Icons.Default.Explore,
+                    iconTint = Color(0xFF059669),
+                    badge = "সেন্সর কম্পাস • নতুন",
+                    onClick = { viewModel.openQibla() }
                 )
                 Spacer(modifier = Modifier.height(10.dp))
             }

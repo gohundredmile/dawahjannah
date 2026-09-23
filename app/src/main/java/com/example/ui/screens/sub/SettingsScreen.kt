@@ -1734,10 +1734,11 @@ fun SettingsScreen(viewModel: MainViewModel) {
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
                                 text = when {
+                                    apkDownloadState.isSameVersionInstalled || apkDownloadState.isAlreadyUpToDate ->
+                                        apkDownloadState.upToDatePromptTitle.ifBlank { "This version already installed." }
                                     apkDownloadState.isDownloading -> "APK ওটিএ ডাউনলোড হচ্ছে..."
                                     apkDownloadState.waitingForInstallPermission -> "অ্যাপ ইনস্টল পারমিশন প্রয়োজন"
                                     apkDownloadState.installCompleted -> "ইনস্টলার শুরু হয়েছে"
-                                    apkDownloadState.isAlreadyUpToDate -> "অ্যাপ ইতিমধ্যে আপ-টু-ডেট"
                                     apkDownloadState.error != null -> "আপডেট সমস্যা"
                                     else -> "অ্যাপ আপডেট"
                                 },
@@ -1789,25 +1790,33 @@ fun SettingsScreen(viewModel: MainViewModel) {
                                         style = MaterialTheme.typography.bodySmall
                                     )
                                 }
-                                apkDownloadState.isAlreadyUpToDate -> {
+                                apkDownloadState.isAlreadyUpToDate || apkDownloadState.isSameVersionInstalled -> {
                                     Surface(
-                                        shape = RoundedCornerShape(8.dp),
+                                        shape = RoundedCornerShape(10.dp),
                                         color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.35f),
                                         modifier = Modifier.fillMaxWidth()
                                     ) {
-                                        Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                                            Text(
-                                                text = apkDownloadState.upToDateMessage ?: "আপনার অ্যাপটি ইতিমধ্যে সর্বশেষ সংস্করণে আপডেট রয়েছে।",
-                                                style = MaterialTheme.typography.bodySmall,
-                                                color = MaterialTheme.colorScheme.onSurface
-                                            )
-                                            if (apkDownloadState.downloadedFile != null) {
+                                        Column(modifier = Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                                Icon(
+                                                    Icons.Default.Check,
+                                                    contentDescription = null,
+                                                    tint = MaterialTheme.colorScheme.primary,
+                                                    modifier = Modifier.size(20.dp)
+                                                )
+                                                Spacer(modifier = Modifier.width(8.dp))
                                                 Text(
-                                                    text = "💡 ক্যাশে পূর্বে ডাউনলোডকৃত সম্পূর্ণ APK ফাইল প্রস্তুত রয়েছে।",
-                                                    style = MaterialTheme.typography.labelSmall,
+                                                    text = "This version already installed.",
+                                                    style = MaterialTheme.typography.titleSmall,
+                                                    fontWeight = FontWeight.Bold,
                                                     color = MaterialTheme.colorScheme.primary
                                                 )
                                             }
+                                            Text(
+                                                text = apkDownloadState.upToDateMessage ?: "This version already installed.\n\nআপনার ডিভাইসে ইতিমধ্যে সর্বশেষ সংস্করণ ইনস্টল রয়েছে। ওটিএ আপডেট বাতিল করা হয়েছে।",
+                                                style = MaterialTheme.typography.bodySmall,
+                                                color = MaterialTheme.colorScheme.onSurface
+                                            )
                                         }
                                     }
                                 }
@@ -1836,23 +1845,21 @@ fun SettingsScreen(viewModel: MainViewModel) {
                                     Text("এখনই ইনস্টল করুন")
                                 }
                             }
-                            apkDownloadState.isAlreadyUpToDate -> {
+                            apkDownloadState.isAlreadyUpToDate || apkDownloadState.isSameVersionInstalled -> {
                                 Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                                     Button(
+                                        onClick = { viewModel.dismissApkDownloadDialog() },
+                                        modifier = Modifier.fillMaxWidth()
+                                    ) {
+                                        Text("ঠিক আছে (OK)")
+                                    }
+                                    OutlinedButton(
                                         onClick = { viewModel.startFullOtaApkUpdate(forceDownload = true) },
                                         modifier = Modifier.fillMaxWidth()
                                     ) {
-                                        Icon(Icons.Default.Download, contentDescription = null, modifier = Modifier.size(16.dp))
+                                        Icon(Icons.Default.Sync, contentDescription = null, modifier = Modifier.size(16.dp))
                                         Spacer(modifier = Modifier.width(6.dp))
-                                        Text("পুনরায় ডাউনলোড ও ফ্রেশ ইনস্টল (Force Update)")
-                                    }
-                                    if (apkDownloadState.downloadedFile != null) {
-                                        OutlinedButton(
-                                            onClick = { viewModel.retryInstallDownloadedApk() },
-                                            modifier = Modifier.fillMaxWidth()
-                                        ) {
-                                            Text("সংরক্ষিত APK ফাইল দিয়ে এখনই ইনস্টল করুন")
-                                        }
+                                        Text("জোরপূর্বক রি-ইনস্টল (Force Reinstall)")
                                     }
                                 }
                             }

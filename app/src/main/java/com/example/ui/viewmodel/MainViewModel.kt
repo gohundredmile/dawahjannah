@@ -1256,6 +1256,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         val waitingForInstallPermission: Boolean = false,
         val installCompleted: Boolean = false,
         val isAlreadyUpToDate: Boolean = false,
+        val isSameVersionInstalled: Boolean = false,
+        val upToDatePromptTitle: String = "This version already installed.",
         val upToDateMessage: String? = null
     )
 
@@ -1281,16 +1283,26 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             if (result.isSuccess) {
                 val release = result.getOrNull()
                 _latestReleaseInfo.value = release
-                if (release != null && release.hasNewerVersion) {
+
+                val installedName = gitHubUpdateManager.installedAppVersionName
+                val installedCode = gitHubUpdateManager.installedAppVersionCode
+                val remoteName = release?.tagName?.removePrefix("v")?.removePrefix("V")?.trim() ?: ""
+                val remoteCode = (release?.remoteVersionCode ?: 0).toLong()
+
+                val isNewer = if (remoteCode > 0 && installedCode > 0) {
+                    remoteCode > installedCode
+                } else if (remoteName.isNotBlank()) {
+                    gitHubUpdateManager.isVersionNewer(remoteName, installedName)
+                } else {
+                    release?.hasNewerVersion == true
+                }
+
+                if (release != null && isNewer) {
                     val ann = if (!release.announcement.isNullOrBlank()) "\n\nঘোষণা: ${release.announcement}" else ""
                     val source = if (release.isFromAppUpdatesJson) " (app-updates.json থেকে)" else " (GitHub Releases থেকে)"
                     _updateAlertMessage.value = "গিটহাবে নতুন সংস্করণ পাওয়া গেছে (${release.tagName})$source!\n${release.versionName}\n\nনতুন পরিবর্তন:\n${release.releaseNotes.take(300)}$ann\n\n'সম্পূর্ণ APK ওটিএ আপডেট' বাটনে চাপলে সরাসরি নতুন APK ডাউনলোড ও ইনস্টল হবে।"
-                } else if (release != null) {
-                    val ann = if (!release.announcement.isNullOrBlank()) "\n\nঘোষণা/বার্তা:\n${release.announcement}" else ""
-                    val source = if (release.isFromAppUpdatesJson) "app-updates.json" else "GitHub Releases"
-                    _updateAlertMessage.value = "গিটহাব সিঙ্ক স্ট্যাটাস ($source):\nআপনার অ্যাপ ও কনটেন্ট সম্পূর্ণ হালনাগাদ রয়েছে (ইনস্টলড: v$installedAppVersionName - কনটেন্ট: v$appliedContentVersion)। কোনো নতুন আপডেট বাকি নেই।$ann"
                 } else {
-                    _updateAlertMessage.value = "আপনার অ্যাপটি সর্বশেষ সংস্করণে (v$installedAppVersionName) আপডেট করা আছে।"
+                    _updateAlertMessage.value = "This version already installed.\n\nআপনার ডিভাইসে ইতিমধ্যে সংস্করণ v$installedName (কোড: $installedCode) সফলভাবে ইনস্টল রয়েছে। ওটিএ আপডেট সম্পন্ন হয়েছে, কোনো নতুন সংস্করণ অবশিষ্ট নেই।"
                 }
             } else {
                 val errorMsg = result.exceptionOrNull()?.message ?: "অজ্ঞাত ত্রুটি"
@@ -1303,10 +1315,11 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     /**
      * Starts the full OTA APK update process:
-     * 1. Downloads the APK in-app with streaming byte & percentage progress
-     * 2. Automatically launches Android package installer (prompts "Do you want to install an update?")
-     * 3. Handles Unknown Sources permission if needed
-     * 4. Supports forceDownload to bypass up-to-date check and perform fresh reinstall
+     * 1. If same version is already installed on the phone, gives prompt: "This version already installed." and aborts update.
+     * 2. Clears any stale or older cached APKs so old versions never hijack the update.
+     * 3. Downloads the latest APK in-app with streaming byte & percentage progress
+     * 4. Automatically launches Android package installer.
+     * 5. Handles Unknown Sources permission if needed.
      */
     fun startFullOtaApkUpdate(forceDownload: Boolean = false) {
         viewModelScope.launch {
@@ -1321,23 +1334,36 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 }
             }
 
-            // If not forcing download, check if device is already running this version
-            val currentCode = gitHubUpdateManager.installedVersionCode
-            val remoteCode = release?.remoteVersionCode ?: 0
-            if (!forceDownload && remoteCode > 0 && currentCode >= remoteCode && release?.hasNewerVersion == false) {
-                val cachedApk = gitHubUpdateManager.getCachedApkFile()
+            val installedCode = gitHubUpdateManager.installedAppVersionCode
+            val installedName = gitHubUpdateManager.installedAppVersionName
+            val remoteVer = release?.tagName?.removePrefix("v")?.removePrefix("V")?.trim() ?: ""
+            val remoteCode = (release?.remoteVersionCode ?: 0).toLong()
+
+            // If same or older version is installed on the phone, prompt and abort!
+            val isSameOrOlder = if (remoteCode > 0 && installedCode > 0) {
+                remoteCode <= installedCode
+            } else if (remoteVer.isNotBlank()) {
+                !gitHubUpdateManager.isVersionNewer(remoteVer, installedName)
+            } else {
+                release?.hasNewerVersion == false
+            }
+
+            if (!forceDownload && isSameOrOlder) {
+                // Clear any stale cached APK files so they never cause confusion
+                gitHubUpdateManager.clearCachedApks()
                 _apkDownloadState.value = ApkDownloadProgress(
                     isDownloading = false,
                     isAlreadyUpToDate = true,
-                    downloadedFile = cachedApk,
-                    upToDateMessage = "আপনার ডিভাইসে ইতিমধ্যে সংস্করণ $installedAppVersionName ইনস্টল রয়েছে।\n\nআপনি চাইলে নিচের বাটনে চাপ দিয়ে রিলিজ APK ফাইলটি সরাসরি পুনরায় ডাউনলোড ও ফ্রেশ ইনস্টল করতে পারেন।"
+                    isSameVersionInstalled = true,
+                    upToDatePromptTitle = "This version already installed.",
+                    upToDateMessage = "This version already installed.\n\nআপনার ডিভাইসে ইতিমধ্যে বর্তমান সংস্করণ v$installedName (কোড: $installedCode) সফলভাবে ইনস্টল রয়েছে। কোনো নতুন আপডেট নেই।\n\nওটিএ আপডেট প্রক্রিয়া বাতিল করা হয়েছে (Update Aborted)।"
                 )
                 return@launch
             }
 
-            // Check if we already have a valid cached APK file on device from a recent download
-            val existingApk = gitHubUpdateManager.getCachedApkFile()
-            if (!forceDownload && existingApk != null && existingApk.length() > 10_000_000L) {
+            // Remote has a newer version: check if a valid cached APK matching this new version exists
+            val existingApk = gitHubUpdateManager.getValidCachedApkFile(remoteCode, remoteVer)
+            if (!forceDownload && existingApk != null && existingApk.length() > 5_000_000L) {
                 val sizeMb = existingApk.length().toFloat() / (1024f * 1024f)
                 _apkDownloadState.value = ApkDownloadProgress(
                     isDownloading = false,

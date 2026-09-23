@@ -31,7 +31,8 @@ data class GitHubReleaseInfo(
     val announcement: String? = null,
     val isFromAppUpdatesJson: Boolean = false,
     val isContentUpdateOnly: Boolean = false,
-    val remoteVersionCode: Int = 0
+    val remoteVersionCode: Int = 0,
+    val isSameVersionInstalled: Boolean = false
 )
 
 @JsonClass(generateAdapter = true)
@@ -117,15 +118,25 @@ class GitHubUpdateManager(private val context: Context) {
 
     val installedAppVersionName: String
         get() = try {
-            val pInfo = context.packageManager.getPackageInfo(context.packageName, 0)
-            pInfo.versionName ?: "1.3.7"
+            val pInfo = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                context.packageManager.getPackageInfo(context.packageName, PackageManager.PackageInfoFlags.of(0))
+            } else {
+                @Suppress("DEPRECATION")
+                context.packageManager.getPackageInfo(context.packageName, 0)
+            }
+            pInfo.versionName ?: com.example.BuildConfig.VERSION_NAME
         } catch (_: Exception) {
-            "1.3.7"
+            com.example.BuildConfig.VERSION_NAME
         }
 
     val installedAppVersionCode: Long
         get() = try {
-            val pInfo = context.packageManager.getPackageInfo(context.packageName, 0)
+            val pInfo = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                context.packageManager.getPackageInfo(context.packageName, PackageManager.PackageInfoFlags.of(0))
+            } else {
+                @Suppress("DEPRECATION")
+                context.packageManager.getPackageInfo(context.packageName, 0)
+            }
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
                 pInfo.longVersionCode
             } else {
@@ -133,7 +144,7 @@ class GitHubUpdateManager(private val context: Context) {
                 pInfo.versionCode.toLong()
             }
         } catch (_: Exception) {
-            137L
+            com.example.BuildConfig.VERSION_CODE.toLong()
         }
 
     val bundledVersionName: String by lazy {
@@ -243,20 +254,18 @@ class GitHubUpdateManager(private val context: Context) {
     private fun getCandidateUrls(owner: String, repo: String): List<String> {
         val ts = System.currentTimeMillis()
         return listOf(
-            // 1. Direct GitHub Git contents API (instant, bypasses Fastly 5-min edge cache)
-            "https://api.github.com/repos/$owner/$repo/contents/app-updates.json",
-            "https://api.github.com/repos/$owner/$repo/contents/app/src/main/assets/app-updates.json",
+            // 1. Direct GitHub Raw with HEAD & main branch (instant, avoids GitHub API 60 req/hr rate limit)
+            "https://raw.githubusercontent.com/$owner/$repo/main/app-updates.json?ts=$ts",
+            "https://raw.githubusercontent.com/$owner/$repo/HEAD/app-updates.json?ts=$ts",
+            "https://raw.githubusercontent.com/$owner/$repo/main/app/src/main/assets/app-updates.json?ts=$ts",
+            "https://raw.githubusercontent.com/$owner/$repo/master/app-updates.json?ts=$ts",
+            "https://raw.githubusercontent.com/$owner/$repo/master/app/src/main/assets/app-updates.json?ts=$ts",
             // 2. jsDelivr CDN with @main / @latest
             "https://cdn.jsdelivr.net/gh/$owner/$repo@main/app-updates.json?ts=$ts",
             "https://cdn.jsdelivr.net/gh/$owner/$repo@latest/app-updates.json?ts=$ts",
-            // 3. GitHub Raw with HEAD (always latest commit)
-            "https://raw.githubusercontent.com/$owner/$repo/HEAD/app-updates.json?ts=$ts",
-            "https://raw.githubusercontent.com/$owner/$repo/HEAD/app/src/main/assets/app-updates.json?ts=$ts",
-            // 4. GitHub Raw with main / master branches
-            "https://raw.githubusercontent.com/$owner/$repo/main/app-updates.json?ts=$ts",
-            "https://raw.githubusercontent.com/$owner/$repo/main/app/src/main/assets/app-updates.json?ts=$ts",
-            "https://raw.githubusercontent.com/$owner/$repo/master/app-updates.json?ts=$ts",
-            "https://raw.githubusercontent.com/$owner/$repo/master/app/src/main/assets/app-updates.json?ts=$ts"
+            // 3. GitHub Git contents API
+            "https://api.github.com/repos/$owner/$repo/contents/app-updates.json",
+            "https://api.github.com/repos/$owner/$repo/contents/app/src/main/assets/app-updates.json"
         )
     }
 
@@ -271,7 +280,7 @@ class GitHubUpdateManager(private val context: Context) {
         var gitHubReleaseInfo: GitHubReleaseInfo? = null
         var otaUpdateInfo: GitHubReleaseInfo? = null
 
-        // 1. Check raw app-updates.json first (source of truth for OTA content updates)
+        // 1. Check raw app-updates.json first (source of truth for OTA updates)
         val otaResult = fetchRawAppUpdatesJson(owner, repo)
         if (otaResult.isSuccess) {
             otaUpdateInfo = otaResult.getOrNull()
@@ -279,66 +288,85 @@ class GitHubUpdateManager(private val context: Context) {
 
         // 2. Check GitHub Releases API (for full APK binary releases)
         try {
-            val releaseUrl = "https://api.github.com/repos/$owner/$repo/releases/latest"
-            val releaseReq = Request.Builder()
-                .url(releaseUrl)
-                .header("Accept", "application/vnd.github.v3+json")
-                .header("User-Agent", "DawahToJannah-Android-App")
-                .header("Cache-Control", "no-cache, no-store, must-revalidate")
-                .header("Pragma", "no-cache")
-                .build()
+            val releaseUrls = listOf(
+                "https://api.github.com/repos/$owner/$repo/releases/latest",
+                "https://api.github.com/repos/$owner/$repo/releases?per_page=3"
+            )
 
-            val releaseResp = client.newCall(releaseReq).execute()
-            if (releaseResp.isSuccessful) {
-                val bodyString = releaseResp.body?.string()
-                if (!bodyString.isNullOrBlank()) {
-                    val json = JSONObject(bodyString)
-                    val tagName = json.optString("tag_name", "v1.0.0")
-                    val releaseName = json.optString("name", tagName)
-                    val releaseNotes = json.optString("body", "কোনো বিবরণ উল্লেখ নেই।")
-                    val publishedAt = json.optString("published_at", "")
+            for (releaseUrl in releaseUrls) {
+                if (gitHubReleaseInfo != null) break
+                try {
+                    val releaseReq = Request.Builder()
+                        .url(releaseUrl)
+                        .header("Accept", "application/vnd.github.v3+json")
+                        .header("User-Agent", "DawahToJannah-Android-App")
+                        .header("Cache-Control", "no-cache, no-store, must-revalidate")
+                        .header("Pragma", "no-cache")
+                        .build()
 
-                    var apkDownloadUrl: String? = null
-                    val assetsArray = json.optJSONArray("assets")
-                    if (assetsArray != null) {
-                        var fallbackApkUrl: String? = null
-                        for (i in 0 until assetsArray.length()) {
-                            val asset = assetsArray.getJSONObject(i)
-                            val name = asset.optString("name", "")
-                            if (name.endsWith(".apk", ignoreCase = true)) {
-                                val dl = asset.optString("browser_download_url", "")
-                                if (dl.isNotBlank()) {
-                                    if (name.contains("release", ignoreCase = true)) {
-                                        apkDownloadUrl = dl
-                                        break
+                    val releaseResp = client.newCall(releaseReq).execute()
+                    if (releaseResp.isSuccessful) {
+                        val bodyString = releaseResp.body?.string()
+                        if (!bodyString.isNullOrBlank()) {
+                            val releaseObj = if (bodyString.trimStart().startsWith("[")) {
+                                val array = JSONArray(bodyString)
+                                if (array.length() > 0) array.getJSONObject(0) else null
+                            } else {
+                                JSONObject(bodyString)
+                            }
+
+                            if (releaseObj != null) {
+                                val tagName = releaseObj.optString("tag_name", "v1.0.0")
+                                val releaseName = releaseObj.optString("name", tagName)
+                                val releaseNotes = releaseObj.optString("body", "কোনো বিবরণ উল্লেখ নেই।")
+                                val publishedAt = releaseObj.optString("published_at", "")
+
+                                var apkDownloadUrl: String? = null
+                                val assetsArray = releaseObj.optJSONArray("assets")
+                                if (assetsArray != null) {
+                                    var fallbackApkUrl: String? = null
+                                    for (i in 0 until assetsArray.length()) {
+                                        val asset = assetsArray.getJSONObject(i)
+                                        val name = asset.optString("name", "")
+                                        if (name.endsWith(".apk", ignoreCase = true)) {
+                                            val dl = asset.optString("browser_download_url", "")
+                                            if (dl.isNotBlank()) {
+                                                if (name.contains("release", ignoreCase = true)) {
+                                                    apkDownloadUrl = dl
+                                                    break
+                                                }
+                                                if (fallbackApkUrl == null) fallbackApkUrl = dl
+                                            }
+                                        }
                                     }
-                                    if (fallbackApkUrl == null) fallbackApkUrl = dl
+                                    if (apkDownloadUrl == null) {
+                                        apkDownloadUrl = fallbackApkUrl
+                                    }
                                 }
+                                if (apkDownloadUrl == null) {
+                                    apkDownloadUrl = releaseObj.optString("html_url", "https://github.com/$owner/$repo/releases")
+                                }
+
+                                val cleanVersion = tagName.removePrefix("v").removePrefix("V").trim()
+                                val hasNewer = isVersionNewer(cleanVersion, installedAppVersionName)
+                                val isSameOrOlder = !hasNewer
+
+                                gitHubReleaseInfo = GitHubReleaseInfo(
+                                    tagName = tagName,
+                                    versionName = releaseName,
+                                    releaseNotes = releaseNotes,
+                                    downloadUrl = apkDownloadUrl,
+                                    publishedAt = publishedAt,
+                                    hasNewerVersion = hasNewer,
+                                    announcement = null,
+                                    isFromAppUpdatesJson = false,
+                                    isContentUpdateOnly = false,
+                                    isSameVersionInstalled = isSameOrOlder
+                                )
                             }
                         }
-                        if (apkDownloadUrl == null) {
-                            apkDownloadUrl = fallbackApkUrl
-                        }
                     }
-                    if (apkDownloadUrl == null) {
-                        apkDownloadUrl = json.optString("html_url", "https://github.com/$owner/$repo/releases")
-                    }
-
-                    val cleanVersion = tagName.removePrefix("v").trim()
-                    val hasNewer = isVersionNewer(cleanVersion, currentAppVersion)
-
-                    gitHubReleaseInfo = GitHubReleaseInfo(
-                        tagName = tagName,
-                        versionName = releaseName,
-                        releaseNotes = releaseNotes,
-                        downloadUrl = apkDownloadUrl,
-                        publishedAt = publishedAt,
-                        hasNewerVersion = hasNewer,
-                        announcement = null,
-                        isFromAppUpdatesJson = false,
-                        isContentUpdateOnly = false
-                    )
-                }
+                } catch (_: Exception) {}
             }
         } catch (_: Exception) {
             // Ignored, fallback to OTA info
@@ -371,12 +399,13 @@ class GitHubUpdateManager(private val context: Context) {
         // Fallback: Check local bundled asset so user always sees valid info
         val localBundled = getLocalBundledUpdates()
         if (localBundled != null) {
-            val localHasNewer = localBundled.remoteVersionCode > appliedVersionCode ||
-                    isVersionNewer(localBundled.versionName, appliedContentVersion) ||
+            val localHasNewer = (localBundled.remoteVersionCode > installedAppVersionCode) ||
+                    isVersionNewer(localBundled.versionName, installedAppVersionName) ||
                     (localBundled.announcement != null && localBundled.announcement != prefs.getString("applied_announcement_id", ""))
             return@withContext Result.success(
                 localBundled.copy(
                     hasNewerVersion = localHasNewer,
+                    isSameVersionInstalled = !localHasNewer,
                     releaseNotes = localBundled.releaseNotes + "\n\n(লোকাল অফলাইন মোড: গিটহাব সংযোগ না পাওয়া গেলেও লোকাল প্যাকেজ ডাটা সম্পূর্ণ প্রস্তুত।)"
                 )
             )
@@ -464,8 +493,9 @@ class GitHubUpdateManager(private val context: Context) {
         val remoteHash = if (!rawContentString.isNullOrBlank()) calculateHash(rawContentString) else ""
 
         val cleanVersion = versionName.removePrefix("v").removePrefix("V").trim()
-        val hasNewerVer = isVersionNewer(cleanVersion, currentAppVersion)
-        val hasHigherCode = versionCode > appliedVersionCode
+        val hasNewerVer = isVersionNewer(cleanVersion, installedAppVersionName)
+        val hasHigherCode = versionCode > installedAppVersionCode
+        val isSameOrOlder = (versionCode <= installedAppVersionCode && !isVersionNewer(cleanVersion, installedAppVersionName))
 
         // Compare content hashes
         val hasDifferentHash = remoteHash.isNotBlank() && appliedContentHash.isNotBlank() && remoteHash != appliedContentHash
@@ -495,7 +525,8 @@ class GitHubUpdateManager(private val context: Context) {
             announcement = announcementText,
             isFromAppUpdatesJson = true,
             isContentUpdateOnly = true,
-            remoteVersionCode = versionCode
+            remoteVersionCode = versionCode,
+            isSameVersionInstalled = isSameOrOlder && !hasDifferentHash && !hasNewAnnouncement && !hasNewerLastUpdated
         )
     }
 
@@ -886,6 +917,75 @@ class GitHubUpdateManager(private val context: Context) {
     }
 
     /**
+     * Returns a cached APK only if it matches the expected remote version and is strictly
+     * newer than the installed app. Automatically deletes any stale or older APKs.
+     */
+    fun getValidCachedApkFile(expectedCode: Long = 0L, expectedVer: String? = null): File? {
+        val candidates = listOf(
+            File(File(context.cacheDir, "apk_updates"), "dawah_to_jannah_update.apk"),
+            File(File(context.filesDir, "apk_updates"), "dawah_to_jannah_update.apk"),
+            File(File(context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS) ?: context.cacheDir, "apk_updates"), "dawah_to_jannah_update.apk")
+        )
+        for (f in candidates) {
+            if (f.exists() && f.length() > 5_000_000L) {
+                try {
+                    val archiveInfo = context.packageManager.getPackageArchiveInfo(f.absolutePath, 0)
+                    if (archiveInfo != null) {
+                        val apkCode = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                            archiveInfo.longVersionCode
+                        } else {
+                            @Suppress("DEPRECATION")
+                            archiveInfo.versionCode.toLong()
+                        }
+                        val apkVer = archiveInfo.versionName ?: ""
+
+                        // Delete if it is same or older than installed version to prevent stale installation loop
+                        if (apkCode <= installedAppVersionCode) {
+                            f.delete()
+                            continue
+                        }
+
+                        // Check if it matches expected target
+                        if (expectedCode > 0 && apkCode == expectedCode) {
+                            return f
+                        }
+                        if (!expectedVer.isNullOrBlank() && apkVer.isNotBlank()) {
+                            val cleanApkVer = apkVer.trim().removePrefix("v").removePrefix("V")
+                            val cleanExpected = expectedVer.trim().removePrefix("v").removePrefix("V")
+                            if (cleanApkVer.equals(cleanExpected, ignoreCase = true)) {
+                                return f
+                            }
+                        }
+                        if (expectedCode == 0L && expectedVer.isNullOrBlank() && apkCode > installedAppVersionCode) {
+                            return f
+                        }
+                    }
+                } catch (_: Exception) {}
+            }
+        }
+        return null
+    }
+
+    /**
+     * Deletes all cached APK files and temporary downloads
+     */
+    fun clearCachedApks() {
+        val candidates = listOf(
+            File(File(context.cacheDir, "apk_updates"), "dawah_to_jannah_update.apk"),
+            File(File(context.cacheDir, "apk_updates"), "dawah_to_jannah_update.apk.tmp"),
+            File(File(context.filesDir, "apk_updates"), "dawah_to_jannah_update.apk"),
+            File(File(context.filesDir, "apk_updates"), "dawah_to_jannah_update.apk.tmp"),
+            File(File(context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS) ?: context.cacheDir, "apk_updates"), "dawah_to_jannah_update.apk"),
+            File(File(context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS) ?: context.cacheDir, "apk_updates"), "dawah_to_jannah_update.apk.tmp")
+        )
+        for (f in candidates) {
+            try {
+                if (f.exists()) f.delete()
+            } catch (_: Exception) {}
+        }
+    }
+
+    /**
      * Downloads the full APK file with real-time progress callbacks for OTA installation.
      * Uses optimized download client, internal storage to prevent Scoped Storage blocks,
      * atomic file swap (.tmp -> .apk), 64KB buffer, and comprehensive URL fallbacks.
@@ -913,11 +1013,13 @@ class GitHubUpdateManager(private val context: Context) {
         // 3. Fallback standard release naming conventions (Release APKs & Debug APKs)
         val standardFallbacks = listOf(
             "https://github.com/$repoOwner/$repoName/releases/latest/download/app-release.apk",
+            "https://github.com/$repoOwner/$repoName/releases/download/v1.7.8/app-release.apk",
+            "https://github.com/$repoOwner/$repoName/releases/download/v1.7.7/app-release.apk",
             "https://github.com/$repoOwner/$repoName/releases/download/v1.7.6/app-release.apk",
-            "https://github.com/$repoOwner/$repoName/releases/download/v1.7.5/app-release.apk",
             "https://github.com/$repoOwner/$repoName/releases/latest/download/app-debug.apk",
+            "https://github.com/$repoOwner/$repoName/releases/download/v1.7.8/app-debug.apk",
+            "https://github.com/$repoOwner/$repoName/releases/download/v1.7.7/app-debug.apk",
             "https://github.com/$repoOwner/$repoName/releases/download/v1.7.6/app-debug.apk",
-            "https://github.com/$repoOwner/$repoName/releases/download/v1.7.5/app-debug.apk",
             "https://github.com/$repoOwner/$repoName/releases/download/v$currentAppVersion/app-release.apk",
             "https://github.com/$repoOwner/$repoName/releases/download/v$currentAppVersion/app-debug.apk",
             "https://github.com/$repoOwner/$repoName/releases/download/latest/app-release.apk",
@@ -1011,7 +1113,7 @@ class GitHubUpdateManager(private val context: Context) {
 গিটহাব থেকে সরাসরি APK ডাউনলোড করা সম্ভব হয়নি (${lastError?.message ?: "সংযোগ সমস্যা"})।
 
 💡 সম্ভাব্য কারণ ও দ্রুত সমাধান:
-১. রিপোজিটরিতে (github.com/$repoOwner/$repoName) নতুন রিলিজ ট্যাগ (v1.7.6) তৈরি হয়ে থাকতে পারে অথবা সাময়িক নেটওয়ার্ক বিঘ্ন ঘটেছে।
+১. রিপোজিটরিতে (github.com/$repoOwner/$repoName) নতুন রিলিজ ট্যাগ (v1.7.8) তৈরি হয়ে থাকতে পারে অথবা সাময়িক নেটওয়ার্ক বিঘ্ন ঘটেছে।
 ২. 'ডাউনলোড ম্যানেজার' বাটনে চাপ দিয়ে ব্যাকগ্রাউন্ডে ডাউনলোড করতে পারেন।
 ৩. কোনো ইনস্টল ঝামেলা ছাড়াই নতুন সমস্ত কনটেন্ট আপডেট পেতে 'অনলাইন কনটেন্ট দ্রুত সিঙ্ক' বাটনে চাপ দিন।
 """.trimIndent()

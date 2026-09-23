@@ -5,32 +5,40 @@ import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
 import android.widget.Toast
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.BookmarkBorder
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Healing
+import androidx.compose.material.icons.filled.MenuBook
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.FilterChip
@@ -42,7 +50,11 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -66,8 +78,132 @@ fun HealthDuaScreen(
     val list by viewModel.filteredHealthDuas.collectAsState()
     val bookmarkedIds by viewModel.bookmarkedIds.collectAsState()
 
+    val listState = rememberLazyListState()
+    val readingProgressFraction by remember {
+        derivedStateOf {
+            val layoutInfo = listState.layoutInfo
+            val totalItems = layoutInfo.totalItemsCount
+            if (totalItems <= 1) {
+                0f
+            } else {
+                val visibleItems = layoutInfo.visibleItemsInfo
+                if (visibleItems.isEmpty()) {
+                    0f
+                } else {
+                    val lastItem = visibleItems.last()
+                    val firstItem = visibleItems.first()
+                    if (lastItem.index >= totalItems - 1) {
+                        val viewportHeight = layoutInfo.viewportEndOffset - layoutInfo.viewportStartOffset
+                        val bottomOffset = lastItem.offset + lastItem.size
+                        if (bottomOffset <= viewportHeight) 1f
+                        else (lastItem.index.toFloat() / (totalItems - 1).toFloat()).coerceIn(0f, 1f)
+                    } else {
+                        val itemFraction = if (firstItem.size > 0) (-firstItem.offset.toFloat() / firstItem.size.toFloat()).coerceIn(0f, 1f) else 0f
+                        ((firstItem.index.toFloat() + itemFraction) / (totalItems - 1).toFloat()).coerceIn(0f, 1f)
+                    }
+                }
+            }
+        }
+    }
+    val animatedProgress by animateFloatAsState(
+        targetValue = readingProgressFraction,
+        animationSpec = spring(stiffness = Spring.StiffnessLow),
+        label = "readingProgress"
+    )
+    val progressPercent = (animatedProgress * 100).toInt().coerceIn(0, 100)
+    val progressPercentBn = com.example.util.CalendarHelper.toBanglaNumber(progressPercent)
+
     Column(modifier = Modifier.fillMaxSize()) {
+        // Sticky Reading Progress Indicator Header pinned at the top
+        Surface(
+            modifier = Modifier.fillMaxWidth(),
+            color = MaterialTheme.colorScheme.surface.copy(alpha = 0.96f),
+            shadowElevation = if (animatedProgress > 0.02f) 3.dp else 0.dp
+        ) {
+            Column(modifier = Modifier.fillMaxWidth()) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 6.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = if (progressPercent >= 100) Icons.Default.CheckCircle else Icons.Default.MenuBook,
+                            contentDescription = null,
+                            tint = if (progressPercent >= 100) Color(0xFF10B981) else MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = "পঠন অগ্রগতি",
+                            style = MaterialTheme.typography.labelMedium,
+                            fontWeight = FontWeight.SemiBold,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+
+                    Surface(
+                        shape = RoundedCornerShape(12.dp),
+                        color = if (progressPercent >= 100) Color(0xFF10B981).copy(alpha = 0.15f)
+                        else MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
+                        border = BorderStroke(
+                            0.8.dp,
+                            if (progressPercent >= 100) Color(0xFF10B981).copy(alpha = 0.4f)
+                            else IslamicGold.copy(alpha = 0.35f)
+                        )
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            if (progressPercent >= 100) {
+                                Text(
+                                    text = "সম্পূর্ণ পঠিত আলহামদুলিল্লাহ ✓",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color(0xFF047857)
+                                )
+                            } else {
+                                Text(
+                                    text = "$progressPercentBn% পঠিত",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                            }
+                        }
+                    }
+                }
+
+                // Smooth animated progress bar with gradient fill
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(4.dp)
+                        .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f))
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth(animatedProgress.coerceIn(0.01f, 1f))
+                            .fillMaxHeight()
+                            .background(
+                                Brush.horizontalGradient(
+                                    colors = listOf(
+                                        MaterialTheme.colorScheme.primary,
+                                        IslamicGold,
+                                        if (progressPercent >= 100) Color(0xFF10B981) else IslamicGold
+                                    )
+                                )
+                            )
+                    )
+                }
+            }
+        }
+
         LazyColumn(
+            state = listState,
             modifier = Modifier.fillMaxSize(),
             contentPadding = PaddingValues(bottom = 24.dp)
         ) {

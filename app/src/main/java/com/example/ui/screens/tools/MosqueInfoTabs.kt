@@ -255,7 +255,7 @@ fun MosquePrayerJamatTab(
                 )
 
                 prayerStatus.prayerList.take(5).forEachIndexed { index, prayer ->
-                    val isCurrent = prayer.isActive
+                    val isCurrent = prayer.isHighlighted || prayer.id == prayerStatus.activePrayer?.id
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()

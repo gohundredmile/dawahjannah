@@ -39,6 +39,7 @@ import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.BookmarkBorder
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.ExpandLess
@@ -532,26 +533,95 @@ fun IslamicLifeSectionDetailScreen(
                 }
             )
 
-            // Sticky Hairline Reading Progress Bar at the very top
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(3.5.dp)
-                    .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f))
+            // Sticky Reading Progress Indicator Header pinned at the very top of the article
+            Surface(
+                modifier = Modifier.fillMaxWidth(),
+                color = MaterialTheme.colorScheme.surface.copy(alpha = 0.96f),
+                shadowElevation = if (animatedProgress > 0.02f) 3.dp else 0.dp
             ) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth(animatedProgress.coerceIn(0f, 1f))
-                        .fillMaxHeight()
-                        .background(
-                            Brush.horizontalGradient(
-                                colors = listOf(
-                                    MaterialTheme.colorScheme.primary,
-                                    IslamicGold
-                                )
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 6.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = if (progressPercent >= 100) Icons.Default.CheckCircle else Icons.Default.MenuBook,
+                                contentDescription = null,
+                                tint = if (progressPercent >= 100) Color(0xFF10B981) else MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(16.dp)
                             )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(
+                                text = "পঠন অগ্রগতি",
+                                style = MaterialTheme.typography.labelMedium,
+                                fontWeight = FontWeight.SemiBold,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+
+                        Surface(
+                            shape = RoundedCornerShape(12.dp),
+                            color = if (progressPercent >= 100) {
+                                Color(0xFF10B981).copy(alpha = 0.15f)
+                            } else {
+                                MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
+                            },
+                            border = BorderStroke(
+                                0.8.dp,
+                                if (progressPercent >= 100) Color(0xFF10B981).copy(alpha = 0.4f)
+                                else IslamicGold.copy(alpha = 0.35f)
+                            )
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                if (progressPercent >= 100) {
+                                    Text(
+                                        text = "সম্পূর্ণ পঠিত আলহামদুলিল্লাহ ✓",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        fontWeight = FontWeight.Bold,
+                                        color = Color(0xFF047857)
+                                    )
+                                } else {
+                                    Text(
+                                        text = "$progressPercentBn% পঠিত",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.primary
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    // Smooth animated progress bar with gradient fill
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(4.dp)
+                            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f))
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth(animatedProgress.coerceIn(0.01f, 1f))
+                                .fillMaxHeight()
+                                .background(
+                                    Brush.horizontalGradient(
+                                        colors = listOf(
+                                            MaterialTheme.colorScheme.primary,
+                                            IslamicGold,
+                                            if (progressPercent >= 100) Color(0xFF10B981) else IslamicGold
+                                        )
+                                    )
+                                )
                         )
-                )
+                    }
+                }
             }
 
             // User Friendly Quick Controls Banner (Font Scale & Aurora Status)

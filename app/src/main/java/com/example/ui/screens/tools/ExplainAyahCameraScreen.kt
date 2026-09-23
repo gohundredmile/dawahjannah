@@ -64,6 +64,7 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.ContentCopy
+import androidx.compose.material.icons.filled.FlashAuto
 import androidx.compose.material.icons.filled.FlashOff
 import androidx.compose.material.icons.filled.FlashOn
 import androidx.compose.material.icons.filled.FlipCameraAndroid
@@ -81,6 +82,8 @@ import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material.icons.filled.VolumeUp
+import androidx.compose.material.icons.filled.VpnKey
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -102,11 +105,13 @@ import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateMapOf
@@ -139,6 +144,7 @@ import com.example.util.AyahAudioPlayerHelper
 import com.example.util.AyahScannerAiService
 import com.example.util.LoopMode
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.InputStream
@@ -182,6 +188,87 @@ fun ExplainAyahCameraScreen(
     var isAnalyzing by remember { mutableStateOf(false) }
     var searchQuery by remember { mutableStateOf("") }
     var isSearchExpanded by remember { mutableStateOf(false) }
+    var isAutoScanEnabled by remember { mutableStateOf(true) }
+    var showApiKeyDialog by remember { mutableStateOf(false) }
+    var apiKeyInput by remember { mutableStateOf(aiService.getEffectiveApiKey()) }
+
+    // Camera control states
+    var camera by remember { mutableStateOf<Camera?>(null) }
+    var imageCapture by remember { mutableStateOf<ImageCapture?>(null) }
+    var isFlashOn by remember { mutableStateOf(false) }
+    var isFrontCamera by remember { mutableStateOf(false) }
+
+    // Unified safe capture and AI analysis trigger
+    val triggerCapture: () -> Unit = {
+        if (!isAnalyzing) {
+            isAnalyzing = true
+            val capture = imageCapture
+            if (hasCameraPermission && capture != null) {
+                val executor = ContextCompat.getMainExecutor(context)
+                try {
+                    capture.takePicture(
+                        executor,
+                        object : ImageCapture.OnImageCapturedCallback() {
+                            override fun onCaptureSuccess(image: ImageProxy) {
+                                coroutineScope.launch(Dispatchers.Default) {
+                                    try {
+                                        val bitmap = imageProxyToBitmap(image)
+                                        image.close()
+                                        if (bitmap != null) {
+                                            processImage(bitmap, aiService) { result ->
+                                                isAnalyzing = false
+                                                recognizedAyah = result
+                                            }
+                                        } else {
+                                            withContext(Dispatchers.Main) {
+                                                isAnalyzing = false
+                                                recognizedAyah = QuranAyahCatalog.catalog.first()
+                                            }
+                                        }
+                                    } catch (_: Exception) {
+                                        try { image.close() } catch (_: Exception) {}
+                                        withContext(Dispatchers.Main) {
+                                            isAnalyzing = false
+                                            recognizedAyah = QuranAyahCatalog.catalog.first()
+                                        }
+                                    }
+                                }
+                            }
+
+                            override fun onError(exception: ImageCaptureException) {
+                                coroutineScope.launch(Dispatchers.Main) {
+                                    isAnalyzing = false
+                                    recognizedAyah = QuranAyahCatalog.catalog.first()
+                                }
+                            }
+                        }
+                    )
+                } catch (_: Exception) {
+                    coroutineScope.launch(Dispatchers.Main) {
+                        isAnalyzing = false
+                        recognizedAyah = QuranAyahCatalog.catalog.first()
+                    }
+                }
+            } else {
+                // If camera hardware not bound yet (e.g. emulator or quick tap)
+                coroutineScope.launch(Dispatchers.Main) {
+                    delay(800)
+                    isAnalyzing = false
+                    recognizedAyah = QuranAyahCatalog.catalog.first()
+                }
+            }
+        }
+    }
+
+    // Auto-Scan interval trigger when viewfinder is steady
+    LaunchedEffect(isAutoScanEnabled, hasCameraPermission, imageCapture, recognizedAyah, isAnalyzing) {
+        if (isAutoScanEnabled && hasCameraPermission && imageCapture != null && recognizedAyah == null && !isAnalyzing) {
+            delay(2800)
+            if (recognizedAyah == null && !isAnalyzing && isAutoScanEnabled) {
+                triggerCapture()
+            }
+        }
+    }
 
     // Gallery Picker
     val galleryLauncher = rememberLauncherForActivityResult(
@@ -189,21 +276,25 @@ fun ExplainAyahCameraScreen(
     ) { uri: Uri? ->
         uri?.let {
             coroutineScope.launch {
-                val bitmap = loadBitmapFromUri(context, it)
-                if (bitmap != null) {
-                    processImage(bitmap, aiService) { result ->
-                        recognizedAyah = result
+                isAnalyzing = true
+                try {
+                    val bitmap = loadBitmapFromUri(context, it)
+                    if (bitmap != null) {
+                        processImage(bitmap, aiService) { result ->
+                            isAnalyzing = false
+                            recognizedAyah = result
+                        }
+                    } else {
+                        isAnalyzing = false
+                        recognizedAyah = QuranAyahCatalog.catalog.first()
                     }
+                } catch (_: Exception) {
+                    isAnalyzing = false
+                    recognizedAyah = QuranAyahCatalog.catalog.first()
                 }
             }
         }
     }
-
-    // Camera control states
-    var camera by remember { mutableStateOf<Camera?>(null) }
-    var imageCapture by remember { mutableStateOf<ImageCapture?>(null) }
-    var isFlashOn by remember { mutableStateOf(false) }
-    var isFrontCamera by remember { mutableStateOf(false) }
 
     if (recognizedAyah != null) {
         // Result Dashboard View
@@ -229,42 +320,44 @@ fun ExplainAyahCameraScreen(
         ) {
             if (hasCameraPermission) {
                 // CameraX Preview View
-                AndroidView(
-                    factory = { ctx ->
-                        val previewView = PreviewView(ctx)
-                        val cameraProviderFuture = ProcessCameraProvider.getInstance(ctx)
-                        cameraProviderFuture.addListener({
-                            val cameraProvider = cameraProviderFuture.get()
-                            val preview = Preview.Builder().build().also {
-                                it.setSurfaceProvider(previewView.surfaceProvider)
-                            }
-                            val capture = ImageCapture.Builder()
-                                .setCaptureMode(ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY)
-                                .build()
-                            imageCapture = capture
+                key(isFrontCamera, hasCameraPermission) {
+                    AndroidView(
+                        factory = { ctx ->
+                            val previewView = PreviewView(ctx)
+                            val cameraProviderFuture = ProcessCameraProvider.getInstance(ctx)
+                            cameraProviderFuture.addListener({
+                                try {
+                                    val cameraProvider = cameraProviderFuture.get()
+                                    val preview = Preview.Builder().build().also {
+                                        it.setSurfaceProvider(previewView.surfaceProvider)
+                                    }
+                                    val capture = ImageCapture.Builder()
+                                        .setCaptureMode(ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY)
+                                        .build()
+                                    imageCapture = capture
 
-                            val cameraSelector = if (isFrontCamera) {
-                                CameraSelector.DEFAULT_FRONT_CAMERA
-                            } else {
-                                CameraSelector.DEFAULT_BACK_CAMERA
-                            }
+                                    val cameraSelector = if (isFrontCamera) {
+                                        CameraSelector.DEFAULT_FRONT_CAMERA
+                                    } else {
+                                        CameraSelector.DEFAULT_BACK_CAMERA
+                                    }
 
-                            try {
-                                cameraProvider.unbindAll()
-                                camera = cameraProvider.bindToLifecycle(
-                                    lifecycleOwner,
-                                    cameraSelector,
-                                    preview,
-                                    capture
-                                )
-                            } catch (e: Exception) {
-                                e.printStackTrace()
-                            }
-                        }, ContextCompat.getMainExecutor(ctx))
-                        previewView
-                    },
-                    modifier = Modifier.fillMaxSize()
-                )
+                                    cameraProvider.unbindAll()
+                                    camera = cameraProvider.bindToLifecycle(
+                                        lifecycleOwner,
+                                        cameraSelector,
+                                        preview,
+                                        capture
+                                    )
+                                } catch (e: Exception) {
+                                    e.printStackTrace()
+                                }
+                            }, ContextCompat.getMainExecutor(ctx))
+                            previewView
+                        },
+                        modifier = Modifier.fillMaxSize()
+                    )
+                }
             } else {
                 // Friendly Camera Permission Request Layout
                 Column(
@@ -373,8 +466,21 @@ fun ExplainAyahCameraScreen(
                     }
                 }
 
-                // Torch and Flip controls
+                // Torch, Flip and AI Settings controls
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Surface(
+                        shape = CircleShape,
+                        color = Color.Black.copy(alpha = 0.55f),
+                        modifier = Modifier.size(44.dp)
+                    ) {
+                        IconButton(onClick = { showApiKeyDialog = true }) {
+                            Icon(
+                                imageVector = Icons.Default.VpnKey,
+                                contentDescription = "API সেটিংস",
+                                tint = if (aiService.isAiOnline()) IslamicGold else Color.White.copy(alpha = 0.8f)
+                            )
+                        }
+                    }
                     if (hasCameraPermission) {
                         Surface(
                             shape = CircleShape,
@@ -424,6 +530,36 @@ fun ExplainAyahCameraScreen(
                     .padding(horizontal = 16.dp, vertical = 20.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
+                // Auto-Scan Toggle Chip
+                Surface(
+                    shape = RoundedCornerShape(16.dp),
+                    color = if (isAutoScanEnabled) IslamicGold.copy(alpha = 0.22f) else Color.White.copy(alpha = 0.12f),
+                    border = BorderStroke(1.dp, if (isAutoScanEnabled) IslamicGold else Color.White.copy(alpha = 0.3f)),
+                    modifier = Modifier
+                        .clickable { isAutoScanEnabled = !isAutoScanEnabled }
+                        .padding(bottom = 10.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = if (isAutoScanEnabled) Icons.Default.FlashAuto else Icons.Default.CameraAlt,
+                            contentDescription = null,
+                            tint = if (isAutoScanEnabled) IslamicGold else Color.White,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = if (isAutoScanEnabled) "অটো স্ক্যান: চালু ⚡" else "ম্যানুয়াল মোড (বোতাম চাপুন)",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = if (isAutoScanEnabled) IslamicGold else Color.White,
+                            fontFamily = banglaFont,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
+
                 // Quick Sample Verses Bar (Instant 1-Tap Testing)
                 Text(
                     text = "নমুনা পৃষ্ঠা দিয়ে তাৎক্ষণিক পরীক্ষা করুন:",
@@ -510,36 +646,7 @@ fun ExplainAyahCameraScreen(
                         modifier = Modifier
                             .size(76.dp)
                             .clickable(enabled = !isAnalyzing) {
-                                if (hasCameraPermission && imageCapture != null) {
-                                    isAnalyzing = true
-                                    val executor = Executors.newSingleThreadExecutor()
-                                    imageCapture?.takePicture(
-                                        executor,
-                                        object : ImageCapture.OnImageCapturedCallback() {
-                                            override fun onCaptureSuccess(image: ImageProxy) {
-                                                val bitmap = imageProxyToBitmap(image)
-                                                image.close()
-                                                coroutineScope.launch {
-                                                    processImage(bitmap, aiService) { result ->
-                                                        isAnalyzing = false
-                                                        recognizedAyah = result
-                                                    }
-                                                }
-                                            }
-
-                                            override fun onError(exception: ImageCaptureException) {
-                                                coroutineScope.launch {
-                                                    isAnalyzing = false
-                                                    // Fallback to sample
-                                                    recognizedAyah = QuranAyahCatalog.catalog.first()
-                                                }
-                                            }
-                                        }
-                                    )
-                                } else {
-                                    // Fallback when camera is not bound
-                                    recognizedAyah = QuranAyahCatalog.catalog.first()
-                                }
+                                triggerCapture()
                             }
                     ) {
                         Box(contentAlignment = Alignment.Center) {
@@ -619,6 +726,56 @@ fun ExplainAyahCameraScreen(
                         )
                     }
                 }
+            }
+
+            // API Key & Settings Dialog
+            if (showApiKeyDialog) {
+                AlertDialog(
+                    onDismissRequest = { showApiKeyDialog = false },
+                    title = {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(Icons.Default.AutoAwesome, contentDescription = null, tint = IslamicGold)
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text("এআই ভিশন ও এপিআই সেটিংস", fontFamily = banglaFont, fontWeight = FontWeight.Bold)
+                        }
+                    },
+                    text = {
+                        Column {
+                            Text(
+                                text = if (aiService.isAiOnline()) {
+                                    "✅ গুগল জেমিনি ৩.৫ ভিশন এআই সক্রিয় রয়েছে। যে কোনো আরবি কুরআন পৃষ্ঠা স্ক্যান করলে রিয়েল-টাইম তাফসীর তৈরি হবে।"
+                                } else {
+                                    "📖 অফলাইন ক্যাটালগ মোড সক্রিয়। কোনো API Key ছাড়াই প্রধান প্রধান সূরা ও আয়াতের তাফসীর, অডিও ও শব্দার্থ সম্পূর্ণ অফলাইনে কাজ করে।"
+                                },
+                                style = MaterialTheme.typography.bodySmall,
+                                fontFamily = banglaFont
+                            )
+                            Spacer(modifier = Modifier.height(12.dp))
+                            OutlinedTextField(
+                                value = apiKeyInput,
+                                onValueChange = { apiKeyInput = it },
+                                label = { Text("Gemini API Key (ঐচ্ছিক)", fontFamily = banglaFont) },
+                                placeholder = { Text("AI Studio থেকে প্রাপ্ত কী পেস্ট করুন") },
+                                singleLine = true,
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                        }
+                    },
+                    confirmButton = {
+                        TextButton(onClick = {
+                            aiService.saveUserApiKey(apiKeyInput.trim())
+                            showApiKeyDialog = false
+                            Toast.makeText(context, "API Key সংরক্ষিত হয়েছে", Toast.LENGTH_SHORT).show()
+                        }) {
+                            Text("সংরক্ষণ করুন", color = IslamicGold, fontWeight = FontWeight.Bold, fontFamily = banglaFont)
+                        }
+                    },
+                    dismissButton = {
+                        TextButton(onClick = { showApiKeyDialog = false }) {
+                            Text("বাতিল", fontFamily = banglaFont)
+                        }
+                    }
+                )
             }
         }
     }
@@ -1895,12 +2052,35 @@ private suspend fun processImage(
     }
 }
 
-private fun imageProxyToBitmap(image: ImageProxy): Bitmap {
-    val planeProxy = image.planes[0]
-    val buffer = planeProxy.buffer
-    val bytes = ByteArray(buffer.remaining())
-    buffer.get(bytes)
-    return BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
+@androidx.annotation.OptIn(androidx.camera.core.ExperimentalGetImage::class)
+private fun imageProxyToBitmap(image: ImageProxy): Bitmap? {
+    return try {
+        val converted = image.toBitmap()
+        val rotation = image.imageInfo.rotationDegrees
+        if (rotation != 0 && converted != null) {
+            val matrix = android.graphics.Matrix().apply { postRotate(rotation.toFloat()) }
+            Bitmap.createBitmap(converted, 0, 0, converted.width, converted.height, matrix, true)
+        } else {
+            converted
+        }
+    } catch (_: Throwable) {
+        try {
+            val planeProxy = image.planes[0]
+            val buffer = planeProxy.buffer
+            val bytes = ByteArray(buffer.remaining())
+            buffer.get(bytes)
+            val decoded = BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
+            val rotation = image.imageInfo.rotationDegrees
+            if (rotation != 0 && decoded != null) {
+                val matrix = android.graphics.Matrix().apply { postRotate(rotation.toFloat()) }
+                Bitmap.createBitmap(decoded, 0, 0, decoded.width, decoded.height, matrix, true)
+            } else {
+                decoded
+            }
+        } catch (_: Throwable) {
+            null
+        }
+    }
 }
 
 private suspend fun loadBitmapFromUri(context: Context, uri: Uri): Bitmap? = withContext(Dispatchers.IO) {

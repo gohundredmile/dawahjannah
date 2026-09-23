@@ -47,6 +47,7 @@ import com.example.ui.screens.sub.AyatDetectorAndSolverScreen
 import com.example.ui.screens.sub.QiblaCompassScreen
 import com.example.ui.screens.sub.TasbihScreen
 import com.example.ui.screens.tools.ExplainAyahCameraScreen
+import com.example.ui.screens.tools.SmartQuranSearchScreen
 import com.example.ui.screens.tools.ToolsScreen
 import com.example.ui.theme.DawahTheme
 import com.example.ui.viewmodel.AppTab
@@ -221,6 +222,7 @@ class MainActivity : ComponentActivity() {
                                     when (currentToolsSub) {
                                         ToolsSubScreen.MAIN -> ToolsScreen(
                                             onOpenExplainAyahCamera = { viewModel.openExplainAyahCamera() },
+                                            onOpenSmartQuranSearch = { viewModel.navigateToToolsSubScreen(ToolsSubScreen.SMART_QURAN_SEARCH) },
                                             onOpenAyatDetector = { viewModel.navigateToToolsSubScreen(ToolsSubScreen.AYAT_DETECTOR_SOLVER) },
                                             onOpenQibla = { viewModel.navigateToToolsSubScreen(ToolsSubScreen.QIBLA) },
                                             onOpenTasbih = { viewModel.navigateToToolsSubScreen(ToolsSubScreen.TASBIH) },
@@ -228,6 +230,9 @@ class MainActivity : ComponentActivity() {
                                             contentPadding = innerPadding
                                         )
                                         ToolsSubScreen.EXPLAIN_AYAH_CAMERA -> ExplainAyahCameraScreen(
+                                            onNavigateBack = { viewModel.navigateBackToTools() }
+                                        )
+                                        ToolsSubScreen.SMART_QURAN_SEARCH -> SmartQuranSearchScreen(
                                             onNavigateBack = { viewModel.navigateBackToTools() }
                                         )
                                         ToolsSubScreen.AYAT_DETECTOR_SOLVER -> AyatDetectorAndSolverScreen(

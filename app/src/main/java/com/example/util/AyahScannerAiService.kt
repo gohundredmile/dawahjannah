@@ -28,26 +28,56 @@ class AyahScannerAiService(private val context: Context) {
         .writeTimeout(30, TimeUnit.SECONDS)
         .build()
 
+    fun getEffectiveApiKey(): String {
+        val prefs = context.getSharedPreferences("dawah_settings", Context.MODE_PRIVATE)
+        val userKey = prefs.getString("custom_gemini_api_key", null)?.trim()
+        if (!userKey.isNullOrBlank()) {
+            return userKey
+        }
+        return try {
+            val key = BuildConfig.GEMINI_API_KEY
+            if (key != "your_api_key_here") key else ""
+        } catch (_: Exception) {
+            ""
+        }
+    }
+
+    fun saveUserApiKey(key: String) {
+        val prefs = context.getSharedPreferences("dawah_settings", Context.MODE_PRIVATE)
+        prefs.edit().putString("custom_gemini_api_key", key.trim()).apply()
+    }
+
+    fun isAiOnline(): Boolean {
+        val key = getEffectiveApiKey()
+        return key.isNotBlank() && key != "your_api_key_here"
+    }
+
     /**
      * Analyzes a Quran page or Ayah snapshot captured from Camera or picked from Gallery.
      */
     suspend fun analyzeQuranImage(bitmap: Bitmap): Result<AyahExplanation> = withContext(Dispatchers.IO) {
-        val apiKey = try {
-            BuildConfig.GEMINI_API_KEY
-        } catch (_: Exception) {
-            ""
-        }
+        val apiKey = getEffectiveApiKey()
 
         // If no API key or placeholder key, match locally with our Quran catalog
         if (apiKey.isBlank() || apiKey == "your_api_key_here") {
-            // Return rich default / catalog verse (Ayatul Kursi or random catalog item)
+            // Return rich default / catalog verse (Ayatul Kursi)
             return@withContext Result.success(QuranAyahCatalog.catalog.first())
         }
 
         try {
+            // Downscale bitmap if larger than 1024px to conserve memory and reduce payload
+            val scaledBitmap = if (bitmap.width > 1024 || bitmap.height > 1024) {
+                val scale = 1024f / maxOf(bitmap.width, bitmap.height)
+                val targetW = (bitmap.width * scale).toInt().coerceAtLeast(1)
+                val targetH = (bitmap.height * scale).toInt().coerceAtLeast(1)
+                Bitmap.createScaledBitmap(bitmap, targetW, targetH, true)
+            } else {
+                bitmap
+            }
+
             // Compress bitmap to JPEG Base64
             val outputStream = ByteArrayOutputStream()
-            bitmap.compress(Bitmap.CompressFormat.JPEG, 80, outputStream)
+            scaledBitmap.compress(Bitmap.CompressFormat.JPEG, 80, outputStream)
             val base64Image = Base64.encodeToString(outputStream.toByteArray(), Base64.NO_WRAP)
 
             val prompt = """
@@ -76,7 +106,7 @@ class AyahScannerAiService(private val context: Context) {
                     {"surahNameBn": "সূরা...", "ayahRef": "৩:২", "arabicText": "...", "translationBn": "..."}
                   ],
                   "relatedHadiths": [
-                    {"sourceBn": "সহীহ বুখারী", "narratorBn": "আবু হুরায়রা (রা.)", "textBn": "হাদিসের বাংলা অর্থ...", "gradeBn": "सहীহ"}
+                    {"sourceBn": "সহীহ বুখারী", "narratorBn": "আবু হুরায়রা (রা.)", "textBn": "হাদিসের বাংলা অর্থ...", "gradeBn": "সহীহ"}
                   ]
                 }
             """.trimIndent()
@@ -105,7 +135,7 @@ class AyahScannerAiService(private val context: Context) {
             }
 
             val request = Request.Builder()
-                .url("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=$apiKey")
+                .url("https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=$apiKey")
                 .post(jsonBody.toString().toRequestBody("application/json".toMediaType()))
                 .build()
 

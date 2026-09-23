@@ -32,6 +32,7 @@ import androidx.compose.material.icons.filled.Fingerprint
 import androidx.compose.material.icons.filled.Lightbulb
 import androidx.compose.material.icons.filled.MenuBook
 import androidx.compose.material.icons.filled.NotificationsActive
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Spellcheck
 import androidx.compose.material.icons.filled.Stars
 import androidx.compose.material.icons.filled.Tune
@@ -83,6 +84,7 @@ data class IslamicToolItem(
 @Composable
 fun ToolsScreen(
     onOpenExplainAyahCamera: () -> Unit,
+    onOpenSmartQuranSearch: () -> Unit = {},
     onOpenAyatDetector: () -> Unit,
     onOpenQibla: () -> Unit,
     onOpenTasbih: () -> Unit,
@@ -266,6 +268,14 @@ fun ToolsScreen(
 
         // Active tools list
         val activeTools = listOf(
+            IslamicToolItem(
+                id = "tool_smart_quran_search",
+                titleBn = "স্মার্ট কুরআন সার্চ (ভাবার্থভিত্তিক অনুসন্ধান)",
+                subtitleBn = "বাংলা ভাষায় যে কোনো বিষয়, পরিস্থিতি বা আবেগ লিখে কুরআনের প্রাসঙ্গিক আয়াত ও সমাধান খুঁজুন।",
+                icon = Icons.Default.Search,
+                badgeBn = "এআই সার্চ",
+                onClick = onOpenSmartQuranSearch
+            ),
             IslamicToolItem(
                 id = "tool_ayat_solver",
                 titleBn = "আয়াত ও হাদীস শুদ্ধিকরণ ল্যাব",

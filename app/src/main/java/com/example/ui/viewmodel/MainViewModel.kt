@@ -106,7 +106,8 @@ enum class ToolsSubScreen(val titleBn: String) {
     AYAT_DETECTOR_SOLVER("আয়াত ও হাদীস শুদ্ধিকরণ ল্যাব"),
     QIBLA("ক্বিবলা কম্পাস"),
     TASBIH("ডিজিটাল তাসবীহ"),
-    NAMES_OF_ALLAH("আসমাউল হুসনা")
+    NAMES_OF_ALLAH("আসমাউল হুসনা"),
+    MOSQUE_MODE("মসজিদ মোড (Mosque Mode)")
 }
 
 enum class MoreSubScreen(val titleBn: String) {
@@ -192,6 +193,11 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     fun openRamadanIntelligence() {
         _toolsSubScreen.value = ToolsSubScreen.RAMADAN_INTELLIGENCE
+        _currentTab.value = AppTab.TOOLS
+    }
+
+    fun openMosqueMode() {
+        _toolsSubScreen.value = ToolsSubScreen.MOSQUE_MODE
         _currentTab.value = AppTab.TOOLS
     }
 

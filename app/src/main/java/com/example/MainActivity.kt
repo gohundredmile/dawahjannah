@@ -50,6 +50,7 @@ import com.example.ui.screens.tools.AskBeforeYouActScreen
 import com.example.ui.screens.tools.DuaBySituationScreen
 import com.example.ui.screens.tools.ExplainAyahCameraScreen
 import com.example.ui.screens.tools.IslamicHabitSystemScreen
+import com.example.ui.screens.tools.MosqueModeScreen
 import com.example.ui.screens.tools.PersonalDuaBuilderScreen
 import com.example.ui.screens.tools.RamadanIntelligenceScreen
 import com.example.ui.screens.tools.SmartQuranSearchScreen
@@ -237,7 +238,13 @@ class MainActivity : ComponentActivity() {
                                             onOpenQibla = { viewModel.navigateToToolsSubScreen(ToolsSubScreen.QIBLA) },
                                             onOpenTasbih = { viewModel.navigateToToolsSubScreen(ToolsSubScreen.TASBIH) },
                                             onOpenNamesOfAllah = { viewModel.navigateToToolsSubScreen(ToolsSubScreen.NAMES_OF_ALLAH) },
+                                            onOpenMosqueMode = { viewModel.openMosqueMode() },
                                             contentPadding = innerPadding
+                                        )
+                                        ToolsSubScreen.MOSQUE_MODE -> MosqueModeScreen(
+                                            viewModel = viewModel,
+                                            onNavigateBack = { viewModel.navigateBackToTools() },
+                                            onOpenQibla = { viewModel.navigateToToolsSubScreen(ToolsSubScreen.QIBLA) }
                                         )
                                         ToolsSubScreen.DUA_BY_SITUATION -> DuaBySituationScreen(
                                             onNavigateBack = { viewModel.navigateBackToTools() }

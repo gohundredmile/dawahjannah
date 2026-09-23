@@ -34,6 +34,8 @@ import androidx.compose.material.icons.filled.Lightbulb
 import androidx.compose.material.icons.filled.MenuBook
 import androidx.compose.material.icons.filled.Nightlight
 import androidx.compose.material.icons.filled.NotificationsActive
+import androidx.compose.material.icons.filled.NotificationsOff
+import androidx.compose.material.icons.filled.Shield
 import androidx.compose.material.icons.filled.Psychology
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Spa
@@ -98,6 +100,7 @@ fun ToolsScreen(
     onOpenQibla: () -> Unit,
     onOpenTasbih: () -> Unit,
     onOpenNamesOfAllah: () -> Unit,
+    onOpenMosqueMode: () -> Unit = {},
     contentPadding: PaddingValues = PaddingValues(0.dp)
 ) {
     val banglaFont = LocalBanglaFontFamily.current
@@ -121,6 +124,158 @@ fun ToolsScreen(
         ),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
+        // TOP PREMIER SPOTLIGHT CARD: "Mosque Mode" (মসজিদ মোড)
+        item {
+            Card(
+                shape = RoundedCornerShape(24.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                border = BorderStroke(1.8.dp, IslamicGold.copy(alpha = 0.85f)),
+                elevation = CardDefaults.cardElevation(defaultElevation = 5.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { onOpenMosqueMode() }
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(
+                            Brush.verticalGradient(
+                                colors = listOf(
+                                    Color(0xFF064E3B).copy(alpha = 0.22f),
+                                    IslamicGold.copy(alpha = 0.12f),
+                                    MaterialTheme.colorScheme.surface
+                                )
+                            )
+                        )
+                        .padding(20.dp)
+                ) {
+                    Column {
+                        // Badge Row
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Surface(
+                                shape = RoundedCornerShape(12.dp),
+                                color = Color(0xFF047857),
+                                modifier = Modifier.padding(bottom = 8.dp)
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.NotificationsOff,
+                                        contentDescription = null,
+                                        tint = Color.White,
+                                        modifier = Modifier.size(13.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(4.dp))
+                                    Text(
+                                        text = "নতুন সিগনেচার ফিচার • সম্পূর্ণ ডিস্ট্রাকশন-ফ্রি",
+                                        color = Color.White,
+                                        style = MaterialTheme.typography.labelSmall,
+                                        fontWeight = FontWeight.Bold,
+                                        fontFamily = banglaFont
+                                    )
+                                }
+                            }
+
+                            Surface(
+                                shape = CircleShape,
+                                color = IslamicGold.copy(alpha = 0.2f),
+                                modifier = Modifier.size(42.dp)
+                            ) {
+                                Box(contentAlignment = Alignment.Center) {
+                                    Text("🕌", fontSize = 20.sp)
+                                }
+                            }
+                        }
+
+                        // Title
+                        Text(
+                            text = "Mosque Mode (মসজিদ মোড)",
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.ExtraBold,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+
+                        Text(
+                            text = "মসজিদে প্রবেশের সাথে সাথে একাগ্রতা ও নিঃশব্দ পরিবেশ",
+                            style = MaterialTheme.typography.labelLarge,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFF047857),
+                            fontFamily = banglaFont
+                        )
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        // Subtitle
+                        Text(
+                            text = "মসজিদে প্রবেশ করলেই এক ট্যাপে ফোন সাইলেন্ট, অপ্রয়োজনীয় নোটিফিকেশন বন্ধ এবং সুন্নাত আমলের জন্য প্রস্তুত। বৃহৎ অ্যাকশন বোতাম: কুরআন, আযকার, সালাত গাইড, ক্বিবলা, সাইলেন্ট ও সালাত ট্র্যাকার। সাথে ওয়াক্ত ও জামা'আত সূচী, জুমু'আহ স্পেশাল, নোটিশ বোর্ড, ক্লাস ও সাদাকাহ ফান্ড।",
+                            style = MaterialTheme.typography.bodyMedium.copy(lineHeight = 22.sp),
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            fontFamily = banglaFont
+                        )
+
+                        Spacer(modifier = Modifier.height(14.dp))
+
+                        // Large Buttons Preview Badges
+                        Text(
+                            text = "দ্রুত অ্যাকশন বোতামসমূহ:",
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = IslamicGold,
+                            fontFamily = banglaFont
+                        )
+                        Spacer(modifier = Modifier.height(6.dp))
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            listOf("📖 কুরআন", "📿 আযকার", "🕋 সালাত", "🧭 ক্বিবলা", "🔕 সাইলেন্ট", "⭐ ট্র্যাকার").take(4).forEach { pill ->
+                                Surface(
+                                    shape = RoundedCornerShape(8.dp),
+                                    color = Color(0xFF064E3B).copy(alpha = 0.15f),
+                                    border = BorderStroke(0.6.dp, IslamicGold.copy(alpha = 0.35f))
+                                ) {
+                                    Text(
+                                        text = pill,
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = MaterialTheme.colorScheme.onSurface,
+                                        fontFamily = banglaFont,
+                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                                    )
+                                }
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        // Action Button
+                        Button(
+                            onClick = onOpenMosqueMode,
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(14.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF047857))
+                        ) {
+                            Icon(Icons.Default.NotificationsOff, contentDescription = null, tint = Color.White)
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "মসজিদ মোড চালু করুন",
+                                style = MaterialTheme.typography.labelLarge,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White,
+                                fontFamily = banglaFont
+                            )
+                        }
+                    }
+                }
+            }
+        }
+
         // TOP SIGNATURE SPOTLIGHT CARD: "Dua by Situation" (অনুভূতি ও পরিস্থিতি অনুযায়ী দু'আ)
         item {
             Card(
@@ -1179,6 +1334,15 @@ fun ToolsScreen(
 
         // Active tools list
         val activeTools = listOf(
+            IslamicToolItem(
+                id = "tool_mosque_mode",
+                titleBn = "Mosque Mode (মসজিদ মোড)",
+                subtitleBn = "মসজিদে প্রবেশের সাথে সাথে সম্পূর্ণ নিঃশব্দ, বিভ্রান্তিমুক্ত একাগ্রতা, জামা'আত সূচী, কুরআন, আযকার ও ট্র্যাকার।",
+                icon = Icons.Default.NotificationsOff,
+                badgeBn = "নতুন সিগনেচার",
+                isFeatured = true,
+                onClick = onOpenMosqueMode
+            ),
             IslamicToolItem(
                 id = "tool_dua_by_situation",
                 titleBn = "Dua by Situation (অনুভূতি ও পরিস্থিতি অনুযায়ী দু'আ)",

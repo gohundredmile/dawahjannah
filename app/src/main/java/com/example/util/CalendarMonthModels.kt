@@ -33,7 +33,13 @@ data class HijriDayItem(
     val gregorianSubDate: String,
     val isToday: Boolean,
     val isCurrentMonth: Boolean = true,
-    val colIndex: Int // 0..6
+    val colIndex: Int, // 0..6
+    val gregorianCal: Calendar? = null,
+    val hasHistoricalEvent: Boolean = false,
+    val isFastingRecommended: Boolean = false,
+    val isFastingForbidden: Boolean = false,
+    val isAyyamAlBeed: Boolean = false,
+    val isFullMoon: Boolean = false
 )
 
 data class GregorianMonthDetail(
@@ -314,6 +320,16 @@ object CalendarMonthProvider {
                            targetYear == todayHijri.year &&
                            day == todayHijri.day)
 
+            val fastingStatus = com.example.data.datasource.IslamicCalendarCatalog.getFastingStatus(
+                hijriDay = day,
+                hijriMonthIndex = targetMonthIndex,
+                dayOfWeek = dayCal.get(Calendar.DAY_OF_WEEK)
+            )
+            val hasEvent = com.example.data.datasource.IslamicCalendarCatalog.hasHistoricalEvent(
+                hijriMonthIndex = targetMonthIndex,
+                hijriDay = day
+            )
+
             list.add(
                 HijriDayItem(
                     hijriDayEng = day,
@@ -321,7 +337,13 @@ object CalendarMonthProvider {
                     hijriDayBn = CalendarHelper.toBanglaNumber(day),
                     gregorianSubDate = gregSub,
                     isToday = isToday,
-                    colIndex = col
+                    colIndex = col,
+                    gregorianCal = dayCal,
+                    hasHistoricalEvent = hasEvent,
+                    isFastingRecommended = fastingStatus.first.isFastingDay,
+                    isFastingForbidden = fastingStatus.first == com.example.data.model.FastingCategory.FORBIDDEN,
+                    isAyyamAlBeed = day in 13..15,
+                    isFullMoon = day == 14
                 )
             )
         }

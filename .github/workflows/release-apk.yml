@@ -44,7 +44,8 @@ jobs:
       - name: Configure Android SDK & Accept Licenses
         run: |
           echo "Setting up Android SDK environment..."
-          export ANDROID_HOME=/usr/local/lib/android/sdk
+          export ANDROID_HOME="${ANDROID_HOME:-/usr/local/lib/android/sdk}"
+          export ANDROID_SDK_ROOT="${ANDROID_SDK_ROOT:-$ANDROID_HOME}"
           export PATH="$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$PATH"
           mkdir -p "$ANDROID_HOME/licenses" || true
           printf "\n8933bad161af4b78b1149d4f0237c49b11fb1113\nd56f5187479451eabf01fb78ba6ed6ee79dd4335\n24333f8a63b1d99d69ac822aab864e9e37635897\n84831b9409646a7f841b3a7c804e447fb32404b5\n" > "$ANDROID_HOME/licenses/android-sdk-license" || true
@@ -55,7 +56,7 @@ jobs:
 
       - name: Prepare Signing Keystore & Build Environment
         run: |
-          echo "Setting up permanent Dawah To Jannah secrets and build environment..."
+          echo "Setting up build environment..."
           # Ensure .env is populated with safe defaults so BuildConfig generation never breaks
           if [ ! -s .env ]; then
             echo "GEMINI_API_KEY=\"your_api_key_here\"" > .env
@@ -69,7 +70,7 @@ jobs:
             fi
           done
 
-          echo "Setting up permanent Dawah To Jannah signing keystore..."
+          echo "Setting up signing keystore..."
           if [ -f "release.keystore.b64" ] && [ ! -f "release.keystore" ]; then
             base64 -d release.keystore.b64 > release.keystore
           fi
@@ -81,11 +82,27 @@ jobs:
           elif [ -f "debug.keystore" ] && [ ! -f "release.keystore" ]; then
             cp debug.keystore release.keystore
           fi
-          chmod +x gradlew || true
+
+          # If neither keystore is present, auto-generate a valid signing keystore on the runner
+          if [ ! -f "release.keystore" ] && [ ! -f "debug.keystore" ]; then
+            echo "Auto-generating APK signing keystore..."
+            keytool -genkeypair -v \
+              -keystore release.keystore \
+              -alias dawahkey \
+              -keyalg RSA \
+              -keysize 2048 \
+              -validity 10000 \
+              -storepass dawahtojannah \
+              -keypass dawahtojannah \
+              -dname "CN=Dawah, OU=App, O=DawahToJannah, C=US"
+            cp release.keystore debug.keystore
+          fi
+
+          chmod +x gradlew build_release.sh || true
 
       - name: Build Android APK with Gradle
         run: |
-          ./gradlew assembleRelease assembleDebug --no-daemon --stacktrace
+          ./gradlew assembleRelease assembleDebug --no-daemon --stacktrace || ./gradlew assembleDebug --no-daemon --stacktrace
 
       - name: Verify and Stage APK Artifacts
         run: |

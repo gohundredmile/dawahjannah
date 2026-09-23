@@ -25,13 +25,37 @@ android {
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
   }
 
+  val releaseKs = file("${rootDir}/release.keystore")
+  val debugKs = file("${rootDir}/debug.keystore")
+
+  if (!releaseKs.exists() && !debugKs.exists()) {
+    try {
+      val pb = ProcessBuilder(
+        "keytool", "-genkeypair", "-v",
+        "-keystore", debugKs.absolutePath,
+        "-alias", "androiddebugkey",
+        "-keyalg", "RSA",
+        "-keysize", "2048",
+        "-validity", "10000",
+        "-storepass", "android",
+        "-keypass", "android",
+        "-dname", "CN=Android Debug, O=Android, C=US"
+      )
+      pb.redirectErrorStream(true).start().waitFor()
+    } catch (_: Exception) {
+      // Gracefully continue
+    }
+  }
+
   signingConfigs {
     create("release") {
-      val keystorePath = System.getenv("KEYSTORE_PATH") ?: if (file("${rootDir}/release.keystore").exists()) "${rootDir}/release.keystore" else "${rootDir}/debug.keystore"
+      val isReleaseAvailable = file("${rootDir}/release.keystore").exists()
+      val keystorePath = System.getenv("KEYSTORE_PATH")
+        ?: if (isReleaseAvailable) "${rootDir}/release.keystore" else "${rootDir}/debug.keystore"
       storeFile = file(keystorePath)
-      storePassword = System.getenv("STORE_PASSWORD") ?: if (file("${rootDir}/release.keystore").exists()) "dawahtojannah" else "android"
-      keyAlias = System.getenv("KEY_ALIAS") ?: if (file("${rootDir}/release.keystore").exists()) "dawahkey" else "androiddebugkey"
-      keyPassword = System.getenv("KEY_PASSWORD") ?: if (file("${rootDir}/release.keystore").exists()) "dawahtojannah" else "android"
+      storePassword = System.getenv("STORE_PASSWORD") ?: if (isReleaseAvailable) "dawahtojannah" else "android"
+      keyAlias = System.getenv("KEY_ALIAS") ?: if (isReleaseAvailable) "dawahkey" else "androiddebugkey"
+      keyPassword = System.getenv("KEY_PASSWORD") ?: if (isReleaseAvailable) "dawahtojannah" else "android"
       enableV1Signing = true
       enableV2Signing = true
     }

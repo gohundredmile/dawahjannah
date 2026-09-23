@@ -96,6 +96,7 @@ enum class AppTab(val index: Int, val titleBn: String) {
 
 enum class ToolsSubScreen(val titleBn: String) {
     MAIN("টুলস"),
+    PERSONAL_DUA_BUILDER("Personal Dua Builder (ব্যক্তিগত দো'আ আর্কিটেক্ট)"),
     ASK_BEFORE_YOU_ACT("Ask Before You Act (পদক্ষেপ নেওয়ার আগে জানুন)"),
     SMART_QURAN_SEARCH("Smart Quran Search (ভাবার্থভিত্তিক অনুসন্ধান)"),
     EXPLAIN_AYAH_CAMERA("Explain This Ayah ক্যামেরা"),
@@ -158,6 +159,11 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     fun navigateToToolsSubScreen(sub: ToolsSubScreen) {
         _toolsSubScreen.value = sub
+        _currentTab.value = AppTab.TOOLS
+    }
+
+    fun openPersonalDuaBuilder() {
+        _toolsSubScreen.value = ToolsSubScreen.PERSONAL_DUA_BUILDER
         _currentTab.value = AppTab.TOOLS
     }
 

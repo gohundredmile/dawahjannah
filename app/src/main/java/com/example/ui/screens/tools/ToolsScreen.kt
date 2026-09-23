@@ -28,6 +28,7 @@ import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Explore
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Fingerprint
 import androidx.compose.material.icons.filled.Lightbulb
 import androidx.compose.material.icons.filled.MenuBook
@@ -85,6 +86,7 @@ data class IslamicToolItem(
 
 @Composable
 fun ToolsScreen(
+    onOpenPersonalDuaBuilder: () -> Unit = {},
     onOpenExplainAyahCamera: () -> Unit,
     onOpenSmartQuranSearch: () -> Unit = {},
     onOpenAskBeforeYouAct: () -> Unit = {},
@@ -115,6 +117,161 @@ fun ToolsScreen(
         ),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
+        // TOP SIGNATURE SPOTLIGHT CARD: "Personal Dua Builder" (ব্যক্তিগত দো'আ আর্কিটেক্ট)
+        item {
+            Card(
+                shape = RoundedCornerShape(24.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                border = BorderStroke(1.5.dp, Color(0xFF059669).copy(alpha = 0.7f)),
+                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { onOpenPersonalDuaBuilder() }
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(
+                            Brush.verticalGradient(
+                                colors = listOf(
+                                    Color(0xFF059669).copy(alpha = 0.15f),
+                                    IslamicGold.copy(alpha = 0.08f)
+                                )
+                            )
+                        )
+                        .padding(20.dp)
+                ) {
+                    Column {
+                        // Badge Row
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Surface(
+                                shape = RoundedCornerShape(12.dp),
+                                color = Color(0xFF059669),
+                                modifier = Modifier.padding(bottom = 8.dp)
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Icon(
+                                        Icons.Default.AutoAwesome,
+                                        contentDescription = null,
+                                        tint = Color.White,
+                                        modifier = Modifier.size(13.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(4.dp))
+                                    Text(
+                                        text = "নতুন সিগনেচার টুল • AI & অথেনটিক হাদীস",
+                                        color = Color.White,
+                                        style = MaterialTheme.typography.labelSmall,
+                                        fontWeight = FontWeight.Bold,
+                                        fontFamily = banglaFont
+                                    )
+                                }
+                            }
+
+                            Surface(
+                                shape = CircleShape,
+                                color = Color(0xFF059669).copy(alpha = 0.18f),
+                                modifier = Modifier.size(40.dp)
+                            ) {
+                                Box(contentAlignment = Alignment.Center) {
+                                    Icon(
+                                        imageVector = Icons.Default.Favorite,
+                                        contentDescription = null,
+                                        tint = Color(0xFF059669),
+                                        modifier = Modifier.size(22.dp)
+                                    )
+                                }
+                            }
+                        }
+
+                        // Title
+                        Text(
+                            text = "Personal Dua Builder",
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.ExtraBold,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+
+                        Text(
+                            text = "ব্যক্তিগত দো'আ আর্কিটেক্ট ও আমল নির্দেশিকা",
+                            style = MaterialTheme.typography.labelLarge,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFF059669),
+                            fontFamily = banglaFont
+                        )
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        // Subtitle
+                        Text(
+                            text = "শুধু তালিকা নয়—আপনার যেকোনো পরিস্থিতি (যেমন: 'My father is sick and I am worried', ঋণ, মানসিক ক্লান্তি) অনুযায়ী কুরআনী আয়াত, সহীহ নববী দু'আ ও আমলের পদ্ধতি সুবিন্যস্তভাবে সাজিয়ে দেয়।",
+                            style = MaterialTheme.typography.bodyMedium.copy(lineHeight = 22.sp),
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            fontFamily = banglaFont
+                        )
+
+                        Spacer(modifier = Modifier.height(14.dp))
+
+                        // Quick Search Examples Pills
+                        Text(
+                            text = "উদাহরণ পরিস্থিতি সমূহ:",
+                            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                            color = Color(0xFF059669),
+                            fontFamily = banglaFont
+                        )
+                        Spacer(modifier = Modifier.height(6.dp))
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            listOf("পিতা-মাতার অসুস্থতা", "কঠিন ঋণ ও অভাব", "হতাশা ও বিষাদ", "তাওবা ও মাগফিরাত").forEach { pill ->
+                                Surface(
+                                    shape = RoundedCornerShape(8.dp),
+                                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f),
+                                    border = BorderStroke(0.6.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
+                                ) {
+                                    Text(
+                                        text = pill,
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = MaterialTheme.colorScheme.onSurface,
+                                        fontFamily = banglaFont,
+                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                                    )
+                                }
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        // Big Action Button
+                        Button(
+                            onClick = onOpenPersonalDuaBuilder,
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(14.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF059669))
+                        ) {
+                            Icon(Icons.Default.Favorite, contentDescription = null, tint = Color.White)
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "Personal Dua Builder চালু করুন",
+                                style = MaterialTheme.typography.labelLarge,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White,
+                                fontFamily = banglaFont
+                            )
+                        }
+                    }
+                }
+            }
+        }
+
         // TOP FEATURED HERO BANNER: "Explain This Ayah" Camera
         item {
             Card(
@@ -571,6 +728,15 @@ fun ToolsScreen(
 
         // Active tools list
         val activeTools = listOf(
+            IslamicToolItem(
+                id = "tool_personal_dua_builder",
+                titleBn = "Personal Dua Builder (ব্যক্তিগত দো'আ আর্কিটেক্ট)",
+                subtitleBn = "পরিস্থিতি অনুযায়ী কুরআনী আয়াত, সহীহ নববী দু'আ ও সুন্নাতী আদবের কাঠামোগত বিন্যাস।",
+                icon = Icons.Default.Favorite,
+                badgeBn = "নতুন সিগনেচার",
+                isFeatured = true,
+                onClick = onOpenPersonalDuaBuilder
+            ),
             IslamicToolItem(
                 id = "tool_ask_before_you_act",
                 titleBn = "Ask Before You Act (পদক্ষেপ নেওয়ার আগে জানুন)",

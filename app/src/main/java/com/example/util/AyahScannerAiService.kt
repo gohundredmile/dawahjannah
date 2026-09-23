@@ -58,10 +58,10 @@ class AyahScannerAiService(private val context: Context) {
     suspend fun analyzeQuranImage(bitmap: Bitmap): Result<AyahExplanation> = withContext(Dispatchers.IO) {
         val apiKey = getEffectiveApiKey()
 
-        // If no API key or placeholder key, match locally with our Quran catalog
         if (apiKey.isBlank() || apiKey == "your_api_key_here") {
-            // Return rich default / catalog verse (Ayatul Kursi)
-            return@withContext Result.success(QuranAyahCatalog.catalog.first())
+            return@withContext Result.failure(
+                Exception("এআই ভিশন সক্রিয় করতে ইন্টারনেট বা API কী প্রয়োজন। উপরের কী (Key) আইকনে ট্যাপ করে API Key দিন অথবা নিচের নমুনা আয়াতসমূহ নির্বাচন করুন।")
+            )
         }
 
         try {
@@ -81,32 +81,42 @@ class AyahScannerAiService(private val context: Context) {
             val base64Image = Base64.encodeToString(outputStream.toByteArray(), Base64.NO_WRAP)
 
             val prompt = """
-                You are an Islamic scholar and Quran expert. 
-                Look at this Arabic Quran page or Ayah snippet image. 
-                Identify the primary Ayah visible in the image.
-                Return a valid JSON object ONLY (no markdown formatting, no code fences, no prefix) with the following structure:
+                You are an Islamic scholar, Hafiz, and Quran specialist.
+                Carefully analyze this camera/gallery image.
+                Determine if this image contains any readable Arabic Quran verse(s) (Ayah) or a Quran page.
+
+                If the image DOES NOT contain an Arabic Quran Ayah (for example: a face, desk, blank screen, keyboard, wall, random non-Quranic text, or unreadable blur), return this exact JSON:
                 {
-                  "surahNumber": 2,
-                  "ayahNumber": 255,
-                  "surahNameArabic": "سورة البقرة",
-                  "surahNameBangla": "সূরা আল-বাক্বারাহ",
-                  "surahNameEnglish": "Surah Al-Baqarah",
-                  "revelationTypeBn": "মাদানী",
-                  "totalAyahsInSurah": 286,
-                  "arabicText": "اللَّهُ لَا إِلَٰهَ إِلَّا هُوَ الْحَيُّ الْقَيُّومُ...",
-                  "transliterationBn": "বাংলা উচ্চারণ...",
-                  "banglaTranslation": "সহজ প্রাঞ্জল বাংলা অনুবাদ...",
-                  "englishTranslation": "Sahih International English translation...",
+                  "isQuranAyah": false,
+                  "message": "কোনো স্পষ্ট কুরআন আয়াত শনাক্ত হয়নি। অনুগ্রহ করে পর্যাপ্ত আলোতে কুরআন শরীফের আরবি আয়াতের উপর ক্যামেরা স্থির রাখুন।"
+                }
+
+                If the image DOES contain one or more Quranic verses, identify the primary Ayah visible in the frame (surah and ayah number), and provide a comprehensive explanation in authentic Bengali and English.
+                Return this exact JSON:
+                {
+                  "isQuranAyah": true,
+                  "surahNumber": 1,
+                  "ayahNumber": 1,
+                  "surahNameArabic": "سورة الفاتحة",
+                  "surahNameBangla": "সূরা আল-ফাতিহা",
+                  "surahNameEnglish": "Surah Al-Fatihah",
+                  "revelationTypeBn": "মাক্কী",
+                  "totalAyahsInSurah": 7,
+                  "arabicText": "بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ",
+                  "transliterationBn": "বিসমিল্লাহির রাহমানির রাহীম",
+                  "banglaTranslation": "পরম করুণাময় অসীম দয়ালু আল্লাহর নামে শুরু করছি।",
+                  "englishTranslation": "In the name of Allah, the Entirely Merciful, the Especially Merciful.",
                   "wordByWord": [
-                    {"arabicWord": "اللَّهُ", "bengaliMeaning": "আল্লাহ", "englishMeaning": "Allah", "grammarNote": "পরম সত্তা"}
+                    {"arabicWord": "بِسْمِ", "bengaliMeaning": "নামে", "englishMeaning": "In the name", "grammarNote": "জার-মাজরুর"},
+                    {"arabicWord": "اللَّهِ", "bengaliMeaning": "আল্লাহর", "englishMeaning": "of Allah", "grammarNote": "মুযাফ ইলাইহি"}
                   ],
-                  "tafsirBn": "সংক্ষিপ্ত প্রামাণ্য তাফসীর (ইবনে কাসীর / মাআরিফুল কুরআন অনুযায়ী)...",
+                  "tafsirBn": "সংক্ষিপ্ত প্রামাণ্য তাফসীর...",
                   "contextBn": "নাযিলের প্রেক্ষাপট ও শানে নুযূল...",
                   "relatedVerses": [
-                    {"surahNameBn": "সূরা...", "ayahRef": "৩:২", "arabicText": "...", "translationBn": "..."}
+                    {"surahNameBn": "সূরা...", "ayahRef": "...", "arabicText": "...", "translationBn": "..."}
                   ],
                   "relatedHadiths": [
-                    {"sourceBn": "সহীহ বুখারী", "narratorBn": "আবু হুরায়রা (রা.)", "textBn": "হাদিসের বাংলা অর্থ...", "gradeBn": "সহীহ"}
+                    {"sourceBn": "সহীহ বুখারী", "narratorBn": "...", "textBn": "হাদিসের বাংলা অর্থ...", "gradeBn": "সহীহ"}
                   ]
                 }
             """.trimIndent()
@@ -129,36 +139,89 @@ class AyahScannerAiService(private val context: Context) {
                 }
                 put("contents", contents)
                 put("generationConfig", JSONObject().apply {
-                    put("temperature", 0.2)
+                    put("temperature", 0.1)
                     put("responseMimeType", "application/json")
                 })
             }
 
             val request = Request.Builder()
-                .url("https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=$apiKey")
+                .url("https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key=$apiKey")
                 .post(jsonBody.toString().toRequestBody("application/json".toMediaType()))
                 .build()
 
-            val response = httpClient.newCall(request).execute()
+            var response = httpClient.newCall(request).execute()
+            if (!response.isSuccessful && response.code == 404) {
+                // Fallback to gemini-3.5-flash
+                val fallbackRequest = Request.Builder()
+                    .url("https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=$apiKey")
+                    .post(jsonBody.toString().toRequestBody("application/json".toMediaType()))
+                    .build()
+                response = httpClient.newCall(fallbackRequest).execute()
+            }
+
             if (!response.isSuccessful) {
-                // Graceful fallback to offline catalog
-                return@withContext Result.success(QuranAyahCatalog.catalog.first())
+                val errBody = response.body?.string() ?: ""
+                val errMsg = try {
+                    JSONObject(errBody).optJSONObject("error")?.optString("message")
+                } catch (_: Exception) {
+                    null
+                } ?: "সার্ভার রেসপন্স ব্যর্থ হয়েছে (Code ${response.code})"
+                return@withContext Result.failure(Exception(errMsg))
             }
 
             val rawResponseStr = response.body?.string() ?: ""
             val jsonResponse = JSONObject(rawResponseStr)
             val candidates = jsonResponse.optJSONArray("candidates")
             val firstCandidate = candidates?.optJSONObject(0)
-            val textContent = firstCandidate?.optJSONObject("content")
-                ?.optJSONArray("parts")?.optJSONObject(0)?.optString("text")
+            val parts = firstCandidate?.optJSONObject("content")?.optJSONArray("parts")
 
-            if (textContent.isNullOrBlank()) {
-                return@withContext Result.success(QuranAyahCatalog.catalog.first())
+            var textContent: String? = null
+            if (parts != null) {
+                for (i in 0 until parts.length()) {
+                    val part = parts.optJSONObject(i) ?: continue
+                    val text = part.optString("text", "")
+                    if (text.isNotBlank() && !part.optBoolean("thought", false)) {
+                        textContent = text
+                        break
+                    }
+                }
             }
 
-            val parsedJson = JSONObject(textContent.trim().removePrefix("```json").removePrefix("```").removeSuffix("```").trim())
-            val sNum = parsedJson.optInt("surahNumber", 2)
-            val aNum = parsedJson.optInt("ayahNumber", 255)
+            if (textContent.isNullOrBlank()) {
+                return@withContext Result.failure(Exception("কোনো এআই ফলাফল পাওয়া যায়নি। অনুগ্রহ করে পুনরায় স্ক্যান করুন।"))
+            }
+
+            val cleanJson = textContent.trim()
+                .removePrefix("```json")
+                .removePrefix("```")
+                .removeSuffix("```")
+                .trim()
+            val parsedJson = JSONObject(cleanJson)
+
+            val isQuranAyah = parsedJson.optBoolean("isQuranAyah", true)
+            if (!isQuranAyah) {
+                val notFoundMsg = parsedJson.optString(
+                    "message",
+                    "কোনো স্পষ্ট কুরআন আয়াত শনাক্ত হয়নি। অনুগ্রহ করে কুরআন শরীফের আরবি আয়াতের উপর ক্যামেরা সোজা রাখুন।"
+                )
+                return@withContext Result.failure(Exception(notFoundMsg))
+            }
+
+            val sNum = parsedJson.optInt("surahNumber", 0)
+            val aNum = parsedJson.optInt("ayahNumber", 0)
+
+            // If it matched a known verse in our pre-compiled high-quality catalog, return it
+            if (sNum > 0 && aNum > 0) {
+                val catalogMatch = QuranAyahCatalog.catalog.firstOrNull { it.surahNumber == sNum && it.ayahNumber == aNum }
+                if (catalogMatch != null) {
+                    return@withContext Result.success(catalogMatch)
+                }
+            }
+
+            val arabicText = parsedJson.optString("arabicText", "").trim()
+            if (arabicText.isBlank()) {
+                return@withContext Result.failure(Exception("আয়াতের আরবি লেখা স্পষ্ট নয়। অনুগ্রহ করে পুনরায় স্ক্যান করুন।"))
+            }
 
             // Parse word by word
             val wordList = mutableListOf<WordMeaning>()
@@ -211,9 +274,9 @@ class AyahScannerAiService(private val context: Context) {
                 }
             }
 
-            // Standard EveryAyah audio URL format: e.g. 002255.mp3
-            val audioSurahStr = sNum.toString().padStart(3, '0')
-            val audioAyahStr = aNum.toString().padStart(3, '0')
+            // Standard EveryAyah audio URL format: e.g. 001001.mp3
+            val audioSurahStr = (if (sNum > 0) sNum else 1).toString().padStart(3, '0')
+            val audioAyahStr = (if (aNum > 0) aNum else 1).toString().padStart(3, '0')
             val audioUrl = "https://everyayah.com/data/Alafasy_128kbps/$audioSurahStr$audioAyahStr.mp3"
 
             val explanation = AyahExplanation(
@@ -221,11 +284,11 @@ class AyahScannerAiService(private val context: Context) {
                 surahNumber = sNum,
                 ayahNumber = aNum,
                 surahNameArabic = parsedJson.optString("surahNameArabic", "القرآن الكريم"),
-                surahNameBangla = parsedJson.optString("surahNameBangla", "সূরা $sNum"),
-                surahNameEnglish = parsedJson.optString("surahNameEnglish", "Surah $sNum"),
+                surahNameBangla = parsedJson.optString("surahNameBangla", if (sNum > 0) "সূরা $sNum" else "সূরা"),
+                surahNameEnglish = parsedJson.optString("surahNameEnglish", if (sNum > 0) "Surah $sNum" else "Surah"),
                 revelationTypeBn = parsedJson.optString("revelationTypeBn", "মাক্কী"),
-                totalAyahsInSurah = parsedJson.optInt("totalAyahsInSurah", 10),
-                arabicText = parsedJson.optString("arabicText", ""),
+                totalAyahsInSurah = parsedJson.optInt("totalAyahsInSurah", 1),
+                arabicText = arabicText,
                 transliterationBn = parsedJson.optString("transliterationBn", ""),
                 banglaTranslation = parsedJson.optString("banglaTranslation", ""),
                 englishTranslation = parsedJson.optString("englishTranslation", ""),
@@ -240,8 +303,7 @@ class AyahScannerAiService(private val context: Context) {
 
             Result.success(explanation)
         } catch (e: Exception) {
-            // Fallback gracefully to offline catalog item
-            Result.success(QuranAyahCatalog.catalog.first())
+            Result.failure(Exception(e.localizedMessage ?: "স্ক্যান করতে সমস্যা হয়েছে। পুনরায় চেষ্টা করুন।"))
         }
     }
 }

@@ -186,9 +186,10 @@ fun ExplainAyahCameraScreen(
     // Screen state: Camera Viewfinder vs Result Dashboard
     var recognizedAyah by remember { mutableStateOf<AyahExplanation?>(null) }
     var isAnalyzing by remember { mutableStateOf(false) }
+    var scanErrorMessage by remember { mutableStateOf<String?>(null) }
     var searchQuery by remember { mutableStateOf("") }
     var isSearchExpanded by remember { mutableStateOf(false) }
-    var isAutoScanEnabled by remember { mutableStateOf(true) }
+    var isAutoScanEnabled by remember { mutableStateOf(false) }
     var showApiKeyDialog by remember { mutableStateOf(false) }
     var apiKeyInput by remember { mutableStateOf(aiService.getEffectiveApiKey()) }
 
@@ -202,6 +203,7 @@ fun ExplainAyahCameraScreen(
     val triggerCapture: () -> Unit = {
         if (!isAnalyzing) {
             isAnalyzing = true
+            scanErrorMessage = null
             val capture = imageCapture
             if (hasCameraPermission && capture != null) {
                 val executor = ContextCompat.getMainExecutor(context)
@@ -215,21 +217,30 @@ fun ExplainAyahCameraScreen(
                                         val bitmap = imageProxyToBitmap(image)
                                         image.close()
                                         if (bitmap != null) {
-                                            processImage(bitmap, aiService) { result ->
-                                                isAnalyzing = false
-                                                recognizedAyah = result
-                                            }
+                                            processImage(
+                                                bitmap = bitmap,
+                                                aiService = aiService,
+                                                onSuccess = { result ->
+                                                    isAnalyzing = false
+                                                    scanErrorMessage = null
+                                                    recognizedAyah = result
+                                                },
+                                                onError = { err ->
+                                                    isAnalyzing = false
+                                                    scanErrorMessage = err
+                                                }
+                                            )
                                         } else {
                                             withContext(Dispatchers.Main) {
                                                 isAnalyzing = false
-                                                recognizedAyah = QuranAyahCatalog.catalog.first()
+                                                scanErrorMessage = "ক্যামেরা ছবি পড়তে ব্যর্থ হয়েছে। পুনরায় চেষ্টা করুন।"
                                             }
                                         }
-                                    } catch (_: Exception) {
+                                    } catch (e: Exception) {
                                         try { image.close() } catch (_: Exception) {}
                                         withContext(Dispatchers.Main) {
                                             isAnalyzing = false
-                                            recognizedAyah = QuranAyahCatalog.catalog.first()
+                                            scanErrorMessage = e.localizedMessage ?: "স্ক্যান করতে সমস্যা হয়েছে।"
                                         }
                                     }
                                 }
@@ -238,23 +249,21 @@ fun ExplainAyahCameraScreen(
                             override fun onError(exception: ImageCaptureException) {
                                 coroutineScope.launch(Dispatchers.Main) {
                                     isAnalyzing = false
-                                    recognizedAyah = QuranAyahCatalog.catalog.first()
+                                    scanErrorMessage = "ক্যামেরা ক্যাপচার ত্রুটি: ${exception.localizedMessage ?: "অজ্ঞাত ত্রুটি"}"
                                 }
                             }
                         }
                     )
-                } catch (_: Exception) {
+                } catch (e: Exception) {
                     coroutineScope.launch(Dispatchers.Main) {
                         isAnalyzing = false
-                        recognizedAyah = QuranAyahCatalog.catalog.first()
+                        scanErrorMessage = e.localizedMessage ?: "ক্যামেরা প্রস্তুত করা যায়নি।"
                     }
                 }
             } else {
-                // If camera hardware not bound yet (e.g. emulator or quick tap)
                 coroutineScope.launch(Dispatchers.Main) {
-                    delay(800)
                     isAnalyzing = false
-                    recognizedAyah = QuranAyahCatalog.catalog.first()
+                    scanErrorMessage = "ক্যামেরা প্রস্তুত নয়। ক্যামেরা স্থির রেখে পুনরায় ট্যাপ করুন।"
                 }
             }
         }
@@ -263,7 +272,7 @@ fun ExplainAyahCameraScreen(
     // Auto-Scan interval trigger when viewfinder is steady
     LaunchedEffect(isAutoScanEnabled, hasCameraPermission, imageCapture, recognizedAyah, isAnalyzing) {
         if (isAutoScanEnabled && hasCameraPermission && imageCapture != null && recognizedAyah == null && !isAnalyzing) {
-            delay(2800)
+            delay(4000)
             if (recognizedAyah == null && !isAnalyzing && isAutoScanEnabled) {
                 triggerCapture()
             }
@@ -277,20 +286,30 @@ fun ExplainAyahCameraScreen(
         uri?.let {
             coroutineScope.launch {
                 isAnalyzing = true
+                scanErrorMessage = null
                 try {
                     val bitmap = loadBitmapFromUri(context, it)
                     if (bitmap != null) {
-                        processImage(bitmap, aiService) { result ->
-                            isAnalyzing = false
-                            recognizedAyah = result
-                        }
+                        processImage(
+                            bitmap = bitmap,
+                            aiService = aiService,
+                            onSuccess = { result ->
+                                isAnalyzing = false
+                                scanErrorMessage = null
+                                recognizedAyah = result
+                            },
+                            onError = { err ->
+                                isAnalyzing = false
+                                scanErrorMessage = err
+                            }
+                        )
                     } else {
                         isAnalyzing = false
-                        recognizedAyah = QuranAyahCatalog.catalog.first()
+                        scanErrorMessage = "ছবিটি লোড করা যায়নি।"
                     }
-                } catch (_: Exception) {
+                } catch (e: Exception) {
                     isAnalyzing = false
-                    recognizedAyah = QuranAyahCatalog.catalog.first()
+                    scanErrorMessage = e.localizedMessage ?: "গ্যালারি ছবি প্রসেস করতে ব্যর্থ হয়েছে।"
                 }
             }
         }
@@ -512,6 +531,58 @@ fun ExplainAyahCameraScreen(
                                     tint = Color.White
                                 )
                             }
+                        }
+                    }
+                }
+            }
+
+            // Error / Guidance Floating Banner
+            if (scanErrorMessage != null) {
+                Surface(
+                    shape = RoundedCornerShape(14.dp),
+                    color = Color(0xFF1E1E1E).copy(alpha = 0.92f),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.error.copy(alpha = 0.7f)),
+                    modifier = Modifier
+                        .align(Alignment.TopCenter)
+                        .padding(top = 84.dp, start = 16.dp, end = 16.dp)
+                        .fillMaxWidth()
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Surface(
+                            shape = CircleShape,
+                            color = MaterialTheme.colorScheme.error.copy(alpha = 0.2f),
+                            modifier = Modifier.size(28.dp)
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                Icon(
+                                    imageVector = Icons.Default.Close,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.error,
+                                    modifier = Modifier.size(16.dp)
+                                )
+                            }
+                        }
+                        Spacer(modifier = Modifier.width(10.dp))
+                        Text(
+                            text = scanErrorMessage!!,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = Color.White,
+                            fontFamily = banglaFont,
+                            modifier = Modifier.weight(1f)
+                        )
+                        IconButton(
+                            onClick = { scanErrorMessage = null },
+                            modifier = Modifier.size(28.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Close,
+                                contentDescription = "বন্ধ করুন",
+                                tint = Color.White.copy(alpha = 0.6f),
+                                modifier = Modifier.size(16.dp)
+                            )
                         }
                     }
                 }
@@ -2043,12 +2114,15 @@ private fun TabMemorizationView(
 private suspend fun processImage(
     bitmap: Bitmap,
     aiService: AyahScannerAiService,
-    onResult: (AyahExplanation) -> Unit
+    onSuccess: (AyahExplanation) -> Unit,
+    onError: (String) -> Unit
 ) = withContext(Dispatchers.IO) {
     val result = aiService.analyzeQuranImage(bitmap)
-    val ayah = result.getOrElse { QuranAyahCatalog.catalog.first() }
     withContext(Dispatchers.Main) {
-        onResult(ayah)
+        result.fold(
+            onSuccess = { ayah -> onSuccess(ayah) },
+            onFailure = { error -> onError(error.localizedMessage ?: "কোনো স্পষ্ট আয়াত শনাক্ত করা যায়নি।") }
+        )
     }
 }
 

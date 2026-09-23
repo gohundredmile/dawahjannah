@@ -96,7 +96,9 @@ val rootDirFile = rootDir
 val envFile = rootDirFile.resolve(".env")
 val envExampleFile = rootDirFile.resolve(".env.example")
 
-fun sanitizeSecretsProperties(file: java.io.File, defaultVal: String = "your_api_key_here") {
+val sysGeminiKey = System.getenv("GEMINI_API_KEY")?.takeIf { it.isNotBlank() } ?: "your_api_key_here"
+
+fun sanitizeSecretsProperties(file: java.io.File, defaultVal: String = sysGeminiKey) {
     if (!file.exists()) {
         file.writeText("GEMINI_API_KEY=\"$defaultVal\"\n")
         return

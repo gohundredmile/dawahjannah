@@ -730,51 +730,72 @@ private fun SemanticAyahResultCard(
 
             Spacer(modifier = Modifier.height(14.dp))
 
-            // Arabic Text Block with Traditional Ornate Styling
+            // Arabic Text Block with Traditional Ornate Styling & Pristine Typography
             Surface(
-                shape = RoundedCornerShape(14.dp),
+                shape = RoundedCornerShape(16.dp),
                 color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f),
-                border = BorderStroke(0.8.dp, IslamicGold.copy(alpha = 0.25f)),
+                border = BorderStroke(1.2.dp, IslamicGold.copy(alpha = 0.4f)),
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Column(modifier = Modifier.padding(14.dp)) {
+                Column(modifier = Modifier.padding(16.dp)) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(
-                            text = ayah.surahNameAr,
-                            style = MaterialTheme.typography.labelMedium,
-                            color = IslamicGold,
-                            fontFamily = arabicFont
-                        )
-
-                        IconButton(
-                            onClick = {
-                                val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                                val clip = ClipData.newPlainText("Ayah Arabic", ayah.arabicText)
-                                clipboard.setPrimaryClip(clip)
-                                Toast.makeText(context, "আরবি আয়াত কপি করা হয়েছে", Toast.LENGTH_SHORT).show()
-                            },
-                            modifier = Modifier.size(28.dp)
+                        Surface(
+                            shape = RoundedCornerShape(6.dp),
+                            color = Color(0xFF059669).copy(alpha = 0.15f),
+                            border = BorderStroke(0.6.dp, Color(0xFF059669).copy(alpha = 0.4f))
                         ) {
-                            Icon(
-                                imageVector = Icons.Default.ContentCopy,
-                                contentDescription = "কপি করুন",
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier.size(15.dp)
+                            Text(
+                                text = "পবিত্র কুরআনুল কারীম • কালামুল্লাহ",
+                                style = MaterialTheme.typography.labelSmall.copy(
+                                    fontSize = 10.5.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color(0xFF059669)
+                                ),
+                                modifier = Modifier.padding(horizontal = 7.dp, vertical = 3.dp),
+                                fontFamily = banglaFont
                             )
+                        }
+
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(
+                                text = ayah.surahNameAr,
+                                style = MaterialTheme.typography.titleMedium.copy(fontSize = 18.sp),
+                                color = IslamicGold,
+                                fontFamily = arabicFont
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            IconButton(
+                                onClick = {
+                                    val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                                    val clip = ClipData.newPlainText("Ayah Arabic", ayah.arabicText)
+                                    clipboard.setPrimaryClip(clip)
+                                    Toast.makeText(context, "আরবি আয়াত কপি করা হয়েছে", Toast.LENGTH_SHORT).show()
+                                },
+                                modifier = Modifier.size(28.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.ContentCopy,
+                                    contentDescription = "কপি করুন",
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    modifier = Modifier.size(15.dp)
+                                )
+                            }
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(8.dp))
+                    Spacer(modifier = Modifier.height(12.dp))
 
+                    // Excellent Classical Arabic Typography with Amiri font and Ayah Ornament
+                    val decoratedArabic = "${ayah.arabicText} ﴿${com.example.util.CalendarHelper.toArabicNumber(ayah.ayahNumber)}﴾"
                     Text(
-                        text = ayah.arabicText,
+                        text = decoratedArabic,
                         style = MaterialTheme.typography.headlineSmall.copy(
-                            fontSize = 22.sp,
-                            lineHeight = 40.sp,
+                            fontSize = 24.sp,
+                            lineHeight = 48.sp,
                             textDirection = TextDirection.Rtl,
                             textAlign = TextAlign.Right
                         ),
@@ -823,9 +844,9 @@ private fun SemanticAyahResultCard(
 
             Spacer(modifier = Modifier.height(10.dp))
 
-            // Bangla Translation
+            // Bangla Translation (Clearly Sourced)
             Text(
-                text = "বাংলা অনুবাদ:",
+                text = "বাংলা অনুবাদ (ইসলামিক ফাউন্ডেশন ও মহিউদ্দীন খান):",
                 style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
                 color = MaterialTheme.colorScheme.primary,
                 fontFamily = banglaFont
@@ -843,7 +864,13 @@ private fun SemanticAyahResultCard(
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // English Translation
+            // English Translation (Sahih International Sourced)
+            Text(
+                text = "English Translation (Sahih International):",
+                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold, fontSize = 11.sp),
+                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
+            )
+            Spacer(modifier = Modifier.height(2.dp))
             Text(
                 text = ayah.englishTranslation,
                 style = MaterialTheme.typography.bodySmall.copy(
@@ -855,40 +882,68 @@ private fun SemanticAyahResultCard(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // Divine Wisdom / Relevance Insight Card
+            // AI Semantic Reflection (Clearly distinguished as AI-assisted topical insight)
             Surface(
-                shape = RoundedCornerShape(12.dp),
-                color = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.35f),
-                border = BorderStroke(0.8.dp, MaterialTheme.colorScheme.secondary.copy(alpha = 0.3f)),
+                shape = RoundedCornerShape(14.dp),
+                color = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.3f),
+                border = BorderStroke(0.8.dp, MaterialTheme.colorScheme.secondary.copy(alpha = 0.35f)),
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Row(modifier = Modifier.padding(12.dp)) {
+                Row(modifier = Modifier.padding(14.dp)) {
                     Icon(
                         imageVector = Icons.Default.Spa,
                         contentDescription = null,
                         tint = MaterialTheme.colorScheme.secondary,
-                        modifier = Modifier.size(18.dp)
+                        modifier = Modifier.size(20.dp)
                     )
-                    Spacer(modifier = Modifier.width(8.dp))
+                    Spacer(modifier = Modifier.width(10.dp))
                     Column {
-                        Text(
-                            text = "কুরআনিক নিরাময় ও প্রাসঙ্গিকতা:",
-                            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
-                            color = MaterialTheme.colorScheme.secondary,
-                            fontFamily = banglaFont
-                        )
-                        Spacer(modifier = Modifier.height(2.dp))
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text(
+                                text = "ঐশী উপলব্ধি ও বাস্তব জীবনের সমাধান:",
+                                style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
+                                color = MaterialTheme.colorScheme.secondary,
+                                fontFamily = banglaFont
+                            )
+                            Surface(
+                                shape = RoundedCornerShape(4.dp),
+                                color = MaterialTheme.colorScheme.secondary.copy(alpha = 0.18f)
+                            ) {
+                                Text(
+                                    text = "এআই ভাবার্থ বিশ্লেষণ",
+                                    style = MaterialTheme.typography.labelSmall.copy(
+                                        fontSize = 9.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.secondary
+                                    ),
+                                    modifier = Modifier.padding(horizontal = 5.dp, vertical = 1.dp),
+                                    fontFamily = banglaFont
+                                )
+                            }
+                        }
+                        Spacer(modifier = Modifier.height(4.dp))
                         Text(
                             text = ayah.divineWisdomBn,
-                            style = MaterialTheme.typography.bodySmall.copy(lineHeight = 18.sp),
+                            style = MaterialTheme.typography.bodySmall.copy(lineHeight = 19.sp),
                             color = MaterialTheme.colorScheme.onSurface,
+                            fontFamily = banglaFont
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = "* আয়াতভিত্তিক প্রজ্ঞাময় অনুধাবন — এটি কোনো শরঈ ফতোয়া বা নতুন ধর্মীয় বিধান নয়।",
+                            style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
+                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.75f),
                             fontFamily = banglaFont
                         )
                     }
                 }
             }
 
-            // Collapsible Classical Tafsir Section
+            // Collapsible Classical Tafsir & Hadith Section (Authentic & Sourced)
             Spacer(modifier = Modifier.height(10.dp))
             Surface(
                 shape = RoundedCornerShape(12.dp),
@@ -913,7 +968,7 @@ private fun SemanticAyahResultCard(
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
-                                text = "তাফসীর ও প্রেক্ষাপট (ইবনে কাসীর / মা'আরিফুল কুরআন)",
+                                text = "প্রামাণ্য তাফসীর ও প্রেক্ষাপট (ইবনে কাসীর / মা'আরিফুল কুরআন)",
                                 style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
                                 color = MaterialTheme.colorScheme.onSurface,
                                 fontFamily = banglaFont
@@ -942,23 +997,33 @@ private fun SemanticAyahResultCard(
                             )
 
                             if (!ayah.relatedHadithBn.isNullOrBlank()) {
-                                Spacer(modifier = Modifier.height(8.dp))
+                                Spacer(modifier = Modifier.height(10.dp))
                                 Surface(
-                                    shape = RoundedCornerShape(8.dp),
-                                    color = IslamicGold.copy(alpha = 0.1f),
+                                    shape = RoundedCornerShape(10.dp),
+                                    color = IslamicGold.copy(alpha = 0.12f),
+                                    border = BorderStroke(0.6.dp, IslamicGold.copy(alpha = 0.3f)),
                                     modifier = Modifier.fillMaxWidth()
                                 ) {
-                                    Column(modifier = Modifier.padding(10.dp)) {
-                                        Text(
-                                            text = "সম্পর্কিত সহীহ হাদীস:",
-                                            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
-                                            color = IslamicGold,
-                                            fontFamily = banglaFont
-                                        )
-                                        Spacer(modifier = Modifier.height(2.dp))
+                                    Column(modifier = Modifier.padding(12.dp)) {
+                                        Row(verticalAlignment = Alignment.CenterVertically) {
+                                            Icon(
+                                                imageVector = Icons.Default.AutoAwesome,
+                                                contentDescription = null,
+                                                tint = IslamicGold,
+                                                modifier = Modifier.size(14.dp)
+                                            )
+                                            Spacer(modifier = Modifier.width(6.dp))
+                                            Text(
+                                                text = "সম্পর্কিত সহীহ হাদীস ও সূত্র:",
+                                                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                                                color = IslamicGold,
+                                                fontFamily = banglaFont
+                                            )
+                                        }
+                                        Spacer(modifier = Modifier.height(4.dp))
                                         Text(
                                             text = ayah.relatedHadithBn,
-                                            style = MaterialTheme.typography.bodySmall.copy(lineHeight = 18.sp),
+                                            style = MaterialTheme.typography.bodySmall.copy(lineHeight = 19.sp),
                                             color = MaterialTheme.colorScheme.onSurface,
                                             fontFamily = banglaFont
                                         )

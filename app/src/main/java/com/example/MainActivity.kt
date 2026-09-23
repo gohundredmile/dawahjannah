@@ -46,6 +46,7 @@ import com.example.ui.screens.sub.AsmaulHusnaScreen
 import com.example.ui.screens.sub.AyatDetectorAndSolverScreen
 import com.example.ui.screens.sub.QiblaCompassScreen
 import com.example.ui.screens.sub.TasbihScreen
+import com.example.ui.screens.tools.AskBeforeYouActScreen
 import com.example.ui.screens.tools.ExplainAyahCameraScreen
 import com.example.ui.screens.tools.SmartQuranSearchScreen
 import com.example.ui.screens.tools.ToolsScreen
@@ -223,11 +224,15 @@ class MainActivity : ComponentActivity() {
                                         ToolsSubScreen.MAIN -> ToolsScreen(
                                             onOpenExplainAyahCamera = { viewModel.openExplainAyahCamera() },
                                             onOpenSmartQuranSearch = { viewModel.navigateToToolsSubScreen(ToolsSubScreen.SMART_QURAN_SEARCH) },
+                                            onOpenAskBeforeYouAct = { viewModel.navigateToToolsSubScreen(ToolsSubScreen.ASK_BEFORE_YOU_ACT) },
                                             onOpenAyatDetector = { viewModel.navigateToToolsSubScreen(ToolsSubScreen.AYAT_DETECTOR_SOLVER) },
                                             onOpenQibla = { viewModel.navigateToToolsSubScreen(ToolsSubScreen.QIBLA) },
                                             onOpenTasbih = { viewModel.navigateToToolsSubScreen(ToolsSubScreen.TASBIH) },
                                             onOpenNamesOfAllah = { viewModel.navigateToToolsSubScreen(ToolsSubScreen.NAMES_OF_ALLAH) },
                                             contentPadding = innerPadding
+                                        )
+                                        ToolsSubScreen.ASK_BEFORE_YOU_ACT -> AskBeforeYouActScreen(
+                                            onNavigateBack = { viewModel.navigateBackToTools() }
                                         )
                                         ToolsSubScreen.EXPLAIN_AYAH_CAMERA -> ExplainAyahCameraScreen(
                                             onNavigateBack = { viewModel.navigateBackToTools() }

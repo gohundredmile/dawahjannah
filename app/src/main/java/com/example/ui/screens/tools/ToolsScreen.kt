@@ -32,7 +32,9 @@ import androidx.compose.material.icons.filled.Fingerprint
 import androidx.compose.material.icons.filled.Lightbulb
 import androidx.compose.material.icons.filled.MenuBook
 import androidx.compose.material.icons.filled.NotificationsActive
+import androidx.compose.material.icons.filled.Psychology
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Spa
 import androidx.compose.material.icons.filled.Spellcheck
 import androidx.compose.material.icons.filled.Stars
 import androidx.compose.material.icons.filled.Tune
@@ -85,6 +87,7 @@ data class IslamicToolItem(
 fun ToolsScreen(
     onOpenExplainAyahCamera: () -> Unit,
     onOpenSmartQuranSearch: () -> Unit = {},
+    onOpenAskBeforeYouAct: () -> Unit = {},
     onOpenAyatDetector: () -> Unit,
     onOpenQibla: () -> Unit,
     onOpenTasbih: () -> Unit,
@@ -254,6 +257,306 @@ fun ToolsScreen(
             }
         }
 
+        // SIGNATURE SPOTLIGHT CARD: "Smart Quran Search" (Semantic AI)
+        item {
+            Card(
+                shape = RoundedCornerShape(24.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                border = BorderStroke(1.5.dp, Color(0xFF059669).copy(alpha = 0.65f)),
+                elevation = CardDefaults.cardElevation(defaultElevation = 3.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { onOpenSmartQuranSearch() }
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(
+                            Brush.verticalGradient(
+                                colors = listOf(
+                                    Color(0xFF059669).copy(alpha = 0.12f),
+                                    IslamicGold.copy(alpha = 0.05f)
+                                )
+                            )
+                        )
+                        .padding(20.dp)
+                ) {
+                    Column {
+                        // Badge Row
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Surface(
+                                shape = RoundedCornerShape(12.dp),
+                                color = Color(0xFF059669),
+                                modifier = Modifier.padding(bottom = 8.dp)
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Search,
+                                        contentDescription = null,
+                                        tint = Color.White,
+                                        modifier = Modifier.size(14.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(4.dp))
+                                    Text(
+                                        text = "সিগনেচার ফিচার • সেমান্টিক এআই",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        fontWeight = FontWeight.Bold,
+                                        color = Color.White,
+                                        fontFamily = banglaFont
+                                    )
+                                }
+                            }
+
+                            Surface(
+                                shape = CircleShape,
+                                color = Color(0xFF059669).copy(alpha = 0.18f),
+                                modifier = Modifier.size(40.dp)
+                            ) {
+                                Box(contentAlignment = Alignment.Center) {
+                                    Icon(
+                                        imageVector = Icons.Default.Psychology,
+                                        contentDescription = null,
+                                        tint = Color(0xFF059669),
+                                        modifier = Modifier.size(22.dp)
+                                    )
+                                }
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(6.dp))
+
+                        // Title
+                        Text(
+                            text = "Smart Quran Search",
+                            style = MaterialTheme.typography.headlineSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            fontFamily = banglaFont
+                        )
+
+                        Spacer(modifier = Modifier.height(6.dp))
+
+                        // Description
+                        Text(
+                            text = "সাধারণ সার্চের মতো শুধু আক্ষরিক শব্দ নয় — মানুষের বাস্তব অনুভূতি, আবেগ বা সংকট লিখে খুঁজুন কুরআনের প্রাসঙ্গিক আয়াত, সহীহ অনুবাদ, তাফসীর ও প্রজ্ঞাপূর্ণ সমাধান।",
+                            style = MaterialTheme.typography.bodyMedium.copy(lineHeight = 22.sp),
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            fontFamily = banglaFont
+                        )
+
+                        Spacer(modifier = Modifier.height(14.dp))
+
+                        // Quick Search Examples Pills
+                        Text(
+                            text = "জনপ্রিয় অনুসন্ধান উদাহরণ:",
+                            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                            color = MaterialTheme.colorScheme.primary,
+                            fontFamily = banglaFont
+                        )
+                        Spacer(modifier = Modifier.height(6.dp))
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            listOf("নিরাশ হওয়া", "আল্লাহর ক্ষমা", "রাগ নিয়ন্ত্রণ").forEach { pill ->
+                                Surface(
+                                    shape = RoundedCornerShape(8.dp),
+                                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f),
+                                    border = BorderStroke(0.6.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
+                                ) {
+                                    Text(
+                                        text = pill,
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = MaterialTheme.colorScheme.onSurface,
+                                        fontFamily = banglaFont,
+                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                                    )
+                                }
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        // Big Action Button
+                        Button(
+                            onClick = onOpenSmartQuranSearch,
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(14.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF059669))
+                        ) {
+                            Icon(Icons.Default.Search, contentDescription = null, tint = Color.White)
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "স্মার্ট কুরআন সার্চ চালু করুন",
+                                style = MaterialTheme.typography.labelLarge,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White,
+                                fontFamily = banglaFont
+                            )
+                        }
+                    }
+                }
+            }
+        }
+
+        // SIGNATURE SPOTLIGHT CARD: "Ask Before You Act" (Structured Jurisprudential Diagnostic)
+        item {
+            Card(
+                shape = RoundedCornerShape(24.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                border = BorderStroke(1.5.dp, Color(0xFF4F46E5).copy(alpha = 0.65f)),
+                elevation = CardDefaults.cardElevation(defaultElevation = 3.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { onOpenAskBeforeYouAct() }
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(
+                            Brush.verticalGradient(
+                                colors = listOf(
+                                    Color(0xFF4F46E5).copy(alpha = 0.12f),
+                                    Color(0xFF059669).copy(alpha = 0.05f)
+                                )
+                            )
+                        )
+                        .padding(20.dp)
+                ) {
+                    Column {
+                        // Badge Row
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Surface(
+                                shape = RoundedCornerShape(12.dp),
+                                color = Color(0xFF4F46E5),
+                                modifier = Modifier.padding(bottom = 8.dp)
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Psychology,
+                                        contentDescription = null,
+                                        tint = Color.White,
+                                        modifier = Modifier.size(14.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(4.dp))
+                                    Text(
+                                        text = "অনন্য সিগনেচার ফিচার • ফিকহি বিশ্লেষণ",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        fontWeight = FontWeight.Bold,
+                                        color = Color.White,
+                                        fontFamily = banglaFont
+                                    )
+                                }
+                            }
+
+                            Surface(
+                                shape = CircleShape,
+                                color = Color(0xFF4F46E5).copy(alpha = 0.18f),
+                                modifier = Modifier.size(40.dp)
+                            ) {
+                                Box(contentAlignment = Alignment.Center) {
+                                    Icon(
+                                        imageVector = Icons.Default.AutoAwesome,
+                                        contentDescription = null,
+                                        tint = Color(0xFF4F46E5),
+                                        modifier = Modifier.size(22.dp)
+                                    )
+                                }
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(6.dp))
+
+                        // Title
+                        Text(
+                            text = "Ask Before You Act",
+                            style = MaterialTheme.typography.headlineSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            fontFamily = banglaFont
+                        )
+
+                        Spacer(modifier = Modifier.height(6.dp))
+
+                        // Description
+                        Text(
+                            text = "কোনো আর্থিক পদক্ষেপ বা চুক্তিতে জড়ানোর আগে সরাসরি স্থূল হ্যাঁ/না নয় — বরং কাঠামোগত প্রশ্নের মাধ্যমে চুক্তির স্বরূপ, সুপ্ত সুদ, জরিমানা ও শর্তাবলি স্পষ্ট করে প্রামাণ্য কুরআন-সুন্নাহ ও ফিকহি উসূলভিত্তিক সমাধান জানুন।",
+                            style = MaterialTheme.typography.bodyMedium.copy(lineHeight = 22.sp),
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            fontFamily = banglaFont
+                        )
+
+                        Spacer(modifier = Modifier.height(14.dp))
+
+                        // Quick Search Examples Pills
+                        Text(
+                            text = "উদাহরণ ও ক্ষেত্রসমূহ:",
+                            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                            color = Color(0xFF4F46E5),
+                            fontFamily = banglaFont
+                        )
+                        Spacer(modifier = Modifier.height(6.dp))
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            listOf("ঋণ ও ব্যাংক লোন", "শেয়ার বাজার ট্রেডিং", "ড্রপশিপিং", "জীবন বীমা").forEach { pill ->
+                                Surface(
+                                    shape = RoundedCornerShape(8.dp),
+                                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f),
+                                    border = BorderStroke(0.6.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
+                                ) {
+                                    Text(
+                                        text = pill,
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = MaterialTheme.colorScheme.onSurface,
+                                        fontFamily = banglaFont,
+                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                                    )
+                                }
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        // Big Action Button
+                        Button(
+                            onClick = onOpenAskBeforeYouAct,
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(14.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4F46E5))
+                        ) {
+                            Icon(Icons.Default.Psychology, contentDescription = null, tint = Color.White)
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "শরঈ অনুসন্ধান শুরু করুন",
+                                style = MaterialTheme.typography.labelLarge,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White,
+                                fontFamily = banglaFont
+                            )
+                        }
+                    }
+                }
+            }
+        }
+
         // SECTION: সক্রিয় ইসলামিক টুলস (Active Tools)
         item {
             Text(
@@ -268,6 +571,15 @@ fun ToolsScreen(
 
         // Active tools list
         val activeTools = listOf(
+            IslamicToolItem(
+                id = "tool_ask_before_you_act",
+                titleBn = "Ask Before You Act (পদক্ষেপ নেওয়ার আগে জানুন)",
+                subtitleBn = "আর্থিক সিদ্ধান্ত বা চুক্তির পূর্বে কাঠামোগত শরঈ প্রশ্নমালা ও প্রামাণ্য দলিলভিত্তিক দিকনির্দেশনা।",
+                icon = Icons.Default.Psychology,
+                badgeBn = "সিগনেচার",
+                isFeatured = true,
+                onClick = onOpenAskBeforeYouAct
+            ),
             IslamicToolItem(
                 id = "tool_smart_quran_search",
                 titleBn = "স্মার্ট কুরআন সার্চ (ভাবার্থভিত্তিক অনুসন্ধান)",

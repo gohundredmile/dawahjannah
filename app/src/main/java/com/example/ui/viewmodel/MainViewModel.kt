@@ -96,6 +96,7 @@ enum class AppTab(val index: Int, val titleBn: String) {
 
 enum class ToolsSubScreen(val titleBn: String) {
     MAIN("টুলস"),
+    ASK_BEFORE_YOU_ACT("Ask Before You Act (পদক্ষেপ নেওয়ার আগে জানুন)"),
     SMART_QURAN_SEARCH("Smart Quran Search (ভাবার্থভিত্তিক অনুসন্ধান)"),
     EXPLAIN_AYAH_CAMERA("Explain This Ayah ক্যামেরা"),
     AYAT_DETECTOR_SOLVER("আয়াত ও হাদীস শুদ্ধিকরণ ল্যাব"),
@@ -162,6 +163,11 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     fun openExplainAyahCamera() {
         _toolsSubScreen.value = ToolsSubScreen.EXPLAIN_AYAH_CAMERA
+        _currentTab.value = AppTab.TOOLS
+    }
+
+    fun openAskBeforeYouAct() {
+        _toolsSubScreen.value = ToolsSubScreen.ASK_BEFORE_YOU_ACT
         _currentTab.value = AppTab.TOOLS
     }
 

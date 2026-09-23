@@ -8,6 +8,13 @@ import java.util.Locale
 object CalendarHelper {
 
     private val banglaDigits = charArrayOf('০', '১', '২', '৩', '৪', '৫', '৬', '৭', '৮', '৯')
+    private val arabicDigits = charArrayOf('٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩')
+
+    fun toArabicNumber(number: Int): String {
+        return number.toString().map { ch ->
+            if (ch in '0'..'9') arabicDigits[ch - '0'] else ch
+        }.joinToString("")
+    }
 
     fun toBanglaNumber(number: Int): String {
         return number.toString().map { ch ->

@@ -288,16 +288,23 @@ class GitHubUpdateManager(private val context: Context) {
                     var apkDownloadUrl: String? = null
                     val assetsArray = json.optJSONArray("assets")
                     if (assetsArray != null) {
+                        var fallbackApkUrl: String? = null
                         for (i in 0 until assetsArray.length()) {
                             val asset = assetsArray.getJSONObject(i)
                             val name = asset.optString("name", "")
                             if (name.endsWith(".apk", ignoreCase = true)) {
                                 val dl = asset.optString("browser_download_url", "")
                                 if (dl.isNotBlank()) {
-                                    apkDownloadUrl = dl
-                                    break
+                                    if (name.contains("release", ignoreCase = true)) {
+                                        apkDownloadUrl = dl
+                                        break
+                                    }
+                                    if (fallbackApkUrl == null) fallbackApkUrl = dl
                                 }
                             }
+                        }
+                        if (apkDownloadUrl == null) {
+                            apkDownloadUrl = fallbackApkUrl
                         }
                     }
                     if (apkDownloadUrl == null) {
@@ -793,14 +800,21 @@ class GitHubUpdateManager(private val context: Context) {
                     val json = JSONObject(body)
                     val assets = json.optJSONArray("assets")
                     if (assets != null) {
+                        var fallbackUrl: String? = null
                         for (i in 0 until assets.length()) {
                             val asset = assets.getJSONObject(i)
                             val name = asset.optString("name", "")
                             if (name.endsWith(".apk", ignoreCase = true)) {
                                 val downloadUrl = asset.optString("browser_download_url", "")
-                                if (downloadUrl.isNotBlank()) return@withContext downloadUrl
+                                if (downloadUrl.isNotBlank()) {
+                                    if (name.contains("release", ignoreCase = true)) {
+                                        return@withContext downloadUrl
+                                    }
+                                    if (fallbackUrl == null) fallbackUrl = downloadUrl
+                                }
                             }
                         }
+                        if (fallbackUrl != null) return@withContext fallbackUrl
                     }
                 }
             }
@@ -991,7 +1005,6 @@ class GitHubUpdateManager(private val context: Context) {
             val installIntent = Intent(Intent.ACTION_VIEW).apply {
                 setDataAndType(apkUri, "application/vnd.android.package-archive")
                 addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                addFlags(Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION)
                 addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                 addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
                 putExtra(Intent.EXTRA_NOT_UNKNOWN_SOURCE, true)

@@ -1326,6 +1326,35 @@ fun SettingsScreen(viewModel: MainViewModel) {
 
                     Spacer(modifier = Modifier.height(8.dp))
 
+                    // Signature / Update Status Tip
+                    Surface(
+                        shape = RoundedCornerShape(8.dp),
+                        color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.35f),
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.25f)),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 8.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                Icons.Default.Info,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "পার্মানেন্ট সাইনিং কি সক্রিয়: সংস্করণ ১.৭.৩ থেকে ভবিষ্যতের সকল আপডেট সরাসরি ইন-অ্যাপ সম্পন্ন হবে। রি-ইনস্টল ছাড়া তাৎক্ষণিক নতুন কনটেন্ট পেতে 'দ্রুত সিঙ্ক (OTA)' ব্যবহার করতে পারেন।",
+                                style = MaterialTheme.typography.bodySmall,
+                                fontSize = 11.sp,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
                     // Action buttons: Configure, USB Guide & Help
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -1577,6 +1606,16 @@ fun SettingsScreen(viewModel: MainViewModel) {
                             )
                             Text(
                                 "অ্যাপ ব্যবহারকারীরা শুধু 'সিঙ্ক' চাপলেই স্বয়ংক্রিয়ভাবে নতুন কনটেন্ট ও আপডেট ডাউনলোড হয়ে যাবে। ব্যবহারকারীর কোনো গিটহাব অ্যাকাউন্ট লাগবে না।",
+                                style = MaterialTheme.typography.bodySmall
+                            )
+                            Text(
+                                "৪. 'App not installed' কেন হতো এবং কীভাবে ফিক্স হলো:",
+                                fontWeight = FontWeight.Bold,
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                            Text(
+                                "অ্যান্ড্রয়েড ওএসের কঠোর সিকিউরিটি পলিসি অনুযায়ী, পূর্বে ইনস্টল করা অ্যাপের সাইনিং সার্টিফিকেট এবং নতুন ডাউনলোডকৃত APK-এর সাইনিং সার্টিফিকেট ১০০% মিলতে হয়। গিটহাব অ্যাকশন্সে প্রতিবার নতুন র্যান্ডম কি তৈরি হওয়ার ফলে এই সাইনিং অমিল হতো।\n\nআমরা এখন গিটহাব বিল্ড ওয়ার্কফ্লোতে স্থায়ী পার্মানেন্ট কি-স্টোর ইউনিফাই করেছি। সংস্করণ ১.৭.৩ একবার ইনস্টল করার পর থেকে ভবিষ্যতের সকল ইন-অ্যাপ আপডেট সরাসরি কোনো এরর ছাড়াই সম্পন্ন হবে।",
                                 style = MaterialTheme.typography.bodySmall
                             )
                         }

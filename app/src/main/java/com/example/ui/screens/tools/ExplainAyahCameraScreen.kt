@@ -534,42 +534,77 @@ fun ExplainAyahCameraScreen(
                         .padding(top = 84.dp, start = 16.dp, end = 16.dp)
                         .fillMaxWidth()
                 ) {
-                    Row(
-                        modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Surface(
-                            shape = CircleShape,
-                            color = MaterialTheme.colorScheme.error.copy(alpha = 0.2f),
-                            modifier = Modifier.size(28.dp)
+                    Column(modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp)) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Box(contentAlignment = Alignment.Center) {
+                            Surface(
+                                shape = CircleShape,
+                                color = MaterialTheme.colorScheme.error.copy(alpha = 0.2f),
+                                modifier = Modifier.size(28.dp)
+                            ) {
+                                Box(contentAlignment = Alignment.Center) {
+                                    Icon(
+                                        imageVector = Icons.Default.Close,
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.error,
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                }
+                            }
+                            Spacer(modifier = Modifier.width(10.dp))
+                            Text(
+                                text = scanErrorMessage!!,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = Color.White,
+                                fontFamily = banglaFont,
+                                modifier = Modifier.weight(1f)
+                            )
+                            IconButton(
+                                onClick = { scanErrorMessage = null },
+                                modifier = Modifier.size(28.dp)
+                            ) {
                                 Icon(
                                     imageVector = Icons.Default.Close,
-                                    contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.error,
+                                    contentDescription = "বন্ধ করুন",
+                                    tint = Color.White.copy(alpha = 0.6f),
                                     modifier = Modifier.size(16.dp)
                                 )
                             }
                         }
-                        Spacer(modifier = Modifier.width(10.dp))
-                        Text(
-                            text = scanErrorMessage!!,
-                            style = MaterialTheme.typography.bodySmall,
-                            color = Color.White,
-                            fontFamily = banglaFont,
-                            modifier = Modifier.weight(1f)
-                        )
-                        IconButton(
-                            onClick = { scanErrorMessage = null },
-                            modifier = Modifier.size(28.dp)
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.End
                         ) {
-                            Icon(
-                                imageVector = Icons.Default.Close,
-                                contentDescription = "বন্ধ করুন",
-                                tint = Color.White.copy(alpha = 0.6f),
-                                modifier = Modifier.size(16.dp)
-                            )
+                            OutlinedButton(
+                                onClick = {
+                                    scanErrorMessage = null
+                                    triggerCapture()
+                                },
+                                shape = RoundedCornerShape(8.dp),
+                                colors = ButtonDefaults.outlinedButtonColors(
+                                    contentColor = IslamicGold
+                                ),
+                                border = BorderStroke(1.dp, IslamicGold.copy(alpha = 0.6f)),
+                                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
+                                modifier = Modifier.height(32.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Replay,
+                                    contentDescription = null,
+                                    tint = IslamicGold,
+                                    modifier = Modifier.size(14.dp)
+                                )
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text(
+                                    text = "পুনরায় স্ক্যান করুন",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    fontFamily = banglaFont,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
                         }
                     }
                 }

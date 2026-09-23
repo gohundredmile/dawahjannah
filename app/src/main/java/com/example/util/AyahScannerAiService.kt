@@ -81,9 +81,9 @@ class AyahScannerAiService(private val context: Context) {
         val apiKey = getEffectiveApiKey().ifBlank { BUILTIN_FREE_GEMINI_KEY }
 
         try {
-            // Downscale bitmap if larger than 1024px to conserve memory and reduce payload
-            val scaledBitmap = if (bitmap.width > 1024 || bitmap.height > 1024) {
-                val scale = 1024f / maxOf(bitmap.width, bitmap.height)
+            // Downscale bitmap if larger than 900px to conserve memory, reduce network payload, and speed up AI response
+            val scaledBitmap = if (bitmap.width > 900 || bitmap.height > 900) {
+                val scale = 900f / maxOf(bitmap.width, bitmap.height)
                 val targetW = (bitmap.width * scale).toInt().coerceAtLeast(1)
                 val targetH = (bitmap.height * scale).toInt().coerceAtLeast(1)
                 Bitmap.createScaledBitmap(bitmap, targetW, targetH, true)
@@ -93,46 +93,56 @@ class AyahScannerAiService(private val context: Context) {
 
             // Compress bitmap to JPEG Base64
             val outputStream = ByteArrayOutputStream()
-            scaledBitmap.compress(Bitmap.CompressFormat.JPEG, 85, outputStream)
+            scaledBitmap.compress(Bitmap.CompressFormat.JPEG, 80, outputStream)
             val base64Image = Base64.encodeToString(outputStream.toByteArray(), Base64.NO_WRAP)
 
             val prompt = """
-                You are an Islamic scholar, Hafiz, and Quran specialist.
+                You are an Islamic scholar, Hafiz, and Quran & Hadith specialist.
                 Carefully analyze this camera/gallery image.
-                Determine if this image contains any readable Arabic Quran verse(s) (Ayah), Quran page, or screen/book with an Ayah.
-                Even if there is Bengali or English text, headings, commentary, or screen borders in the photo, focus on the primary Arabic Quran Ayah visible.
+                Determine if this image contains any readable Arabic text of a Quranic verse (Ayah), Quran page, Masnoon Dua, Islamic supplication, or Hadith quotation.
+                Even if there is Bengali or English text, headings, commentary, or book borders in the photo, focus on the primary Arabic Quran Ayah or Masnoon Dua visible.
 
-                If the image DOES NOT contain any Arabic Quran Ayah at all (e.g., pure wall, keyboard, random object, animal, or completely unreadable blur), return this exact JSON:
+                If the image has ABSOLUTELY NO readable Arabic, Quran, Dua, or Islamic text at all (e.g., pure wall, keyboard, random object, animal, or completely unreadable blur), return this exact JSON:
                 {
                   "isQuranAyah": false,
-                  "message": "কোনো স্পষ্ট কুরআন আয়াত শনাক্ত হয়নি। অনুগ্রহ করে কুরআন পৃষ্ঠার আয়াতের উপর ক্যামেরা স্থির রাখুন।"
+                  "message": "কোনো স্পষ্ট কুরআন আয়াত বা মাসনুন দো'আ শনাক্ত হয়নি। অনুগ্রহ করে কুরআন বা দো'আর কিতাবের পৃষ্ঠায় ক্যামেরা সোজা রাখুন।"
                 }
 
-                If the image DOES contain one or more Quranic verses, identify the primary Ayah visible in the frame (surah and ayah number), and provide a comprehensive explanation in authentic Bengali and English.
+                If the image DOES contain a Quranic verse OR a Masnoon Dua / Hadith:
+                - If it is a Quran Ayah: Identify the exact Surah number (1-114) and Ayah number.
+                - If it is a Masnoon Dua, Hadith supplication, or Azkar (e.g. from Hisnul Muslim, Masnoon Munajat, Sahih Hadith collections like Bukhari, Muslim, etc.):
+                    "surahNumber": 0,
+                    "ayahNumber": 0,
+                    "surahNameArabic": "دعاء مأثور / ذكر مسنون",
+                    "surahNameBangla": "মাসনুন দো'আ ও মুনাজাত",
+                    "surahNameEnglish": "Masnoon Dua & Supplication",
+                    "revelationTypeBn": "সহীহ হাদিস ও সুন্নাহ",
+                    "totalAyahsInSurah": 1
+
                 Return this exact JSON:
                 {
                   "isQuranAyah": true,
-                  "surahNumber": 4,
-                  "ayahNumber": 90,
-                  "surahNameArabic": "سورة النساء",
-                  "surahNameBangla": "সূরা আন-নিসা",
-                  "surahNameEnglish": "Surah An-Nisa",
-                  "revelationTypeBn": "মাদানী",
-                  "totalAyahsInSurah": 176,
-                  "arabicText": "...",
+                  "surahNumber": 0,
+                  "ayahNumber": 0,
+                  "surahNameArabic": "سورة...",
+                  "surahNameBangla": "সূরা... বা দো'আর নাম",
+                  "surahNameEnglish": "Surah... or Dua name",
+                  "revelationTypeBn": "মাক্কী / মাদানী / সহীহ হাদিস",
+                  "totalAyahsInSurah": 114,
+                  "arabicText": "মূল পূর্ণাঙ্গ আরবি টেক্সট হরকতসহ...",
                   "transliterationBn": "বাংলা উচ্চারণ...",
                   "banglaTranslation": "সহজ প্রাঞ্জল বাংলা অনুবাদ...",
-                  "englishTranslation": "Sahih International English translation...",
+                  "englishTranslation": "Accurate English translation...",
                   "wordByWord": [
                     {"arabicWord": "...", "bengaliMeaning": "...", "englishMeaning": "...", "grammarNote": "..."}
                   ],
-                  "tafsirBn": "সংক্ষিপ্ত প্রামাণ্য তাফসীর...",
-                  "contextBn": "নাযিলের প্রেক্ষাপট ও শানে নুযূল...",
+                  "tafsirBn": "সংক্ষিপ্ত প্রামাণ্য তাফসীর ও তাৎপর্য...",
+                  "contextBn": "নাযিলের প্রেক্ষাপট বা হাদিসের সূত্র ও ফযীলত...",
                   "relatedVerses": [
                     {"surahNameBn": "সূরা...", "ayahRef": "...", "arabicText": "...", "translationBn": "..."}
                   ],
                   "relatedHadiths": [
-                    {"sourceBn": "সহীহ বুখারী", "narratorBn": "...", "textBn": "হাদিসের বাংলা অর্থ...", "gradeBn": "সহীহ"}
+                    {"sourceBn": "সহীহ বুখারী / মুসলিম", "narratorBn": "...", "textBn": "হাদিসের বাংলা অর্থ...", "gradeBn": "সহীহ"}
                   ]
                 }
             """.trimIndent()
@@ -160,34 +170,59 @@ class AyahScannerAiService(private val context: Context) {
                 })
             }
 
-            // Primary attempt with gemini-3.5-flash (fast & highly reliable multimodal)
-            val request = Request.Builder()
-                .url("https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=$apiKey")
-                .post(jsonBody.toString().toRequestBody("application/json".toMediaType()))
-                .build()
+            // High-availability multi-model cascade (starts with gemini-2.5-flash for rapid response and minimal 503 errors)
+            val candidateModels = listOf(
+                "gemini-2.5-flash",
+                "gemini-3.5-flash",
+                "gemini-flash-latest",
+                "gemini-3.1-pro-preview"
+            )
 
-            var response = httpClient.newCall(request).execute()
+            var response: okhttp3.Response? = null
+            var lastErrorMessage: String? = null
 
-            // If gemini-3.5-flash fails (503/404/429), fallback to gemini-3.6-flash
-            if (!response.isSuccessful) {
-                val fallbackRequest = Request.Builder()
-                    .url("https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key=$apiKey")
+            for (model in candidateModels) {
+                val requestUrl = "https://generativelanguage.googleapis.com/v1beta/models/$model:generateContent?key=$apiKey"
+                val request = Request.Builder()
+                    .url(requestUrl)
                     .post(jsonBody.toString().toRequestBody("application/json".toMediaType()))
                     .build()
-                val fallbackResponse = httpClient.newCall(fallbackRequest).execute()
-                if (fallbackResponse.isSuccessful) {
-                    response = fallbackResponse
+
+                try {
+                    val resp = httpClient.newCall(request).execute()
+                    if (resp.isSuccessful) {
+                        response = resp
+                        break
+                    } else {
+                        val code = resp.code
+                        val errBody = resp.body?.string() ?: ""
+                        val apiMsg = try {
+                            JSONObject(errBody).optJSONObject("error")?.optString("message")
+                        } catch (_: Exception) {
+                            null
+                        }
+                        lastErrorMessage = apiMsg ?: "Code $code"
+
+                        // If high demand (503) or rate-limit (429), pause briefly and move to next model
+                        if (code == 503 || code == 429) {
+                            kotlinx.coroutines.delay(400)
+                        }
+                    }
+                } catch (ioe: Exception) {
+                    lastErrorMessage = ioe.message
                 }
             }
 
-            if (!response.isSuccessful) {
-                val errBody = response.body?.string() ?: ""
-                val errMsg = try {
-                    JSONObject(errBody).optJSONObject("error")?.optString("message")
-                } catch (_: Exception) {
-                    null
-                } ?: "সার্ভার রেসপন্স ব্যর্থ হয়েছে (Code ${response.code})"
-                return@withContext Result.failure(Exception(errMsg))
+            if (response == null || !response.isSuccessful) {
+                val friendlyMsg = when {
+                    lastErrorMessage?.contains("high demand", ignoreCase = true) == true ->
+                        "এআই সার্ভারে সাময়িক ভিড় চলছে। অনুগ্রহ করে ২ সেকেন্ড পর ক্যামেরা স্থির রেখে আবার চাপুন।"
+                    lastErrorMessage?.contains("quota", ignoreCase = true) == true || lastErrorMessage?.contains("rate", ignoreCase = true) == true ->
+                        "অনুরোধের সীমা শেষ হতে পারে। অনুগ্রহ করে কিছুক্ষণ পর পুনরায় চেষ্টা করুন।"
+                    else ->
+                        "সার্ভার থেকে রেসপন্স পাওয়া যায়নি। অনুগ্রহ করে ইন্টারনেট চেক করে আবার চেষ্টা করুন।"
+                }
+                return@withContext Result.failure(Exception(friendlyMsg))
             }
 
             val rawResponseStr = response.body?.string() ?: ""
@@ -297,13 +332,13 @@ class AyahScannerAiService(private val context: Context) {
             val audioUrl = "https://everyayah.com/data/Alafasy_128kbps/$audioSurahStr$audioAyahStr.mp3"
 
             val explanation = AyahExplanation(
-                id = "scanned_${sNum}_$aNum",
+                id = if (sNum > 0 && aNum > 0) "scanned_${sNum}_$aNum" else "scanned_dua_${System.currentTimeMillis()}",
                 surahNumber = sNum,
                 ayahNumber = aNum,
-                surahNameArabic = parsedJson.optString("surahNameArabic", "القرآن الكريم"),
-                surahNameBangla = parsedJson.optString("surahNameBangla", if (sNum > 0) "সূরা $sNum" else "সূরা"),
-                surahNameEnglish = parsedJson.optString("surahNameEnglish", if (sNum > 0) "Surah $sNum" else "Surah"),
-                revelationTypeBn = parsedJson.optString("revelationTypeBn", "মাক্কী"),
+                surahNameArabic = parsedJson.optString("surahNameArabic", if (sNum > 0) "القرآن الكريم" else "دعاء مأثور"),
+                surahNameBangla = parsedJson.optString("surahNameBangla", "").ifBlank { if (sNum > 0) "সূরা $sNum" else "মাসনুন দো'আ ও আমল" },
+                surahNameEnglish = parsedJson.optString("surahNameEnglish", "").ifBlank { if (sNum > 0) "Surah $sNum" else "Masnoon Dua" },
+                revelationTypeBn = parsedJson.optString("revelationTypeBn", "").ifBlank { if (sNum > 0) "মাক্কী" else "সহীহ হাদিস ও সুন্নাহ" },
                 totalAyahsInSurah = parsedJson.optInt("totalAyahsInSurah", 1),
                 arabicText = arabicText,
                 transliterationBn = parsedJson.optString("transliterationBn", ""),

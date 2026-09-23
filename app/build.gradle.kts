@@ -98,7 +98,7 @@ val envExampleFile = rootDirFile.resolve(".env.example")
 
 val sysGeminiKey = System.getenv("GEMINI_API_KEY")?.takeIf { it.isNotBlank() } ?: "your_api_key_here"
 
-fun sanitizeSecretsProperties(file: java.io.File, defaultVal: String = sysGeminiKey) {
+fun sanitizeSecretsProperties(file: java.io.File, defaultVal: String = "your_api_key_here") {
     if (!file.exists()) {
         file.writeText("GEMINI_API_KEY=\"$defaultVal\"\n")
         return
@@ -122,8 +122,10 @@ fun sanitizeSecretsProperties(file: java.io.File, defaultVal: String = sysGemini
 }
 
 try {
-    sanitizeSecretsProperties(envExampleFile)
-    sanitizeSecretsProperties(envFile)
+    sanitizeSecretsProperties(envExampleFile, "your_api_key_here")
+    if (sysGeminiKey != "your_api_key_here") {
+        sanitizeSecretsProperties(envFile, sysGeminiKey)
+    }
 } catch (_: Exception) {
     // Gracefully continue if filesystem access is restricted
 }

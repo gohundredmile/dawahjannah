@@ -262,8 +262,8 @@ fun ExplainAyahCameraScreen(
                 }
             } else {
                 coroutineScope.launch(Dispatchers.Main) {
+                    delay(400)
                     isAnalyzing = false
-                    scanErrorMessage = "ক্যামেরা প্রস্তুত নয়। ক্যামেরা স্থির রেখে পুনরায় ট্যাপ করুন।"
                 }
             }
         }
@@ -485,21 +485,8 @@ fun ExplainAyahCameraScreen(
                     }
                 }
 
-                // Torch, Flip and AI Settings controls
+                // Torch and Flip controls
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Surface(
-                        shape = CircleShape,
-                        color = Color.Black.copy(alpha = 0.55f),
-                        modifier = Modifier.size(44.dp)
-                    ) {
-                        IconButton(onClick = { showApiKeyDialog = true }) {
-                            Icon(
-                                imageVector = Icons.Default.VpnKey,
-                                contentDescription = "API সেটিংস",
-                                tint = if (aiService.isAiOnline()) IslamicGold else Color.White.copy(alpha = 0.8f)
-                            )
-                        }
-                    }
                     if (hasCameraPermission) {
                         Surface(
                             shape = CircleShape,

@@ -1,1 +1,9 @@
-/build
+build/
+/build/
+*.apk
+*.aab
+*.dex
+*.flat
+*.class
+.cxx/
+.externalNativeBuild/

@@ -1,17 +1,17 @@
 {
-  "versionCode": 174,
-  "versionName": "1.7.4",
-  "tagName": "v1.7.4",
+  "versionCode": 175,
+  "versionName": "1.7.5",
+  "tagName": "v1.7.5",
   "minSupportedVersion": "1.0.0",
-  "releaseTitle": "দা'ওয়াহ টু জান্নাহ - সংস্করণ ১.৭.৪ (নতুন সিগনেচার টুল 'Personal Dua Builder')",
-  "releaseNotes": "• ১. নতুন সিগনেচার টুল 'Personal Dua Builder': যেকোনো পরিস্থিতি (যেমন: 'My father is sick and I am worried', ঋণ, মানসিক ক্লান্তি...) অনুযায়ী কুরআনী আয়াত, সহীহ নববী দু'আ ও আমলের পদ্ধতি সুবিন্যস্তভাবে সাজিয়ে দেয়।\n• ২. উৎকৃষ্ট আরবি টাইপোগ্রাফি, সঠিক হরকত ও সাইজ নিয়ন্ত্রণ।\n• ৩. কুরআনী দু'আ, নববী মাসনূন দু'আ, সাধারণ বৈধ আরজি ও ফিকহী সতর্কতার ৪টি পৃথক স্তর।\n• ৪. সরাসরি তাসবীহ ও আমল কাউন্টার মোড।\n• ৫. 'Ask Before You Act' ও ইন-অ্যাপ আপডেট ইঞ্জিন অপ্টিমাইজেশন।",
-  "publishedAt": "2026-09-23T11:30:00Z",
+  "releaseTitle": "দা'ওয়াহ টু জান্নাহ - সংস্করণ ১.৭.৫ (নতুন সিগনেচার টুল 'Dua by Situation')",
+  "releaseNotes": "• ১. নতুন সিগনেচার টুল 'Dua by Situation': অনুভূতি ও প্রয়োজন ভিত্তিক দ্বিমুখী অনুসন্ধান (I feel... anxious, angry, afraid... + I need... forgiveness, guidance, patience...)।\n• ২. কাস্টম অনুভূতি ও প্রয়োজন লিখে সরাসরি প্রাসঙ্গিক প্রামাণ্য দো'আ পাওয়ার পূর্ণ স্বাধীনতা।\n• ৩. কুরআন, সহীহ হাদীস, শানে নুযূল/তাফসীর ও উলামাদের ব্যাখ্যার স্পষ্ট বিভাজন।\n• ৪. নিখুঁত আরবি টাইপোগ্রাফি ও ফন্ট সাইজ নিয়ন্ত্রণ ব্যবস্থা।\n• ৫. এক ক্লিকে আমল কাউন্টার, ক্লিপবোর্ড কপি ও শেয়ারিং সুবিধা।",
+  "publishedAt": "2026-09-23T12:00:00Z",
   "apkDownloadUrl": "https://github.com/gohundredmile/dawahjannah/releases/latest/download/app-release.apk",
   "isCriticalUpdate": false,
   "announcement": {
-    "id": "announcement_2026_09_v174_personal_dua_builder",
-    "title": "সংস্করণ ১.৭.৪: 'Personal Dua Builder' সিগনেচার টুল উন্মোচন!",
-    "message": "আলহামদুলিল্লাহ! আপনার যেকোনো পরিস্থিতি বা মনের আকুতির জন্য কুরআন ও সুন্নাহসম্মত প্রামাণ্য দো'আ আর্কিটেক্ট টুল এখন সক্রিয়।",
+    "id": "announcement_2026_09_v175_dua_by_situation",
+    "title": "সংস্করণ ১.৭.৫: 'Dua by Situation' সিগনেচার সার্চ উন্মোচন!",
+    "message": "আলহামদুলিল্লাহ! আপনার বর্তমান আবেগ, অনুভূতি ও আত্মিক চাহিদার সাথে মিল রেখে কুরআন ও হাদীসের বিশুদ্ধ দু'আ খুঁজে নেওয়ার নতুন সার্চ টুল এখন সম্পূর্ণ সক্রিয়।",
     "active": true
   },
   "contentUpdates": {

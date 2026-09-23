@@ -86,6 +86,7 @@ data class IslamicToolItem(
 
 @Composable
 fun ToolsScreen(
+    onOpenDuaBySituation: () -> Unit = {},
     onOpenPersonalDuaBuilder: () -> Unit = {},
     onOpenExplainAyahCamera: () -> Unit,
     onOpenSmartQuranSearch: () -> Unit = {},
@@ -117,6 +118,147 @@ fun ToolsScreen(
         ),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
+        // TOP SIGNATURE SPOTLIGHT CARD: "Dua by Situation" (অনুভূতি ও পরিস্থিতি অনুযায়ী দু'আ)
+        item {
+            Card(
+                shape = RoundedCornerShape(24.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                border = BorderStroke(1.5.dp, Color(0xFF0284C7).copy(alpha = 0.75f)),
+                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { onOpenDuaBySituation() }
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(
+                            Brush.verticalGradient(
+                                colors = listOf(
+                                    Color(0xFF0284C7).copy(alpha = 0.14f),
+                                    IslamicGold.copy(alpha = 0.08f)
+                                )
+                            )
+                        )
+                        .padding(20.dp)
+                ) {
+                    Column {
+                        // Badge Row
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Surface(
+                                shape = RoundedCornerShape(12.dp),
+                                color = Color(0xFF0284C7),
+                                modifier = Modifier.padding(bottom = 8.dp)
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Icon(
+                                        Icons.Default.AutoAwesome,
+                                        contentDescription = null,
+                                        tint = Color.White,
+                                        modifier = Modifier.size(13.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(4.dp))
+                                    Text(
+                                        text = "নতুন ফিচার • I feel... I need...",
+                                        color = Color.White,
+                                        style = MaterialTheme.typography.labelSmall,
+                                        fontWeight = FontWeight.Bold,
+                                        fontFamily = banglaFont
+                                    )
+                                }
+                            }
+
+                            Surface(
+                                shape = CircleShape,
+                                color = Color(0xFF0284C7).copy(alpha = 0.18f),
+                                modifier = Modifier.size(40.dp)
+                            ) {
+                                Box(contentAlignment = Alignment.Center) {
+                                    Text("🤲", fontSize = 18.sp)
+                                }
+                            }
+                        }
+
+                        // Title
+                        Text(
+                            text = "Dua by Situation",
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.ExtraBold,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+
+                        Text(
+                            text = "অনুভূতি ও প্রয়োজন অনুযায়ী প্রামাণ্য দু'আ",
+                            style = MaterialTheme.typography.labelLarge,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFF0284C7),
+                            fontFamily = banglaFont
+                        )
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        // Subtitle
+                        Text(
+                            text = "দ্বিমুখী আত্মিক অনুসন্ধান: 'I feel... (anxious, angry, afraid...)' এবং 'I need... (forgiveness, guidance, patience...)' নির্বাচন করে তৎক্ষণাৎ কুরআন ও সহীহ হাদীসের বিশুদ্ধ দু'আ ও আমল জেনে নিন।",
+                            style = MaterialTheme.typography.bodyMedium.copy(lineHeight = 22.sp),
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            fontFamily = banglaFont
+                        )
+
+                        Spacer(modifier = Modifier.height(14.dp))
+
+                        // Quick Pills
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            listOf("🌪️ anxious", "🔥 angry", "🤲 forgiveness", "💡 guidance", "⛰️ patience").forEach { pill ->
+                                Surface(
+                                    shape = RoundedCornerShape(8.dp),
+                                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f),
+                                    border = BorderStroke(0.6.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
+                                ) {
+                                    Text(
+                                        text = pill,
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = MaterialTheme.colorScheme.onSurface,
+                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                                    )
+                                }
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        // Big Action Button
+                        Button(
+                            onClick = onOpenDuaBySituation,
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(14.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF0284C7))
+                        ) {
+                            Text("🤲", fontSize = 16.sp)
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "পরিস্থিতি অনুযায়ী দু'আ খুঁজুন",
+                                style = MaterialTheme.typography.labelLarge,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White,
+                                fontFamily = banglaFont
+                            )
+                        }
+                    }
+                }
+            }
+        }
+
         // TOP SIGNATURE SPOTLIGHT CARD: "Personal Dua Builder" (ব্যক্তিগত দো'আ আর্কিটেক্ট)
         item {
             Card(
@@ -728,6 +870,15 @@ fun ToolsScreen(
 
         // Active tools list
         val activeTools = listOf(
+            IslamicToolItem(
+                id = "tool_dua_by_situation",
+                titleBn = "Dua by Situation (অনুভূতি ও পরিস্থিতি অনুযায়ী দু'আ)",
+                subtitleBn = "I feel... I need... দ্বিমুখী আত্মিক অনুসন্ধান ও কুরআন-হাদীসের প্রাসঙ্গিক দু'আ সমাধান।",
+                icon = Icons.Default.AutoAwesome,
+                badgeBn = "নতুন সিগনেচার",
+                isFeatured = true,
+                onClick = onOpenDuaBySituation
+            ),
             IslamicToolItem(
                 id = "tool_personal_dua_builder",
                 titleBn = "Personal Dua Builder (ব্যক্তিগত দো'আ আর্কিটেক্ট)",

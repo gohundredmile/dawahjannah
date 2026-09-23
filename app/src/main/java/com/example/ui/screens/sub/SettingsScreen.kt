@@ -1737,6 +1737,7 @@ fun SettingsScreen(viewModel: MainViewModel) {
                                     apkDownloadState.isDownloading -> "APK ওটিএ ডাউনলোড হচ্ছে..."
                                     apkDownloadState.waitingForInstallPermission -> "অ্যাপ ইনস্টল পারমিশন প্রয়োজন"
                                     apkDownloadState.installCompleted -> "ইনস্টলার শুরু হয়েছে"
+                                    apkDownloadState.isAlreadyUpToDate -> "অ্যাপ ইতিমধ্যে আপ-টু-ডেট"
                                     apkDownloadState.error != null -> "আপডেট সমস্যা"
                                     else -> "অ্যাপ আপডেট"
                                 },
@@ -1788,6 +1789,28 @@ fun SettingsScreen(viewModel: MainViewModel) {
                                         style = MaterialTheme.typography.bodySmall
                                     )
                                 }
+                                apkDownloadState.isAlreadyUpToDate -> {
+                                    Surface(
+                                        shape = RoundedCornerShape(8.dp),
+                                        color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.35f),
+                                        modifier = Modifier.fillMaxWidth()
+                                    ) {
+                                        Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                                            Text(
+                                                text = apkDownloadState.upToDateMessage ?: "আপনার অ্যাপটি ইতিমধ্যে সর্বশেষ সংস্করণে আপডেট রয়েছে।",
+                                                style = MaterialTheme.typography.bodySmall,
+                                                color = MaterialTheme.colorScheme.onSurface
+                                            )
+                                            if (apkDownloadState.downloadedFile != null) {
+                                                Text(
+                                                    text = "💡 ক্যাশে পূর্বে ডাউনলোডকৃত সম্পূর্ণ APK ফাইল প্রস্তুত রয়েছে।",
+                                                    style = MaterialTheme.typography.labelSmall,
+                                                    color = MaterialTheme.colorScheme.primary
+                                                )
+                                            }
+                                        }
+                                    }
+                                }
                                 apkDownloadState.error != null -> {
                                     Surface(
                                         shape = RoundedCornerShape(8.dp),
@@ -1811,6 +1834,26 @@ fun SettingsScreen(viewModel: MainViewModel) {
                             apkDownloadState.waitingForInstallPermission -> {
                                 Button(onClick = { viewModel.retryInstallDownloadedApk() }) {
                                     Text("এখনই ইনস্টল করুন")
+                                }
+                            }
+                            apkDownloadState.isAlreadyUpToDate -> {
+                                Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                                    Button(
+                                        onClick = { viewModel.startFullOtaApkUpdate(forceDownload = true) },
+                                        modifier = Modifier.fillMaxWidth()
+                                    ) {
+                                        Icon(Icons.Default.Download, contentDescription = null, modifier = Modifier.size(16.dp))
+                                        Spacer(modifier = Modifier.width(6.dp))
+                                        Text("পুনরায় ডাউনলোড ও ফ্রেশ ইনস্টল (Force Update)")
+                                    }
+                                    if (apkDownloadState.downloadedFile != null) {
+                                        OutlinedButton(
+                                            onClick = { viewModel.retryInstallDownloadedApk() },
+                                            modifier = Modifier.fillMaxWidth()
+                                        ) {
+                                            Text("সংরক্ষিত APK ফাইল দিয়ে এখনই ইনস্টল করুন")
+                                        }
+                                    }
                                 }
                             }
                             apkDownloadState.error != null -> {
@@ -1845,10 +1888,10 @@ fun SettingsScreen(viewModel: MainViewModel) {
                                             },
                                             modifier = Modifier.weight(1.2f)
                                         ) {
-                                            Text("গিটহাব রিলিজ", fontSize = 11.sp)
+                                            Text("ডাউনলোড ম্যানেজার", fontSize = 11.sp)
                                         }
                                         Button(
-                                            onClick = { viewModel.startFullOtaApkUpdate() },
+                                            onClick = { viewModel.startFullOtaApkUpdate(forceDownload = true) },
                                             modifier = Modifier.weight(1f)
                                         ) {
                                             Text("রিট্রাই", fontSize = 11.sp)
@@ -1867,7 +1910,7 @@ fun SettingsScreen(viewModel: MainViewModel) {
                     dismissButton = {
                         if (!apkDownloadState.isDownloading) {
                             TextButton(onClick = { viewModel.dismissApkDownloadDialog() }) {
-                                Text("বাতিল")
+                                Text(if (apkDownloadState.isAlreadyUpToDate) "ঠিক আছে" else "বাতিল")
                             }
                         }
                     }

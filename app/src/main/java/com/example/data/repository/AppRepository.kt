@@ -41,6 +41,7 @@ class AppRepository(private val context: Context) {
     private val checklistDao = db.checklistDao()
     private val bookmarkDao = db.bookmarkDao()
     private val scratchpadDao = db.scratchpadDao()
+    val sunnahHabitDao = db.sunnahHabitDao()
 
     companion object {
         val KEY_THEME_STYLE = stringPreferencesKey("theme_style")

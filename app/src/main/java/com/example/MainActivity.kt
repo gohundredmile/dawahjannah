@@ -49,7 +49,9 @@ import com.example.ui.screens.sub.TasbihScreen
 import com.example.ui.screens.tools.AskBeforeYouActScreen
 import com.example.ui.screens.tools.DuaBySituationScreen
 import com.example.ui.screens.tools.ExplainAyahCameraScreen
+import com.example.ui.screens.tools.IslamicHabitSystemScreen
 import com.example.ui.screens.tools.PersonalDuaBuilderScreen
+import com.example.ui.screens.tools.RamadanIntelligenceScreen
 import com.example.ui.screens.tools.SmartQuranSearchScreen
 import com.example.ui.screens.tools.ToolsScreen
 import com.example.ui.theme.DawahTheme
@@ -228,6 +230,8 @@ class MainActivity : ComponentActivity() {
                                             onOpenPersonalDuaBuilder = { viewModel.navigateToToolsSubScreen(ToolsSubScreen.PERSONAL_DUA_BUILDER) },
                                             onOpenExplainAyahCamera = { viewModel.openExplainAyahCamera() },
                                             onOpenSmartQuranSearch = { viewModel.navigateToToolsSubScreen(ToolsSubScreen.SMART_QURAN_SEARCH) },
+                                            onOpenIslamicHabitSystem = { viewModel.openIslamicHabitSystem() },
+                                            onOpenRamadanIntelligence = { viewModel.openRamadanIntelligence() },
                                             onOpenAskBeforeYouAct = { viewModel.navigateToToolsSubScreen(ToolsSubScreen.ASK_BEFORE_YOU_ACT) },
                                             onOpenAyatDetector = { viewModel.navigateToToolsSubScreen(ToolsSubScreen.AYAT_DETECTOR_SOLVER) },
                                             onOpenQibla = { viewModel.navigateToToolsSubScreen(ToolsSubScreen.QIBLA) },
@@ -248,6 +252,12 @@ class MainActivity : ComponentActivity() {
                                             onNavigateBack = { viewModel.navigateBackToTools() }
                                         )
                                         ToolsSubScreen.SMART_QURAN_SEARCH -> SmartQuranSearchScreen(
+                                            onNavigateBack = { viewModel.navigateBackToTools() }
+                                        )
+                                        ToolsSubScreen.ISLAMIC_HABIT_SYSTEM -> IslamicHabitSystemScreen(
+                                            onNavigateBack = { viewModel.navigateBackToTools() }
+                                        )
+                                        ToolsSubScreen.RAMADAN_INTELLIGENCE -> RamadanIntelligenceScreen(
                                             onNavigateBack = { viewModel.navigateBackToTools() }
                                         )
                                         ToolsSubScreen.AYAT_DETECTOR_SOLVER -> AyatDetectorAndSolverScreen(

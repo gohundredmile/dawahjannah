@@ -74,8 +74,21 @@ data class RemoteDuaItem(
 class GitHubUpdateManager(private val context: Context) {
 
     private val client = OkHttpClient.Builder()
-        .connectTimeout(12, TimeUnit.SECONDS)
-        .readTimeout(15, TimeUnit.SECONDS)
+        .connectTimeout(20, TimeUnit.SECONDS)
+        .readTimeout(30, TimeUnit.SECONDS)
+        .followRedirects(true)
+        .followSslRedirects(true)
+        .retryOnConnectionFailure(true)
+        .build()
+
+    // Dedicated high-speed download client with long timeouts and streaming resilience for large APKs (25-50MB)
+    private val downloadClient = OkHttpClient.Builder()
+        .connectTimeout(35, TimeUnit.SECONDS)
+        .readTimeout(180, TimeUnit.SECONDS)
+        .writeTimeout(60, TimeUnit.SECONDS)
+        .followRedirects(true)
+        .followSslRedirects(true)
+        .retryOnConnectionFailure(true)
         .build()
 
     private val prefs = context.getSharedPreferences("github_update_prefs", Context.MODE_PRIVATE)
@@ -855,9 +868,27 @@ class GitHubUpdateManager(private val context: Context) {
     }
 
     /**
+     * Checks if a previously downloaded update APK exists in any of the update directories
+     * and has a valid file size (greater than 5MB).
+     */
+    fun getCachedApkFile(): File? {
+        val candidates = listOf(
+            File(File(context.cacheDir, "apk_updates"), "dawah_to_jannah_update.apk"),
+            File(File(context.filesDir, "apk_updates"), "dawah_to_jannah_update.apk"),
+            File(File(context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS) ?: context.cacheDir, "apk_updates"), "dawah_to_jannah_update.apk")
+        )
+        for (f in candidates) {
+            if (f.exists() && f.length() > 5_000_000L) {
+                return f
+            }
+        }
+        return null
+    }
+
+    /**
      * Downloads the full APK file with real-time progress callbacks for OTA installation.
-     * Automatically attempts GitHub Releases API asset discovery, release/latest, tag-based URLs,
-     * and debug asset URLs before returning informative guidance.
+     * Uses optimized download client, internal storage to prevent Scoped Storage blocks,
+     * atomic file swap (.tmp -> .apk), 64KB buffer, and comprehensive URL fallbacks.
      */
     suspend fun downloadApkWithProgress(
         url: String,
@@ -866,21 +897,27 @@ class GitHubUpdateManager(private val context: Context) {
         val candidates = mutableListOf<String>()
 
         // 1. Direct discovery from GitHub API
-        val discoveredUrl = discoverLiveApkUrl(repoOwner, repoName)
-        if (!discoveredUrl.isNullOrBlank()) {
-            candidates.add(discoveredUrl)
-        }
+        try {
+            val discoveredUrl = discoverLiveApkUrl(repoOwner, repoName)
+            if (!discoveredUrl.isNullOrBlank()) {
+                candidates.add(discoveredUrl)
+            }
+        } catch (_: Exception) {}
 
         // 2. The input URL passed
         val primaryTarget = resolveDirectApkUrl(url)
-        if (!candidates.contains(primaryTarget)) {
+        if (primaryTarget.isNotBlank() && !candidates.contains(primaryTarget)) {
             candidates.add(primaryTarget)
         }
 
-        // 3. Fallback standard release naming conventions
+        // 3. Fallback standard release naming conventions (Release APKs & Debug APKs)
         val standardFallbacks = listOf(
             "https://github.com/$repoOwner/$repoName/releases/latest/download/app-release.apk",
+            "https://github.com/$repoOwner/$repoName/releases/download/v1.7.6/app-release.apk",
+            "https://github.com/$repoOwner/$repoName/releases/download/v1.7.5/app-release.apk",
             "https://github.com/$repoOwner/$repoName/releases/latest/download/app-debug.apk",
+            "https://github.com/$repoOwner/$repoName/releases/download/v1.7.6/app-debug.apk",
+            "https://github.com/$repoOwner/$repoName/releases/download/v1.7.5/app-debug.apk",
             "https://github.com/$repoOwner/$repoName/releases/download/v$currentAppVersion/app-release.apk",
             "https://github.com/$repoOwner/$repoName/releases/download/v$currentAppVersion/app-debug.apk",
             "https://github.com/$repoOwner/$repoName/releases/download/latest/app-release.apk",
@@ -893,11 +930,11 @@ class GitHubUpdateManager(private val context: Context) {
         }
 
         var lastError: Exception? = null
-        val baseDir = context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS)
-            ?: context.externalCacheDir
-            ?: context.cacheDir
-        val apkDir = File(baseDir, "apk_updates").apply { mkdirs() }
+
+        // Prefer internal cacheDir for reliable FileProvider access on Android 10-15 (immune to /Android/data SELinux restrictions)
+        val apkDir = File(context.cacheDir, "apk_updates").apply { mkdirs() }
         val apkFile = File(apkDir, "dawah_to_jannah_update.apk")
+        val tempFile = File(apkDir, "dawah_to_jannah_update.apk.tmp")
 
         for (candidateUrl in candidates) {
             try {
@@ -907,7 +944,7 @@ class GitHubUpdateManager(private val context: Context) {
                     .header("Accept", "application/vnd.android.package-archive, application/octet-stream, */*")
                     .build()
 
-                val response = client.newCall(request).execute()
+                val response = downloadClient.newCall(request).execute()
                 if (!response.isSuccessful) {
                     lastError = Exception("HTTP ${response.code} (URL: $candidateUrl)")
                     continue
@@ -922,51 +959,61 @@ class GitHubUpdateManager(private val context: Context) {
                     continue
                 }
 
-                if (apkFile.exists()) {
-                    apkFile.delete()
+                if (tempFile.exists()) {
+                    tempFile.delete()
                 }
 
-                val inputStream = body.byteStream()
-                val outputStream = FileOutputStream(apkFile)
-                val buffer = ByteArray(16384)
-                var bytesRead: Int
-                var totalRead: Long = 0
+                body.byteStream().use { inputStream ->
+                    FileOutputStream(tempFile).use { outputStream ->
+                        val buffer = ByteArray(65536) // 64KB buffer for faster throughput
+                        var bytesRead: Int
+                        var totalRead: Long = 0
 
-                while (inputStream.read(buffer).also { bytesRead = it } != -1) {
-                    outputStream.write(buffer, 0, bytesRead)
-                    totalRead += bytesRead
-                    val progress = if (contentLength > 0) (totalRead.toFloat() / contentLength.toFloat()).coerceIn(0f, 1f) else -1f
-                    onProgress(progress, totalRead, contentLength)
+                        while (inputStream.read(buffer).also { bytesRead = it } != -1) {
+                            outputStream.write(buffer, 0, bytesRead)
+                            totalRead += bytesRead
+                            val progress = if (contentLength > 0) (totalRead.toFloat() / contentLength.toFloat()).coerceIn(0f, 1f) else -1f
+                            onProgress(progress, totalRead, contentLength)
+                        }
+                        outputStream.flush()
+                    }
                 }
 
-                outputStream.flush()
-                outputStream.close()
-                inputStream.close()
+                tempFile.setReadable(true, false)
 
-                apkFile.setReadable(true, false)
-
-                if (apkFile.length() < 100_000) {
-                    val size = apkFile.length()
-                    apkFile.delete()
-                    lastError = Exception("ডাউনলোডকৃত APK ফাইলটি অসম্পূর্ণ (সাইজ: $size বাইট)")
+                if (tempFile.length() < 1_000_000) {
+                    val size = tempFile.length()
+                    tempFile.delete()
+                    lastError = Exception("ডাউনলোডকৃত ফাইলটি অসম্পূর্ণ বা ক্ষতিগ্রস্ত (সাইজ: $size বাইট)")
                     continue
                 }
 
+                // Atomic rename to final APK file
+                if (apkFile.exists()) {
+                    apkFile.delete()
+                }
+                val renameSuccess = tempFile.renameTo(apkFile)
+                val finalFile = if (renameSuccess) apkFile else tempFile
+                finalFile.setReadable(true, false)
+
                 // Successfully downloaded a valid APK!
-                return@withContext Result.success(apkFile)
+                return@withContext Result.success(finalFile)
             } catch (e: Exception) {
                 lastError = e
+                try {
+                    if (tempFile.exists()) tempFile.delete()
+                } catch (_: Exception) {}
             }
         }
 
         // If all candidates failed, provide clear diagnostic message in Bengali
         val errorMessage = """
-গিটহাব রিপোজিটরিতে (github.com/$repoOwner/$repoName) এখনও কোনো রিলিজ APK ফাইল আপলোড করা হয়নি (HTTP 404)।
+গিটহাব থেকে সরাসরি APK ডাউনলোড করা সম্ভব হয়নি (${lastError?.message ?: "সংযোগ সমস্যা"})।
 
-💡 কীভাবে নতুন APK স্বয়ংক্রিয়ভাবে আপলোড ও প্রতিস্থাপন করবেন:
-১. রিপোজিটরিতে স্বয়ংক্রিয় 'GitHub Actions' ফাইল (.github/workflows/release-apk.yml) যুক্ত করা হয়েছে। এআই স্টুডিও থেকে গিটহাবে কোড পুশ করলেই স্বয়ংক্রিয়ভাবে নতুন APK তৈরি হবে এবং রিলিজ পেজে পুরনো APK নতুনটি দিয়ে রিপ্লেস হবে।
-২. আপনি এআই স্টুডিও ব্রাউজার থেকে সরাসরি 'Install via USB' বাটনে ক্লিক করেও ফোনে এখনই নতুন সংস্করণ ইনস্টল করে নিতে পারেন।
-৩. কোনো ইনস্টল ঝামেলা ছাড়াই নতুন সমস্ত দো'আ ও আমল পেতে 'অনলাইন কনটেন্ট দ্রুত সিঙ্ক' বাটনে চাপ দিন।
+💡 সম্ভাব্য কারণ ও দ্রুত সমাধান:
+১. রিপোজিটরিতে (github.com/$repoOwner/$repoName) নতুন রিলিজ ট্যাগ (v1.7.6) তৈরি হয়ে থাকতে পারে অথবা সাময়িক নেটওয়ার্ক বিঘ্ন ঘটেছে।
+২. 'ডাউনলোড ম্যানেজার' বাটনে চাপ দিয়ে ব্যাকগ্রাউন্ডে ডাউনলোড করতে পারেন।
+৩. কোনো ইনস্টল ঝামেলা ছাড়াই নতুন সমস্ত কনটেন্ট আপডেট পেতে 'অনলাইন কনটেন্ট দ্রুত সিঙ্ক' বাটনে চাপ দিন।
 """.trimIndent()
 
         Result.failure(Exception(errorMessage))
@@ -974,22 +1021,32 @@ class GitHubUpdateManager(private val context: Context) {
 
     /**
      * Triggers the Android package installer for a downloaded APK.
+     * Grants permissions explicitly to package installers and handles Unknown Sources securely.
      * Returns true if installer intent was launched, false if permission setting is required.
      */
     fun installApk(apkFile: File): Result<Boolean> {
         return try {
-            if (!apkFile.exists() || apkFile.length() == 0L) {
-                return Result.failure(Exception("ইনস্টল করার জন্য কোনো APK ফাইল পাওয়া যায়নি।"))
+            if (!apkFile.exists() || apkFile.length() < 500_000L) {
+                return Result.failure(Exception("ইনস্টল করার জন্য কোনো সম্পূর্ণ APK ফাইল পাওয়া যায়নি। সাইজ: ${apkFile.length()} বাইট"))
             }
 
             // Android 8.0+ Unknown App Sources check
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 if (!context.packageManager.canRequestPackageInstalls()) {
-                    val intent = Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES).apply {
-                        data = Uri.parse("package:${context.packageName}")
-                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    try {
+                        val intent = Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES).apply {
+                            data = Uri.parse("package:${context.packageName}")
+                            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                        }
+                        context.startActivity(intent)
+                    } catch (_: Exception) {
+                        try {
+                            val intent = Intent(Settings.ACTION_SECURITY_SETTINGS).apply {
+                                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                            }
+                            context.startActivity(intent)
+                        } catch (_: Exception) {}
                     }
-                    context.startActivity(intent)
                     return Result.success(false)
                 }
             }
@@ -1005,12 +1062,25 @@ class GitHubUpdateManager(private val context: Context) {
             val installIntent = Intent(Intent.ACTION_VIEW).apply {
                 setDataAndType(apkUri, "application/vnd.android.package-archive")
                 addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                addFlags(Intent.FLAG_GRANT_PREFIX_URI_PERMISSION)
                 addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                 addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
                 putExtra(Intent.EXTRA_NOT_UNKNOWN_SOURCE, true)
             }
 
-            // Explicitly grant URI permission to any package installer component
+            // Explicitly grant URI permission to known package installer packages
+            val knownInstallers = listOf(
+                "com.google.android.packageinstaller",
+                "com.android.packageinstaller",
+                "com.samsung.android.packageinstaller"
+            )
+            for (pkg in knownInstallers) {
+                try {
+                    context.grantUriPermission(pkg, apkUri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                } catch (_: Exception) {}
+            }
+
+            // Explicitly grant URI permission to any queried package installer components
             try {
                 val resolvedActivities = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                     context.packageManager.queryIntentActivities(

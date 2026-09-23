@@ -37,3 +37,12 @@ data class ScratchpadNote(
     val createdAt: Long = System.currentTimeMillis(),
     val updatedAt: Long = System.currentTimeMillis()
 )
+
+@Entity(tableName = "sunnah_habit_logs")
+data class SunnahHabitLog(
+    @PrimaryKey val id: String, // Format: "${habitId}_${date}"
+    val habitId: String,
+    val date: String, // Format: yyyy-MM-dd
+    val timestamp: Long = System.currentTimeMillis(),
+    val reflectionNote: String = ""
+)

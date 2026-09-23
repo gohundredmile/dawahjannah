@@ -32,6 +32,7 @@ import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Fingerprint
 import androidx.compose.material.icons.filled.Lightbulb
 import androidx.compose.material.icons.filled.MenuBook
+import androidx.compose.material.icons.filled.Nightlight
 import androidx.compose.material.icons.filled.NotificationsActive
 import androidx.compose.material.icons.filled.Psychology
 import androidx.compose.material.icons.filled.Search
@@ -90,6 +91,8 @@ fun ToolsScreen(
     onOpenPersonalDuaBuilder: () -> Unit = {},
     onOpenExplainAyahCamera: () -> Unit,
     onOpenSmartQuranSearch: () -> Unit = {},
+    onOpenIslamicHabitSystem: () -> Unit = {},
+    onOpenRamadanIntelligence: () -> Unit = {},
     onOpenAskBeforeYouAct: () -> Unit = {},
     onOpenAyatDetector: () -> Unit,
     onOpenQibla: () -> Unit,
@@ -706,6 +709,312 @@ fun ToolsScreen(
             }
         }
 
+        // SIGNATURE SPOTLIGHT CARD: "Ramadan Intelligence" (Complete Ramadan System)
+        item {
+            Card(
+                shape = RoundedCornerShape(24.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                border = BorderStroke(1.5.dp, Color(0xFF059669).copy(alpha = 0.85f)),
+                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { onOpenRamadanIntelligence() }
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(
+                            Brush.verticalGradient(
+                                colors = listOf(
+                                    Color(0xFF059669).copy(alpha = 0.16f),
+                                    IslamicGold.copy(alpha = 0.10f),
+                                    MaterialTheme.colorScheme.surface
+                                )
+                            )
+                        )
+                        .padding(20.dp)
+                ) {
+                    Column {
+                        // Badge Row
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Surface(
+                                shape = RoundedCornerShape(12.dp),
+                                color = Color(0xFF059669),
+                                modifier = Modifier.padding(bottom = 8.dp)
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Nightlight,
+                                        contentDescription = null,
+                                        tint = Color.White,
+                                        modifier = Modifier.size(13.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(4.dp))
+                                    Text(
+                                        text = "নতুন সিগনেচার সিস্টেম • পূর্ণাঙ্গ রমাদান",
+                                        color = Color.White,
+                                        style = MaterialTheme.typography.labelSmall,
+                                        fontWeight = FontWeight.Bold,
+                                        fontFamily = banglaFont
+                                    )
+                                }
+                            }
+
+                            Surface(
+                                shape = CircleShape,
+                                color = IslamicGold.copy(alpha = 0.2f),
+                                modifier = Modifier.size(42.dp)
+                            ) {
+                                Box(contentAlignment = Alignment.Center) {
+                                    Text("🌙", fontSize = 20.sp)
+                                }
+                            }
+                        }
+
+                        // Title
+                        Text(
+                            text = "Ramadan Intelligence",
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.ExtraBold,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+
+                        Text(
+                            text = "শুধুমাত্র কাউন্টডাউন নয় — একটি পূর্ণাঙ্গ জীবনমুখী রমাদান পদ্ধতি",
+                            style = MaterialTheme.typography.labelLarge,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFF059669),
+                            fontFamily = banglaFont
+                        )
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        // Subtitle
+                        Text(
+                            text = "রমাদানের পূর্ব প্রস্তুতি (চেকলিস্ট, কুরআন পেসিং, সিয়াম ফিকহ, দান পরিকল্পনা) • রমাদানের চলাকালীন সিয়াম, তারাবীহ, কুরআন খতম, লাইলাতুল কদর ও সহীহ দো'আ ভল্ট • রমাদান পরবর্তী কাযা ও শাওয়ালের ৬ রোযা ব্যবস্থাপনা।",
+                            style = MaterialTheme.typography.bodyMedium.copy(lineHeight = 22.sp),
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            fontFamily = banglaFont
+                        )
+
+                        Spacer(modifier = Modifier.height(14.dp))
+
+                        // Quick Pills
+                        Text(
+                            text = "মৌলিক ৩টি পর্যায়:",
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary,
+                            fontFamily = banglaFont
+                        )
+                        Spacer(modifier = Modifier.height(6.dp))
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            listOf("🌙 পূর্বে: প্রস্তুতি ও ফিকহ", "✨ চলাকালীন: সিয়াম ও ক্বিয়াম", "🕊️ পরে: কাযা ও শাওয়াল").forEach { pill ->
+                                Surface(
+                                    shape = RoundedCornerShape(8.dp),
+                                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f),
+                                    border = BorderStroke(0.6.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
+                                ) {
+                                    Text(
+                                        text = pill,
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = MaterialTheme.colorScheme.onSurface,
+                                        fontFamily = banglaFont,
+                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                                    )
+                                }
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        // Action Button
+                        Button(
+                            onClick = onOpenRamadanIntelligence,
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(14.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF059669))
+                        ) {
+                            Text("🌙", fontSize = 16.sp)
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "রমাদান ইন্টেলিজেন্স চালু করুন",
+                                style = MaterialTheme.typography.labelLarge,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White,
+                                fontFamily = banglaFont
+                            )
+                        }
+                    }
+                }
+            }
+        }
+
+        // SIGNATURE SPOTLIGHT CARD: "Islamic Habit System" (Gentle Sunnah Tracker)
+        item {
+            Card(
+                shape = RoundedCornerShape(24.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                border = BorderStroke(1.5.dp, Color(0xFF059669).copy(alpha = 0.75f)),
+                elevation = CardDefaults.cardElevation(defaultElevation = 3.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { onOpenIslamicHabitSystem() }
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(
+                            Brush.verticalGradient(
+                                colors = listOf(
+                                    Color(0xFF059669).copy(alpha = 0.14f),
+                                    IslamicGold.copy(alpha = 0.08f),
+                                    MaterialTheme.colorScheme.surface
+                                )
+                            )
+                        )
+                        .padding(20.dp)
+                ) {
+                    Column {
+                        // Badge Row
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Surface(
+                                shape = RoundedCornerShape(12.dp),
+                                color = Color(0xFF059669),
+                                modifier = Modifier.padding(bottom = 8.dp)
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Spa,
+                                        contentDescription = null,
+                                        tint = Color.White,
+                                        modifier = Modifier.size(13.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(4.dp))
+                                    Text(
+                                        text = "নতুন সিগনেচার টুল • মৃদু অভ্যাস পদ্ধতি",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        fontWeight = FontWeight.Bold,
+                                        color = Color.White,
+                                        fontFamily = banglaFont
+                                    )
+                                }
+                            }
+
+                            Surface(
+                                shape = CircleShape,
+                                color = Color(0xFF059669).copy(alpha = 0.18f),
+                                modifier = Modifier.size(40.dp)
+                            ) {
+                                Box(contentAlignment = Alignment.Center) {
+                                    Text("🌿", fontSize = 18.sp)
+                                }
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(6.dp))
+
+                        // Title
+                        Text(
+                            text = "Islamic Habit System",
+                            style = MaterialTheme.typography.headlineSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            fontFamily = banglaFont
+                        )
+
+                        Text(
+                            text = "সুন্নাহ ট্র্যাকার ও প্রশান্তিময় অভ্যাস পদ্ধতি",
+                            style = MaterialTheme.typography.labelLarge,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFF059669),
+                            fontFamily = banglaFont
+                        )
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        // Description
+                        Text(
+                            text = "ধর্মকে অতিরিক্ত গ্যামিফাই বা প্রতিযোগিতার লিডারবোর্ড না বানিয়ে প্রশান্তিময় সুন্নাহ চর্চা—মেসওয়াক, বিসমিল্লাহ, ডান হাতে পানাহার, সালাম, ঘুমানোর সুন্নাত, সকাল-সন্ধ্যার জিকির, আত্মীয়তার হক ও দান। কোনো অপরাধবোধ ছাড়াই ধারাবাহিকতার আত্মিক আনন্দ।",
+                            style = MaterialTheme.typography.bodyMedium.copy(lineHeight = 22.sp),
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            fontFamily = banglaFont
+                        )
+
+                        Spacer(modifier = Modifier.height(14.dp))
+
+                        // Quick Pills
+                        Text(
+                            text = "সুন্নাহর আলোকচ্ছটা:",
+                            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                            color = Color(0xFF059669),
+                            fontFamily = banglaFont
+                        )
+                        Spacer(modifier = Modifier.height(6.dp))
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            listOf("🌿 মেসওয়াক", "✨ বিসমিল্লাহ", "🥣 ডান হাত", "🤝 সালাম", "🌙 ঘুমানোর সুন্নাত").forEach { pill ->
+                                Surface(
+                                    shape = RoundedCornerShape(8.dp),
+                                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f),
+                                    border = BorderStroke(0.6.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
+                                ) {
+                                    Text(
+                                        text = pill,
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = MaterialTheme.colorScheme.onSurface,
+                                        fontFamily = banglaFont,
+                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                                    )
+                                }
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        // Action Button
+                        Button(
+                            onClick = onOpenIslamicHabitSystem,
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(14.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF059669))
+                        ) {
+                            Text("🌿", fontSize = 16.sp)
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "সুন্নাহ হ্যাবিট সিস্টেম চালু করুন",
+                                style = MaterialTheme.typography.labelLarge,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White,
+                                fontFamily = banglaFont
+                            )
+                        }
+                    }
+                }
+            }
+        }
+
         // SIGNATURE SPOTLIGHT CARD: "Ask Before You Act" (Structured Jurisprudential Diagnostic)
         item {
             Card(
@@ -904,6 +1213,24 @@ fun ToolsScreen(
                 icon = Icons.Default.Search,
                 badgeBn = "এআই সার্চ",
                 onClick = onOpenSmartQuranSearch
+            ),
+            IslamicToolItem(
+                id = "tool_islamic_habit_system",
+                titleBn = "Islamic Habit System (সুন্নাহ ট্র্যাকার)",
+                subtitleBn = "অতিরিক্ত গ্যামিফিকেশন মুক্ত মৃদু অভ্যাস—মেসওয়াক, ডান হাত, সালাম, ঘুমানোর বরকতময় সুন্নাত।",
+                icon = Icons.Default.Spa,
+                badgeBn = "সিগনেচার",
+                isFeatured = true,
+                onClick = onOpenIslamicHabitSystem
+            ),
+            IslamicToolItem(
+                id = "tool_ramadan_intelligence",
+                titleBn = "Ramadan Intelligence (রমাদান ইন্টেলিজেন্স)",
+                subtitleBn = "রমাদানের পূর্ব প্রস্তুতি, চলাকালীন সিয়াম-কুরআন-তারাবীহ-দোয়া এবং পরবর্তী কাযা ও শাওয়াল রোযার পূর্ণাঙ্গ ব্যবস্থা।",
+                icon = Icons.Default.Nightlight,
+                badgeBn = "নতুন সিগনেচার",
+                isFeatured = true,
+                onClick = onOpenRamadanIntelligence
             ),
             IslamicToolItem(
                 id = "tool_ayat_solver",

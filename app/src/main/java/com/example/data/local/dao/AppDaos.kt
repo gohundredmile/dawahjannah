@@ -60,3 +60,25 @@ interface ScratchpadDao {
     @Query("DELETE FROM scratchpad_notes WHERE id = :id")
     suspend fun deleteNoteById(id: Int)
 }
+
+@Dao
+interface SunnahHabitDao {
+    @Query("SELECT * FROM sunnah_habit_logs WHERE date = :date")
+    fun getLogsForDate(date: String): Flow<List<com.example.data.local.entity.SunnahHabitLog>>
+
+    @Query("SELECT * FROM sunnah_habit_logs WHERE date BETWEEN :startDate AND :endDate")
+    fun getLogsBetweenDates(startDate: String, endDate: String): Flow<List<com.example.data.local.entity.SunnahHabitLog>>
+
+    @Query("SELECT * FROM sunnah_habit_logs ORDER BY timestamp DESC")
+    fun getAllLogs(): Flow<List<com.example.data.local.entity.SunnahHabitLog>>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertOrUpdate(log: com.example.data.local.entity.SunnahHabitLog)
+
+    @Query("DELETE FROM sunnah_habit_logs WHERE id = :id")
+    suspend fun deleteById(id: String)
+
+    @Query("DELETE FROM sunnah_habit_logs WHERE habitId = :habitId AND date = :date")
+    suspend fun deleteByHabitAndDate(habitId: String, date: String)
+}
+

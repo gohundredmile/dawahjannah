@@ -100,6 +100,8 @@ enum class ToolsSubScreen(val titleBn: String) {
     PERSONAL_DUA_BUILDER("Personal Dua Builder (ব্যক্তিগত দো'আ আর্কিটেক্ট)"),
     ASK_BEFORE_YOU_ACT("Ask Before You Act (পদক্ষেপ নেওয়ার আগে জানুন)"),
     SMART_QURAN_SEARCH("Smart Quran Search (ভাবার্থভিত্তিক অনুসন্ধান)"),
+    ISLAMIC_HABIT_SYSTEM("Islamic Habit System (সুন্নাহ ও অভ্যাস পদ্ধতি)"),
+    RAMADAN_INTELLIGENCE("Ramadan Intelligence (রমাদান ইন্টেলিজেন্স ও পূর্ণাঙ্গ রমাদান পদ্ধতি)"),
     EXPLAIN_AYAH_CAMERA("Explain This Ayah ক্যামেরা"),
     AYAT_DETECTOR_SOLVER("আয়াত ও হাদীস শুদ্ধিকরণ ল্যাব"),
     QIBLA("ক্বিবলা কম্পাস"),
@@ -180,6 +182,16 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     fun openAskBeforeYouAct() {
         _toolsSubScreen.value = ToolsSubScreen.ASK_BEFORE_YOU_ACT
+        _currentTab.value = AppTab.TOOLS
+    }
+
+    fun openIslamicHabitSystem() {
+        _toolsSubScreen.value = ToolsSubScreen.ISLAMIC_HABIT_SYSTEM
+        _currentTab.value = AppTab.TOOLS
+    }
+
+    fun openRamadanIntelligence() {
+        _toolsSubScreen.value = ToolsSubScreen.RAMADAN_INTELLIGENCE
         _currentTab.value = AppTab.TOOLS
     }
 
@@ -1236,7 +1248,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         val downloadedFile: java.io.File? = null,
         val error: String? = null,
         val waitingForInstallPermission: Boolean = false,
-        val installCompleted: Boolean = false
+        val installCompleted: Boolean = false,
+        val isAlreadyUpToDate: Boolean = false,
+        val upToDateMessage: String? = null
     )
 
     private val _apkDownloadState = MutableStateFlow(ApkDownloadProgress())
@@ -1286,8 +1300,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
      * 1. Downloads the APK in-app with streaming byte & percentage progress
      * 2. Automatically launches Android package installer (prompts "Do you want to install an update?")
      * 3. Handles Unknown Sources permission if needed
+     * 4. Supports forceDownload to bypass up-to-date check and perform fresh reinstall
      */
-    fun startFullOtaApkUpdate() {
+    fun startFullOtaApkUpdate(forceDownload: Boolean = false) {
         viewModelScope.launch {
             _apkDownloadState.value = ApkDownloadProgress(isDownloading = true, progress = 0.05f)
 
@@ -1300,15 +1315,42 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 }
             }
 
-            // Check if device is already running this or a newer version
+            // If not forcing download, check if device is already running this version
             val currentCode = gitHubUpdateManager.installedVersionCode
             val remoteCode = release?.remoteVersionCode ?: 0
-            if (remoteCode > 0 && currentCode >= remoteCode && release?.hasNewerVersion == false) {
+            if (!forceDownload && remoteCode > 0 && currentCode >= remoteCode && release?.hasNewerVersion == false) {
+                val cachedApk = gitHubUpdateManager.getCachedApkFile()
                 _apkDownloadState.value = ApkDownloadProgress(
                     isDownloading = false,
-                    error = "আপনার অ্যাপটি ইতিমধ্যে সর্বশেষ সংস্করণ (${gitHubUpdateManager.installedVersionName}) এ আপডেট রয়েছে। আপনি ইতিমধ্যে আপ-টু-ডেট আছেন।"
+                    isAlreadyUpToDate = true,
+                    downloadedFile = cachedApk,
+                    upToDateMessage = "আপনার ডিভাইসে ইতিমধ্যে সংস্করণ $installedAppVersionName ইনস্টল রয়েছে।\n\nআপনি চাইলে নিচের বাটনে চাপ দিয়ে রিলিজ APK ফাইলটি সরাসরি পুনরায় ডাউনলোড ও ফ্রেশ ইনস্টল করতে পারেন।"
                 )
                 return@launch
+            }
+
+            // Check if we already have a valid cached APK file on device from a recent download
+            val existingApk = gitHubUpdateManager.getCachedApkFile()
+            if (!forceDownload && existingApk != null && existingApk.length() > 10_000_000L) {
+                val sizeMb = existingApk.length().toFloat() / (1024f * 1024f)
+                _apkDownloadState.value = ApkDownloadProgress(
+                    isDownloading = false,
+                    progress = 1f,
+                    downloadedMb = sizeMb,
+                    totalMb = sizeMb,
+                    downloadedFile = existingApk
+                )
+                val installResult = gitHubUpdateManager.installApk(existingApk)
+                if (installResult.isSuccess) {
+                    val launched = installResult.getOrThrow()
+                    if (launched) {
+                        _apkDownloadState.value = _apkDownloadState.value.copy(installCompleted = true)
+                        return@launch
+                    } else {
+                        _apkDownloadState.value = _apkDownloadState.value.copy(waitingForInstallPermission = true)
+                        return@launch
+                    }
+                }
             }
 
             val targetUrl = release?.downloadUrl
@@ -1361,7 +1403,11 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun retryInstallDownloadedApk() {
-        val file = _apkDownloadState.value.downloadedFile ?: return
+        val file = _apkDownloadState.value.downloadedFile ?: gitHubUpdateManager.getCachedApkFile()
+        if (file == null) {
+            startFullOtaApkUpdate(forceDownload = true)
+            return
+        }
         val installResult = gitHubUpdateManager.installApk(file)
         if (installResult.isSuccess) {
             val launched = installResult.getOrThrow()
@@ -1375,7 +1421,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             }
         } else {
             _apkDownloadState.value = _apkDownloadState.value.copy(
-                error = "ইনস্টলেশন শুরু করতে সমস্যা: ${installResult.exceptionOrNull()?.message}"
+                error = "ইনস্টল করা যায়নি: ${installResult.exceptionOrNull()?.message}"
             )
         }
     }

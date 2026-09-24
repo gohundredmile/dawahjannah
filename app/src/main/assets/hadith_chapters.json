@@ -1,0 +1,2970 @@
+[
+  {
+    "id": "bukhari_1",
+    "bookSlug": "bukhari",
+    "chapterNumber": 1,
+    "titleBn": "ওহীর সূচনা (অধ্যায় ১)",
+    "titleAr": "Revelation",
+    "hadithRange": "১ - ৭"
+  },
+  {
+    "id": "bukhari_2",
+    "bookSlug": "bukhari",
+    "chapterNumber": 2,
+    "titleBn": "ঈমান (বিশ্বাস) (অধ্যায় ২)",
+    "titleAr": "Belief",
+    "hadithRange": "৮ - ৫৮"
+  },
+  {
+    "id": "bukhari_3",
+    "bookSlug": "bukhari",
+    "chapterNumber": 3,
+    "titleBn": "ইলম বা জ্ঞান (অধ্যায় ৩)",
+    "titleAr": "Knowledge",
+    "hadithRange": "৫৯ - ১৩৪"
+  },
+  {
+    "id": "bukhari_4",
+    "bookSlug": "bukhari",
+    "chapterNumber": 4,
+    "titleBn": "অযু (পবিত্রতা) (অধ্যায় ৪)",
+    "titleAr": "Ablutions (Wudu')",
+    "hadithRange": "১৩৫ - ২৪৭"
+  },
+  {
+    "id": "bukhari_5",
+    "bookSlug": "bukhari",
+    "chapterNumber": 5,
+    "titleBn": "গোসল (অধ্যায় ৫)",
+    "titleAr": "Bathing (Ghusl)",
+    "hadithRange": "২৪৮ - ২৯৩"
+  },
+  {
+    "id": "bukhari_6",
+    "bookSlug": "bukhari",
+    "chapterNumber": 6,
+    "titleBn": "ঋতুস্রাব বা হায়েয (অধ্যায় ৬)",
+    "titleAr": "Menstrual Periods",
+    "hadithRange": "২৯৪ - ৩৩৩"
+  },
+  {
+    "id": "bukhari_7",
+    "bookSlug": "bukhari",
+    "chapterNumber": 7,
+    "titleBn": "তায়াম্মুম (অধ্যায় ৭)",
+    "titleAr": "Rubbing hands and feet with dust (Tayammum)",
+    "hadithRange": "৩৩৪ - ৩৪৮"
+  },
+  {
+    "id": "bukhari_8",
+    "bookSlug": "bukhari",
+    "chapterNumber": 8,
+    "titleBn": "সালাত (নামায) (অধ্যায় ৮)",
+    "titleAr": "Prayers (Salat)",
+    "hadithRange": "৩৪৯ - ৫২০"
+  },
+  {
+    "id": "bukhari_9",
+    "bookSlug": "bukhari",
+    "chapterNumber": 9,
+    "titleBn": "সালাতের ওয়াক্তসমূহ (অধ্যায় ৯)",
+    "titleAr": "Times of the Prayers",
+    "hadithRange": "৫২২ - ৬০২"
+  },
+  {
+    "id": "bukhari_10",
+    "bookSlug": "bukhari",
+    "chapterNumber": 10,
+    "titleBn": "Call to Prayers (Adhaan) (অধ্যায় ১০)",
+    "titleAr": "Call to Prayers (Adhaan)",
+    "hadithRange": "৬০৩ - ৮৭৫"
+  },
+  {
+    "id": "bukhari_11",
+    "bookSlug": "bukhari",
+    "chapterNumber": 11,
+    "titleBn": "জুমু'আর সালাত (অধ্যায় ১১)",
+    "titleAr": "Friday Prayer",
+    "hadithRange": "৮৭৬ - ৯৪১"
+  },
+  {
+    "id": "bukhari_12",
+    "bookSlug": "bukhari",
+    "chapterNumber": 12,
+    "titleBn": "ভয়ের সালাত (সালাতুল খাওফ) (অধ্যায় ১২)",
+    "titleAr": "Fear Prayer",
+    "hadithRange": "৯৪২ - ৯৪৭"
+  },
+  {
+    "id": "bukhari_13",
+    "bookSlug": "bukhari",
+    "chapterNumber": 13,
+    "titleBn": "দুই ঈদের সালাত (অধ্যায় ১৩)",
+    "titleAr": "The Two Festivals (Eids)",
+    "hadithRange": "৯৪৮ - ৯৮৯"
+  },
+  {
+    "id": "bukhari_14",
+    "bookSlug": "bukhari",
+    "chapterNumber": 14,
+    "titleBn": "বিতর সালাত (অধ্যায় ১৪)",
+    "titleAr": "Witr Prayer",
+    "hadithRange": "৯৯০ - ১০০৪"
+  },
+  {
+    "id": "bukhari_15",
+    "bookSlug": "bukhari",
+    "chapterNumber": 15,
+    "titleBn": "Invoking Allah for Rain (Istisqaa) (অধ্যায় ১৫)",
+    "titleAr": "Invoking Allah for Rain (Istisqaa)",
+    "hadithRange": "১০০৫ - ১০৩৯"
+  },
+  {
+    "id": "bukhari_16",
+    "bookSlug": "bukhari",
+    "chapterNumber": 16,
+    "titleBn": "সূর্য ও চন্দ্রগ্রহণ (কুসূফ) (অধ্যায় ১৬)",
+    "titleAr": "Eclipses",
+    "hadithRange": "১০৪০ - ১০৬৬"
+  },
+  {
+    "id": "bukhari_17",
+    "bookSlug": "bukhari",
+    "chapterNumber": 17,
+    "titleBn": "Prostration During Recital of Qur'an (অধ্যায় ১৭)",
+    "titleAr": "Prostration During Recital of Qur'an",
+    "hadithRange": "১০৬৭ - ১০৭৯"
+  },
+  {
+    "id": "bukhari_18",
+    "bookSlug": "bukhari",
+    "chapterNumber": 18,
+    "titleBn": "কসর সালাত (মুসাফিরের নামায) (অধ্যায় ১৮)",
+    "titleAr": "Shortening the Prayers (At-Taqseer)",
+    "hadithRange": "১০৮০ - ১১১৯"
+  },
+  {
+    "id": "bukhari_19",
+    "bookSlug": "bukhari",
+    "chapterNumber": 19,
+    "titleBn": "তাহাজ্জুদ ও রাতের নফল সালাত (অধ্যায় ১৯)",
+    "titleAr": "Prayer at Night (Tahajjud)",
+    "hadithRange": "১১২০ - ১১৮৭"
+  },
+  {
+    "id": "bukhari_20",
+    "bookSlug": "bukhari",
+    "chapterNumber": 20,
+    "titleBn": "Virtues of Prayer at Masjid Makkah and Madinah (অধ্যায় ২০)",
+    "titleAr": "Virtues of Prayer at Masjid Makkah and Madinah",
+    "hadithRange": "১১৮৮ - ১১৯৭"
+  },
+  {
+    "id": "bukhari_21",
+    "bookSlug": "bukhari",
+    "chapterNumber": 21,
+    "titleBn": "সালাতের মধ্যকার আদব (অধ্যায় ২১)",
+    "titleAr": "Actions while Praying",
+    "hadithRange": "১১৯৮ - ১২২৩"
+  },
+  {
+    "id": "bukhari_22",
+    "bookSlug": "bukhari",
+    "chapterNumber": 22,
+    "titleBn": "Forgetfulness in Prayer (অধ্যায় ২২)",
+    "titleAr": "Forgetfulness in Prayer",
+    "hadithRange": "১২২৪ - ১২৩৬"
+  },
+  {
+    "id": "bukhari_23",
+    "bookSlug": "bukhari",
+    "chapterNumber": 23,
+    "titleBn": "জানাযা ও দাফন (অধ্যায় ২৩)",
+    "titleAr": "Funerals (Al-Janaa'iz)",
+    "hadithRange": "১২৩৭ - ১৩৯৪"
+  },
+  {
+    "id": "bukhari_24",
+    "bookSlug": "bukhari",
+    "chapterNumber": 24,
+    "titleBn": "যাকাত (অধ্যায় ২৪)",
+    "titleAr": "Obligatory Charity Tax (Zakat)",
+    "hadithRange": "১৩৯৫ - ১৫১২"
+  },
+  {
+    "id": "bukhari_25",
+    "bookSlug": "bukhari",
+    "chapterNumber": 25,
+    "titleBn": "হজ্জ ও ওমরাহ (অধ্যায় ২৫)",
+    "titleAr": "Hajj (Pilgrimage)",
+    "hadithRange": "১৫১৩ - ১৭৭২"
+  },
+  {
+    "id": "bukhari_26",
+    "bookSlug": "bukhari",
+    "chapterNumber": 26,
+    "titleBn": "`Umrah (Minor pilgrimage) (অধ্যায় ২৬)",
+    "titleAr": "`Umrah (Minor pilgrimage)",
+    "hadithRange": "১৭৭৩ - ১৮০৫"
+  },
+  {
+    "id": "bukhari_27",
+    "bookSlug": "bukhari",
+    "chapterNumber": 27,
+    "titleBn": "Pilgrims Prevented from Completing the Pilgrimage (অধ্যায় ২৭)",
+    "titleAr": "Pilgrims Prevented from Completing the Pilgrimage",
+    "hadithRange": "১৮০৬ - ১৮২০"
+  },
+  {
+    "id": "bukhari_28",
+    "bookSlug": "bukhari",
+    "chapterNumber": 28,
+    "titleBn": "Penalty of Hunting while on Pilgrimage (অধ্যায় ২৮)",
+    "titleAr": "Penalty of Hunting while on Pilgrimage",
+    "hadithRange": "১৮২১ - ১৮৬৬"
+  },
+  {
+    "id": "bukhari_29",
+    "bookSlug": "bukhari",
+    "chapterNumber": 29,
+    "titleBn": "Virtues of Madinah (অধ্যায় ২৯)",
+    "titleAr": "Virtues of Madinah",
+    "hadithRange": "১৮৬৭ - ১৮৯০"
+  },
+  {
+    "id": "bukhari_30",
+    "bookSlug": "bukhari",
+    "chapterNumber": 30,
+    "titleBn": "সাওম বা রোজা (অধ্যায় ৩০)",
+    "titleAr": "Fasting",
+    "hadithRange": "১৮৯১ - ২০০৭"
+  },
+  {
+    "id": "bukhari_31",
+    "bookSlug": "bukhari",
+    "chapterNumber": 31,
+    "titleBn": "তারাবীহ সালাত (অধ্যায় ৩১)",
+    "titleAr": "Praying at Night in Ramadaan (Taraweeh)",
+    "hadithRange": "২০০৮ - ২০১৩"
+  },
+  {
+    "id": "bukhari_32",
+    "bookSlug": "bukhari",
+    "chapterNumber": 32,
+    "titleBn": "Virtues of the Night of Qadr (অধ্যায় ৩২)",
+    "titleAr": "Virtues of the Night of Qadr",
+    "hadithRange": "২০১৪ - ২০২৪"
+  },
+  {
+    "id": "bukhari_33",
+    "bookSlug": "bukhari",
+    "chapterNumber": 33,
+    "titleBn": "ইতিকাফ (অধ্যায় ৩৩)",
+    "titleAr": "Retiring to a Mosque for Remembrance of Allah (I'tikaf)",
+    "hadithRange": "২০২৫ - ২০৪৬"
+  },
+  {
+    "id": "bukhari_34",
+    "bookSlug": "bukhari",
+    "chapterNumber": 34,
+    "titleBn": "ক্রয়-বিক্রয় ও ব্যবসা-বাণিজ্য (অধ্যায় ৩৪)",
+    "titleAr": "Sales and Trade",
+    "hadithRange": "২০৪৭ - ২২৩৮"
+  },
+  {
+    "id": "bukhari_35",
+    "bookSlug": "bukhari",
+    "chapterNumber": 35,
+    "titleBn": "Sales in which a Price is paid for Goods to be Delivered Later (As-Salam) (অধ্যায় ৩৫)",
+    "titleAr": "Sales in which a Price is paid for Goods to be Delivered Later (As-Salam)",
+    "hadithRange": "২২৩৯ - ২২৫৬"
+  },
+  {
+    "id": "bukhari_36",
+    "bookSlug": "bukhari",
+    "chapterNumber": 36,
+    "titleBn": "Shuf'a (অধ্যায় ৩৬)",
+    "titleAr": "Shuf'a",
+    "hadithRange": "২২৫৭ - ২২৫৯"
+  },
+  {
+    "id": "bukhari_37",
+    "bookSlug": "bukhari",
+    "chapterNumber": 37,
+    "titleBn": "Hiring (অধ্যায় ৩৭)",
+    "titleAr": "Hiring",
+    "hadithRange": "২২৬০ - ২২৮৬"
+  },
+  {
+    "id": "bukhari_38",
+    "bookSlug": "bukhari",
+    "chapterNumber": 38,
+    "titleBn": "Transferance of a Debt from One Person to Another (Al-Hawaala) (অধ্যায় ৩৮)",
+    "titleAr": "Transferance of a Debt from One Person to Another (Al-Hawaala)",
+    "hadithRange": "২২৮৭ - ২২৮৯"
+  },
+  {
+    "id": "bukhari_39",
+    "bookSlug": "bukhari",
+    "chapterNumber": 39,
+    "titleBn": "Kafalah (অধ্যায় ৩৯)",
+    "titleAr": "Kafalah",
+    "hadithRange": "২২৯০ - ২২৯৮"
+  },
+  {
+    "id": "bukhari_40",
+    "bookSlug": "bukhari",
+    "chapterNumber": 40,
+    "titleBn": "Representation, Authorization, Business by Proxy (অধ্যায় ৪০)",
+    "titleAr": "Representation, Authorization, Business by Proxy",
+    "hadithRange": "২২৯৯ - ২৩১৯"
+  },
+  {
+    "id": "bukhari_41",
+    "bookSlug": "bukhari",
+    "chapterNumber": 41,
+    "titleBn": "Agriculture (অধ্যায় ৪১)",
+    "titleAr": "Agriculture",
+    "hadithRange": "২৩২০ - ২৩৫০"
+  },
+  {
+    "id": "bukhari_42",
+    "bookSlug": "bukhari",
+    "chapterNumber": 42,
+    "titleBn": "পানি বণ্টন ও সেচ (অধ্যায় ৪২)",
+    "titleAr": "Distribution of Water",
+    "hadithRange": "২৩৫১ - ২৩৮৩"
+  },
+  {
+    "id": "bukhari_43",
+    "bookSlug": "bukhari",
+    "chapterNumber": 43,
+    "titleBn": "ঋণ ও দেনা পরিশোধ (অধ্যায় ৪৩)",
+    "titleAr": "Loans, Payment of Loans, Freezing of Property, Bankruptcy",
+    "hadithRange": "২৩৮৫ - ২৪০৯"
+  },
+  {
+    "id": "bukhari_44",
+    "bookSlug": "bukhari",
+    "chapterNumber": 44,
+    "titleBn": "বিবাদ মীমাংসা (অধ্যায় ৪৪)",
+    "titleAr": "Khusoomaat",
+    "hadithRange": "২৪১০ - ২৪২৫"
+  },
+  {
+    "id": "bukhari_45",
+    "bookSlug": "bukhari",
+    "chapterNumber": 45,
+    "titleBn": "কুড়িয়ে পাওয়া বস্তু (লুকতাহ) (অধ্যায় ৪৫)",
+    "titleAr": "Lost Things Picked up by Someone (Luqatah)",
+    "hadithRange": "২৪২৬ - ২৪৩৯"
+  },
+  {
+    "id": "bukhari_46",
+    "bookSlug": "bukhari",
+    "chapterNumber": 46,
+    "titleBn": "মজলুমের অধিকার ও জুলুম নিষেধ (অধ্যায় ৪৬)",
+    "titleAr": "Oppressions",
+    "hadithRange": "২৪৪০ - ২৪৮২"
+  },
+  {
+    "id": "bukhari_47",
+    "bookSlug": "bukhari",
+    "chapterNumber": 47,
+    "titleBn": "অংশীদারি কারবার (শিরকাত) (অধ্যায় ৪৭)",
+    "titleAr": "Partnership",
+    "hadithRange": "২৪৮৩ - ২৫০৭"
+  },
+  {
+    "id": "bukhari_48",
+    "bookSlug": "bukhari",
+    "chapterNumber": 48,
+    "titleBn": "বন্ধক রাখা (অধ্যায় ৪৮)",
+    "titleAr": "Mortgaging",
+    "hadithRange": "২৫০৮ - ২৫১৫"
+  },
+  {
+    "id": "bukhari_49",
+    "bookSlug": "bukhari",
+    "chapterNumber": 49,
+    "titleBn": "দাসমুক্তি (অধ্যায় ৪৯)",
+    "titleAr": "Manumission of Slaves",
+    "hadithRange": "২৫১৭ - ২৫৫৯"
+  },
+  {
+    "id": "bukhari_50",
+    "bookSlug": "bukhari",
+    "chapterNumber": 50,
+    "titleBn": "Makaatib (অধ্যায় ৫০)",
+    "titleAr": "Makaatib",
+    "hadithRange": "২৫৬০ - ২৫৬৫"
+  },
+  {
+    "id": "bukhari_51",
+    "bookSlug": "bukhari",
+    "chapterNumber": 51,
+    "titleBn": "দান ও উপঢৌকন (হিবা) (অধ্যায় ৫১)",
+    "titleAr": "Gifts",
+    "hadithRange": "২৫৬৬ - ২৬৩৬"
+  },
+  {
+    "id": "bukhari_52",
+    "bookSlug": "bukhari",
+    "chapterNumber": 52,
+    "titleBn": "সাক্ষ্যদান (অধ্যায় ৫২)",
+    "titleAr": "Witnesses",
+    "hadithRange": "২৬৩৭ - ২৬৮৯"
+  },
+  {
+    "id": "bukhari_53",
+    "bookSlug": "bukhari",
+    "chapterNumber": 53,
+    "titleBn": "সুলহ বা আপস-মীমাংসা (অধ্যায় ৫৩)",
+    "titleAr": "Peacemaking",
+    "hadithRange": "২৬৯০ - ২৭১০"
+  },
+  {
+    "id": "bukhari_54",
+    "bookSlug": "bukhari",
+    "chapterNumber": 54,
+    "titleBn": "শর্তাবলি (অধ্যায় ৫৪)",
+    "titleAr": "Conditions",
+    "hadithRange": "২৭১২ - ২৭৩৭"
+  },
+  {
+    "id": "bukhari_55",
+    "bookSlug": "bukhari",
+    "chapterNumber": 55,
+    "titleBn": "অসিয়ত বা উইল (অধ্যায় ৫৫)",
+    "titleAr": "Wills and Testaments (Wasaayaa)",
+    "hadithRange": "২৭৩৮ - ২৭৮১"
+  },
+  {
+    "id": "bukhari_56",
+    "bookSlug": "bukhari",
+    "chapterNumber": 56,
+    "titleBn": "Fighting for the Cause of Allah (Jihaad) (অধ্যায় ৫৬)",
+    "titleAr": "Fighting for the Cause of Allah (Jihaad)",
+    "hadithRange": "২৭৮২ - ৩০৯০"
+  },
+  {
+    "id": "bukhari_57",
+    "bookSlug": "bukhari",
+    "chapterNumber": 57,
+    "titleBn": "খুমুস বা গণিমতের এক-পঞ্চমাংশ (অধ্যায় ৫৭)",
+    "titleAr": "One-fifth of Booty to the Cause of Allah (Khumus)",
+    "hadithRange": "৩০৯১ - ৩১৫৫"
+  },
+  {
+    "id": "bukhari_58",
+    "bookSlug": "bukhari",
+    "chapterNumber": 58,
+    "titleBn": "জিযিয়া ও সন্ধিচুক্তি (অধ্যায় ৫৮)",
+    "titleAr": "Jizyah and Mawaada'ah",
+    "hadithRange": "৩১৫৭ - ৩১৮৯"
+  },
+  {
+    "id": "bukhari_59",
+    "bookSlug": "bukhari",
+    "chapterNumber": 59,
+    "titleBn": "সৃষ্টির সূচনা (অধ্যায় ৫৯)",
+    "titleAr": "Beginning of Creation",
+    "hadithRange": "৩১৯০ - ৩৩২৫"
+  },
+  {
+    "id": "bukhari_60",
+    "bookSlug": "bukhari",
+    "chapterNumber": 60,
+    "titleBn": "নবী-রাসূলগণের ইতিহাস (অধ্যায় ৬০)",
+    "titleAr": "Prophets",
+    "hadithRange": "৩৩২৬ - ৩৪৮৮"
+  },
+  {
+    "id": "bukhari_61",
+    "bookSlug": "bukhari",
+    "chapterNumber": 61,
+    "titleBn": "নবীজী (সা.) ও সাহাবায়ে কিরামের ফযিলত (অধ্যায় ৬১)",
+    "titleAr": "Virtues and Merits of the Prophet (pbuh) and his Companions",
+    "hadithRange": "৩৪৮৯ - ৩৬৪৮"
+  },
+  {
+    "id": "bukhari_62",
+    "bookSlug": "bukhari",
+    "chapterNumber": 62,
+    "titleBn": "সাহাবায়ে কিরামের মর্যাদা (অধ্যায় ৬২)",
+    "titleAr": "Companions of the Prophet",
+    "hadithRange": "৩৬৪৯ - ৩৭৭৫"
+  },
+  {
+    "id": "bukhari_63",
+    "bookSlug": "bukhari",
+    "chapterNumber": 63,
+    "titleBn": "আনসারদের মর্যাদা (অধ্যায় ৬৩)",
+    "titleAr": "Merits of the Helpers in Madinah (Ansaar)",
+    "hadithRange": "৩৭৭৬ - ৩৯৪৮"
+  },
+  {
+    "id": "bukhari_64",
+    "bookSlug": "bukhari",
+    "chapterNumber": 64,
+    "titleBn": "মাগাযী বা যুদ্ধাভিযান (অধ্যায় ৬৪)",
+    "titleAr": "Military Expeditions led by the Prophet (pbuh) (Al-Maghaazi)",
+    "hadithRange": "৩৯৪৯ - ৪৪৭৩"
+  },
+  {
+    "id": "bukhari_65",
+    "bookSlug": "bukhari",
+    "chapterNumber": 65,
+    "titleBn": "কুরআনের তাফসীর (অধ্যায় ৬৫)",
+    "titleAr": "Prophetic Commentary on the Qur'an (Tafseer of the Prophet (pbuh))",
+    "hadithRange": "৪৪৭৪ - ৪৯৭৭"
+  },
+  {
+    "id": "bukhari_66",
+    "bookSlug": "bukhari",
+    "chapterNumber": 66,
+    "titleBn": "কুরআনের ফযিলত (অধ্যায় ৬৬)",
+    "titleAr": "Virtues of the Qur'an",
+    "hadithRange": "৪৯৭৯ - ৫০৬২"
+  },
+  {
+    "id": "bukhari_67",
+    "bookSlug": "bukhari",
+    "chapterNumber": 67,
+    "titleBn": "বিবাহ ও দাম্পত্য জীবন (অধ্যায় ৬৭)",
+    "titleAr": "Wedlock, Marriage (Nikaah)",
+    "hadithRange": "৫০৬৩ - ৫২৫০"
+  },
+  {
+    "id": "bukhari_68",
+    "bookSlug": "bukhari",
+    "chapterNumber": 68,
+    "titleBn": "তালাক ও বিচ্ছেদ (অধ্যায় ৬৮)",
+    "titleAr": "Divorce",
+    "hadithRange": "৫২৫১ - ৫৩৫০"
+  },
+  {
+    "id": "bukhari_69",
+    "bookSlug": "bukhari",
+    "chapterNumber": 69,
+    "titleBn": "পরিবারের ভরণপোষণ ও খোরপোশ (অধ্যায় ৬৯)",
+    "titleAr": "Supporting the Family",
+    "hadithRange": "৫৩৫১ - ৫৩৭২"
+  },
+  {
+    "id": "bukhari_70",
+    "bookSlug": "bukhari",
+    "chapterNumber": 70,
+    "titleBn": "খাবার ও আহারের আদব (অধ্যায় ৭০)",
+    "titleAr": "Food, Meals",
+    "hadithRange": "৫৩৭৩ - ৫৪৬৬"
+  },
+  {
+    "id": "bukhari_71",
+    "bookSlug": "bukhari",
+    "chapterNumber": 71,
+    "titleBn": "Sacrifice on Occasion of Birth (`Aqiqa) (অধ্যায় ৭১)",
+    "titleAr": "Sacrifice on Occasion of Birth (`Aqiqa)",
+    "hadithRange": "৫৪৬৭ - ৫৪৭৪"
+  },
+  {
+    "id": "bukhari_72",
+    "bookSlug": "bukhari",
+    "chapterNumber": 72,
+    "titleBn": "শিকার ও পশুজবাই (অধ্যায় ৭২)",
+    "titleAr": "Hunting, Slaughtering",
+    "hadithRange": "৫৪৭৫ - ৫৫৪৪"
+  },
+  {
+    "id": "bukhari_73",
+    "bookSlug": "bukhari",
+    "chapterNumber": 73,
+    "titleBn": "কোরবানি ও নহর (অধ্যায় ৭৩)",
+    "titleAr": "Al-Adha Festival Sacrifice (Adaahi)",
+    "hadithRange": "৫৫৪৫ - ৫৫৭৪"
+  },
+  {
+    "id": "bukhari_74",
+    "bookSlug": "bukhari",
+    "chapterNumber": 74,
+    "titleBn": "হালাল ও হারাম পানীয় (অধ্যায় ৭৪)",
+    "titleAr": "Drinks",
+    "hadithRange": "৫৫৭৫ - ৫৬৩৯"
+  },
+  {
+    "id": "bukhari_75",
+    "bookSlug": "bukhari",
+    "chapterNumber": 75,
+    "titleBn": "রোগীর সেবা ও শুশ্রূষা (অধ্যায় ৭৫)",
+    "titleAr": "Patients",
+    "hadithRange": "৫৬৪০ - ৫৬৭৭"
+  },
+  {
+    "id": "bukhari_76",
+    "bookSlug": "bukhari",
+    "chapterNumber": 76,
+    "titleBn": "চিকিৎসা ও রোগ নিরাময় (অধ্যায় ৭৬)",
+    "titleAr": "Medicine",
+    "hadithRange": "৫৬৭৮ - ৫৭৮২"
+  },
+  {
+    "id": "bukhari_77",
+    "bookSlug": "bukhari",
+    "chapterNumber": 77,
+    "titleBn": "পোশাক-পরিচ্ছদ ও সাজসজ্জা (অধ্যায় ৭৭)",
+    "titleAr": "Dress",
+    "hadithRange": "৫৭৮৩ - ৫৯৬৯"
+  },
+  {
+    "id": "bukhari_78",
+    "bookSlug": "bukhari",
+    "chapterNumber": 78,
+    "titleBn": "উত্তম চরিত্র ও শিষ্টাচার (আদব) (অধ্যায় ৭৮)",
+    "titleAr": "Good Manners and Form (Al-Adab)",
+    "hadithRange": "৫৯৭০ - ৬২২৬"
+  },
+  {
+    "id": "bukhari_79",
+    "bookSlug": "bukhari",
+    "chapterNumber": 79,
+    "titleBn": "অনুমতি প্রার্থনা (ইস্তিজান) (অধ্যায় ৭৯)",
+    "titleAr": "Asking Permission",
+    "hadithRange": "৬২২৭ - ৬৩০৩"
+  },
+  {
+    "id": "bukhari_80",
+    "bookSlug": "bukhari",
+    "chapterNumber": 80,
+    "titleBn": "দো'আ ও মুনাজাত (অধ্যায় ৮০)",
+    "titleAr": "Invocations",
+    "hadithRange": "৬৩০৪ - ৬৪১১"
+  },
+  {
+    "id": "bukhari_81",
+    "bookSlug": "bukhari",
+    "chapterNumber": 81,
+    "titleBn": "আত্মশুদ্ধি ও হৃদয়ের কোমলতা (রিকাক্ব) (অধ্যায় ৮১)",
+    "titleAr": "To make the Heart Tender (Ar-Riqaq)",
+    "hadithRange": "৬৪১২ - ৬৫৯৩"
+  },
+  {
+    "id": "bukhari_82",
+    "bookSlug": "bukhari",
+    "chapterNumber": 82,
+    "titleBn": "তকদীর বা ভাগ্যবিশ্বাস (অধ্যায় ৮২)",
+    "titleAr": "Divine Will (Al-Qadar)",
+    "hadithRange": "৬৫৯৪ - ৬৬২০"
+  },
+  {
+    "id": "bukhari_83",
+    "bookSlug": "bukhari",
+    "chapterNumber": 83,
+    "titleBn": "শপথ ও মানত (অধ্যায় ৮৩)",
+    "titleAr": "Oaths and Vows",
+    "hadithRange": "৬৬২১ - ৬৭০৭"
+  },
+  {
+    "id": "bukhari_84",
+    "bookSlug": "bukhari",
+    "chapterNumber": 84,
+    "titleBn": "কাফফারা (অধ্যায় ৮৪)",
+    "titleAr": "Expiation for Unfulfilled Oaths",
+    "hadithRange": "৬৭০৮ - ৬৭২২"
+  },
+  {
+    "id": "bukhari_85",
+    "bookSlug": "bukhari",
+    "chapterNumber": 85,
+    "titleBn": "উত্তরাধিকার আইন (ফারায়েয) (অধ্যায় ৮৫)",
+    "titleAr": "Laws of Inheritance (Al-Faraa'id)",
+    "hadithRange": "৬৭২৩ - ৬৭৭১"
+  },
+  {
+    "id": "bukhari_86",
+    "bookSlug": "bukhari",
+    "chapterNumber": 86,
+    "titleBn": "হুদূদ বা ইসলামি শাস্তিবিধি (অধ্যায় ৮৬)",
+    "titleAr": "Limits and Punishments set by Allah (Hudood)",
+    "hadithRange": "৬৭৭২ - ৬৮৬০"
+  },
+  {
+    "id": "bukhari_87",
+    "bookSlug": "bukhari",
+    "chapterNumber": 87,
+    "titleBn": "দিয়াত বা রক্তের বিনিময় (অধ্যায় ৮৭)",
+    "titleAr": "Blood Money (Ad-Diyat)",
+    "hadithRange": "৬৮৬১ - ৬৯১৭"
+  },
+  {
+    "id": "bukhari_88",
+    "bookSlug": "bukhari",
+    "chapterNumber": 88,
+    "titleBn": "মুরতাদদের বিধান (অধ্যায় ৮৮)",
+    "titleAr": "Apostates",
+    "hadithRange": "৬৯১৮ - ৬৯৩৯"
+  },
+  {
+    "id": "bukhari_89",
+    "bookSlug": "bukhari",
+    "chapterNumber": 89,
+    "titleBn": "বাধ্যকরণ (ইকরাহ) (অধ্যায় ৮৯)",
+    "titleAr": "(Statements made under) Coercion",
+    "hadithRange": "৬৯৪০ - ৬৯৫২"
+  },
+  {
+    "id": "bukhari_90",
+    "bookSlug": "bukhari",
+    "chapterNumber": 90,
+    "titleBn": "হিলা বা কূটকৌশল প্রতিরোধ (অধ্যায় ৯০)",
+    "titleAr": "Tricks",
+    "hadithRange": "৬৯৫৩ - ৬৯৮১"
+  },
+  {
+    "id": "bukhari_91",
+    "bookSlug": "bukhari",
+    "chapterNumber": 91,
+    "titleBn": "স্বপ্নের ব্যাখ্যা (তাবীরুর রুয়া) (অধ্যায় ৯১)",
+    "titleAr": "Interpretation of Dreams",
+    "hadithRange": "৬৯৮২ - ৭০৪৭"
+  },
+  {
+    "id": "bukhari_92",
+    "bookSlug": "bukhari",
+    "chapterNumber": 92,
+    "titleBn": "ফিতনা ও কেয়ামতের আলামত (অধ্যায় ৯২)",
+    "titleAr": "Afflictions and the End of the World",
+    "hadithRange": "৭০৪৮ - ৭১৩৬"
+  },
+  {
+    "id": "bukhari_93",
+    "bookSlug": "bukhari",
+    "chapterNumber": 93,
+    "titleBn": "বিচারকার্য ও বিচারকের রায় (অধ্যায় ৯৩)",
+    "titleAr": "Judgments (Ahkaam)",
+    "hadithRange": "৭১৩৭ - ৭২২৫"
+  },
+  {
+    "id": "bukhari_94",
+    "bookSlug": "bukhari",
+    "chapterNumber": 94,
+    "titleBn": "আকাঙ্ক্ষা ও মনের বাসনা (অধ্যায় ৯৪)",
+    "titleAr": "Wishes",
+    "hadithRange": "৭২২৬ - ৭২৪৫"
+  },
+  {
+    "id": "bukhari_95",
+    "bookSlug": "bukhari",
+    "chapterNumber": 95,
+    "titleBn": "Accepting Information Given by a Truthful Person (অধ্যায় ৯৫)",
+    "titleAr": "Accepting Information Given by a Truthful Person",
+    "hadithRange": "৭২৪৬ - ৭২৬৭"
+  },
+  {
+    "id": "bukhari_96",
+    "bookSlug": "bukhari",
+    "chapterNumber": 96,
+    "titleBn": "কুরআন ও সুন্নাহকে আঁকড়ে ধরা (অধ্যায় ৯৬)",
+    "titleAr": "Holding Fast to the Qur'an and Sunnah",
+    "hadithRange": "৭২৬৮ - ৭৩৭০"
+  },
+  {
+    "id": "bukhari_97",
+    "bookSlug": "bukhari",
+    "chapterNumber": 97,
+    "titleBn": "তাওহীদ বা আল্লাহর একত্ববাদ (অধ্যায় ৯৭)",
+    "titleAr": "Oneness, Uniqueness of Allah (Tawheed)",
+    "hadithRange": "৭৩৭১ - ৭৫৬৩"
+  },
+  {
+    "id": "muslim_1",
+    "bookSlug": "muslim",
+    "chapterNumber": 1,
+    "titleBn": "ঈমান (কিতাবুল ঈমান) (অধ্যায় ১)",
+    "titleAr": "The Book of Faith",
+    "hadithRange": "৯৩ - ৫৩৩"
+  },
+  {
+    "id": "muslim_2",
+    "bookSlug": "muslim",
+    "chapterNumber": 2,
+    "titleBn": "তাহারাত বা পবিত্রতা (অধ্যায় ২)",
+    "titleAr": "The Book of Purification",
+    "hadithRange": "৫৩৪ - ৬৭৮"
+  },
+  {
+    "id": "muslim_3",
+    "bookSlug": "muslim",
+    "chapterNumber": 3,
+    "titleBn": "ঋতুস্রাব বা হায়েয (অধ্যায় ৩)",
+    "titleAr": "The Book of Menstruation",
+    "hadithRange": "৬৭৯ - ৮৩৬"
+  },
+  {
+    "id": "muslim_4",
+    "bookSlug": "muslim",
+    "chapterNumber": 4,
+    "titleBn": "সালাত বা নামায (অধ্যায় ৪)",
+    "titleAr": "The Book of Prayers ",
+    "hadithRange": "৮৩৭ - ১১৬০"
+  },
+  {
+    "id": "muslim_5",
+    "bookSlug": "muslim",
+    "chapterNumber": 5,
+    "titleBn": "মসজিদ ও নামাযের স্থান (অধ্যায় ৫)",
+    "titleAr": "The Book of Mosques and Places of Prayer",
+    "hadithRange": "১১৬১ - ১৫৬৯"
+  },
+  {
+    "id": "muslim_6",
+    "bookSlug": "muslim",
+    "chapterNumber": 6,
+    "titleBn": "মুসাফিরের সালাত (অধ্যায় ৬)",
+    "titleAr": "The Book of Prayer - Travellers",
+    "hadithRange": "১৫৭০ - ১৯৫০"
+  },
+  {
+    "id": "muslim_7",
+    "bookSlug": "muslim",
+    "chapterNumber": 7,
+    "titleBn": "জুমু'আর সালাত (অধ্যায় ৭)",
+    "titleAr": "The Book of Prayer - Friday",
+    "hadithRange": "১৯৫১ - ২০৪৩"
+  },
+  {
+    "id": "muslim_8",
+    "bookSlug": "muslim",
+    "chapterNumber": 8,
+    "titleBn": "দুই ঈদের সালাত (অধ্যায় ৮)",
+    "titleAr": "The Book of Prayer - Two Eids",
+    "hadithRange": "২০৪৪ - ২০৬৯"
+  },
+  {
+    "id": "muslim_9",
+    "bookSlug": "muslim",
+    "chapterNumber": 9,
+    "titleBn": "বৃষ্টির প্রার্থনা (ইসতিসকা) (অধ্যায় ৯)",
+    "titleAr": "The Book of Prayer - Rain",
+    "hadithRange": "২০৭০ - ২০৮৮"
+  },
+  {
+    "id": "muslim_10",
+    "bookSlug": "muslim",
+    "chapterNumber": 10,
+    "titleBn": "গ্রহণের সালাত (অধ্যায় ১০)",
+    "titleAr": "The Book of Prayer - Eclipses",
+    "hadithRange": "২০৮৯ - ২১২২"
+  },
+  {
+    "id": "muslim_11",
+    "bookSlug": "muslim",
+    "chapterNumber": 11,
+    "titleBn": "জানাযার সালাত (অধ্যায় ১১)",
+    "titleAr": "The Book of Prayer - Funerals",
+    "hadithRange": "২১২৩ - ২২৬২"
+  },
+  {
+    "id": "muslim_12",
+    "bookSlug": "muslim",
+    "chapterNumber": 12,
+    "titleBn": "যাকাত (অধ্যায় ১২)",
+    "titleAr": "The Book of Zakat",
+    "hadithRange": "২২৬৩ - ২৪৯৪"
+  },
+  {
+    "id": "muslim_13",
+    "bookSlug": "muslim",
+    "chapterNumber": 13,
+    "titleBn": "সাওম বা রোজা (অধ্যায় ১৩)",
+    "titleAr": "The Book of Fasting ",
+    "hadithRange": "২৪৯৫ - ২৭৭৯"
+  },
+  {
+    "id": "muslim_14",
+    "bookSlug": "muslim",
+    "chapterNumber": 14,
+    "titleBn": "ইতিকাফ ও লাইলাতুল কদর (অধ্যায় ১৪)",
+    "titleAr": "The Book of I'tikaf",
+    "hadithRange": "২৭৮০ - ২৭৯০"
+  },
+  {
+    "id": "muslim_15",
+    "bookSlug": "muslim",
+    "chapterNumber": 15,
+    "titleBn": "হজ্জ ও ওমরাহ (অধ্যায় ১৫)",
+    "titleAr": "The Book of Pilgrimage",
+    "hadithRange": "২৭৯১ - ৩৩৯৭"
+  },
+  {
+    "id": "muslim_16",
+    "bookSlug": "muslim",
+    "chapterNumber": 16,
+    "titleBn": "বিবাহ ও দাম্পত্য জীবন (অধ্যায় ১৬)",
+    "titleAr": "The Book of Marriage",
+    "hadithRange": "৩৮৮ - ৩৫৬৭"
+  },
+  {
+    "id": "muslim_17",
+    "bookSlug": "muslim",
+    "chapterNumber": 17,
+    "titleBn": "The Book of Suckling (অধ্যায় ১৭)",
+    "titleAr": "The Book of Suckling",
+    "hadithRange": "৩৫৬৮ - ৩৬৫১"
+  },
+  {
+    "id": "muslim_18",
+    "bookSlug": "muslim",
+    "chapterNumber": 18,
+    "titleBn": "তালাক ও বিচ্ছেদ (অধ্যায় ১৮)",
+    "titleAr": "The Book of Divorce ",
+    "hadithRange": "৩৬৫২ - ৩৭৪২"
+  },
+  {
+    "id": "muslim_19",
+    "bookSlug": "muslim",
+    "chapterNumber": 19,
+    "titleBn": "The Book of Invoking Curses (অধ্যায় ১৯)",
+    "titleAr": "The Book of Invoking Curses",
+    "hadithRange": "৩৭৪৩ - ৩৭৬৯"
+  },
+  {
+    "id": "muslim_20",
+    "bookSlug": "muslim",
+    "chapterNumber": 20,
+    "titleBn": "The Book of Emancipating Slaves (অধ্যায় ২০)",
+    "titleAr": "The Book of Emancipating Slaves",
+    "hadithRange": "৩৭৭০ - ৩৮০০"
+  },
+  {
+    "id": "muslim_21",
+    "bookSlug": "muslim",
+    "chapterNumber": 21,
+    "titleBn": "লেনদেন ও ক্রয়-বিক্রয় (অধ্যায় ২১)",
+    "titleAr": "The Book of Transactions",
+    "hadithRange": "৩৮০১ - ৩৯৬১"
+  },
+  {
+    "id": "muslim_22",
+    "bookSlug": "muslim",
+    "chapterNumber": 22,
+    "titleBn": "The Book of Musaqah (অধ্যায় ২২)",
+    "titleAr": "The Book of Musaqah",
+    "hadithRange": "৩৯৬২ - ৪১৩৯"
+  },
+  {
+    "id": "muslim_23",
+    "bookSlug": "muslim",
+    "chapterNumber": 23,
+    "titleBn": "The Book of the Rules of Inheritance (অধ্যায় ২৩)",
+    "titleAr": "The Book of the Rules of Inheritance",
+    "hadithRange": "৪১৪০ - ৪১৬২"
+  },
+  {
+    "id": "muslim_24",
+    "bookSlug": "muslim",
+    "chapterNumber": 24,
+    "titleBn": "দান ও উপঢৌকন (হিবা) (অধ্যায় ২৪)",
+    "titleAr": "The Book of Gifts",
+    "hadithRange": "৪১৬৩ - ৪২০৩"
+  },
+  {
+    "id": "muslim_25",
+    "bookSlug": "muslim",
+    "chapterNumber": 25,
+    "titleBn": "The Book of Wills (অধ্যায় ২৫)",
+    "titleAr": "The Book of Wills",
+    "hadithRange": "৪২০৪ - ৪২৩৪"
+  },
+  {
+    "id": "muslim_26",
+    "bookSlug": "muslim",
+    "chapterNumber": 26,
+    "titleBn": "The Book of Vows (অধ্যায় ২৬)",
+    "titleAr": "The Book of Vows",
+    "hadithRange": "৪২৩৫ - ৪২৫৩"
+  },
+  {
+    "id": "muslim_27",
+    "bookSlug": "muslim",
+    "chapterNumber": 27,
+    "titleBn": "The Book of Oaths (অধ্যায় ২৭)",
+    "titleAr": "The Book of Oaths",
+    "hadithRange": "৪২৫৪ - ৪৩৪১"
+  },
+  {
+    "id": "muslim_28",
+    "bookSlug": "muslim",
+    "chapterNumber": 28,
+    "titleBn": "The Book of Oaths, Muharibin, Qasas (Retaliation), and Diyat (Blood Money) (অধ্যায় ২৮)",
+    "titleAr": "The Book of Oaths, Muharibin, Qasas (Retaliation), and Diyat (Blood Money)",
+    "hadithRange": "৪৩৪২ - ৪৩৯৭"
+  },
+  {
+    "id": "muslim_29",
+    "bookSlug": "muslim",
+    "chapterNumber": 29,
+    "titleBn": "The Book of Legal Punishments (অধ্যায় ২৯)",
+    "titleAr": "The Book of Legal Punishments",
+    "hadithRange": "৪৩৯৮ - ৪৪৬৯"
+  },
+  {
+    "id": "muslim_30",
+    "bookSlug": "muslim",
+    "chapterNumber": 30,
+    "titleBn": "The Book of Judicial Decisions (অধ্যায় ৩০)",
+    "titleAr": "The Book of Judicial Decisions",
+    "hadithRange": "৪৪৭০ - ৪৪৯৭"
+  },
+  {
+    "id": "muslim_31",
+    "bookSlug": "muslim",
+    "chapterNumber": 31,
+    "titleBn": "The Book of Lost Property (অধ্যায় ৩১)",
+    "titleAr": "The Book of Lost Property",
+    "hadithRange": "৪৪৯৮ - ৪৫১৮"
+  },
+  {
+    "id": "muslim_32",
+    "bookSlug": "muslim",
+    "chapterNumber": 32,
+    "titleBn": "জিহাদ ও আল্লাহর পথে প্রচেষ্টা (অধ্যায় ৩২)",
+    "titleAr": "The Book of Jihad and Expeditions",
+    "hadithRange": "৪৫১৯ - ৪৭০০"
+  },
+  {
+    "id": "muslim_33",
+    "bookSlug": "muslim",
+    "chapterNumber": 33,
+    "titleBn": "The Book on Government (অধ্যায় ৩৩)",
+    "titleAr": "The Book on Government",
+    "hadithRange": "৪৭০১ - ৪৯৬৭"
+  },
+  {
+    "id": "muslim_34",
+    "bookSlug": "muslim",
+    "chapterNumber": 34,
+    "titleBn": "The Book of Hunting, Slaughter, and what may be Eaten (অধ্যায় ৩৪)",
+    "titleAr": "The Book of Hunting, Slaughter, and what may be Eaten",
+    "hadithRange": "৪৯৭২ - ৫০৬৩"
+  },
+  {
+    "id": "muslim_35",
+    "bookSlug": "muslim",
+    "chapterNumber": 35,
+    "titleBn": "The Book of Sacrifices (অধ্যায় ৩৫)",
+    "titleAr": "The Book of Sacrifices",
+    "hadithRange": "৫০৬৪ - ৫১২৬"
+  },
+  {
+    "id": "muslim_36",
+    "bookSlug": "muslim",
+    "chapterNumber": 36,
+    "titleBn": "পানীয় ও পানাহারের বিধান (অধ্যায় ৩৬)",
+    "titleAr": "The Book of Drinks",
+    "hadithRange": "৫১১৪ - ৫৩৮৩"
+  },
+  {
+    "id": "muslim_37",
+    "bookSlug": "muslim",
+    "chapterNumber": 37,
+    "titleBn": "The Book of Clothes and Adornment (অধ্যায় ৩৭)",
+    "titleAr": "The Book of Clothes and Adornment",
+    "hadithRange": "৫৩৮৫ - ৫৫৮৫"
+  },
+  {
+    "id": "muslim_38",
+    "bookSlug": "muslim",
+    "chapterNumber": 38,
+    "titleBn": "The Book of Manners and Etiquette (অধ্যায় ৩৮)",
+    "titleAr": "The Book of Manners and Etiquette",
+    "hadithRange": "৫৫৮৬ - ৫৬৪৫"
+  },
+  {
+    "id": "muslim_39",
+    "bookSlug": "muslim",
+    "chapterNumber": 39,
+    "titleBn": "The Book of Greetings (অধ্যায় ৩৯)",
+    "titleAr": "The Book of Greetings",
+    "hadithRange": "৫৬৪৬ - ৫৮৬১"
+  },
+  {
+    "id": "muslim_40",
+    "bookSlug": "muslim",
+    "chapterNumber": 40,
+    "titleBn": "The Book Concerning the Use of Correct Words (অধ্যায় ৪০)",
+    "titleAr": "The Book Concerning the Use of Correct Words",
+    "hadithRange": "৫৮৬২ - ৫৮৮৪"
+  },
+  {
+    "id": "muslim_41",
+    "bookSlug": "muslim",
+    "chapterNumber": 41,
+    "titleBn": "The Book of Poetry (অধ্যায় ৪১)",
+    "titleAr": "The Book of Poetry",
+    "hadithRange": "৫৮৮৭ - ৫৮৯৬"
+  },
+  {
+    "id": "muslim_42",
+    "bookSlug": "muslim",
+    "chapterNumber": 42,
+    "titleBn": "স্বপ্নের তাৎপর্য ও ব্যাখ্যা (অধ্যায় ৪২)",
+    "titleAr": "The Book of Dreams",
+    "hadithRange": "৫৮৯৭ - ৫৯৩৭"
+  },
+  {
+    "id": "muslim_43",
+    "bookSlug": "muslim",
+    "chapterNumber": 43,
+    "titleBn": "The Book of Virtues (অধ্যায় ৪৩)",
+    "titleAr": "The Book of Virtues",
+    "hadithRange": "৩৮৪ - ৬১৬৮"
+  },
+  {
+    "id": "muslim_44",
+    "bookSlug": "muslim",
+    "chapterNumber": 44,
+    "titleBn": "The Book of the Merits of the Companions (অধ্যায় ৪৪)",
+    "titleAr": "The Book of the Merits of the Companions",
+    "hadithRange": "৬১৬৯ - ৬৪৯৯"
+  },
+  {
+    "id": "muslim_45",
+    "bookSlug": "muslim",
+    "chapterNumber": 45,
+    "titleBn": "The Book of Virtue, Enjoining Good Manners, and Joining of the Ties of Kinship (অধ্যায় ৪৫)",
+    "titleAr": "The Book of Virtue, Enjoining Good Manners, and Joining of the Ties of Kinship",
+    "hadithRange": "৬৫০০ - ৬৭২২"
+  },
+  {
+    "id": "muslim_46",
+    "bookSlug": "muslim",
+    "chapterNumber": 46,
+    "titleBn": "তকদীর বা ভাগ্যবিশ্বাস (অধ্যায় ৪৬)",
+    "titleAr": "The Book of Destiny",
+    "hadithRange": "৬৭২৩ - ৬৭৭৪"
+  },
+  {
+    "id": "muslim_47",
+    "bookSlug": "muslim",
+    "chapterNumber": 47,
+    "titleBn": "ইলম বা জ্ঞান (অধ্যায় ৪৭)",
+    "titleAr": "The Book of Knowledge",
+    "hadithRange": "৬৭৭৫ - ৬৮০৪"
+  },
+  {
+    "id": "muslim_48",
+    "bookSlug": "muslim",
+    "chapterNumber": 48,
+    "titleBn": "The Book Pertaining to the Remembrance of Allah, Supplication, Repentance and Seeking Forgiveness (অধ্যায় ৪৮)",
+    "titleAr": "The Book Pertaining to the Remembrance of Allah, Supplication, Repentance and Seeking Forgiveness ",
+    "hadithRange": "৬৮০৫ - ৬৯৩৬"
+  },
+  {
+    "id": "muslim_49",
+    "bookSlug": "muslim",
+    "chapterNumber": 49,
+    "titleBn": "আত্মশুদ্ধি ও আখিরাতের স্মরণ (অধ্যায় ৪৯)",
+    "titleAr": "The Book of Heart-Melting Traditions",
+    "hadithRange": "৬৯৩৭ - ৬৯৫১"
+  },
+  {
+    "id": "muslim_50",
+    "bookSlug": "muslim",
+    "chapterNumber": 50,
+    "titleBn": "The Book of Repentance (অধ্যায় ৫০)",
+    "titleAr": "The Book of Repentance",
+    "hadithRange": "৬৯৫২ - ৭০২৩"
+  },
+  {
+    "id": "muslim_51",
+    "bookSlug": "muslim",
+    "chapterNumber": 51,
+    "titleBn": "Characteristics of The Hypocrites And Rulings Concerning Them (অধ্যায় ৫১)",
+    "titleAr": "Characteristics of The Hypocrites And Rulings Concerning Them",
+    "hadithRange": "৭০২৪ - ৭০৪৪"
+  },
+  {
+    "id": "muslim_52",
+    "bookSlug": "muslim",
+    "chapterNumber": 52,
+    "titleBn": "Characteristics of the Day of Judgment, Paradise, and Hell (অধ্যায় ৫২)",
+    "titleAr": "Characteristics of the Day of Judgment, Paradise, and Hell",
+    "hadithRange": "৭০৪৫ - ৭১২৯"
+  },
+  {
+    "id": "muslim_53",
+    "bookSlug": "muslim",
+    "chapterNumber": 53,
+    "titleBn": "The Book of Paradise, its Description, its Bounties and its Inhabitants (অধ্যায় ৫৩)",
+    "titleAr": "The Book of Paradise, its Description, its Bounties and its Inhabitants",
+    "hadithRange": "৭১৩০ - ৭২৩৪"
+  },
+  {
+    "id": "muslim_54",
+    "bookSlug": "muslim",
+    "chapterNumber": 54,
+    "titleBn": "The Book of Tribulations and Portents of the Last Hour (অধ্যায় ৫৪)",
+    "titleAr": "The Book of Tribulations and Portents of the Last Hour",
+    "hadithRange": "৭২৩৫ - ৭৪১৬"
+  },
+  {
+    "id": "muslim_55",
+    "bookSlug": "muslim",
+    "chapterNumber": 55,
+    "titleBn": "The Book of Zuhd and Softening of Hearts (অধ্যায় ৫৫)",
+    "titleAr": "The Book of Zuhd and Softening of Hearts ",
+    "hadithRange": "৭৪১৭ - ৭৫২২"
+  },
+  {
+    "id": "muslim_56",
+    "bookSlug": "muslim",
+    "chapterNumber": 56,
+    "titleBn": "The Book of Commentary on the Qur'an (অধ্যায় ৫৬)",
+    "titleAr": "The Book of Commentary on the Qur'an",
+    "hadithRange": "৭৫২৩ - ৭৫৬৩"
+  },
+  {
+    "id": "tirmidhi_1",
+    "bookSlug": "tirmidhi",
+    "chapterNumber": 1,
+    "titleBn": "তাহারাত বা পবিত্রতা (অধ্যায় ১)",
+    "titleAr": "The Book on Purification",
+    "hadithRange": "১ - ১৪৮"
+  },
+  {
+    "id": "tirmidhi_2",
+    "bookSlug": "tirmidhi",
+    "chapterNumber": 2,
+    "titleBn": "সালাত বা নামায (অধ্যায় ২)",
+    "titleAr": "The Book on Salat (Prayer)",
+    "hadithRange": "১৪৯ - ৪৫১"
+  },
+  {
+    "id": "tirmidhi_3",
+    "bookSlug": "tirmidhi",
+    "chapterNumber": 3,
+    "titleBn": "বিতর সালাত (অধ্যায় ৩)",
+    "titleAr": "The Book on Al-Witr",
+    "hadithRange": "৪৫২ - ৪৮৭"
+  },
+  {
+    "id": "tirmidhi_4",
+    "bookSlug": "tirmidhi",
+    "chapterNumber": 4,
+    "titleBn": "জুমু'আ ও তার ফযিলত (অধ্যায় ৪)",
+    "titleAr": "The Book on the Day of Friday",
+    "hadithRange": "৪৮৮ - ৫২৯"
+  },
+  {
+    "id": "tirmidhi_5",
+    "bookSlug": "tirmidhi",
+    "chapterNumber": 5,
+    "titleBn": "দুই ঈদের সালাত (অধ্যায় ৫)",
+    "titleAr": "The Book on the Two Eids",
+    "hadithRange": "৫৩০ - ৫৪৩"
+  },
+  {
+    "id": "tirmidhi_6",
+    "bookSlug": "tirmidhi",
+    "chapterNumber": 6,
+    "titleBn": "মুসাফিরের সালাত ও বিধান (অধ্যায় ৬)",
+    "titleAr": "The Book on Traveling",
+    "hadithRange": "৫৪৪ - ৬১৬"
+  },
+  {
+    "id": "tirmidhi_7",
+    "bookSlug": "tirmidhi",
+    "chapterNumber": 7,
+    "titleBn": "যাকাত (অধ্যায় ৭)",
+    "titleAr": "The Book on Zakat",
+    "hadithRange": "৬১৭ - ৬৮১"
+  },
+  {
+    "id": "tirmidhi_8",
+    "bookSlug": "tirmidhi",
+    "chapterNumber": 8,
+    "titleBn": "সাওম বা রোজা (অধ্যায় ৮)",
+    "titleAr": "The Book on Fasting",
+    "hadithRange": "৬৮২ - ৮০৮"
+  },
+  {
+    "id": "tirmidhi_9",
+    "bookSlug": "tirmidhi",
+    "chapterNumber": 9,
+    "titleBn": "হজ্জ ও ওমরাহ (অধ্যায় ৯)",
+    "titleAr": "The Book on Hajj",
+    "hadithRange": "৮০৯ - ৯৬৪"
+  },
+  {
+    "id": "tirmidhi_10",
+    "bookSlug": "tirmidhi",
+    "chapterNumber": 10,
+    "titleBn": "The Book on Jana''iz (Funerals) (অধ্যায় ১০)",
+    "titleAr": "The Book on Jana''iz (Funerals)",
+    "hadithRange": "৯৬৫ - ১০৭৯"
+  },
+  {
+    "id": "tirmidhi_11",
+    "bookSlug": "tirmidhi",
+    "chapterNumber": 11,
+    "titleBn": "The Book on Marriage (অধ্যায় ১১)",
+    "titleAr": "The Book on Marriage",
+    "hadithRange": "১০৮০ - ১১৪৫"
+  },
+  {
+    "id": "tirmidhi_12",
+    "bookSlug": "tirmidhi",
+    "chapterNumber": 12,
+    "titleBn": "The Book on Suckling (অধ্যায় ১২)",
+    "titleAr": "The Book on Suckling",
+    "hadithRange": "১১৪৬ - ১১৭৪"
+  },
+  {
+    "id": "tirmidhi_13",
+    "bookSlug": "tirmidhi",
+    "chapterNumber": 13,
+    "titleBn": "তালাক ও বিচ্ছেদ (অধ্যায় ১৩)",
+    "titleAr": "The Book on Divorce and Li'an",
+    "hadithRange": "১১৭৫ - ১২০৪"
+  },
+  {
+    "id": "tirmidhi_14",
+    "bookSlug": "tirmidhi",
+    "chapterNumber": 14,
+    "titleBn": "The Book on Business (অধ্যায় ১৪)",
+    "titleAr": "The Book on Business",
+    "hadithRange": "১২০৫ - ১৩২১"
+  },
+  {
+    "id": "tirmidhi_15",
+    "bookSlug": "tirmidhi",
+    "chapterNumber": 15,
+    "titleBn": "The Chapters On Judgements From The Messenger of Allah (অধ্যায় ১৫)",
+    "titleAr": "The Chapters On Judgements From The Messenger of Allah",
+    "hadithRange": "১৩২২ - ১৩৮৫"
+  },
+  {
+    "id": "tirmidhi_16",
+    "bookSlug": "tirmidhi",
+    "chapterNumber": 16,
+    "titleBn": "The Book on Blood Money (অধ্যায় ১৬)",
+    "titleAr": "The Book on Blood Money",
+    "hadithRange": "১৩৮৬ - ১৪২২"
+  },
+  {
+    "id": "tirmidhi_17",
+    "bookSlug": "tirmidhi",
+    "chapterNumber": 17,
+    "titleBn": "The Book on Legal Punishments (Al-Hudud) (অধ্যায় ১৭)",
+    "titleAr": "The Book on Legal Punishments (Al-Hudud)",
+    "hadithRange": "১৪২৩ - ১৪৬৩"
+  },
+  {
+    "id": "tirmidhi_18",
+    "bookSlug": "tirmidhi",
+    "chapterNumber": 18,
+    "titleBn": "The Book on Hunting (অধ্যায় ১৮)",
+    "titleAr": "The Book on Hunting",
+    "hadithRange": "১৪৬৪ - ১৪৯২"
+  },
+  {
+    "id": "tirmidhi_19",
+    "bookSlug": "tirmidhi",
+    "chapterNumber": 19,
+    "titleBn": "The Book on Sacrifices (অধ্যায় ১৯)",
+    "titleAr": "The Book on Sacrifices",
+    "hadithRange": "১৪৯৩ - ১৫২৩"
+  },
+  {
+    "id": "tirmidhi_20",
+    "bookSlug": "tirmidhi",
+    "chapterNumber": 20,
+    "titleBn": "The Book on Vows and Oaths (অধ্যায় ২০)",
+    "titleAr": "The Book on Vows and Oaths",
+    "hadithRange": "১৫২৪ - ১৫৪৭"
+  },
+  {
+    "id": "tirmidhi_21",
+    "bookSlug": "tirmidhi",
+    "chapterNumber": 21,
+    "titleBn": "The Book on Military Expeditions (অধ্যায় ২১)",
+    "titleAr": "The Book on Military Expeditions",
+    "hadithRange": "১৫৪৮ - ১৬১৮"
+  },
+  {
+    "id": "tirmidhi_22",
+    "bookSlug": "tirmidhi",
+    "chapterNumber": 22,
+    "titleBn": "The Book on Virtues of Jihad (অধ্যায় ২২)",
+    "titleAr": "The Book on Virtues of Jihad",
+    "hadithRange": "১৬১৯ - ১৬৬৯"
+  },
+  {
+    "id": "tirmidhi_23",
+    "bookSlug": "tirmidhi",
+    "chapterNumber": 23,
+    "titleBn": "The Book on Jihad (অধ্যায় ২৩)",
+    "titleAr": "The Book on Jihad",
+    "hadithRange": "১৬৭০ - ১৭১৯"
+  },
+  {
+    "id": "tirmidhi_24",
+    "bookSlug": "tirmidhi",
+    "chapterNumber": 24,
+    "titleBn": "The Book on Clothing (অধ্যায় ২৪)",
+    "titleAr": "The Book on Clothing",
+    "hadithRange": "১৭২০ - ১৭৮৭"
+  },
+  {
+    "id": "tirmidhi_25",
+    "bookSlug": "tirmidhi",
+    "chapterNumber": 25,
+    "titleBn": "The Book on Food (অধ্যায় ২৫)",
+    "titleAr": "The Book on Food",
+    "hadithRange": "১৭৮৮ - ১৮৬০"
+  },
+  {
+    "id": "tirmidhi_26",
+    "bookSlug": "tirmidhi",
+    "chapterNumber": 26,
+    "titleBn": "হালাল ও হারাম পানীয় (অধ্যায় ২৬)",
+    "titleAr": "The Book on Drinks",
+    "hadithRange": "১৮৬১ - ১৮৯৬"
+  },
+  {
+    "id": "tirmidhi_27",
+    "bookSlug": "tirmidhi",
+    "chapterNumber": 27,
+    "titleBn": "Chapters on Righteousness And Maintaining Good Relations With Relatives (অধ্যায় ২৭)",
+    "titleAr": "Chapters on Righteousness And Maintaining Good Relations With Relatives",
+    "hadithRange": "১৮৯৭ - ২০৩৫"
+  },
+  {
+    "id": "tirmidhi_28",
+    "bookSlug": "tirmidhi",
+    "chapterNumber": 28,
+    "titleBn": "চিকিৎসা ও রোগ নিরাময় (অধ্যায় ২৮)",
+    "titleAr": "Chapters on Medicine",
+    "hadithRange": "২০৩৬ - ২০৮৯"
+  },
+  {
+    "id": "tirmidhi_29",
+    "bookSlug": "tirmidhi",
+    "chapterNumber": 29,
+    "titleBn": "Chapters On Inheritance (অধ্যায় ২৯)",
+    "titleAr": "Chapters On Inheritance",
+    "hadithRange": "২০৯০ - ২১১৫"
+  },
+  {
+    "id": "tirmidhi_30",
+    "bookSlug": "tirmidhi",
+    "chapterNumber": 30,
+    "titleBn": "Chapters On Wasaya (Wills and Testament) (অধ্যায় ৩০)",
+    "titleAr": "Chapters On Wasaya (Wills and Testament)",
+    "hadithRange": "২১১৬ - ২১২৪"
+  },
+  {
+    "id": "tirmidhi_31",
+    "bookSlug": "tirmidhi",
+    "chapterNumber": 31,
+    "titleBn": "দান ও উপঢৌকন (হিবা) (অধ্যায় ৩১)",
+    "titleAr": "Chapters On Wala' And Gifts",
+    "hadithRange": "২১২৫ - ২১৩২"
+  },
+  {
+    "id": "tirmidhi_32",
+    "bookSlug": "tirmidhi",
+    "chapterNumber": 32,
+    "titleBn": "Chapters On Al-Qadar (অধ্যায় ৩২)",
+    "titleAr": "Chapters On Al-Qadar",
+    "hadithRange": "২১৩৩ - ২২৯৮"
+  },
+  {
+    "id": "tirmidhi_33",
+    "bookSlug": "tirmidhi",
+    "chapterNumber": 33,
+    "titleBn": "Chapters On Al-Fitan (অধ্যায় ৩৩)",
+    "titleAr": "Chapters On Al-Fitan",
+    "hadithRange": "২১৫৮ - ২২৬৯"
+  },
+  {
+    "id": "tirmidhi_34",
+    "bookSlug": "tirmidhi",
+    "chapterNumber": 34,
+    "titleBn": "স্বপ্নের তাৎপর্য ও ব্যাখ্যা (অধ্যায় ৩৪)",
+    "titleAr": "Chapters On Dreams",
+    "hadithRange": "২২৭০ - ২২৯৪"
+  },
+  {
+    "id": "tirmidhi_35",
+    "bookSlug": "tirmidhi",
+    "chapterNumber": 35,
+    "titleBn": "সাক্ষ্যদান (অধ্যায় ৩৫)",
+    "titleAr": "Chapters On Witnesses",
+    "hadithRange": "২২৯৫ - ২৩০৩"
+  },
+  {
+    "id": "tirmidhi_36",
+    "bookSlug": "tirmidhi",
+    "chapterNumber": 36,
+    "titleBn": "Chapters On Zuhd (অধ্যায় ৩৬)",
+    "titleAr": "Chapters On Zuhd",
+    "hadithRange": "২৩০৪ - ২৪১৪"
+  },
+  {
+    "id": "tirmidhi_37",
+    "bookSlug": "tirmidhi",
+    "chapterNumber": 37,
+    "titleBn": "Chapters on the description of the Day of Judgement, Ar-Riqaq, and Al-Wara' (অধ্যায় ৩৭)",
+    "titleAr": "Chapters on the description of the Day of Judgement, Ar-Riqaq, and Al-Wara'",
+    "hadithRange": "২৪১৫ - ২৫২২"
+  },
+  {
+    "id": "tirmidhi_38",
+    "bookSlug": "tirmidhi",
+    "chapterNumber": 38,
+    "titleBn": "Chapters on the description of Paradise (অধ্যায় ৩৮)",
+    "titleAr": "Chapters on the description of Paradise",
+    "hadithRange": "২৫২৩ - ২৭৩৫"
+  },
+  {
+    "id": "tirmidhi_39",
+    "bookSlug": "tirmidhi",
+    "chapterNumber": 39,
+    "titleBn": "The Book on the Description of Hellfire (অধ্যায় ৩৯)",
+    "titleAr": "The Book on the Description of Hellfire",
+    "hadithRange": "২৫৭৩ - ২৭৯৫"
+  },
+  {
+    "id": "tirmidhi_40",
+    "bookSlug": "tirmidhi",
+    "chapterNumber": 40,
+    "titleBn": "ঈমান ও আকীদা (অধ্যায় ৪০)",
+    "titleAr": "The Book on Faith",
+    "hadithRange": "২৬০৬ - ২৬৪৪"
+  },
+  {
+    "id": "tirmidhi_41",
+    "bookSlug": "tirmidhi",
+    "chapterNumber": 41,
+    "titleBn": "ইলম বা জ্ঞান (অধ্যায় ৪১)",
+    "titleAr": "Chapters on Knowledge",
+    "hadithRange": "২৬৪৫ - ২৬৮৭"
+  },
+  {
+    "id": "tirmidhi_42",
+    "bookSlug": "tirmidhi",
+    "chapterNumber": 42,
+    "titleBn": "Chapters on Seeking Permission (অধ্যায় ৪২)",
+    "titleAr": "Chapters on Seeking Permission",
+    "hadithRange": "২৬৮৮ - ২৭৩৪"
+  },
+  {
+    "id": "tirmidhi_43",
+    "bookSlug": "tirmidhi",
+    "chapterNumber": 43,
+    "titleBn": "Chapters on Manners (অধ্যায় ৪৩)",
+    "titleAr": "Chapters on Manners",
+    "hadithRange": "২৭৩৬ - ২৮৫৮"
+  },
+  {
+    "id": "tirmidhi_44",
+    "bookSlug": "tirmidhi",
+    "chapterNumber": 44,
+    "titleBn": "Chapters on Parables (অধ্যায় ৪৪)",
+    "titleAr": "Chapters on Parables",
+    "hadithRange": "২৮৫৯ - ২৮৭৪"
+  },
+  {
+    "id": "tirmidhi_45",
+    "bookSlug": "tirmidhi",
+    "chapterNumber": 45,
+    "titleBn": "কুরআনের ফযিলত (অধ্যায় ৪৫)",
+    "titleAr": "Chapters on The Virtues of the Qur'an",
+    "hadithRange": "২৮৭৫ - ২৯২৬"
+  },
+  {
+    "id": "tirmidhi_46",
+    "bookSlug": "tirmidhi",
+    "chapterNumber": 46,
+    "titleBn": "Chapters on Recitation (অধ্যায় ৪৬)",
+    "titleAr": "Chapters on Recitation",
+    "hadithRange": "২৯২৭ - ২৯৪৯"
+  },
+  {
+    "id": "tirmidhi_47",
+    "bookSlug": "tirmidhi",
+    "chapterNumber": 47,
+    "titleBn": "Chapters on Tafsir (অধ্যায় ৪৭)",
+    "titleAr": "Chapters on Tafsir",
+    "hadithRange": "২৯৫০ - ৩৭২৩"
+  },
+  {
+    "id": "tirmidhi_48",
+    "bookSlug": "tirmidhi",
+    "chapterNumber": 48,
+    "titleBn": "Chapters on Supplication (অধ্যায় ৪৮)",
+    "titleAr": "Chapters on Supplication",
+    "hadithRange": "৩৩৭০ - ৩৬০৪.১"
+  },
+  {
+    "id": "tirmidhi_49",
+    "bookSlug": "tirmidhi",
+    "chapterNumber": 49,
+    "titleBn": "Chapters on Virtues (অধ্যায় ৪৯)",
+    "titleAr": "Chapters on Virtues",
+    "hadithRange": "৩৬০৫ - ৩৯৫৬"
+  },
+  {
+    "id": "abu-dawud_1",
+    "bookSlug": "abu-dawud",
+    "chapterNumber": 1,
+    "titleBn": "তাহারাত বা পবিত্রতা (অধ্যায় ১)",
+    "titleAr": "Purification (Kitab Al-Taharah)",
+    "hadithRange": "১ - ৩৯০"
+  },
+  {
+    "id": "abu-dawud_2",
+    "bookSlug": "abu-dawud",
+    "chapterNumber": 2,
+    "titleBn": "সালাত বা নামায (অধ্যায় ২)",
+    "titleAr": "Prayer (Kitab Al-Salat)",
+    "hadithRange": "৩৯১ - ১১৬০"
+  },
+  {
+    "id": "abu-dawud_3",
+    "bookSlug": "abu-dawud",
+    "chapterNumber": 3,
+    "titleBn": "বৃষ্টির সালাত (ইসতিসকা) (অধ্যায় ৩)",
+    "titleAr": "The Book Of The Prayer For Rain (Kitab al-Istisqa')",
+    "hadithRange": "১১৬১ - ১১৯৭"
+  },
+  {
+    "id": "abu-dawud_4",
+    "bookSlug": "abu-dawud",
+    "chapterNumber": 4,
+    "titleBn": "মুসাফিরের সালাতের নিয়ম (অধ্যায় ৪)",
+    "titleAr": "Prayer (Kitab Al-Salat): Detailed Rules of Law about the Prayer during Journey",
+    "hadithRange": "১১৯৮ - ১২৪৯"
+  },
+  {
+    "id": "abu-dawud_5",
+    "bookSlug": "abu-dawud",
+    "chapterNumber": 5,
+    "titleBn": "নফল ও সুন্নাত সালাত (অধ্যায় ৫)",
+    "titleAr": "Prayer (Kitab Al-Salat): Voluntary Prayers",
+    "hadithRange": "১২৫০ - ১৩৭০"
+  },
+  {
+    "id": "abu-dawud_6",
+    "bookSlug": "abu-dawud",
+    "chapterNumber": 6,
+    "titleBn": "রমজানের সালাত ও কিয়াম (অধ্যায় ৬)",
+    "titleAr": "Prayer (Kitab Al-Salat): Detailed Injunctions about Ramadan",
+    "hadithRange": "১৩৭১ - ১৪০০"
+  },
+  {
+    "id": "abu-dawud_7",
+    "bookSlug": "abu-dawud",
+    "chapterNumber": 7,
+    "titleBn": "কুরআনের সিজদাহ (অধ্যায় ৭)",
+    "titleAr": "Prayer (Kitab Al-Salat): Prostration while reciting the Qur'an",
+    "hadithRange": "১৪০১ - ১৪১৫"
+  },
+  {
+    "id": "abu-dawud_8",
+    "bookSlug": "abu-dawud",
+    "chapterNumber": 8,
+    "titleBn": "বিতর সালাতের বিধান (অধ্যায় ৮)",
+    "titleAr": "Prayer (Kitab Al-Salat): Detailed Injunctions about Witr",
+    "hadithRange": "১৪১৬ - ১৫৫৫"
+  },
+  {
+    "id": "abu-dawud_9",
+    "bookSlug": "abu-dawud",
+    "chapterNumber": 9,
+    "titleBn": "যাকাত ও সদকা (অধ্যায় ৯)",
+    "titleAr": "Zakat (Kitab Al-Zakat)",
+    "hadithRange": "১৫৫৬ - ১৭০০"
+  },
+  {
+    "id": "abu-dawud_10",
+    "bookSlug": "abu-dawud",
+    "chapterNumber": 10,
+    "titleBn": "The Book of Lost and Found Items (অধ্যায় ১০)",
+    "titleAr": "The Book of Lost and Found Items",
+    "hadithRange": "১৭০১ - ১৭২০"
+  },
+  {
+    "id": "abu-dawud_11",
+    "bookSlug": "abu-dawud",
+    "chapterNumber": 11,
+    "titleBn": "The Rites of Hajj (Kitab Al-Manasik Wa'l-Hajj) (অধ্যায় ১১)",
+    "titleAr": "The Rites of Hajj (Kitab Al-Manasik Wa'l-Hajj)",
+    "hadithRange": "১৭২১ - ২০৪৫"
+  },
+  {
+    "id": "abu-dawud_12",
+    "bookSlug": "abu-dawud",
+    "chapterNumber": 12,
+    "titleBn": "বিবাহ ও দাম্পত্য জীবন (অধ্যায় ১২)",
+    "titleAr": "Marriage (Kitab Al-Nikah)",
+    "hadithRange": "২০৪৬ - ২১৭৪"
+  },
+  {
+    "id": "abu-dawud_13",
+    "bookSlug": "abu-dawud",
+    "chapterNumber": 13,
+    "titleBn": "তালাক ও বিচ্ছেদ (অধ্যায় ১৩)",
+    "titleAr": "Divorce (Kitab Al-Talaq)",
+    "hadithRange": "২১৭৫ - ২৩১২"
+  },
+  {
+    "id": "abu-dawud_14",
+    "bookSlug": "abu-dawud",
+    "chapterNumber": 14,
+    "titleBn": "সাওম বা রোজা (অধ্যায় ১৪)",
+    "titleAr": "Fasting (Kitab Al-Siyam)",
+    "hadithRange": "২৩১৩ - ২৪৭৬"
+  },
+  {
+    "id": "abu-dawud_15",
+    "bookSlug": "abu-dawud",
+    "chapterNumber": 15,
+    "titleBn": "জিহাদ ও শাহাদাত (অধ্যায় ১৫)",
+    "titleAr": "Jihad (Kitab Al-Jihad)",
+    "hadithRange": "২৪৭৭ - ২৭৮৭"
+  },
+  {
+    "id": "abu-dawud_16",
+    "bookSlug": "abu-dawud",
+    "chapterNumber": 16,
+    "titleBn": "Sacrifice (Kitab Al-Dahaya) (অধ্যায় ১৬)",
+    "titleAr": "Sacrifice (Kitab Al-Dahaya)",
+    "hadithRange": "২৭৮৮ - ২৮৪৩"
+  },
+  {
+    "id": "abu-dawud_17",
+    "bookSlug": "abu-dawud",
+    "chapterNumber": 17,
+    "titleBn": "Game (Kitab Al-Said) (অধ্যায় ১৭)",
+    "titleAr": "Game (Kitab Al-Said)",
+    "hadithRange": "২৮৪৪ - ২৮৬১"
+  },
+  {
+    "id": "abu-dawud_18",
+    "bookSlug": "abu-dawud",
+    "chapterNumber": 18,
+    "titleBn": "অসিয়ত বা উইল (অধ্যায় ১৮)",
+    "titleAr": "Wills (Kitab Al-Wasaya)",
+    "hadithRange": "২৮৬২ - ২৮৮৪"
+  },
+  {
+    "id": "abu-dawud_19",
+    "bookSlug": "abu-dawud",
+    "chapterNumber": 19,
+    "titleBn": "উত্তরাধিকার বণ্টন (অধ্যায় ১৯)",
+    "titleAr": "Shares of Inheritance (Kitab Al-Fara'id)",
+    "hadithRange": "২৮৮৫ - ২৯২৭"
+  },
+  {
+    "id": "abu-dawud_20",
+    "bookSlug": "abu-dawud",
+    "chapterNumber": 20,
+    "titleBn": "Tribute, Spoils, and Rulership (Kitab Al-Kharaj, Wal-Fai' Wal-Imarah) (অধ্যায় ২০)",
+    "titleAr": "Tribute, Spoils, and Rulership (Kitab Al-Kharaj, Wal-Fai' Wal-Imarah)",
+    "hadithRange": "২৯২৮ - ৩০৮৮"
+  },
+  {
+    "id": "abu-dawud_21",
+    "bookSlug": "abu-dawud",
+    "chapterNumber": 21,
+    "titleBn": "Funerals (Kitab Al-Jana'iz) (অধ্যায় ২১)",
+    "titleAr": "Funerals (Kitab Al-Jana'iz)",
+    "hadithRange": "৩০৮৯ - ৩২৪১"
+  },
+  {
+    "id": "abu-dawud_22",
+    "bookSlug": "abu-dawud",
+    "chapterNumber": 22,
+    "titleBn": "শপথ ও মানত (অধ্যায় ২২)",
+    "titleAr": "Oaths and Vows (Kitab Al-Aiman Wa Al-Nudhur)",
+    "hadithRange": "৩২৪২ - ৩৩২৫"
+  },
+  {
+    "id": "abu-dawud_23",
+    "bookSlug": "abu-dawud",
+    "chapterNumber": 23,
+    "titleBn": "ব্যবসা-বাণিজ্য ও লেনদেন (অধ্যায় ২৩)",
+    "titleAr": "Commercial Transactions (Kitab Al-Buyu)",
+    "hadithRange": "৩৩২৬ - ৩৪১৫"
+  },
+  {
+    "id": "abu-dawud_24",
+    "bookSlug": "abu-dawud",
+    "chapterNumber": 24,
+    "titleBn": "ভাড়া ও পারিশ্রমিক (ইজারা) (অধ্যায় ২৪)",
+    "titleAr": "Wages (Kitab Al-Ijarah)",
+    "hadithRange": "৩৪১৬ - ৩৫৭০"
+  },
+  {
+    "id": "abu-dawud_25",
+    "bookSlug": "abu-dawud",
+    "chapterNumber": 25,
+    "titleBn": "বিচারব্যবস্থা ও ফয়সালা (অধ্যায় ২৫)",
+    "titleAr": "The Office of the Judge (Kitab Al-Aqdiyah)",
+    "hadithRange": "৩৫৭১ - ৩৬৪০"
+  },
+  {
+    "id": "abu-dawud_26",
+    "bookSlug": "abu-dawud",
+    "chapterNumber": 26,
+    "titleBn": "ইলম বা জ্ঞান (অধ্যায় ২৬)",
+    "titleAr": "Knowledge (Kitab Al-Ilm)",
+    "hadithRange": "৩৬৪১ - ৩৬৬৮"
+  },
+  {
+    "id": "abu-dawud_27",
+    "bookSlug": "abu-dawud",
+    "chapterNumber": 27,
+    "titleBn": "হালাল ও হারাম পানীয় (অধ্যায় ২৭)",
+    "titleAr": "Drinks (Kitab Al-Ashribah)",
+    "hadithRange": "৩৬৬৯ - ৩৭৩৫"
+  },
+  {
+    "id": "abu-dawud_28",
+    "bookSlug": "abu-dawud",
+    "chapterNumber": 28,
+    "titleBn": "খাদ্য ও আহারের নিয়ম (অধ্যায় ২৮)",
+    "titleAr": "Foods (Kitab Al-At'imah)",
+    "hadithRange": "৩৭৩৬ - ৩৮৫৪"
+  },
+  {
+    "id": "abu-dawud_29",
+    "bookSlug": "abu-dawud",
+    "chapterNumber": 29,
+    "titleBn": "চিকিৎসা ও শেফা (অধ্যায় ২৯)",
+    "titleAr": "Medicine (Kitab Al-Tibb)",
+    "hadithRange": "৩৮৫৫ - ৩৯০৩"
+  },
+  {
+    "id": "abu-dawud_30",
+    "bookSlug": "abu-dawud",
+    "chapterNumber": 30,
+    "titleBn": "Divination and Omens (Kitab Al-Kahanah Wa Al-Tatayyur) (অধ্যায় ৩০)",
+    "titleAr": "Divination and Omens (Kitab Al-Kahanah Wa Al-Tatayyur)",
+    "hadithRange": "৩৯০৪ - ৩৯২৫"
+  },
+  {
+    "id": "abu-dawud_31",
+    "bookSlug": "abu-dawud",
+    "chapterNumber": 31,
+    "titleBn": "দাসমুক্তি (অধ্যায় ৩১)",
+    "titleAr": "The Book of Manumission of Slaves",
+    "hadithRange": "৩৯২৬ - ৩৯৬৮"
+  },
+  {
+    "id": "abu-dawud_32",
+    "bookSlug": "abu-dawud",
+    "chapterNumber": 32,
+    "titleBn": "Dialects and Readings of the Qur'an (Kitab Al-Huruf Wa Al-Qira'at) (অধ্যায় ৩২)",
+    "titleAr": "Dialects and Readings of the Qur'an (Kitab Al-Huruf Wa Al-Qira'at)",
+    "hadithRange": "৩৯৬৯ - ৪০০৮"
+  },
+  {
+    "id": "abu-dawud_33",
+    "bookSlug": "abu-dawud",
+    "chapterNumber": 33,
+    "titleBn": "Hot Baths (Kitab Al-Hammam) (অধ্যায় ৩৩)",
+    "titleAr": "Hot Baths (Kitab Al-Hammam)",
+    "hadithRange": "৪০০৯ - ৪০১৯"
+  },
+  {
+    "id": "abu-dawud_34",
+    "bookSlug": "abu-dawud",
+    "chapterNumber": 34,
+    "titleBn": "পোশাক ও ভূষণ (অধ্যায় ৩৪)",
+    "titleAr": "Clothing (Kitab Al-Libas)",
+    "hadithRange": "৪০২০ - ৪১৫৮"
+  },
+  {
+    "id": "abu-dawud_35",
+    "bookSlug": "abu-dawud",
+    "chapterNumber": 35,
+    "titleBn": "Combing the Hair (Kitab Al-Tarajjul) (অধ্যায় ৩৫)",
+    "titleAr": "Combing the Hair (Kitab Al-Tarajjul)",
+    "hadithRange": "৪১৫৯ - ৪২১৩"
+  },
+  {
+    "id": "abu-dawud_36",
+    "bookSlug": "abu-dawud",
+    "chapterNumber": 36,
+    "titleBn": "Signet-Rings (Kitab Al-Khatam) (অধ্যায় ৩৬)",
+    "titleAr": "Signet-Rings (Kitab Al-Khatam)",
+    "hadithRange": "৪২১৪ - ৪২৩৯"
+  },
+  {
+    "id": "abu-dawud_37",
+    "bookSlug": "abu-dawud",
+    "chapterNumber": 37,
+    "titleBn": "Trials and Fierce Battles (Kitab Al-Fitan Wa Al-Malahim) (অধ্যায় ৩৭)",
+    "titleAr": "Trials and Fierce Battles (Kitab Al-Fitan Wa Al-Malahim)",
+    "hadithRange": "৪২৪০ - ৪২৭৮"
+  },
+  {
+    "id": "abu-dawud_38",
+    "bookSlug": "abu-dawud",
+    "chapterNumber": 38,
+    "titleBn": "The Promised Deliverer (Kitab Al-Mahdi) (অধ্যায় ৩৮)",
+    "titleAr": "The Promised Deliverer (Kitab Al-Mahdi)",
+    "hadithRange": "৪২৭৯ - ৪২৯০"
+  },
+  {
+    "id": "abu-dawud_39",
+    "bookSlug": "abu-dawud",
+    "chapterNumber": 39,
+    "titleBn": "Battles (Kitab Al-Malahim) (অধ্যায় ৩৯)",
+    "titleAr": "Battles (Kitab Al-Malahim)",
+    "hadithRange": "৪২৯১ - ৪৩৫০"
+  },
+  {
+    "id": "abu-dawud_40",
+    "bookSlug": "abu-dawud",
+    "chapterNumber": 40,
+    "titleBn": "হুদূদ ও বিচারবিধি (অধ্যায় ৪০)",
+    "titleAr": "Prescribed Punishments (Kitab Al-Hudud)",
+    "hadithRange": "৪৩৫১ - ৪৪৯৩"
+  },
+  {
+    "id": "abu-dawud_41",
+    "bookSlug": "abu-dawud",
+    "chapterNumber": 41,
+    "titleBn": "Types of Blood-Wit (Kitab Al-Diyat) (অধ্যায় ৪১)",
+    "titleAr": "Types of Blood-Wit (Kitab Al-Diyat)",
+    "hadithRange": "৪৪৯৪ - ৪৫৯৫"
+  },
+  {
+    "id": "abu-dawud_42",
+    "bookSlug": "abu-dawud",
+    "chapterNumber": 42,
+    "titleBn": "Model Behavior of the Prophet (Kitab Al-Sunnah) (অধ্যায় ৪২)",
+    "titleAr": "Model Behavior of the Prophet (Kitab Al-Sunnah)",
+    "hadithRange": "৪৫৯৬ - ৪৭৭২"
+  },
+  {
+    "id": "abu-dawud_43",
+    "bookSlug": "abu-dawud",
+    "chapterNumber": 43,
+    "titleBn": "শিষ্টাচার ও আদব (অধ্যায় ৪৩)",
+    "titleAr": "General Behavior (Kitab Al-Adab)",
+    "hadithRange": "৪৭৭৩ - ৫২৭৪"
+  },
+  {
+    "id": "nasai_1",
+    "bookSlug": "nasai",
+    "chapterNumber": 1,
+    "titleBn": "তাহারাত বা পবিত্রতা (অধ্যায় ১)",
+    "titleAr": "The Book of Purification",
+    "hadithRange": "১ - ৩২৪"
+  },
+  {
+    "id": "nasai_2",
+    "bookSlug": "nasai",
+    "chapterNumber": 2,
+    "titleBn": "পানি ও পবিত্রতা (অধ্যায় ২)",
+    "titleAr": "The Book of Water",
+    "hadithRange": "৩২৫ - ৩৪৭"
+  },
+  {
+    "id": "nasai_3",
+    "bookSlug": "nasai",
+    "chapterNumber": 3,
+    "titleBn": "হায়েয ও ইস্তিহাযা (অধ্যায় ৩)",
+    "titleAr": "The Book of Menstruation and Istihadah",
+    "hadithRange": "৩৪৮ - ৩৯৫"
+  },
+  {
+    "id": "nasai_4",
+    "bookSlug": "nasai",
+    "chapterNumber": 4,
+    "titleBn": "গোসল ও তায়াম্মুম (অধ্যায় ৪)",
+    "titleAr": "The Book of Ghusl and Tayammum",
+    "hadithRange": "৩৯৬ - ৪৪৭"
+  },
+  {
+    "id": "nasai_5",
+    "bookSlug": "nasai",
+    "chapterNumber": 5,
+    "titleBn": "সালাত বা নামায (অধ্যায় ৫)",
+    "titleAr": "The Book of Salah",
+    "hadithRange": "৪৪৮ - ৪৯৩"
+  },
+  {
+    "id": "nasai_6",
+    "bookSlug": "nasai",
+    "chapterNumber": 6,
+    "titleBn": "সালাতের ওয়াক্তসমূহ (অধ্যায় ৬)",
+    "titleAr": "The Book of the Times (of Prayer)",
+    "hadithRange": "৪৯৪ - ৬২৫"
+  },
+  {
+    "id": "nasai_7",
+    "bookSlug": "nasai",
+    "chapterNumber": 7,
+    "titleBn": "আযান ও মুয়াযযিন (অধ্যায় ৭)",
+    "titleAr": "The Book of the Adhan (The Call to Prayer)",
+    "hadithRange": "৬২৬ - ৬৮৭"
+  },
+  {
+    "id": "nasai_8",
+    "bookSlug": "nasai",
+    "chapterNumber": 8,
+    "titleBn": "মসজিদ ও তার মর্যাদা (অধ্যায় ৮)",
+    "titleAr": "The Book of the Masjids",
+    "hadithRange": "৬৮৮ - ৭৪১"
+  },
+  {
+    "id": "nasai_9",
+    "bookSlug": "nasai",
+    "chapterNumber": 9,
+    "titleBn": "কিবলাহ নির্ধারণ (অধ্যায় ৯)",
+    "titleAr": "The Book of the Qiblah",
+    "hadithRange": "৭৪২ - ৭৭৬"
+  },
+  {
+    "id": "nasai_10",
+    "bookSlug": "nasai",
+    "chapterNumber": 10,
+    "titleBn": "The Book of Leading the Prayer (Al-Imamah) (অধ্যায় ১০)",
+    "titleAr": "The Book of Leading the Prayer (Al-Imamah)",
+    "hadithRange": "৭৭৭ - ৮৭৫"
+  },
+  {
+    "id": "nasai_11",
+    "bookSlug": "nasai",
+    "chapterNumber": 11,
+    "titleBn": "The Book of the Commencement of the Prayer (অধ্যায় ১১)",
+    "titleAr": "The Book of the Commencement of the Prayer",
+    "hadithRange": "৮৭৬ - ১০২৮"
+  },
+  {
+    "id": "nasai_12",
+    "bookSlug": "nasai",
+    "chapterNumber": 12,
+    "titleBn": "The Book of The At-Tatbiq (Clasping One's Hands Together) (অধ্যায় ১২)",
+    "titleAr": "The Book of The At-Tatbiq (Clasping One's Hands Together)",
+    "hadithRange": "১০২৯ - ১১৭৮"
+  },
+  {
+    "id": "nasai_13",
+    "bookSlug": "nasai",
+    "chapterNumber": 13,
+    "titleBn": "The Book of Forgetfulness (In Prayer) (অধ্যায় ১৩)",
+    "titleAr": "The Book of Forgetfulness (In Prayer)",
+    "hadithRange": "১১৭৯ - ১৩৬৬"
+  },
+  {
+    "id": "nasai_14",
+    "bookSlug": "nasai",
+    "chapterNumber": 14,
+    "titleBn": "জুমু'আর সালাত (অধ্যায় ১৪)",
+    "titleAr": "The Book of Jumu'ah (Friday Prayer)",
+    "hadithRange": "১৩৬৭ - ১৪৩২"
+  },
+  {
+    "id": "nasai_15",
+    "bookSlug": "nasai",
+    "chapterNumber": 15,
+    "titleBn": "The Book of Shortening the Prayer When Traveling (অধ্যায় ১৫)",
+    "titleAr": "The Book of Shortening the Prayer When Traveling",
+    "hadithRange": "১৪৩৩ - ১৪৫৮"
+  },
+  {
+    "id": "nasai_16",
+    "bookSlug": "nasai",
+    "chapterNumber": 16,
+    "titleBn": "সূর্য ও চন্দ্রগ্রহণ (কুসূফ) (অধ্যায় ১৬)",
+    "titleAr": "The Book of Eclipses",
+    "hadithRange": "১৪৫৯ - ১৫০৩"
+  },
+  {
+    "id": "nasai_17",
+    "bookSlug": "nasai",
+    "chapterNumber": 17,
+    "titleBn": "The Book of Praying for Rain (Al-Istisqa') (অধ্যায় ১৭)",
+    "titleAr": "The Book of Praying for Rain (Al-Istisqa')",
+    "hadithRange": "১৫০৪ - ১৫২৮"
+  },
+  {
+    "id": "nasai_18",
+    "bookSlug": "nasai",
+    "chapterNumber": 18,
+    "titleBn": "ভয়ের সালাত (সালাতুল খাওফ) (অধ্যায় ১৮)",
+    "titleAr": "The Book of the Fear Prayer",
+    "hadithRange": "১৫২৯ - ১৫৫৫"
+  },
+  {
+    "id": "nasai_19",
+    "bookSlug": "nasai",
+    "chapterNumber": 19,
+    "titleBn": "সালাত বা নামায (অধ্যায় ১৯)",
+    "titleAr": "The Book of the Prayer for the Two 'Eids",
+    "hadithRange": "১৫৫৬ - ১৫৯৭"
+  },
+  {
+    "id": "nasai_20",
+    "bookSlug": "nasai",
+    "chapterNumber": 20,
+    "titleBn": "The Book of Qiyam Al-Lail (The Night Prayer) and Voluntary Prayers During the Day (অধ্যায় ২০)",
+    "titleAr": "The Book of Qiyam Al-Lail (The Night Prayer) and Voluntary Prayers During the Day",
+    "hadithRange": "১৫৯৮ - ১৮১৭"
+  },
+  {
+    "id": "nasai_21",
+    "bookSlug": "nasai",
+    "chapterNumber": 21,
+    "titleBn": "The Book of Funerals (অধ্যায় ২১)",
+    "titleAr": "The Book of Funerals",
+    "hadithRange": "১৮১৮ - ২০৮৯"
+  },
+  {
+    "id": "nasai_22",
+    "bookSlug": "nasai",
+    "chapterNumber": 22,
+    "titleBn": "সাওম বা রোজা (অধ্যায় ২২)",
+    "titleAr": "The Book of Fasting",
+    "hadithRange": "২০৯০ - ২৪৩৪"
+  },
+  {
+    "id": "nasai_23",
+    "bookSlug": "nasai",
+    "chapterNumber": 23,
+    "titleBn": "The Book of Zakah (অধ্যায় ২৩)",
+    "titleAr": "The Book of Zakah",
+    "hadithRange": "২৪৩৫ - ২৬১৮"
+  },
+  {
+    "id": "nasai_24",
+    "bookSlug": "nasai",
+    "chapterNumber": 24,
+    "titleBn": "The Book of Hajj (অধ্যায় ২৪)",
+    "titleAr": "The Book of Hajj",
+    "hadithRange": "২৬১৯ - ৩০৮৪"
+  },
+  {
+    "id": "nasai_25",
+    "bookSlug": "nasai",
+    "chapterNumber": 25,
+    "titleBn": "জিহাদ ও আল্লাহর পথে প্রচেষ্টা (অধ্যায় ২৫)",
+    "titleAr": "The Book of Jihad",
+    "hadithRange": "৩০৮৫ - ৩১৯৫"
+  },
+  {
+    "id": "nasai_26",
+    "bookSlug": "nasai",
+    "chapterNumber": 26,
+    "titleBn": "বিবাহ ও দাম্পত্য জীবন (অধ্যায় ২৬)",
+    "titleAr": "The Book of Marriage",
+    "hadithRange": "৩১৯৬ - ৩৩৮৮"
+  },
+  {
+    "id": "nasai_27",
+    "bookSlug": "nasai",
+    "chapterNumber": 27,
+    "titleBn": "তালাক ও বিচ্ছেদ (অধ্যায় ২৭)",
+    "titleAr": "The Book of Divorce",
+    "hadithRange": "৩৩৮৯ - ৩৫৬০"
+  },
+  {
+    "id": "nasai_28",
+    "bookSlug": "nasai",
+    "chapterNumber": 28,
+    "titleBn": "The Book of Horses, Races and Shooting (অধ্যায় ২৮)",
+    "titleAr": "The Book of Horses, Races and Shooting",
+    "hadithRange": "৩৫৬১ - ৩৫৯৩"
+  },
+  {
+    "id": "nasai_29",
+    "bookSlug": "nasai",
+    "chapterNumber": 29,
+    "titleBn": "The Book of Endowments (অধ্যায় ২৯)",
+    "titleAr": "The Book of Endowments",
+    "hadithRange": "৩৫৯৪ - ৩৬১০"
+  },
+  {
+    "id": "nasai_30",
+    "bookSlug": "nasai",
+    "chapterNumber": 30,
+    "titleBn": "The Book of Wills (অধ্যায় ৩০)",
+    "titleAr": "The Book of Wills",
+    "hadithRange": "৩৬১১ - ৩৬৭১"
+  },
+  {
+    "id": "nasai_31",
+    "bookSlug": "nasai",
+    "chapterNumber": 31,
+    "titleBn": "The Book of Presents (অধ্যায় ৩১)",
+    "titleAr": "The Book of Presents",
+    "hadithRange": "৩৬৭২ - ৩৬৮৭"
+  },
+  {
+    "id": "nasai_32",
+    "bookSlug": "nasai",
+    "chapterNumber": 32,
+    "titleBn": "দান ও উপঢৌকন (হিবা) (অধ্যায় ৩২)",
+    "titleAr": "The Book of Gifts",
+    "hadithRange": "৩৬৮৮ - ৩৭০৫"
+  },
+  {
+    "id": "nasai_33",
+    "bookSlug": "nasai",
+    "chapterNumber": 33,
+    "titleBn": "The Book of ar-Ruqba (অধ্যায় ৩৩)",
+    "titleAr": "The Book of ar-Ruqba",
+    "hadithRange": "৩৭০৬ - ৩৭১৯"
+  },
+  {
+    "id": "nasai_34",
+    "bookSlug": "nasai",
+    "chapterNumber": 34,
+    "titleBn": "The Book of 'Umra (অধ্যায় ৩৪)",
+    "titleAr": "The Book of 'Umra",
+    "hadithRange": "৩৭২০ - ৩৭৬০"
+  },
+  {
+    "id": "nasai_35",
+    "bookSlug": "nasai",
+    "chapterNumber": 35,
+    "titleBn": "The Book of Agriculture (অধ্যায় ৩৫)",
+    "titleAr": "The Book of Agriculture",
+    "hadithRange": "৩৭৬১ - ৩৮৫৬"
+  },
+  {
+    "id": "nasai_36",
+    "bookSlug": "nasai",
+    "chapterNumber": 36,
+    "titleBn": "The Book of the Kind Treatment of Women (অধ্যায় ৩৬)",
+    "titleAr": "The Book of the Kind Treatment of Women",
+    "hadithRange": "৩৯৩৯ - ৩৯৬৫"
+  },
+  {
+    "id": "nasai_37",
+    "bookSlug": "nasai",
+    "chapterNumber": 37,
+    "titleBn": "The Book of Fighting [The Prohibition of Bloodshed] (অধ্যায় ৩৭)",
+    "titleAr": "The Book of Fighting [The Prohibition of Bloodshed]",
+    "hadithRange": "৩৯৬৬ - ৪১৩২"
+  },
+  {
+    "id": "nasai_38",
+    "bookSlug": "nasai",
+    "chapterNumber": 38,
+    "titleBn": "The Book of Distribution of Al-Fay' (অধ্যায় ৩৮)",
+    "titleAr": "The Book of Distribution of Al-Fay'",
+    "hadithRange": "৪১৩৩ - ৪১৪৮"
+  },
+  {
+    "id": "nasai_39",
+    "bookSlug": "nasai",
+    "chapterNumber": 39,
+    "titleBn": "The Book of al-Bay'ah (অধ্যায় ৩৯)",
+    "titleAr": "The Book of al-Bay'ah",
+    "hadithRange": "৪১৪৯ - ৪২১১"
+  },
+  {
+    "id": "nasai_40",
+    "bookSlug": "nasai",
+    "chapterNumber": 40,
+    "titleBn": "The Book of al-'Aqiqah (অধ্যায় ৪০)",
+    "titleAr": "The Book of al-'Aqiqah",
+    "hadithRange": "৪২১২ - ৪২২১"
+  },
+  {
+    "id": "nasai_41",
+    "bookSlug": "nasai",
+    "chapterNumber": 41,
+    "titleBn": "The Book of al-Fara' and al-'Atirah (অধ্যায় ৪১)",
+    "titleAr": "The Book of al-Fara' and al-'Atirah",
+    "hadithRange": "৪২২২ - ৪২৬২"
+  },
+  {
+    "id": "nasai_42",
+    "bookSlug": "nasai",
+    "chapterNumber": 42,
+    "titleBn": "শিকার ও কুরবানি (অধ্যায় ৪২)",
+    "titleAr": "The Book of Hunting and Slaughtering",
+    "hadithRange": "৪২৬৩ - ৪৩৬০"
+  },
+  {
+    "id": "nasai_43",
+    "bookSlug": "nasai",
+    "chapterNumber": 43,
+    "titleBn": "The Book of ad-Dahaya (Sacrifices) (অধ্যায় ৪৩)",
+    "titleAr": "The Book of ad-Dahaya (Sacrifices)",
+    "hadithRange": "৪৩৬১ - ৪৪৪৮"
+  },
+  {
+    "id": "nasai_44",
+    "bookSlug": "nasai",
+    "chapterNumber": 44,
+    "titleBn": "The Book of Financial Transactions (অধ্যায় ৪৪)",
+    "titleAr": "The Book of Financial Transactions",
+    "hadithRange": "৪৪৪৯ - ৪৭০৫"
+  },
+  {
+    "id": "nasai_45",
+    "bookSlug": "nasai",
+    "chapterNumber": 45,
+    "titleBn": "The Book of Oaths (qasamah), Retaliation and Blood Money (অধ্যায় ৪৫)",
+    "titleAr": "The Book of Oaths (qasamah), Retaliation and Blood Money",
+    "hadithRange": "৪৭০৬ - ৪৮৬৯"
+  },
+  {
+    "id": "nasai_46",
+    "bookSlug": "nasai",
+    "chapterNumber": 46,
+    "titleBn": "The Book of Cutting off the Hand of the Thief (অধ্যায় ৪৬)",
+    "titleAr": "The Book of Cutting off the Hand of the Thief",
+    "hadithRange": "৪৮৭০ - ৪৯৮৪"
+  },
+  {
+    "id": "nasai_47",
+    "bookSlug": "nasai",
+    "chapterNumber": 47,
+    "titleBn": "ঈমান (কিতাবুল ঈমান) (অধ্যায় ৪৭)",
+    "titleAr": "The Book Of Faith and its Signs",
+    "hadithRange": "৪৯৮৫ - ৫০৩৯"
+  },
+  {
+    "id": "nasai_48",
+    "bookSlug": "nasai",
+    "chapterNumber": 48,
+    "titleBn": "The Book of Adornment (অধ্যায় ৪৮)",
+    "titleAr": "The Book of Adornment",
+    "hadithRange": "৫০৪০ - ৫৩৭৮"
+  },
+  {
+    "id": "nasai_49",
+    "bookSlug": "nasai",
+    "chapterNumber": 49,
+    "titleBn": "The Book of the Etiquette of Judges (অধ্যায় ৪৯)",
+    "titleAr": "The Book of the Etiquette of Judges",
+    "hadithRange": "৫৩৭৯ - ৫৪২৭"
+  },
+  {
+    "id": "nasai_50",
+    "bookSlug": "nasai",
+    "chapterNumber": 50,
+    "titleBn": "The Book of Seeking Refuge with Allah (অধ্যায় ৫০)",
+    "titleAr": "The Book of Seeking Refuge with Allah",
+    "hadithRange": "৫৪২৮ - ৫৫৩৯"
+  },
+  {
+    "id": "nasai_51",
+    "bookSlug": "nasai",
+    "chapterNumber": 51,
+    "titleBn": "পানীয় ও পানাহারের বিধান (অধ্যায় ৫১)",
+    "titleAr": "The Book of Drinks",
+    "hadithRange": "৫৫৪০ - ৫৭৫৮"
+  },
+  {
+    "id": "ibn-majah_1",
+    "bookSlug": "ibn-majah",
+    "chapterNumber": 1,
+    "titleBn": "তাহারাত ও তার সুন্নাতসমূহ (অধ্যায় ১)",
+    "titleAr": "The Book of Purification and its Sunnah",
+    "hadithRange": "২৬৭ - ৬৬৬"
+  },
+  {
+    "id": "ibn-majah_2",
+    "bookSlug": "ibn-majah",
+    "chapterNumber": 2,
+    "titleBn": "সালাত বা নামায (অধ্যায় ২)",
+    "titleAr": "The Book of the Prayer",
+    "hadithRange": "৬৬৭ - ৭০৫"
+  },
+  {
+    "id": "ibn-majah_3",
+    "bookSlug": "ibn-majah",
+    "chapterNumber": 3,
+    "titleBn": "আযান ও তার নিয়মাবলি (অধ্যায় ৩)",
+    "titleAr": "The Book of the Adhan and the Sunnah Regarding It",
+    "hadithRange": "৭০৬ - ৭৩৪"
+  },
+  {
+    "id": "ibn-majah_4",
+    "bookSlug": "ibn-majah",
+    "chapterNumber": 4,
+    "titleBn": "মসজিদ ও জামা'আত (অধ্যায় ৪)",
+    "titleAr": "The Book On The Mosques And The Congregations",
+    "hadithRange": "৭৩৫ - ৮০২"
+  },
+  {
+    "id": "ibn-majah_5",
+    "bookSlug": "ibn-majah",
+    "chapterNumber": 5,
+    "titleBn": "সালাত কায়েম ও নিয়মাবলি (অধ্যায় ৫)",
+    "titleAr": "Establishing the Prayer and the Sunnah Regarding Them",
+    "hadithRange": "৮০৩ - ১৪৩২"
+  },
+  {
+    "id": "ibn-majah_6",
+    "bookSlug": "ibn-majah",
+    "chapterNumber": 6,
+    "titleBn": "জানাযা ও কবর যিয়ারত (অধ্যায় ৬)",
+    "titleAr": "Chapters Regarding Funerals",
+    "hadithRange": "১৪৩৩ - ১৬৩৭"
+  },
+  {
+    "id": "ibn-majah_7",
+    "bookSlug": "ibn-majah",
+    "chapterNumber": 7,
+    "titleBn": "সাওম বা রোজা (অধ্যায় ৭)",
+    "titleAr": "Fasting",
+    "hadithRange": "১৬৩৮ - ১৭৮২"
+  },
+  {
+    "id": "ibn-majah_8",
+    "bookSlug": "ibn-majah",
+    "chapterNumber": 8,
+    "titleBn": "যাকাত ও ফিতরা (অধ্যায় ৮)",
+    "titleAr": "The Chapters Regarding Zakat",
+    "hadithRange": "১৭৮৩ - ১৮৪৪"
+  },
+  {
+    "id": "ibn-majah_9",
+    "bookSlug": "ibn-majah",
+    "chapterNumber": 9,
+    "titleBn": "বিবাহ ও পরিবার (অধ্যায় ৯)",
+    "titleAr": "The Chapters on Marriage",
+    "hadithRange": "১৮৪৫ - ২০১৫"
+  },
+  {
+    "id": "ibn-majah_10",
+    "bookSlug": "ibn-majah",
+    "chapterNumber": 10,
+    "titleBn": "তালাক ও ইদ্দত (অধ্যায় ১০)",
+    "titleAr": "The Chapters on Divorce",
+    "hadithRange": "২০১৬ - ২৪৭৭"
+  },
+  {
+    "id": "ibn-majah_11",
+    "bookSlug": "ibn-majah",
+    "chapterNumber": 11,
+    "titleBn": "The Chapters on Expiation (অধ্যায় ১১)",
+    "titleAr": "The Chapters on Expiation",
+    "hadithRange": "২০৯০ - ২১৩৬"
+  },
+  {
+    "id": "ibn-majah_12",
+    "bookSlug": "ibn-majah",
+    "chapterNumber": 12,
+    "titleBn": "The Chapters on Business Transactions (অধ্যায় ১২)",
+    "titleAr": "The Chapters on Business Transactions",
+    "hadithRange": "২১৩৭ - ২৩০৭"
+  },
+  {
+    "id": "ibn-majah_13",
+    "bookSlug": "ibn-majah",
+    "chapterNumber": 13,
+    "titleBn": "The Chapters on Rulings (অধ্যায় ১৩)",
+    "titleAr": "The Chapters on Rulings",
+    "hadithRange": "২৩০৮ - ২৩৭৪"
+  },
+  {
+    "id": "ibn-majah_14",
+    "bookSlug": "ibn-majah",
+    "chapterNumber": 14,
+    "titleBn": "দান ও উপঢৌকন (হিবা) (অধ্যায় ১৪)",
+    "titleAr": "The Chapters on Gifts",
+    "hadithRange": "২৩৭৫ - ২৩৮৯"
+  },
+  {
+    "id": "ibn-majah_15",
+    "bookSlug": "ibn-majah",
+    "chapterNumber": 15,
+    "titleBn": "The Chapters on Charity (অধ্যায় ১৫)",
+    "titleAr": "The Chapters on Charity",
+    "hadithRange": "২৩৯০ - ২৫২৮"
+  },
+  {
+    "id": "ibn-majah_16",
+    "bookSlug": "ibn-majah",
+    "chapterNumber": 16,
+    "titleBn": "The Chapters on Pawning (অধ্যায় ১৬)",
+    "titleAr": "The Chapters on Pawning",
+    "hadithRange": "২৪৩৬ - ২৪৯১"
+  },
+  {
+    "id": "ibn-majah_17",
+    "bookSlug": "ibn-majah",
+    "chapterNumber": 17,
+    "titleBn": "The Chapters on Pre-emption (অধ্যায় ১৭)",
+    "titleAr": "The Chapters on Pre-emption",
+    "hadithRange": "২৪৯২ - ২৫০১"
+  },
+  {
+    "id": "ibn-majah_18",
+    "bookSlug": "ibn-majah",
+    "chapterNumber": 18,
+    "titleBn": "The Chapters on Lost Property (অধ্যায় ১৮)",
+    "titleAr": "The Chapters on Lost Property",
+    "hadithRange": "২৫০২ - ২৫১১"
+  },
+  {
+    "id": "ibn-majah_19",
+    "bookSlug": "ibn-majah",
+    "chapterNumber": 19,
+    "titleBn": "The Chapters on Manumission (of Slaves) (অধ্যায় ১৯)",
+    "titleAr": "The Chapters on Manumission (of Slaves)",
+    "hadithRange": "২৫১২ - ২৫৩২"
+  },
+  {
+    "id": "ibn-majah_20",
+    "bookSlug": "ibn-majah",
+    "chapterNumber": 20,
+    "titleBn": "The Chapters on Legal Punishments (অধ্যায় ২০)",
+    "titleAr": "The Chapters on Legal Punishments",
+    "hadithRange": "২৫৩৩ - ২৬১৪"
+  },
+  {
+    "id": "ibn-majah_21",
+    "bookSlug": "ibn-majah",
+    "chapterNumber": 21,
+    "titleBn": "The Chapters on Blood Money (অধ্যায় ২১)",
+    "titleAr": "The Chapters on Blood Money",
+    "hadithRange": "২৬১৫ - ২৬৯৪"
+  },
+  {
+    "id": "ibn-majah_22",
+    "bookSlug": "ibn-majah",
+    "chapterNumber": 22,
+    "titleBn": "The Chapters on Wills (অধ্যায় ২২)",
+    "titleAr": "The Chapters on Wills",
+    "hadithRange": "২৬৯৫ - ২৭১৮"
+  },
+  {
+    "id": "ibn-majah_23",
+    "bookSlug": "ibn-majah",
+    "chapterNumber": 23,
+    "titleBn": "Chapters on Shares of Inheritance (অধ্যায় ২৩)",
+    "titleAr": "Chapters on Shares of Inheritance",
+    "hadithRange": "২৭১৯ - ২৭৫২"
+  },
+  {
+    "id": "ibn-majah_24",
+    "bookSlug": "ibn-majah",
+    "chapterNumber": 24,
+    "titleBn": "The Chapters on Jihad (অধ্যায় ২৪)",
+    "titleAr": "The Chapters on Jihad",
+    "hadithRange": "২৭৫৩ - ২৮৮১"
+  },
+  {
+    "id": "ibn-majah_25",
+    "bookSlug": "ibn-majah",
+    "chapterNumber": 25,
+    "titleBn": "Chapters on Hajj Rituals (অধ্যায় ২৫)",
+    "titleAr": "Chapters on Hajj Rituals",
+    "hadithRange": "২৮৮২ - ৩১১৯"
+  },
+  {
+    "id": "ibn-majah_26",
+    "bookSlug": "ibn-majah",
+    "chapterNumber": 26,
+    "titleBn": "Chapters on Sacrifices (অধ্যায় ২৬)",
+    "titleAr": "Chapters on Sacrifices",
+    "hadithRange": "৩১২০ - ৩১৬১"
+  },
+  {
+    "id": "ibn-majah_27",
+    "bookSlug": "ibn-majah",
+    "chapterNumber": 27,
+    "titleBn": "Chapters on Slaughtering (অধ্যায় ২৭)",
+    "titleAr": "Chapters on Slaughtering",
+    "hadithRange": "৩১৬২ - ৩১৯৯"
+  },
+  {
+    "id": "ibn-majah_28",
+    "bookSlug": "ibn-majah",
+    "chapterNumber": 28,
+    "titleBn": "Chapters on Hunting (অধ্যায় ২৮)",
+    "titleAr": "Chapters on Hunting",
+    "hadithRange": "৩২০০ - ৩২৫০"
+  },
+  {
+    "id": "ibn-majah_29",
+    "bookSlug": "ibn-majah",
+    "chapterNumber": 29,
+    "titleBn": "Chapters on Food (অধ্যায় ২৯)",
+    "titleAr": " Chapters on Food",
+    "hadithRange": "৩২৫১ - ৩৩৭০"
+  },
+  {
+    "id": "ibn-majah_30",
+    "bookSlug": "ibn-majah",
+    "chapterNumber": 30,
+    "titleBn": "হালাল ও হারাম পানীয় (অধ্যায় ৩০)",
+    "titleAr": "Chapters on Drinks",
+    "hadithRange": "৩৩৭১ - ৩৪৩৫"
+  },
+  {
+    "id": "ibn-majah_31",
+    "bookSlug": "ibn-majah",
+    "chapterNumber": 31,
+    "titleBn": "চিকিৎসা ও রোগ নিরাময় (অধ্যায় ৩১)",
+    "titleAr": "Chapters on Medicine",
+    "hadithRange": "৩৪৩৬ - ৩৫৪৯"
+  },
+  {
+    "id": "ibn-majah_32",
+    "bookSlug": "ibn-majah",
+    "chapterNumber": 32,
+    "titleBn": "পোশাক-পরিচ্ছদ ও সাজসজ্জা (অধ্যায় ৩২)",
+    "titleAr": "Chapters on Dress",
+    "hadithRange": "৩৫৫০ - ৩৬৫৬"
+  },
+  {
+    "id": "ibn-majah_33",
+    "bookSlug": "ibn-majah",
+    "chapterNumber": 33,
+    "titleBn": "Etiquette (অধ্যায় ৩৩)",
+    "titleAr": "Etiquette",
+    "hadithRange": "৩৬৫৭ - ৩৮২৬"
+  },
+  {
+    "id": "ibn-majah_34",
+    "bookSlug": "ibn-majah",
+    "chapterNumber": 34,
+    "titleBn": "Supplication (অধ্যায় ৩৪)",
+    "titleAr": "Supplication",
+    "hadithRange": "৩৮২৭ - ৩৮৯২"
+  },
+  {
+    "id": "ibn-majah_35",
+    "bookSlug": "ibn-majah",
+    "chapterNumber": 35,
+    "titleBn": "স্বপ্নের ব্যাখ্যা (তাবীরুর রুয়া) (অধ্যায় ৩৫)",
+    "titleAr": "Interpretation of Dreams",
+    "hadithRange": "৩৮৯৩ - ৩৯২৬"
+  },
+  {
+    "id": "ibn-majah_36",
+    "bookSlug": "ibn-majah",
+    "chapterNumber": 36,
+    "titleBn": "Tribulations (অধ্যায় ৩৬)",
+    "titleAr": "Tribulations",
+    "hadithRange": "৩৯২৭ - ৪০৯৯"
+  },
+  {
+    "id": "ibn-majah_37",
+    "bookSlug": "ibn-majah",
+    "chapterNumber": 37,
+    "titleBn": "Zuhd (অধ্যায় ৩৭)",
+    "titleAr": "Zuhd",
+    "hadithRange": "৪১০০ - ৪৩৪১"
+  },
+  {
+    "id": "forty-nawawi_1",
+    "bookSlug": "forty-nawawi",
+    "chapterNumber": 1,
+    "titleBn": "ইমাম নববীর মৌলিক ৪০ হাদীস (অধ্যায় ১)",
+    "titleAr": "Forty Hadith of an-Nawawi",
+    "hadithRange": "১ - ৪২"
+  },
+  {
+    "id": "hadith-qudsi_1",
+    "bookSlug": "hadith-qudsi",
+    "chapterNumber": 1,
+    "titleBn": "হাদীসে কুদসী সমগ্র (অধ্যায় ১)",
+    "titleAr": "Forty Hadith Qudsi",
+    "hadithRange": "১ - ৪০"
+  },
+  {
+    "id": "riyadus-salihin_1",
+    "bookSlug": "riyadus-salihin",
+    "chapterNumber": 1,
+    "titleBn": "ইখলাস ও নিয়ত",
+    "titleAr": "الإخلاص",
+    "hadithRange": "১ - ১২"
+  },
+  {
+    "id": "riyadus-salihin_2",
+    "bookSlug": "riyadus-salihin",
+    "chapterNumber": 2,
+    "titleBn": "তাওবাহ বা অনুশোচনা",
+    "titleAr": "التوبة",
+    "hadithRange": "১৩ - ২৯"
+  },
+  {
+    "id": "riyadus-salihin_3",
+    "bookSlug": "riyadus-salihin",
+    "chapterNumber": 3,
+    "titleBn": "সবর বা ধৈর্য",
+    "titleAr": "الصبر",
+    "hadithRange": "৩০ - ৫৩"
+  },
+  {
+    "id": "riyadus-salihin_4",
+    "bookSlug": "riyadus-salihin",
+    "chapterNumber": 4,
+    "titleBn": "সত্যবাদিতা বা সিদক্ব",
+    "titleAr": "الصدق",
+    "hadithRange": "৫৪ - ৫৯"
+  },
+  {
+    "id": "riyadus-salihin_5",
+    "bookSlug": "riyadus-salihin",
+    "chapterNumber": 5,
+    "titleBn": "মুরাকাবা বা আল্লাহর পর্যবেক্ষণ অনুভূতি",
+    "titleAr": "المراقبة",
+    "hadithRange": "৬০ - ৬৭"
+  },
+  {
+    "id": "riyadus-salihin_6",
+    "bookSlug": "riyadus-salihin",
+    "chapterNumber": 6,
+    "titleBn": "তাকওয়া বা খোদাভীতি",
+    "titleAr": "التقوى",
+    "hadithRange": "৬৮ - ৭৩"
+  },
+  {
+    "id": "riyadus-salihin_7",
+    "bookSlug": "riyadus-salihin",
+    "chapterNumber": 7,
+    "titleBn": "আল্লাহর ওপর তাওয়াক্কুল ও বিশ্বাস",
+    "titleAr": "اليقين والتوكل",
+    "hadithRange": "৭৪ - ৮১"
+  },
+  {
+    "id": "riyadus-salihin_8",
+    "bookSlug": "riyadus-salihin",
+    "chapterNumber": 8,
+    "titleBn": "সঠিক পথে অবিচলতা (ইস্তিক্বামাত)",
+    "titleAr": "الاستقامة",
+    "hadithRange": "৮২ - ৮৫"
+  },
+  {
+    "id": "riyadus-salihin_9",
+    "bookSlug": "riyadus-salihin",
+    "chapterNumber": 9,
+    "titleBn": "সৎকাজে প্রতিযোগিতা ও দ্রুত পদক্ষেপ",
+    "titleAr": "المبادرة إلى الخيرات",
+    "hadithRange": "৮৬ - ৯১"
+  },
+  {
+    "id": "riyadus-salihin_10",
+    "bookSlug": "riyadus-salihin",
+    "chapterNumber": 10,
+    "titleBn": "মুজাহাদাহ বা আত্মসংগ্রাম",
+    "titleAr": "المجاهدة",
+    "hadithRange": "৯২ - ১০৮"
+  },
+  {
+    "id": "riyadus-salihin_11",
+    "bookSlug": "riyadus-salihin",
+    "chapterNumber": 11,
+    "titleBn": "মৃত্যুর স্মরণ ও দুনিয়ার অসারতা",
+    "titleAr": "ذكر الموت وقصر الأمل",
+    "hadithRange": "১০৯ - ১২০"
+  },
+  {
+    "id": "riyadus-salihin_12",
+    "bookSlug": "riyadus-salihin",
+    "chapterNumber": 12,
+    "titleBn": "বিনয় ও অহংকার বর্জন",
+    "titleAr": "التواضع وخفض الجناح",
+    "hadithRange": "১২১ - ১৩২"
+  },
+  {
+    "id": "riyadus-salihin_13",
+    "bookSlug": "riyadus-salihin",
+    "chapterNumber": 13,
+    "titleBn": "আখলাক ও শিষ্টাচার",
+    "titleAr": "حسن الخلق",
+    "hadithRange": "১৩৩ - ১৪৫"
+  },
+  {
+    "id": "riyadus-salihin_14",
+    "bookSlug": "riyadus-salihin",
+    "chapterNumber": 14,
+    "titleBn": "প্রতিবেশীর অধিকার ও দায়িত্ব",
+    "titleAr": "حق الجار",
+    "hadithRange": "১৪৬ - ১৫২"
+  },
+  {
+    "id": "riyadus-salihin_15",
+    "bookSlug": "riyadus-salihin",
+    "chapterNumber": 15,
+    "titleBn": "পিতামাতার আনুগত্য ও সেবা",
+    "titleAr": "بر الوالدين",
+    "hadithRange": "১৫৩ - ১৬৫"
+  },
+  {
+    "id": "riyadus-salihin_16",
+    "bookSlug": "riyadus-salihin",
+    "chapterNumber": 16,
+    "titleBn": "আত্মীয়তার সম্পর্ক রক্ষা",
+    "titleAr": "صلة الرحم",
+    "hadithRange": "১৬৬ - ১৭৮"
+  },
+  {
+    "id": "riyadus-salihin_17",
+    "bookSlug": "riyadus-salihin",
+    "chapterNumber": 17,
+    "titleBn": "মেহমানদারি ও আতিথেয়তা",
+    "titleAr": "إكرام الضيف",
+    "hadithRange": "১৭৯ - ১৮৮"
+  },
+  {
+    "id": "riyadus-salihin_18",
+    "bookSlug": "riyadus-salihin",
+    "chapterNumber": 18,
+    "titleBn": "সালামের প্রচার ও প্রসার",
+    "titleAr": "إفشاء السلام",
+    "hadithRange": "১৮৯ - ২০২"
+  },
+  {
+    "id": "riyadus-salihin_19",
+    "bookSlug": "riyadus-salihin",
+    "chapterNumber": 19,
+    "titleBn": "অসুস্থের সেবা ও শুশ্রূষা",
+    "titleAr": "عيادة المريض",
+    "hadithRange": "২০৩ - ২১৮"
+  },
+  {
+    "id": "riyadus-salihin_20",
+    "bookSlug": "riyadus-salihin",
+    "chapterNumber": 20,
+    "titleBn": "দো'আ ও আল্লাহর যিকির",
+    "titleAr": "الأذكار والدعوات",
+    "hadithRange": "২১৯ - ৩০০"
+  },
+  {
+    "id": "bulugh-al-maram_1",
+    "bookSlug": "bulugh-al-maram",
+    "chapterNumber": 1,
+    "titleBn": "কিতাবুত তাহারাত (পবিত্রতা অধ্যায়)",
+    "titleAr": "كتاب الطهارة",
+    "hadithRange": "১ - ১৪৬"
+  },
+  {
+    "id": "bulugh-al-maram_2",
+    "bookSlug": "bulugh-al-maram",
+    "chapterNumber": 2,
+    "titleBn": "কিতাবুস সালাত (নামায অধ্যায়)",
+    "titleAr": "كتاب الصلاة",
+    "hadithRange": "১৪৭ - ৪৫৫"
+  },
+  {
+    "id": "bulugh-al-maram_3",
+    "bookSlug": "bulugh-al-maram",
+    "chapterNumber": 3,
+    "titleBn": "কিতাবুল জানায়েয (জানাযা ও কাফন-দাফন)",
+    "titleAr": "كتاب الجنائز",
+    "hadithRange": "৪৫৬ - ৫৪৮"
+  },
+  {
+    "id": "bulugh-al-maram_4",
+    "bookSlug": "bulugh-al-maram",
+    "chapterNumber": 4,
+    "titleBn": "কিতাবুজ যাকাত (যাকাত ও সাদাকাতুল ফিতর)",
+    "titleAr": "كتاب الزكاة",
+    "hadithRange": "৫৪৯ - ৬৬৫"
+  },
+  {
+    "id": "bulugh-al-maram_5",
+    "bookSlug": "bulugh-al-maram",
+    "chapterNumber": 5,
+    "titleBn": "কিতাবুস সিয়াম (রোজা বা সাওম অধ্যায়)",
+    "titleAr": "كتاب الصيام",
+    "hadithRange": "৬৬৬ - ৭৩৮"
+  },
+  {
+    "id": "bulugh-al-maram_6",
+    "bookSlug": "bulugh-al-maram",
+    "chapterNumber": 6,
+    "titleBn": "কিতাবুল হজ্জ (হজ্জ ও ওমরাহ বিধান)",
+    "titleAr": "كتاب الحج",
+    "hadithRange": "৭৩৯ - ৮৫২"
+  },
+  {
+    "id": "bulugh-al-maram_7",
+    "bookSlug": "bulugh-al-maram",
+    "chapterNumber": 7,
+    "titleBn": "কিতাবুল বুয়ূ' (ক্রয়-বিক্রয় ও ব্যবসা)",
+    "titleAr": "كتاب البيوع",
+    "hadithRange": "৮৫৩ - ৯৯৮"
+  },
+  {
+    "id": "bulugh-al-maram_8",
+    "bookSlug": "bulugh-al-maram",
+    "chapterNumber": 8,
+    "titleBn": "কিতাবুন নিকাহ (বিবাহ ও মোহরানা)",
+    "titleAr": "كتاب النكاح",
+    "hadithRange": "৯৯৯ - ১১৪৫"
+  },
+  {
+    "id": "bulugh-al-maram_9",
+    "bookSlug": "bulugh-al-maram",
+    "chapterNumber": 9,
+    "titleBn": "কিতাবুত তালাক (তালাক ও ইদ্দত)",
+    "titleAr": "كتاب الطلاق",
+    "hadithRange": "১১৪৬ - ১২২০"
+  },
+  {
+    "id": "bulugh-al-maram_10",
+    "bookSlug": "bulugh-al-maram",
+    "chapterNumber": 10,
+    "titleBn": "কিতাবুল জিনায়াত (অপরাধ ও শাস্তি)",
+    "titleAr": "كتاب الجنايات",
+    "hadithRange": "১২২১ - ১২৮৫"
+  },
+  {
+    "id": "bulugh-al-maram_11",
+    "bookSlug": "bulugh-al-maram",
+    "chapterNumber": 11,
+    "titleBn": "কিতাবুল হুদূদ (ইসলামি দণ্ডবিধি)",
+    "titleAr": "كتاب الحدود",
+    "hadithRange": "১২৮৬ - ১৩৬২"
+  },
+  {
+    "id": "bulugh-al-maram_12",
+    "bookSlug": "bulugh-al-maram",
+    "chapterNumber": 12,
+    "titleBn": "কিতাবুল জিহাদ (জিহাদ ও নিরাপত্তা)",
+    "titleAr": "كتاب الجهاد",
+    "hadithRange": "১৩৬৩ - ১৪৪৮"
+  },
+  {
+    "id": "bulugh-al-maram_13",
+    "bookSlug": "bulugh-al-maram",
+    "chapterNumber": 13,
+    "titleBn": "কিতাবুল আতইমাহ (খাদ্য ও পানীয়)",
+    "titleAr": "كتاب الأطعمة",
+    "hadithRange": "১৪৪৯ - ১৫০৫"
+  },
+  {
+    "id": "bulugh-al-maram_14",
+    "bookSlug": "bulugh-al-maram",
+    "chapterNumber": 14,
+    "titleBn": "কিতাবুল আইমান ওয়ান নুযূর (শপথ ও মানত)",
+    "titleAr": "كتاب الأيمان والنذور",
+    "hadithRange": "১৫০৬ - ১৫৫২"
+  },
+  {
+    "id": "bulugh-al-maram_15",
+    "bookSlug": "bulugh-al-maram",
+    "chapterNumber": 15,
+    "titleBn": "কিতাবুল কাযা (বিচার ও সাক্ষ্য)",
+    "titleAr": "كتاب القضاء",
+    "hadithRange": "১৫৫৩ - ১৫৭৮"
+  },
+  {
+    "id": "bulugh-al-maram_16",
+    "bookSlug": "bulugh-al-maram",
+    "chapterNumber": 16,
+    "titleBn": "কিতাবুল জামে' (আখলাক ও শিষ্টাচার)",
+    "titleAr": "كتاب الجامع",
+    "hadithRange": "১৫৭৯ - ১৫৯৬"
+  }
+]

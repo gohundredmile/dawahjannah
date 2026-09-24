@@ -911,41 +911,80 @@ fun SurahDetailScreen(
                         )
                     }
 
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            text = "সূরা ${surah.nameBn}",
-                            style = MaterialTheme.typography.titleMedium.copy(
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onSurface
-                            ),
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                        Text(
-                            text = "${surah.revelationType} • আয়াত: ${BanglaNumberUtils.toBanglaDigits(surah.totalAyat)}",
-                            style = MaterialTheme.typography.bodySmall.copy(
-                                fontSize = 11.5.sp,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            ),
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                    }
-
+                    // Quick Surah Dropdown Selector in Top Bar
                     Surface(
-                        color = IslamicGreen.copy(alpha = 0.12f),
-                        shape = RoundedCornerShape(8.dp),
-                        modifier = Modifier.padding(end = 8.dp)
+                        onClick = { showSurahQuickSwitchDialog = true },
+                        shape = RoundedCornerShape(10.dp),
+                        color = IslamicGreen.copy(alpha = 0.08f),
+                        border = BorderStroke(1.dp, IslamicGreen.copy(alpha = 0.25f)),
+                        modifier = Modifier
+                            .weight(1f)
+                            .testTag("btn_top_bar_surah_dropdown")
                     ) {
-                        Text(
-                            text = "${BanglaNumberUtils.toBanglaDigits(surah.number)}/১১৪",
-                            style = MaterialTheme.typography.labelSmall.copy(
-                                fontWeight = FontWeight.Bold,
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 8.dp, vertical = 5.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column(modifier = Modifier.weight(1f)) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Text(
+                                        text = "সূরা ${surah.nameBn}",
+                                        style = MaterialTheme.typography.titleMedium.copy(
+                                            fontWeight = FontWeight.Bold,
+                                            color = MaterialTheme.colorScheme.onSurface
+                                        ),
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis
+                                    )
+                                    Spacer(modifier = Modifier.width(4.dp))
+                                    Icon(
+                                        imageVector = Icons.Default.ArrowDropDown,
+                                        contentDescription = "সূরা পরিবর্তন ড্রপডাউন",
+                                        tint = IslamicGreen,
+                                        modifier = Modifier.size(22.dp)
+                                    )
+                                }
+                                Text(
+                                    text = "${surah.revelationType} • আয়াত: ${BanglaNumberUtils.toBanglaDigits(surah.totalAyat)} • দ্রুত পরিবর্তন ▾",
+                                    style = MaterialTheme.typography.bodySmall.copy(
+                                        fontSize = 11.sp,
+                                        fontWeight = FontWeight.Medium,
+                                        color = IslamicGreen
+                                    ),
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                            }
+
+                            Surface(
                                 color = IslamicGreen,
-                                fontSize = 11.sp
-                            ),
-                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-                        )
+                                shape = RoundedCornerShape(8.dp),
+                                modifier = Modifier.padding(start = 6.dp)
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(horizontal = 7.dp, vertical = 4.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(2.dp)
+                                ) {
+                                    Text(
+                                        text = "${BanglaNumberUtils.toBanglaDigits(surah.number)}/১১৪",
+                                        style = MaterialTheme.typography.labelSmall.copy(
+                                            fontWeight = FontWeight.Bold,
+                                            color = Color.White,
+                                            fontSize = 11.sp
+                                        )
+                                    )
+                                    Icon(
+                                        imageVector = Icons.Default.ArrowDropDown,
+                                        contentDescription = null,
+                                        tint = Color.White,
+                                        modifier = Modifier.size(14.dp)
+                                    )
+                                }
+                            }
+                        }
                     }
                 }
 

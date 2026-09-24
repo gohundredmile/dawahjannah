@@ -767,8 +767,11 @@ private fun HadithBookDetailView(
     var selectedChapterNumber by remember(book.slug) { mutableIntStateOf(1) }
     var showHadithJumpDialog by remember { mutableStateOf(false) }
     var showBookSwitchDialog by remember { mutableStateOf(false) }
+    var showChapterPickerDialog by remember { mutableStateOf(false) }
+    var isDownloadingChapter by remember { mutableStateOf(false) }
     val listState = rememberLazyListState()
     val coroutineScope = rememberCoroutineScope()
+    val context = LocalContext.current
 
     val chapters by hadithRepository.getChaptersForBook(book.slug).collectAsState(initial = emptyList())
     val hadithsInChapter by hadithRepository.getHadithsForChapter(book.slug, selectedChapterNumber).collectAsState(initial = emptyList())
@@ -831,7 +834,7 @@ private fun HadithBookDetailView(
             }
         }
 
-        // Chapters Strip (if available)
+        // Chapters Strip (if available) with Fast Chapter Switcher
         if (chapters.isNotEmpty()) {
             Row(
                 modifier = Modifier
@@ -839,8 +842,37 @@ private fun HadithBookDetailView(
                     .background(MaterialTheme.colorScheme.surface)
                     .horizontalScroll(rememberScrollState())
                     .padding(horizontal = 12.dp, vertical = 6.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
+                // All Chapters Button
+                Surface(
+                    onClick = { showChapterPickerDialog = true },
+                    shape = RoundedCornerShape(10.dp),
+                    color = MaterialTheme.colorScheme.primaryContainer,
+                    border = BorderStroke(1.dp, IslamicGreen)
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.MenuBook,
+                            contentDescription = null,
+                            tint = IslamicGreen,
+                            modifier = Modifier.size(14.dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = "সকল অধ্যায় (${BanglaNumberUtils.toBanglaDigits(chapters.size)}) ▾",
+                            style = MaterialTheme.typography.labelSmall.copy(
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer
+                            )
+                        )
+                    }
+                }
+
                 chapters.forEach { chapter ->
                     val isSelected = chapter.chapterNumber == selectedChapterNumber
                     Surface(
@@ -861,6 +893,71 @@ private fun HadithBookDetailView(
                             modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
                         )
                     }
+                }
+            }
+        }
+
+        // Offline Database Status Banner & Sync Action
+        Surface(
+            color = IslamicGreen.copy(alpha = 0.07f),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 12.dp, vertical = 3.dp),
+            shape = RoundedCornerShape(8.dp),
+            border = BorderStroke(0.6.dp, IslamicGreen.copy(alpha = 0.25f))
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 10.dp, vertical = 4.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Row(
+                    modifier = Modifier.weight(1f),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.CheckCircle,
+                        contentDescription = null,
+                        tint = IslamicGreen,
+                        modifier = Modifier.size(15.dp)
+                    )
+                    Spacer(modifier = Modifier.width(5.dp))
+                    Text(
+                        text = if (activeHadiths.isNotEmpty()) {
+                            "অফলাইন ডাটাবেজে প্রস্তুত: ${BanglaNumberUtils.toBanglaDigits(activeHadiths.size)} টি হাদীস"
+                        } else {
+                            "অধ্যায় $selectedChapterNumber এর হাদীস লোড হচ্ছে..."
+                        },
+                        fontSize = 11.5.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                }
+
+                TextButton(
+                    onClick = {
+                        coroutineScope.launch {
+                            isDownloadingChapter = true
+                            val res = hadithRepository.downloadChapterToOfflineDb(book.slug, selectedChapterNumber)
+                            isDownloadingChapter = false
+                            res.onSuccess { count ->
+                                Toast.makeText(context, "অধ্যায় $selectedChapterNumber-এর $count টি হাদীস অফলাইন ডাটাবেজে সংরক্ষিত হয়েছে ✅", Toast.LENGTH_SHORT).show()
+                            }.onFailure { err ->
+                                Toast.makeText(context, err.message ?: "ডাউনলোড ব্যর্থ হয়েছে", Toast.LENGTH_SHORT).show()
+                            }
+                        }
+                    },
+                    enabled = !isDownloadingChapter,
+                    contentPadding = PaddingValues(horizontal = 6.dp, vertical = 0.dp)
+                ) {
+                    Text(
+                        text = if (isDownloadingChapter) "সংরক্ষণ হচ্ছে..." else "💾 অফলাইনে সেভ করুন",
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = IslamicGreen
+                    )
                 }
             }
         }
@@ -1096,6 +1193,20 @@ private fun HadithBookDetailView(
                 showBookSwitchDialog = false
             },
             onDismiss = { showBookSwitchDialog = false }
+        )
+    }
+
+    // Chapter Switch Dialog
+    if (showChapterPickerDialog) {
+        HadithChapterSwitchDialog(
+            chapters = chapters,
+            currentChapterNumber = selectedChapterNumber,
+            onSelectChapter = { targetChapter ->
+                selectedChapterNumber = targetChapter
+                coroutineScope.launch { listState.scrollToItem(0) }
+                showChapterPickerDialog = false
+            },
+            onDismiss = { showChapterPickerDialog = false }
         )
     }
 }
@@ -1662,6 +1773,156 @@ private fun HadithBookSwitchDialog(
                                     tint = IslamicGreen,
                                     modifier = Modifier.size(18.dp)
                                 )
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text("বন্ধ করুন", color = IslamicGreen, fontWeight = FontWeight.Bold)
+            }
+        }
+    )
+}
+
+@Composable
+private fun HadithChapterSwitchDialog(
+    chapters: List<HadithChapterEntity>,
+    currentChapterNumber: Int,
+    onSelectChapter: (Int) -> Unit,
+    onDismiss: () -> Unit
+) {
+    var searchQuery by remember { mutableStateOf("") }
+    val filtered = remember(chapters, searchQuery) {
+        if (searchQuery.isBlank()) chapters
+        else {
+            val q = searchQuery.trim().lowercase()
+            chapters.filter {
+                it.titleBn.lowercase().contains(q) ||
+                    it.titleAr.lowercase().contains(q) ||
+                    it.chapterNumber.toString() == q ||
+                    BanglaNumberUtils.toBanglaDigits(it.chapterNumber).contains(q) ||
+                    it.hadithRange.contains(q)
+            }
+        }
+    }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    imageVector = Icons.Default.MenuBook,
+                    contentDescription = null,
+                    tint = IslamicGreen,
+                    modifier = Modifier.size(22.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = "অধ্যায় নির্বাচন (${BanglaNumberUtils.toBanglaDigits(chapters.size)} টি অধ্যায়)",
+                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
+                )
+            }
+        },
+        text = {
+            Column(modifier = Modifier.fillMaxWidth().height(420.dp)) {
+                OutlinedTextField(
+                    value = searchQuery,
+                    onValueChange = { searchQuery = it },
+                    placeholder = { Text("অধ্যায়ের নাম বা নম্বর দিয়ে খুঁজুন...", fontSize = 12.sp) },
+                    leadingIcon = {
+                        Icon(Icons.Default.Search, contentDescription = null, modifier = Modifier.size(18.dp))
+                    },
+                    trailingIcon = {
+                        if (searchQuery.isNotEmpty()) {
+                            IconButton(onClick = { searchQuery = "" }) {
+                                Icon(Icons.Default.Clear, contentDescription = "মুছুন", modifier = Modifier.size(18.dp))
+                            }
+                        }
+                    },
+                    singleLine = true,
+                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 8.dp)
+                )
+
+                Text(
+                    text = "মোট প্রাপ্ত: ${BanglaNumberUtils.toBanglaDigits(filtered.size)} টি অধ্যায়",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(bottom = 6.dp)
+                )
+
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    items(filtered, key = { it.id }) { ch ->
+                        val isSelected = ch.chapterNumber == currentChapterNumber
+                        Surface(
+                            onClick = {
+                                onSelectChapter(ch.chapterNumber)
+                            },
+                            shape = RoundedCornerShape(10.dp),
+                            color = if (isSelected) IslamicGreen.copy(alpha = 0.15f) else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f),
+                            border = if (isSelected) BorderStroke(1.2.dp, IslamicGreen) else null,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 12.dp, vertical = 8.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Surface(
+                                    color = if (isSelected) IslamicGreen else MaterialTheme.colorScheme.primaryContainer,
+                                    shape = RoundedCornerShape(6.dp)
+                                ) {
+                                    Text(
+                                        text = BanglaNumberUtils.toBanglaDigits(ch.chapterNumber),
+                                        style = MaterialTheme.typography.labelSmall.copy(
+                                            fontWeight = FontWeight.Bold,
+                                            color = if (isSelected) Color.White else MaterialTheme.colorScheme.onPrimaryContainer
+                                        ),
+                                        modifier = Modifier.padding(horizontal = 7.dp, vertical = 3.dp)
+                                    )
+                                }
+
+                                Spacer(modifier = Modifier.width(10.dp))
+
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = ch.titleBn,
+                                        style = MaterialTheme.typography.bodyMedium.copy(
+                                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.SemiBold,
+                                            color = if (isSelected) IslamicGreen else MaterialTheme.colorScheme.onSurface
+                                        ),
+                                        fontSize = 13.sp
+                                    )
+                                    if (ch.hadithRange.isNotBlank()) {
+                                        Text(
+                                            text = "হাদীস: ${ch.hadithRange}",
+                                            style = MaterialTheme.typography.bodySmall.copy(
+                                                fontSize = 11.sp,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                            )
+                                        )
+                                    }
+                                }
+
+                                if (isSelected) {
+                                    Icon(
+                                        imageVector = Icons.Default.CheckCircle,
+                                        contentDescription = "নির্বাচিত",
+                                        tint = IslamicGreen,
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                }
                             }
                         }
                     }

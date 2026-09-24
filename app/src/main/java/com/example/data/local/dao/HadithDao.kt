@@ -36,6 +36,9 @@ interface HadithDao {
     @Query("SELECT * FROM hadith_chapters WHERE bookSlug = :bookSlug ORDER BY chapterNumber ASC")
     fun getChaptersForBook(bookSlug: String): Flow<List<HadithChapterEntity>>
 
+    @Query("SELECT COUNT(*) FROM hadith_chapters")
+    suspend fun getChaptersCount(): Int
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertChapters(chapters: List<HadithChapterEntity>)
 
@@ -45,6 +48,15 @@ interface HadithDao {
 
     @Query("SELECT * FROM hadith_items WHERE bookSlug = :bookSlug AND chapterNumber = :chapterNumber ORDER BY hadithNumber ASC")
     fun getHadithsForChapter(bookSlug: String, chapterNumber: Int): Flow<List<HadithEntity>>
+
+    @Query("SELECT * FROM hadith_items WHERE bookSlug = :bookSlug AND chapterNumber = :chapterNumber ORDER BY hadithNumber ASC")
+    suspend fun getHadithsForChapterSync(bookSlug: String, chapterNumber: Int): List<HadithEntity>
+
+    @Query("SELECT * FROM hadith_items WHERE bookSlug = :bookSlug ORDER BY hadithNumber ASC LIMIT :limit OFFSET :offset")
+    suspend fun getHadithsForBookSync(bookSlug: String, limit: Int = 100, offset: Int = 0): List<HadithEntity>
+
+    @Query("SELECT * FROM hadith_items WHERE bookSlug = :bookSlug AND hadithNumber = :number LIMIT 1")
+    suspend fun getHadithByNumberSync(bookSlug: String, number: Int): HadithEntity?
 
     @Query("SELECT * FROM hadith_items WHERE id = :id LIMIT 1")
     fun getHadithById(id: String): Flow<HadithEntity?>

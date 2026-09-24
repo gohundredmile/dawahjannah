@@ -87,6 +87,7 @@ import com.example.ui.components.SehriIftarSummaryCard
 import com.example.ui.components.TopFeaturesSection
 import com.example.ui.components.TripleCalendarDialog
 import com.example.ui.theme.IslamicGold
+import com.example.ui.theme.IslamicGreen
 import com.example.ui.theme.LocalBanglaFontFamily
 import com.example.ui.viewmodel.AppTab
 import com.example.ui.viewmodel.MainViewModel
@@ -134,11 +135,24 @@ fun HomeScreen(
         val isNamazModeActiveNow = NamazModeManager.isNamazModeActive(context)
         val namazMinutesLeft = NamazModeManager.getRemainingMinutes(context)
         listOf(
+            // পবিত্র কুরআন
+            HomeFeatureItem(
+                id = "holy_quran",
+                serialNumberBn = "০১",
+                titleBn = "১. পবিত্র কুরআন",
+                shortTitleBn = "আল-কুরআন",
+                subtitleBn = "১১৪ সূরার অনুবাদ, বাংলা উচ্চারণ, বিশদ তাফসীর ও ক্বারী তিলাওয়াত",
+                categoryBn = "কুরআন ও তাফসীর",
+                icon = Icons.Default.MenuBook,
+                iconColor = IslamicGreen,
+                isTopEight = true,
+                onClickAction = { viewModel.openHolyQuran() }
+            ),
             // ১. তাসবিহ
             HomeFeatureItem(
                 id = "tasbih",
-                serialNumberBn = "০১",
-                titleBn = "১. তাসবিহ",
+                serialNumberBn = "০২",
+                titleBn = "২. তাসবিহ",
                 shortTitleBn = "তাসবিহ",
                 subtitleBn = "ডিজিটাল তাসবিহ কাউন্টার, তাসবিহ তালিকা ও জিকির",
                 categoryBn = "দো‘আ ও যিকির",

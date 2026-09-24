@@ -6,11 +6,15 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import com.example.data.local.dao.BookmarkDao
 import com.example.data.local.dao.ChecklistDao
+import com.example.data.local.dao.QuranDao
 import com.example.data.local.dao.RamadanDao
 import com.example.data.local.dao.ScratchpadDao
 import com.example.data.local.dao.SunnahHabitDao
 import com.example.data.local.entity.BookmarkEntity
 import com.example.data.local.entity.ChecklistRecord
+import com.example.data.local.entity.QuranAyahEntity
+import com.example.data.local.entity.QuranBookmarkEntity
+import com.example.data.local.entity.QuranSurahEntity
 import com.example.data.local.entity.RamadanCharityEntryEntity
 import com.example.data.local.entity.RamadanChecklistEntity
 import com.example.data.local.entity.RamadanDayLogEntity
@@ -31,9 +35,12 @@ import com.example.data.local.entity.SunnahHabitLog
         RamadanMissedFastEntity::class,
         RamadanShawwalLogEntity::class,
         RamadanCharityEntryEntity::class,
-        RamadanSettingsEntity::class
+        RamadanSettingsEntity::class,
+        QuranSurahEntity::class,
+        QuranAyahEntity::class,
+        QuranBookmarkEntity::class
     ],
-    version = 4,
+    version = 5,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -42,6 +49,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun scratchpadDao(): ScratchpadDao
     abstract fun sunnahHabitDao(): SunnahHabitDao
     abstract fun ramadanDao(): RamadanDao
+    abstract fun quranDao(): QuranDao
 
     companion object {
         @Volatile

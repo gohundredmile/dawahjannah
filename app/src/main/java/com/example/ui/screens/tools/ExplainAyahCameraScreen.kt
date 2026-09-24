@@ -154,6 +154,7 @@ import java.util.concurrent.Executors
 @Composable
 fun ExplainAyahCameraScreen(
     onNavigateBack: () -> Unit,
+    onOpenHolyQuran: ((Int?) -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
@@ -342,7 +343,8 @@ fun ExplainAyahCameraScreen(
                 audioPlayer.stop()
                 recognizedAyah = null
                 onNavigateBack()
-            }
+            },
+            onOpenHolyQuran = onOpenHolyQuran
         )
     } else {
         // Live Camera / Scanner Viewfinder
@@ -1060,7 +1062,8 @@ private fun AyahExplanationDetailView(
     ayah: AyahExplanation,
     audioPlayer: AyahAudioPlayerHelper,
     onRescan: () -> Unit,
-    onNavigateBack: () -> Unit
+    onNavigateBack: () -> Unit,
+    onOpenHolyQuran: ((Int?) -> Unit)? = null
 ) {
     val context = LocalContext.current
     val banglaFont = LocalBanglaFontFamily.current
@@ -1362,7 +1365,8 @@ private fun AyahExplanationDetailView(
                         fontSizeSp = fontSizeSp,
                         onFontSizeChange = { fontSizeSp = it },
                         banglaFont = banglaFont,
-                        arabicFont = arabicFont
+                        arabicFont = arabicFont,
+                        onOpenHolyQuran = onOpenHolyQuran
                     )
                 }
             }
@@ -1426,7 +1430,8 @@ private fun TabCoreTextView(
     fontSizeSp: Float,
     onFontSizeChange: (Float) -> Unit,
     banglaFont: androidx.compose.ui.text.font.FontFamily?,
-    arabicFont: androidx.compose.ui.text.font.FontFamily?
+    arabicFont: androidx.compose.ui.text.font.FontFamily?,
+    onOpenHolyQuran: ((Int?) -> Unit)? = null
 ) {
     val context = LocalContext.current
 
@@ -1467,15 +1472,51 @@ private fun TabCoreTextView(
                     }
 
                     // Copy Arabic
-                    IconButton(
-                        onClick = {
-                            val cm = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                            cm.setPrimaryClip(ClipData.newPlainText("Arabic Ayah", ayah.arabicText))
-                            Toast.makeText(context, "আরবি টেক্সট কপি করা হয়েছে", Toast.LENGTH_SHORT).show()
-                        },
-                        modifier = Modifier.size(32.dp)
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
-                        Icon(Icons.Default.ContentCopy, contentDescription = "কপি", modifier = Modifier.size(18.dp))
+                        if (onOpenHolyQuran != null) {
+                            Surface(
+                                shape = RoundedCornerShape(12.dp),
+                                color = IslamicGold.copy(alpha = 0.15f),
+                                border = BorderStroke(1.dp, IslamicGold.copy(alpha = 0.4f)),
+                                modifier = Modifier.clickable {
+                                    onOpenHolyQuran(ayah.surahNumber)
+                                }
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.MenuBook,
+                                        contentDescription = "কুরআনে পড়ুন",
+                                        tint = IslamicGold,
+                                        modifier = Modifier.size(14.dp)
+                                    )
+                                    Text(
+                                        text = "কুরআনে পড়ুন",
+                                        style = MaterialTheme.typography.labelSmall.copy(
+                                            color = IslamicGold,
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                    )
+                                }
+                            }
+                        }
+
+                        IconButton(
+                            onClick = {
+                                val cm = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                                cm.setPrimaryClip(ClipData.newPlainText("Arabic Ayah", ayah.arabicText))
+                                Toast.makeText(context, "আরবি টেক্সট কপি করা হয়েছে", Toast.LENGTH_SHORT).show()
+                            },
+                            modifier = Modifier.size(32.dp)
+                        ) {
+                            Icon(Icons.Default.ContentCopy, contentDescription = "কপি", modifier = Modifier.size(18.dp))
+                        }
                     }
                 }
 

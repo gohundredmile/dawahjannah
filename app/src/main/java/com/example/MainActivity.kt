@@ -42,6 +42,7 @@ import com.example.ui.screens.HomeScreen
 import com.example.ui.screens.MasnunDuaScreen
 import com.example.ui.screens.MoreScreen
 import com.example.ui.screens.RoutineScreen
+import com.example.ui.screens.quran.HolyQuranScreen
 import com.example.ui.screens.sub.AsmaulHusnaScreen
 import com.example.ui.screens.sub.AyatDetectorAndSolverScreen
 import com.example.ui.screens.sub.QiblaCompassScreen
@@ -227,6 +228,7 @@ class MainActivity : ComponentActivity() {
                                 AppTab.TOOLS -> {
                                     when (currentToolsSub) {
                                         ToolsSubScreen.MAIN -> ToolsScreen(
+                                            onOpenHolyQuran = { viewModel.openHolyQuran() },
                                             onOpenDuaBySituation = { viewModel.openDuaBySituation() },
                                             onOpenPersonalDuaBuilder = { viewModel.navigateToToolsSubScreen(ToolsSubScreen.PERSONAL_DUA_BUILDER) },
                                             onOpenExplainAyahCamera = { viewModel.openExplainAyahCamera() },
@@ -241,6 +243,16 @@ class MainActivity : ComponentActivity() {
                                             onOpenMosqueMode = { viewModel.openMosqueMode() },
                                             contentPadding = innerPadding
                                         )
+                                        ToolsSubScreen.HOLY_QURAN -> {
+                                            val initialSurah by viewModel.targetQuranSurahNumber.collectAsState()
+                                            HolyQuranScreen(
+                                                quranRepository = viewModel.quranRepository,
+                                                audioManager = viewModel.quranAudioManager,
+                                                initialSurahNumber = initialSurah,
+                                                onNavigateBack = { viewModel.navigateBackToTools() },
+                                                contentPadding = innerPadding
+                                            )
+                                        }
                                         ToolsSubScreen.MOSQUE_MODE -> MosqueModeScreen(
                                             viewModel = viewModel,
                                             onNavigateBack = { viewModel.navigateBackToTools() },
@@ -256,7 +268,8 @@ class MainActivity : ComponentActivity() {
                                             onNavigateBack = { viewModel.navigateBackToTools() }
                                         )
                                         ToolsSubScreen.EXPLAIN_AYAH_CAMERA -> ExplainAyahCameraScreen(
-                                            onNavigateBack = { viewModel.navigateBackToTools() }
+                                            onNavigateBack = { viewModel.navigateBackToTools() },
+                                            onOpenHolyQuran = { surahNumber -> viewModel.openHolyQuran(surahNumber) }
                                         )
                                         ToolsSubScreen.SMART_QURAN_SEARCH -> SmartQuranSearchScreen(
                                             onNavigateBack = { viewModel.navigateBackToTools() }

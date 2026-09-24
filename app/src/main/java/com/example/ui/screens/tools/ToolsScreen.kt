@@ -89,6 +89,7 @@ data class IslamicToolItem(
 
 @Composable
 fun ToolsScreen(
+    onOpenHolyQuran: () -> Unit = {},
     onOpenDuaBySituation: () -> Unit = {},
     onOpenPersonalDuaBuilder: () -> Unit = {},
     onOpenExplainAyahCamera: () -> Unit,
@@ -1334,6 +1335,15 @@ fun ToolsScreen(
 
         // Active tools list
         val activeTools = listOf(
+            IslamicToolItem(
+                id = "tool_holy_quran",
+                titleBn = "The Holy Quran (পবিত্র কুরআন)",
+                subtitleBn = "১১৪ সূরার প্রমিত আরবি পাঠ, বিশুদ্ধ বাংলা উচ্চারণ, প্রামাণ্য অনুবাদ (ড. আবু বকর যাকারিয়া), বিশদ তাফসীর ও অফলাইন অডিও তিলাওয়াত।",
+                icon = Icons.Default.MenuBook,
+                badgeBn = "কুরআনুল কারীম",
+                isFeatured = true,
+                onClick = onOpenHolyQuran
+            ),
             IslamicToolItem(
                 id = "tool_mosque_mode",
                 titleBn = "Mosque Mode (মসজিদ মোড)",

@@ -90,3 +90,5 @@ val IslamicGoldLight = NaturalGoldAccentLight
 val IslamicIvory = NaturalCreamGold
 val IslamicBorderGold = Color(0xFFFDE68A)
 val IslamicCardDarkBorder = Color(0xFF2D4B3D)
+val IslamicGreen = Color(0xFF10B981)
+val IslamicGreenDark = Color(0xFF064E3B)

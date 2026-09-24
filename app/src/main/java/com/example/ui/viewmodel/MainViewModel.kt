@@ -1339,22 +1339,34 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             _apkDownloadState.value = ApkDownloadProgress(isDownloading = true, progress = 0.05f)
 
-            var release = _latestReleaseInfo.value
-            if (release == null) {
-                val checkResult = gitHubUpdateManager.checkLatestRelease()
-                if (checkResult.isSuccess) {
-                    release = checkResult.getOrNull()
-                    _latestReleaseInfo.value = release
-                }
+            // Actively fetch fresh release info from GitHub
+            val checkResult = gitHubUpdateManager.checkLatestRelease()
+            val release = if (checkResult.isSuccess) {
+                val r = checkResult.getOrNull()
+                if (r != null) _latestReleaseInfo.value = r
+                r
+            } else {
+                _latestReleaseInfo.value
             }
 
             val installedCode = gitHubUpdateManager.installedAppVersionCode
             val installedName = gitHubUpdateManager.installedAppVersionName
-            val remoteVer = release?.tagName?.removePrefix("v")?.removePrefix("V")?.trim() ?: ""
-            val remoteCode = (release?.remoteVersionCode ?: 0).toLong()
+            val rawRemoteVer = release?.tagName?.removePrefix("v")?.removePrefix("V")?.trim()
+                ?: release?.versionName?.removePrefix("v")?.removePrefix("V")?.trim() ?: ""
+            val remoteVer = rawRemoteVer.split(" ")[0].trim()
+            val remoteCode = if ((release?.remoteVersionCode ?: 0) > 0) {
+                (release?.remoteVersionCode ?: 0).toLong()
+            } else if (remoteVer.isNotBlank()) {
+                gitHubUpdateManager.parseVersionToCode(remoteVer)
+            } else {
+                0L
+            }
 
             // If same or older version is installed on the phone, prompt and abort!
-            val isSameOrOlder = if (remoteCode > 0 && installedCode > 0) {
+            val isExactSameVersion = remoteVer.isNotBlank() && remoteVer.equals(installedName.trim().removePrefix("v").removePrefix("V"), ignoreCase = true)
+            val isSameOrOlder = if (isExactSameVersion) {
+                true
+            } else if (remoteCode > 0 && installedCode > 0) {
                 remoteCode <= installedCode
             } else if (remoteVer.isNotBlank()) {
                 !gitHubUpdateManager.isVersionNewer(remoteVer, installedName)
@@ -1370,7 +1382,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     isAlreadyUpToDate = true,
                     isSameVersionInstalled = true,
                     upToDatePromptTitle = "This version already installed.",
-                    upToDateMessage = "This version already installed.\n\nআপনার ডিভাইসে ইতিমধ্যে বর্তমান সংস্করণ v$installedName (কোড: $installedCode) সফলভাবে ইনস্টল রয়েছে। কোনো নতুন আপডেট নেই।\n\nওটিএ আপডেট প্রক্রিয়া বাতিল করা হয়েছে (Update Aborted)।"
+                    upToDateMessage = "This version already installed.\n\nআপনার ডিভাইসে ইতিমধ্যে বর্তমান সংস্করণ (v$installedName, কোড: $installedCode) সফলভাবে ইনস্টল রয়েছে। ওটিএ আপডেট বাতিল করা হয়েছে (Update Aborted)।"
                 )
                 return@launch
             }
@@ -1399,13 +1411,10 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 }
             }
 
+            // Target URL is strictly resolved to app-debug.apk
             val rawTargetUrl = release?.downloadUrl
                 ?: "https://github.com/${gitHubUpdateManager.repoOwner}/${gitHubUpdateManager.repoName}/releases/latest/download/app-debug.apk"
-            val targetUrl = if (rawTargetUrl.contains("app-release.apk", ignoreCase = true)) {
-                rawTargetUrl.replace("app-release.apk", "app-debug.apk", ignoreCase = true)
-            } else {
-                rawTargetUrl
-            }
+            val targetUrl = gitHubUpdateManager.resolveDirectApkUrl(rawTargetUrl)
 
             val downloadResult = gitHubUpdateManager.downloadApkWithProgress(targetUrl) { progress, downloadedBytes, totalBytes ->
                 val dlMb = downloadedBytes.toFloat() / (1024f * 1024f)

@@ -47,6 +47,7 @@ import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Replay10
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.Translate
@@ -77,6 +78,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -101,6 +103,7 @@ import androidx.compose.ui.unit.sp
 import com.example.data.datasource.QuranSurahCatalog
 import com.example.data.model.QuranAyah
 import com.example.data.model.QuranReciter
+import com.example.data.model.QuranSettings
 import com.example.data.model.QuranSurah
 import com.example.data.model.QuranTranslator
 import com.example.data.repository.QuranRepository
@@ -108,6 +111,7 @@ import com.example.ui.theme.IslamicGold
 import com.example.ui.theme.IslamicGreen
 import com.example.util.BanglaNumberUtils
 import com.example.util.QuranAudioManager
+import com.example.util.QuranSettingsManager
 import kotlinx.coroutines.launch
 
 enum class QuranFilter(val titleBn: String) {
@@ -128,10 +132,13 @@ fun HolyQuranScreen(
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
+    val settingsManager = remember { QuranSettingsManager(context) }
 
     var activeSurahNumber by remember { mutableStateOf(initialSurahNumber) }
     var selectedTranslator by remember { mutableStateOf(QuranTranslator.DR_ZAKARIA) }
     var showReciterDialog by remember { mutableStateOf(false) }
+    var showSettingsDialog by remember { mutableStateOf(false) }
+    var showAudioManagerDialog by remember { mutableStateOf(false) }
 
     val reciter by audioManager.selectedReciter.collectAsState()
     val playerState by audioManager.playerState.collectAsState()
@@ -150,6 +157,8 @@ fun HolyQuranScreen(
                 activeSurahNumber = surah.number
             },
             onOpenReciterPicker = { showReciterDialog = true },
+            onOpenSettings = { showSettingsDialog = true },
+            onOpenAudioManager = { showAudioManagerDialog = true },
             onNavigateBack = onNavigateBack,
             contentPadding = contentPadding
         )
@@ -164,9 +173,12 @@ fun HolyQuranScreen(
             surah = surah,
             quranRepository = quranRepository,
             audioManager = audioManager,
+            settingsManager = settingsManager,
             selectedTranslator = selectedTranslator,
             onSelectTranslator = { selectedTranslator = it },
             onOpenReciterPicker = { showReciterDialog = true },
+            onOpenSettings = { showSettingsDialog = true },
+            onOpenAudioManager = { showAudioManagerDialog = true },
             onBackToIndex = { activeSurahNumber = null },
             contentPadding = contentPadding
         )
@@ -181,6 +193,24 @@ fun HolyQuranScreen(
                 Toast.makeText(context, "ক্বারী নির্বাচিত: ${newReciter.nameBn}", Toast.LENGTH_SHORT).show()
             },
             onDismiss = { showReciterDialog = false }
+        )
+    }
+
+    if (showSettingsDialog) {
+        QuranSettingsDialog(
+            settingsManager = settingsManager,
+            onDismiss = { showSettingsDialog = false },
+            onOpenAudioManager = {
+                showSettingsDialog = false
+                showAudioManagerDialog = true
+            }
+        )
+    }
+
+    if (showAudioManagerDialog) {
+        QuranAudioManagerDialog(
+            audioManager = audioManager,
+            onDismiss = { showAudioManagerDialog = false }
         )
     }
 }
@@ -198,6 +228,8 @@ fun HolyQuranIndexScreen(
     audioManager: QuranAudioManager,
     onSurahSelected: (QuranSurah) -> Unit,
     onOpenReciterPicker: () -> Unit,
+    onOpenSettings: () -> Unit,
+    onOpenAudioManager: () -> Unit,
     onNavigateBack: () -> Unit,
     contentPadding: PaddingValues
 ) {
@@ -206,6 +238,7 @@ fun HolyQuranIndexScreen(
     val bookmarks by quranRepository.getBookmarkedAyahs().collectAsState(initial = emptyList())
     val playerState by audioManager.playerState.collectAsState()
     val reciter by audioManager.selectedReciter.collectAsState()
+    val batchState by audioManager.batchDownloadState.collectAsState()
 
     var searchQuery by remember { mutableStateOf("") }
     var selectedFilter by remember { mutableStateOf(QuranFilter.ALL) }
@@ -303,6 +336,17 @@ fun HolyQuranIndexScreen(
                 }
 
                 IconButton(
+                    onClick = onOpenAudioManager,
+                    modifier = Modifier.testTag("btn_audio_manager")
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.CloudDownload,
+                        contentDescription = "কুরআন অডিও ডাউনলোড ম্যানেজার",
+                        tint = IslamicGreen
+                    )
+                }
+
+                IconButton(
                     onClick = onOpenReciterPicker,
                     modifier = Modifier.testTag("btn_reciter_picker")
                 ) {
@@ -310,6 +354,57 @@ fun HolyQuranIndexScreen(
                         imageVector = Icons.AutoMirrored.Filled.VolumeUp,
                         contentDescription = "ক্বারী নির্বাচন",
                         tint = IslamicGold
+                    )
+                }
+
+                IconButton(
+                    onClick = onOpenSettings,
+                    modifier = Modifier.testTag("btn_quran_settings")
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Settings,
+                        contentDescription = "কুরআন সেটিংস",
+                        tint = MaterialTheme.colorScheme.onSurface
+                    )
+                }
+            }
+        }
+
+        // Active Batch Download Banner (if running)
+        if (batchState.isBatchRunning) {
+            Surface(
+                color = IslamicGreen.copy(alpha = 0.12f),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { onOpenAudioManager() }
+                    .padding(horizontal = 16.dp, vertical = 6.dp),
+                shape = RoundedCornerShape(10.dp)
+            ) {
+                Row(
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    CircularProgressIndicator(
+                        progress = { batchState.overallPercent / 100f },
+                        modifier = Modifier.size(18.dp),
+                        strokeWidth = 2.dp,
+                        color = IslamicGreen
+                    )
+                    Spacer(modifier = Modifier.width(10.dp))
+                    Text(
+                        text = "১১৪ সূরা ডাউনলোড হচ্ছে: ${BanglaNumberUtils.toBanglaDigits(batchState.completedSurahsCount)}/১১৪ (${BanglaNumberUtils.toBanglaDigits(batchState.overallPercent)}%)",
+                        style = MaterialTheme.typography.bodySmall.copy(
+                            fontWeight = FontWeight.Bold,
+                            color = IslamicGreen
+                        ),
+                        modifier = Modifier.weight(1f)
+                    )
+                    Text(
+                        text = "বিস্তারিত",
+                        style = MaterialTheme.typography.labelSmall.copy(
+                            color = IslamicGreen,
+                            fontWeight = FontWeight.Bold
+                        )
                     )
                 }
             }
@@ -623,14 +718,28 @@ fun SurahDetailScreen(
     surah: QuranSurah,
     quranRepository: QuranRepository,
     audioManager: QuranAudioManager,
+    settingsManager: QuranSettingsManager,
     selectedTranslator: QuranTranslator,
     onSelectTranslator: (QuranTranslator) -> Unit,
     onOpenReciterPicker: () -> Unit,
+    onOpenSettings: () -> Unit,
+    onOpenAudioManager: () -> Unit,
     onBackToIndex: () -> Unit,
     contentPadding: PaddingValues
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
+    val settings by settingsManager.settings.collectAsState()
+
+    val activity = context as? android.app.Activity
+    DisposableEffect(settings.keepScreenAwake) {
+        if (settings.keepScreenAwake) {
+            activity?.window?.addFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        }
+        onDispose {
+            activity?.window?.clearFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        }
+    }
 
     val ayahsState by quranRepository.getAyahsForSurah(surah.number).collectAsState(initial = emptyList())
     val bookmarks by quranRepository.getBookmarkedAyahs().collectAsState(initial = emptyList())
@@ -648,6 +757,15 @@ fun SurahDetailScreen(
 
     LaunchedEffect(playerState) {
         isFullSurahPlaying = playerState.isPlaying && playerState.surahNumber == surah.number && playerState.activeAyahNumber == null
+    }
+
+    val listState = rememberLazyListState()
+    LaunchedEffect(playerState.activeAyahNumber) {
+        val activeAyah = playerState.activeAyahNumber
+        if (activeAyah != null && settings.autoScrollWithAudio) {
+            val targetIndex = (activeAyah - 1).coerceAtLeast(0)
+            listState.animateScrollToItem(targetIndex + (if (surah.number != 9) 1 else 0))
+        }
     }
 
     Column(
@@ -698,11 +816,27 @@ fun SurahDetailScreen(
                         )
                     }
 
+                    IconButton(onClick = onOpenAudioManager) {
+                        Icon(
+                            imageVector = Icons.Default.CloudDownload,
+                            contentDescription = "কুরআন অডিও ম্যানেজার",
+                            tint = IslamicGreen
+                        )
+                    }
+
                     IconButton(onClick = onOpenReciterPicker) {
                         Icon(
                             imageVector = Icons.Default.Tune,
-                            contentDescription = "ক্বারী ও অডিও সেটিংস",
+                            contentDescription = "ক্বারী নির্বাচন",
                             tint = IslamicGold
+                        )
+                    }
+
+                    IconButton(onClick = onOpenSettings) {
+                        Icon(
+                            imageVector = Icons.Default.Settings,
+                            contentDescription = "কুরআন সেটিংস",
+                            tint = MaterialTheme.colorScheme.onSurface
                         )
                     }
                 }
@@ -877,6 +1011,7 @@ fun SurahDetailScreen(
 
         // Ayah List with Bismillah Card
         LazyColumn(
+            state = listState,
             modifier = Modifier
                 .weight(1f)
                 .fillMaxWidth()
@@ -918,12 +1053,13 @@ fun SurahDetailScreen(
             } else {
                 items(ayahsState, key = { "${it.surahNumber}_${it.ayahNumber}" }) { ayah ->
                     val isAyahBookmarked = bookmarks.any { it.surahNumber == ayah.surahNumber && it.ayahNumber == ayah.ayahNumber }
-                    val isTafsirExpanded = expandedTafsirs.contains(ayah.ayahNumber)
+                    val isTafsirExpanded = expandedTafsirs.contains(ayah.ayahNumber) || settings.showTafsirByDefault
                     val isPlayingThisAyah = playerState.isPlaying && playerState.surahNumber == ayah.surahNumber && playerState.activeAyahNumber == ayah.ayahNumber
 
                     AyahCardItem(
                         ayah = ayah,
                         surah = surah,
+                        settings = settings,
                         selectedTranslator = selectedTranslator,
                         isBookmarked = isAyahBookmarked,
                         isTafsirExpanded = isTafsirExpanded,
@@ -1035,6 +1171,7 @@ fun BismillahBannerCard() {
 fun AyahCardItem(
     ayah: QuranAyah,
     surah: QuranSurah,
+    settings: QuranSettings,
     selectedTranslator: QuranTranslator,
     isBookmarked: Boolean,
     isTafsirExpanded: Boolean,
@@ -1197,56 +1334,74 @@ fun AyahCardItem(
             Spacer(modifier = Modifier.height(14.dp))
 
             // Arabic Verse Text (Right aligned, large authentic calligraphy)
-            Text(
-                text = "${ayah.arabicText} ۝$ayahNumberBn",
-                style = MaterialTheme.typography.headlineSmall.copy(
-                    fontSize = 22.sp,
-                    lineHeight = 38.sp,
-                    fontWeight = FontWeight.Medium,
-                    textAlign = TextAlign.End,
-                    color = MaterialTheme.colorScheme.onSurface
-                ),
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            Spacer(modifier = Modifier.height(10.dp))
+            if (settings.showArabic) {
+                Text(
+                    text = "${ayah.arabicText} ۝$ayahNumberBn",
+                    style = MaterialTheme.typography.headlineSmall.copy(
+                        fontSize = settings.arabicFontSize.sp,
+                        lineHeight = (settings.arabicFontSize * 1.6f).sp,
+                        fontWeight = FontWeight.Medium,
+                        textAlign = TextAlign.End,
+                        color = MaterialTheme.colorScheme.onSurface
+                    ),
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Spacer(modifier = Modifier.height(10.dp))
+            }
 
             // Bengali Pronunciation Pill Container (উচ্চারণ)
-            Surface(
-                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
-                shape = RoundedCornerShape(12.dp),
-                modifier = Modifier.fillMaxWidth()
-            ) {
+            if (settings.showPronunciation && ayah.pronunciationBn.isNotBlank()) {
+                Surface(
+                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        text = ayah.pronunciationBn,
+                        style = MaterialTheme.typography.bodyMedium.copy(
+                            fontSize = (settings.banglaFontSize * 0.95f).coerceIn(12f, 22f).sp,
+                            lineHeight = (settings.banglaFontSize * 1.4f).sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        ),
+                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)
+                    )
+                }
+                Spacer(modifier = Modifier.height(10.dp))
+            }
+
+            // Bengali Translation Text
+            if (settings.showTranslation) {
+                val activeTranslation = when (selectedTranslator) {
+                    QuranTranslator.DR_ZAKARIA -> ayah.translationZakaria ?: ayah.translationBn
+                    QuranTranslator.TAISIRUL_QURAN -> ayah.translationTaisirul ?: ayah.translationBn
+                    QuranTranslator.MUHIBBUR_RAHMAN -> ayah.translationBn
+                }
+
                 Text(
-                    text = ayah.pronunciationBn,
-                    style = MaterialTheme.typography.bodyMedium.copy(
-                        fontSize = 13.5.sp,
-                        lineHeight = 20.sp,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    text = activeTranslation,
+                    style = MaterialTheme.typography.bodyLarge.copy(
+                        fontSize = settings.banglaFontSize.sp,
+                        lineHeight = (settings.banglaFontSize * 1.45f).sp,
+                        fontWeight = FontWeight.Normal,
+                        color = MaterialTheme.colorScheme.onSurface
                     ),
-                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)
+                    modifier = Modifier.fillMaxWidth()
                 )
             }
 
-            Spacer(modifier = Modifier.height(10.dp))
-
-            // Bengali Translation Text
-            val activeTranslation = when (selectedTranslator) {
-                QuranTranslator.DR_ZAKARIA -> ayah.translationZakaria ?: ayah.translationBn
-                QuranTranslator.TAISIRUL_QURAN -> ayah.translationTaisirul ?: ayah.translationBn
-                QuranTranslator.MUHIBBUR_RAHMAN -> ayah.translationBn
+            // English Translation Text (Optional)
+            if (settings.showEnglishTranslation && !ayah.translationEn.isNullOrBlank()) {
+                Spacer(modifier = Modifier.height(6.dp))
+                Text(
+                    text = ayah.translationEn,
+                    style = MaterialTheme.typography.bodyMedium.copy(
+                        fontSize = (settings.banglaFontSize * 0.9f).sp,
+                        lineHeight = (settings.banglaFontSize * 1.35f).sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    ),
+                    modifier = Modifier.fillMaxWidth()
+                )
             }
-
-            Text(
-                text = activeTranslation,
-                style = MaterialTheme.typography.bodyLarge.copy(
-                    fontSize = 15.sp,
-                    lineHeight = 22.sp,
-                    fontWeight = FontWeight.Normal,
-                    color = MaterialTheme.colorScheme.onSurface
-                ),
-                modifier = Modifier.fillMaxWidth()
-            )
 
             // Expandable Scholarly Tafsir Card
             AnimatedVisibility(

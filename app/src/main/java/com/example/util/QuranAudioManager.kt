@@ -3,6 +3,8 @@ package com.example.util
 import android.content.Context
 import android.media.AudioAttributes
 import android.media.MediaPlayer
+import com.example.data.datasource.QuranSurahCatalog
+import com.example.data.model.BatchDownloadState
 import com.example.data.model.DownloadProgressState
 import com.example.data.model.QuranReciter
 import com.example.data.model.SurahAudioPlayerState
@@ -20,6 +22,7 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import java.io.File
 import java.io.FileOutputStream
+import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.TimeUnit
 
 class QuranAudioManager(private val context: Context) {
@@ -27,7 +30,11 @@ class QuranAudioManager(private val context: Context) {
     private val scope = CoroutineScope(Dispatchers.Main + Job())
     private var mediaPlayer: MediaPlayer? = null
     private var progressTrackingJob: Job? = null
-    private var downloadJob: Job? = null
+
+    // Individual download jobs map
+    private val activeDownloadJobs = ConcurrentHashMap<Int, Job>()
+    private var batchDownloadJob: Job? = null
+    @Volatile private var isBatchPausedFlag = false
 
     private val httpClient = OkHttpClient.Builder()
         .connectTimeout(30, TimeUnit.SECONDS)
@@ -39,6 +46,9 @@ class QuranAudioManager(private val context: Context) {
 
     private val _downloadState = MutableStateFlow<Map<Int, DownloadProgressState>>(emptyMap())
     val downloadState: StateFlow<Map<Int, DownloadProgressState>> = _downloadState.asStateFlow()
+
+    private val _batchDownloadState = MutableStateFlow(BatchDownloadState())
+    val batchDownloadState: StateFlow<BatchDownloadState> = _batchDownloadState.asStateFlow()
 
     private val _selectedReciter = MutableStateFlow(QuranReciter.MISHARY_ALAFASY)
     val selectedReciter: StateFlow<QuranReciter> = _selectedReciter.asStateFlow()
@@ -72,7 +82,7 @@ class QuranAudioManager(private val context: Context) {
         val audioSource = if (isOffline) {
             offlineFile.absolutePath
         } else {
-            _selectedReciter.value.getSurahAudioUrl(surahNumber)
+            getHighQualitySurahUrl(surahNumber, _selectedReciter.value)
         }
 
         _playerState.value = SurahAudioPlayerState(
@@ -120,7 +130,7 @@ class QuranAudioManager(private val context: Context) {
                 prepareAsync()
             }
             mediaPlayer = player
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             _playerState.value = _playerState.value.copy(isPlaying = false, isBuffering = false)
         }
     }
@@ -175,7 +185,7 @@ class QuranAudioManager(private val context: Context) {
                 prepareAsync()
             }
             mediaPlayer = player
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             _playerState.value = _playerState.value.copy(isPlaying = false, isBuffering = false, activeAyahNumber = null)
         }
     }
@@ -269,64 +279,266 @@ class QuranAudioManager(private val context: Context) {
         return File(dir, "surah_$padded.mp3")
     }
 
-    fun downloadSurahAudio(surahNumber: Int, onComplete: (Boolean) -> Unit = {}) {
+    fun getHighQualitySurahUrl(surahNumber: Int, reciter: QuranReciter): String {
+        return reciter.getSurahAudioUrl(surahNumber)
+    }
+
+    fun downloadSurahAudio(
+        surahNumber: Int,
+        onComplete: (Boolean) -> Unit
+    ) {
+        downloadSurahAudio(surahNumber, _selectedReciter.value, onComplete)
+    }
+
+    fun downloadSurahAudio(
+        surahNumber: Int,
+        reciter: QuranReciter = _selectedReciter.value,
+        onComplete: (Boolean) -> Unit = {}
+    ) {
+        cancelSurahDownload(surahNumber)
+
         val targetFile = getOfflineSurahFile(surahNumber)
-        val audioUrl = QuranReciter.MISHARY_ALAFASY.getSurahAudioUrl(surahNumber)
+        val audioUrl = getHighQualitySurahUrl(surahNumber, reciter)
 
         updateDownloadState(surahNumber, DownloadProgressState(surahNumber, isDownloading = true, progressPercent = 0))
 
-        downloadJob = scope.launch(Dispatchers.IO) {
-            try {
-                val request = Request.Builder().url(audioUrl).build()
-                val response = httpClient.newCall(request).execute()
+        val job = scope.launch(Dispatchers.IO) {
+            val success = executeFileDownload(audioUrl, targetFile, surahNumber)
+            withContext(Dispatchers.Main) {
+                activeDownloadJobs.remove(surahNumber)
+                onComplete(success)
+            }
+        }
+        activeDownloadJobs[surahNumber] = job
+    }
 
-                if (!response.isSuccessful || response.body == null) {
-                    withContext(Dispatchers.Main) {
-                        updateDownloadState(surahNumber, DownloadProgressState(surahNumber, isDownloading = false, errorMessage = "ডাউনলোড ব্যর্থ হয়েছে"))
-                        onComplete(false)
-                    }
-                    return@launch
+    fun cancelSurahDownload(surahNumber: Int) {
+        activeDownloadJobs.remove(surahNumber)?.cancel()
+        updateDownloadState(
+            surahNumber,
+            DownloadProgressState(surahNumber, isDownloading = false, progressPercent = 0)
+        )
+    }
+
+    fun deleteDownloadedSurah(surahNumber: Int): Boolean {
+        cancelSurahDownload(surahNumber)
+        val file = getOfflineSurahFile(surahNumber)
+        val deleted = if (file.exists()) file.delete() else false
+        updateDownloadState(surahNumber, DownloadProgressState(surahNumber, isDownloading = false, progressPercent = 0))
+        return deleted
+    }
+
+    fun deleteAllDownloadedAudio(): Int {
+        var count = 0
+        for (i in 1..114) {
+            if (deleteDownloadedSurah(i)) {
+                count++
+            }
+        }
+        return count
+    }
+
+    fun getDownloadedSurahsCount(): Int {
+        var count = 0
+        for (i in 1..114) {
+            if (isSurahDownloaded(i)) count++
+        }
+        return count
+    }
+
+    fun getTotalAudioStorageBytes(): Long {
+        var total: Long = 0
+        for (i in 1..114) {
+            val f = getOfflineSurahFile(i)
+            if (f.exists()) {
+                total += f.length()
+            }
+        }
+        return total
+    }
+
+    // --- Batch Download All 114 Surahs (1-Click Feature) ---
+
+    fun startBatchDownloadAllSurahs(reciter: QuranReciter = _selectedReciter.value) {
+        if (_batchDownloadState.value.isBatchRunning && !_batchDownloadState.value.isPaused) {
+            return
+        }
+
+        isBatchPausedFlag = false
+
+        batchDownloadJob?.cancel()
+        batchDownloadJob = scope.launch(Dispatchers.IO) {
+            var completedCount = getDownloadedSurahsCount()
+
+            withContext(Dispatchers.Main) {
+                _batchDownloadState.value = BatchDownloadState(
+                    isBatchRunning = true,
+                    isPaused = false,
+                    completedSurahsCount = completedCount,
+                    totalSurahsCount = 114,
+                    overallPercent = ((completedCount * 100) / 114),
+                    statusMessage = "ডাউনলোড প্রস্তুতি চলছে..."
+                )
+            }
+
+            for (surahNum in 1..114) {
+                if (!isActive) break
+
+                while (isBatchPausedFlag) {
+                    delay(500)
+                    if (!isActive) break
+                }
+                if (!isActive) break
+
+                val surahMeta = QuranSurahCatalog.all114Surahs.find { it.number == surahNum }
+                val surahName = surahMeta?.nameBn ?: "সূরা $surahNum"
+
+                if (isSurahDownloaded(surahNum)) {
+                    continue
                 }
 
-                val body = response.body!!
-                val totalBytes = body.contentLength()
-                val inputStream = body.byteStream()
-                val tempFile = File(targetFile.parentFile, "surah_${surahNumber}_temp.mp3")
-                val outputStream = FileOutputStream(tempFile)
+                withContext(Dispatchers.Main) {
+                    _batchDownloadState.value = _batchDownloadState.value.copy(
+                        currentSurahNumber = surahNum,
+                        currentSurahNameBn = surahName,
+                        statusMessage = "ডাউনলোড হচ্ছে: $surahName (${surahNum}/১১৪)"
+                    )
+                }
 
-                val buffer = ByteArray(8 * 1024)
-                var downloadedBytes: Long = 0
-                var read: Int
-                var lastProgress = 0
+                val targetFile = getOfflineSurahFile(surahNum)
+                val audioUrl = getHighQualitySurahUrl(surahNum, reciter)
 
-                while (inputStream.read(buffer).also { read = it } != -1) {
-                    outputStream.write(buffer, 0, read)
-                    downloadedBytes += read
-                    if (totalBytes > 0) {
-                        val progress = ((downloadedBytes * 100) / totalBytes).toInt()
-                        if (progress != lastProgress) {
-                            lastProgress = progress
-                            withContext(Dispatchers.Main) {
-                                updateDownloadState(
-                                    surahNumber,
-                                    DownloadProgressState(
-                                        surahNumber = surahNumber,
-                                        isDownloading = true,
-                                        progressPercent = progress,
-                                        downloadedBytes = downloadedBytes,
-                                        totalBytes = totalBytes
-                                    )
+                val success = executeFileDownload(audioUrl, targetFile, surahNum)
+                if (success) {
+                    completedCount = getDownloadedSurahsCount()
+                    withContext(Dispatchers.Main) {
+                        _batchDownloadState.value = _batchDownloadState.value.copy(
+                            completedSurahsCount = completedCount,
+                            overallPercent = ((completedCount * 100) / 114),
+                            currentSurahPercent = 100
+                        )
+                    }
+                }
+                delay(150)
+            }
+
+            withContext(Dispatchers.Main) {
+                val finalCount = getDownloadedSurahsCount()
+                _batchDownloadState.value = BatchDownloadState(
+                    isBatchRunning = false,
+                    isPaused = false,
+                    completedSurahsCount = finalCount,
+                    totalSurahsCount = 114,
+                    overallPercent = ((finalCount * 100) / 114),
+                    statusMessage = if (finalCount >= 114) "আলহামদুলিল্লাহ! সম্পূর্ণ ১১৪টি সূরা ডাউনলোড সম্পন্ন হয়েছে।"
+                    else "ডাউনলোড সমাপ্ত (${finalCount}/১১৪ সূরা সংরক্ষিত)"
+                )
+            }
+        }
+    }
+
+    fun pauseBatchDownload() {
+        isBatchPausedFlag = true
+        _batchDownloadState.value = _batchDownloadState.value.copy(
+            isPaused = true,
+            statusMessage = "ডাউনলোড স্থগিত রাখা হয়েছে"
+        )
+    }
+
+    fun resumeBatchDownload() {
+        isBatchPausedFlag = false
+        _batchDownloadState.value = _batchDownloadState.value.copy(
+            isPaused = false,
+            statusMessage = "পুনরায় ডাউনলোড শুরু হচ্ছে..."
+        )
+    }
+
+    fun cancelBatchDownload() {
+        isBatchPausedFlag = false
+        batchDownloadJob?.cancel()
+        batchDownloadJob = null
+
+        // Also cancel any currently active individual surah download
+        activeDownloadJobs.values.forEach { it.cancel() }
+        activeDownloadJobs.clear()
+
+        _batchDownloadState.value = BatchDownloadState(
+            isBatchRunning = false,
+            isPaused = false,
+            completedSurahsCount = getDownloadedSurahsCount(),
+            statusMessage = "ডাউনলোড বাতিল করা হয়েছে"
+        )
+    }
+
+    private suspend fun executeFileDownload(
+        audioUrl: String,
+        targetFile: File,
+        surahNumber: Int
+    ): Boolean {
+        try {
+            val request = Request.Builder()
+                .url(audioUrl)
+                .addHeader("User-Agent", "DawahToJannah/1.9.0")
+                .build()
+
+            val response = httpClient.newCall(request).execute()
+            if (!response.isSuccessful || response.body == null) {
+                withContext(Dispatchers.Main) {
+                    updateDownloadState(
+                        surahNumber,
+                        DownloadProgressState(surahNumber, isDownloading = false, errorMessage = "ডাউনলোড ব্যর্থ")
+                    )
+                }
+                return false
+            }
+
+            val body = response.body!!
+            val totalBytes = body.contentLength()
+            val inputStream = body.byteStream()
+            val tempFile = File(targetFile.parentFile, "surah_${surahNumber}_temp.mp3")
+            val outputStream = FileOutputStream(tempFile)
+
+            val buffer = ByteArray(16 * 1024)
+            var downloadedBytes: Long = 0
+            var read: Int
+            var lastProgress = 0
+
+            while (inputStream.read(buffer).also { read = it } != -1) {
+                outputStream.write(buffer, 0, read)
+                downloadedBytes += read
+                if (totalBytes > 0) {
+                    val progress = ((downloadedBytes * 100) / totalBytes).toInt()
+                    if (progress != lastProgress) {
+                        lastProgress = progress
+                        withContext(Dispatchers.Main) {
+                            updateDownloadState(
+                                surahNumber,
+                                DownloadProgressState(
+                                    surahNumber = surahNumber,
+                                    isDownloading = true,
+                                    progressPercent = progress,
+                                    downloadedBytes = downloadedBytes,
+                                    totalBytes = totalBytes
+                                )
+                            )
+                            if (_batchDownloadState.value.isBatchRunning) {
+                                _batchDownloadState.value = _batchDownloadState.value.copy(
+                                    currentSurahPercent = progress
                                 )
                             }
                         }
                     }
                 }
+            }
 
-                outputStream.flush()
-                outputStream.close()
-                inputStream.close()
+            outputStream.flush()
+            outputStream.close()
+            inputStream.close()
 
-                if (tempFile.renameTo(targetFile)) {
+            if (tempFile.length() > 50000) {
+                if (targetFile.exists()) targetFile.delete()
+                val renamed = tempFile.renameTo(targetFile)
+                if (renamed) {
                     withContext(Dispatchers.Main) {
                         updateDownloadState(
                             surahNumber,
@@ -338,28 +550,25 @@ class QuranAudioManager(private val context: Context) {
                                 totalBytes = totalBytes
                             )
                         )
-                        onComplete(true)
                     }
-                } else {
-                    withContext(Dispatchers.Main) {
-                        updateDownloadState(surahNumber, DownloadProgressState(surahNumber, isDownloading = false, errorMessage = "ফাইল সংরক্ষণ করা যায়নি"))
-                        onComplete(false)
-                    }
-                }
-            } catch (e: Exception) {
-                withContext(Dispatchers.Main) {
-                    updateDownloadState(surahNumber, DownloadProgressState(surahNumber, isDownloading = false, errorMessage = e.localizedMessage ?: "সংযোগ ত্রুটি"))
-                    onComplete(false)
+                    return true
                 }
             }
+            tempFile.delete()
+            return false
+        } catch (e: Exception) {
+            withContext(Dispatchers.Main) {
+                updateDownloadState(
+                    surahNumber,
+                    DownloadProgressState(
+                        surahNumber = surahNumber,
+                        isDownloading = false,
+                        errorMessage = e.localizedMessage ?: "সংযোগ ত্রুটি"
+                    )
+                )
+            }
+            return false
         }
-    }
-
-    fun deleteDownloadedSurah(surahNumber: Int): Boolean {
-        val file = getOfflineSurahFile(surahNumber)
-        val deleted = if (file.exists()) file.delete() else false
-        updateDownloadState(surahNumber, DownloadProgressState(surahNumber, isDownloading = false, progressPercent = 0))
-        return deleted
     }
 
     private fun updateDownloadState(surahNumber: Int, state: DownloadProgressState) {

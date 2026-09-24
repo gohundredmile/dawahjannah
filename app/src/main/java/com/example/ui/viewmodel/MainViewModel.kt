@@ -1385,8 +1385,13 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 }
             }
 
-            val targetUrl = release?.downloadUrl
-                ?: "https://github.com/${gitHubUpdateManager.repoOwner}/${gitHubUpdateManager.repoName}/releases/latest/download/app-release.apk"
+            val rawTargetUrl = release?.downloadUrl
+                ?: "https://github.com/${gitHubUpdateManager.repoOwner}/${gitHubUpdateManager.repoName}/releases/latest/download/app-debug.apk"
+            val targetUrl = if (rawTargetUrl.contains("app-release.apk", ignoreCase = true)) {
+                rawTargetUrl.replace("app-release.apk", "app-debug.apk", ignoreCase = true)
+            } else {
+                rawTargetUrl
+            }
 
             val downloadResult = gitHubUpdateManager.downloadApkWithProgress(targetUrl) { progress, downloadedBytes, totalBytes ->
                 val dlMb = downloadedBytes.toFloat() / (1024f * 1024f)
@@ -1467,8 +1472,13 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
      */
     fun downloadNewApkVersion() {
         val release = _latestReleaseInfo.value
-        val url = release?.downloadUrl
-            ?: "https://github.com/${gitHubUpdateManager.repoOwner}/${gitHubUpdateManager.repoName}/releases/latest"
+        val rawUrl = release?.downloadUrl
+            ?: "https://github.com/${gitHubUpdateManager.repoOwner}/${gitHubUpdateManager.repoName}/releases/latest/download/app-debug.apk"
+        val url = if (rawUrl.contains("app-release.apk", ignoreCase = true)) {
+            rawUrl.replace("app-release.apk", "app-debug.apk", ignoreCase = true)
+        } else {
+            rawUrl
+        }
         val versionName = release?.tagName ?: "latest"
 
         val result = gitHubUpdateManager.downloadApk(url, versionName)

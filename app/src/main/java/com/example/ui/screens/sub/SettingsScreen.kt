@@ -1907,8 +1907,15 @@ fun SettingsScreen(viewModel: MainViewModel) {
                                 }
                             }
                             apkDownloadState.installCompleted -> {
-                                Button(onClick = { viewModel.dismissApkDownloadDialog() }) {
-                                    Text("ঠিক আছে")
+                                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                    OutlinedButton(onClick = { viewModel.retryInstallDownloadedApk() }) {
+                                        Icon(Icons.Default.Refresh, contentDescription = null, modifier = Modifier.size(16.dp))
+                                        Spacer(modifier = Modifier.width(4.dp))
+                                        Text("পুনরায় ইনস্টলার খুলুন")
+                                    }
+                                    Button(onClick = { viewModel.dismissApkDownloadDialog() }) {
+                                        Text("ঠিক আছে")
+                                    }
                                 }
                             }
                             else -> {}

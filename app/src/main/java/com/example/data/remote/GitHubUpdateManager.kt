@@ -324,6 +324,7 @@ class GitHubUpdateManager(private val context: Context) {
                                 var apkDownloadUrl: String? = null
                                 val assetsArray = releaseObj.optJSONArray("assets")
                                 if (assetsArray != null) {
+                                    var debugApkUrl: String? = null
                                     var fallbackApkUrl: String? = null
                                     for (i in 0 until assetsArray.length()) {
                                         val asset = assetsArray.getJSONObject(i)
@@ -331,20 +332,18 @@ class GitHubUpdateManager(private val context: Context) {
                                         if (name.endsWith(".apk", ignoreCase = true)) {
                                             val dl = asset.optString("browser_download_url", "")
                                             if (dl.isNotBlank()) {
-                                                if (name.contains("release", ignoreCase = true)) {
-                                                    apkDownloadUrl = dl
+                                                if (name.equals("app-debug.apk", ignoreCase = true) || name.contains("debug", ignoreCase = true)) {
+                                                    debugApkUrl = dl
                                                     break
                                                 }
                                                 if (fallbackApkUrl == null) fallbackApkUrl = dl
                                             }
                                         }
                                     }
-                                    if (apkDownloadUrl == null) {
-                                        apkDownloadUrl = fallbackApkUrl
-                                    }
+                                    apkDownloadUrl = debugApkUrl ?: fallbackApkUrl
                                 }
                                 if (apkDownloadUrl == null) {
-                                    apkDownloadUrl = releaseObj.optString("html_url", "https://github.com/$owner/$repo/releases")
+                                    apkDownloadUrl = "https://github.com/$owner/$repo/releases/latest/download/app-debug.apk"
                                 }
 
                                 val cleanVersion = tagName.removePrefix("v").removePrefix("V").trim()
@@ -812,16 +811,22 @@ class GitHubUpdateManager(private val context: Context) {
      */
     fun resolveDirectApkUrl(inputUrl: String?): String {
         val rawUrl = inputUrl?.trim() ?: ""
-        if (rawUrl.endsWith(".apk", ignoreCase = true) || rawUrl.contains(".apk?", ignoreCase = true)) {
-            return rawUrl
+        // Always prioritize app-debug.apk as requested
+        val debugUrl = if (rawUrl.contains("app-release.apk", ignoreCase = true)) {
+            rawUrl.replace("app-release.apk", "app-debug.apk", ignoreCase = true)
+        } else {
+            rawUrl
+        }
+        if (debugUrl.endsWith(".apk", ignoreCase = true) || debugUrl.contains(".apk?", ignoreCase = true)) {
+            return debugUrl
         }
 
         val owner = repoOwner
         val repo = repoName
         return when {
-            rawUrl.contains("releases/download/") -> rawUrl
-            rawUrl.isNotBlank() && !rawUrl.contains("releases/latest") && !rawUrl.endsWith("releases") -> rawUrl
-            else -> "https://github.com/$owner/$repo/releases/latest/download/app-release.apk"
+            debugUrl.contains("releases/download/") -> debugUrl
+            debugUrl.isNotBlank() && !debugUrl.contains("releases/latest") && !debugUrl.endsWith("releases") -> debugUrl
+            else -> "https://github.com/$owner/$repo/releases/latest/download/app-debug.apk"
         }
     }
 
@@ -829,7 +834,7 @@ class GitHubUpdateManager(private val context: Context) {
      * Searches GitHub Releases API for any live .apk asset browser_download_url
      */
     suspend fun discoverLiveApkUrl(owner: String = repoOwner, repo: String = repoName): String? = withContext(Dispatchers.IO) {
-        // 1. Check latest release
+        // 1. Check latest release - prioritize app-debug.apk
         try {
             val req = Request.Builder()
                 .url("https://api.github.com/repos/$owner/$repo/releases/latest")
@@ -844,6 +849,7 @@ class GitHubUpdateManager(private val context: Context) {
                     val json = JSONObject(body)
                     val assets = json.optJSONArray("assets")
                     if (assets != null) {
+                        var debugApkUrl: String? = null
                         var fallbackUrl: String? = null
                         for (i in 0 until assets.length()) {
                             val asset = assets.getJSONObject(i)
@@ -851,20 +857,22 @@ class GitHubUpdateManager(private val context: Context) {
                             if (name.endsWith(".apk", ignoreCase = true)) {
                                 val downloadUrl = asset.optString("browser_download_url", "")
                                 if (downloadUrl.isNotBlank()) {
-                                    if (name.contains("release", ignoreCase = true)) {
-                                        return@withContext downloadUrl
+                                    if (name.equals("app-debug.apk", ignoreCase = true) || name.contains("debug", ignoreCase = true)) {
+                                        debugApkUrl = downloadUrl
+                                        break
                                     }
                                     if (fallbackUrl == null) fallbackUrl = downloadUrl
                                 }
                             }
                         }
+                        if (debugApkUrl != null) return@withContext debugApkUrl
                         if (fallbackUrl != null) return@withContext fallbackUrl
                     }
                 }
             }
         } catch (_: Exception) {}
 
-        // 2. Check all recent releases (in case latest is not tagged as 'latest' release)
+        // 2. Check all recent releases (in case latest is not tagged as 'latest' release) - prioritize app-debug.apk
         try {
             val req = Request.Builder()
                 .url("https://api.github.com/repos/$owner/$repo/releases?per_page=5")
@@ -877,6 +885,8 @@ class GitHubUpdateManager(private val context: Context) {
                 val body = resp.body?.string()
                 if (!body.isNullOrBlank()) {
                     val releases = JSONArray(body)
+                    var debugUrl: String? = null
+                    var anyUrl: String? = null
                     for (i in 0 until releases.length()) {
                         val rel = releases.getJSONObject(i)
                         val assets = rel.optJSONArray("assets")
@@ -886,11 +896,20 @@ class GitHubUpdateManager(private val context: Context) {
                                 val name = asset.optString("name", "")
                                 if (name.endsWith(".apk", ignoreCase = true)) {
                                     val downloadUrl = asset.optString("browser_download_url", "")
-                                    if (downloadUrl.isNotBlank()) return@withContext downloadUrl
+                                    if (downloadUrl.isNotBlank()) {
+                                        if (name.equals("app-debug.apk", ignoreCase = true) || name.contains("debug", ignoreCase = true)) {
+                                            debugUrl = downloadUrl
+                                            break
+                                        }
+                                        if (anyUrl == null) anyUrl = downloadUrl
+                                    }
                                 }
                             }
                         }
+                        if (debugUrl != null) break
                     }
+                    if (debugUrl != null) return@withContext debugUrl
+                    if (anyUrl != null) return@withContext anyUrl
                 }
             }
         } catch (_: Exception) {}
@@ -1004,26 +1023,31 @@ class GitHubUpdateManager(private val context: Context) {
             }
         } catch (_: Exception) {}
 
-        // 2. The input URL passed
+        // 2. The input URL passed (ensure app-debug.apk is preferred)
         val primaryTarget = resolveDirectApkUrl(url)
+        val debugCandidate = if (primaryTarget.contains("app-release.apk", ignoreCase = true)) {
+            primaryTarget.replace("app-release.apk", "app-debug.apk", ignoreCase = true)
+        } else {
+            primaryTarget
+        }
+        if (debugCandidate.isNotBlank() && !candidates.contains(debugCandidate)) {
+            candidates.add(debugCandidate)
+        }
         if (primaryTarget.isNotBlank() && !candidates.contains(primaryTarget)) {
             candidates.add(primaryTarget)
         }
 
-        // 3. Fallback standard release naming conventions (Release APKs & Debug APKs)
+        // 3. Fallback standard release naming conventions (Always app-debug.apk FIRST)
         val standardFallbacks = listOf(
-            "https://github.com/$repoOwner/$repoName/releases/latest/download/app-release.apk",
-            "https://github.com/$repoOwner/$repoName/releases/download/v1.7.8/app-release.apk",
-            "https://github.com/$repoOwner/$repoName/releases/download/v1.7.7/app-release.apk",
-            "https://github.com/$repoOwner/$repoName/releases/download/v1.7.6/app-release.apk",
             "https://github.com/$repoOwner/$repoName/releases/latest/download/app-debug.apk",
-            "https://github.com/$repoOwner/$repoName/releases/download/v1.7.8/app-debug.apk",
-            "https://github.com/$repoOwner/$repoName/releases/download/v1.7.7/app-debug.apk",
-            "https://github.com/$repoOwner/$repoName/releases/download/v1.7.6/app-debug.apk",
-            "https://github.com/$repoOwner/$repoName/releases/download/v$currentAppVersion/app-release.apk",
             "https://github.com/$repoOwner/$repoName/releases/download/v$currentAppVersion/app-debug.apk",
-            "https://github.com/$repoOwner/$repoName/releases/download/latest/app-release.apk",
-            "https://github.com/$repoOwner/$repoName/releases/download/latest/app-debug.apk"
+            "https://github.com/$repoOwner/$repoName/releases/download/v1.8.0/app-debug.apk",
+            "https://github.com/$repoOwner/$repoName/releases/download/v1.7.9/app-debug.apk",
+            "https://github.com/$repoOwner/$repoName/releases/download/latest/app-debug.apk",
+            "https://github.com/$repoOwner/$repoName/releases/latest/download/app-release.apk",
+            "https://github.com/$repoOwner/$repoName/releases/download/v$currentAppVersion/app-release.apk",
+            "https://github.com/$repoOwner/$repoName/releases/download/v1.8.0/app-release.apk",
+            "https://github.com/$repoOwner/$repoName/releases/download/v1.7.9/app-release.apk"
         )
         for (u in standardFallbacks) {
             if (!candidates.contains(u)) {
@@ -1087,6 +1111,14 @@ class GitHubUpdateManager(private val context: Context) {
                     val size = tempFile.length()
                     tempFile.delete()
                     lastError = Exception("ডাউনলোডকৃত ফাইলটি অসম্পূর্ণ বা ক্ষতিগ্রস্ত (সাইজ: $size বাইট)")
+                    continue
+                }
+
+                // Verify that the downloaded file is a genuine, non-corrupted Android package
+                val archiveInfo = context.packageManager.getPackageArchiveInfo(tempFile.absolutePath, 0)
+                if (archiveInfo == null) {
+                    tempFile.delete()
+                    lastError = Exception("ডাউনলোডকৃত ফাইলটি সঠিক অ্যান্ড্রয়েড APK প্যাকেজ নয় বা ক্ষতিগ্রস্ত হয়েছে।")
                     continue
                 }
 

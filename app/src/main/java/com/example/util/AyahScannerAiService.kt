@@ -34,9 +34,9 @@ class AyahScannerAiService(private val context: Context) {
     }
 
     private val httpClient = OkHttpClient.Builder()
-        .connectTimeout(30, TimeUnit.SECONDS)
-        .readTimeout(60, TimeUnit.SECONDS)
-        .writeTimeout(30, TimeUnit.SECONDS)
+        .connectTimeout(6, TimeUnit.SECONDS)
+        .readTimeout(12, TimeUnit.SECONDS)
+        .writeTimeout(8, TimeUnit.SECONDS)
         .build()
 
     fun getEffectiveApiKey(): String {
@@ -82,9 +82,9 @@ class AyahScannerAiService(private val context: Context) {
         val apiKey = getEffectiveApiKey().ifBlank { BUILTIN_FREE_GEMINI_KEY }
 
         try {
-            // Downscale bitmap to max 640px to conserve memory, reduce network payload, and speed up AI response
-            val scaledBitmap = if (bitmap.width > 640 || bitmap.height > 640) {
-                val scale = 640f / maxOf(bitmap.width, bitmap.height)
+            // Downscale bitmap to max 540px to conserve memory, minimize network payload, and speed up AI response
+            val scaledBitmap = if (bitmap.width > 540 || bitmap.height > 540) {
+                val scale = 540f / maxOf(bitmap.width, bitmap.height)
                 val targetW = (bitmap.width * scale).toInt().coerceAtLeast(1)
                 val targetH = (bitmap.height * scale).toInt().coerceAtLeast(1)
                 Bitmap.createScaledBitmap(bitmap, targetW, targetH, true)
@@ -92,9 +92,9 @@ class AyahScannerAiService(private val context: Context) {
                 bitmap
             }
 
-            // Compress bitmap to JPEG Base64 (70% quality for optimal speed and minimal token footprint)
+            // Compress bitmap to JPEG Base64 (65% quality for ultra-rapid transmission and lightweight tokens)
             val outputStream = ByteArrayOutputStream()
-            scaledBitmap.compress(Bitmap.CompressFormat.JPEG, 70, outputStream)
+            scaledBitmap.compress(Bitmap.CompressFormat.JPEG, 65, outputStream)
             val base64Image = Base64.encodeToString(outputStream.toByteArray(), Base64.NO_WRAP)
 
             val prompt = """
@@ -172,12 +172,12 @@ class AyahScannerAiService(private val context: Context) {
                 })
             }
 
-            // High-availability multi-model cascade with modern supported models
+            // High-availability multi-model cascade with fast official multimodal models
             val candidateModels = listOf(
-                "gemini-2.5-flash-image",
-                "gemini-3.5-flash",
-                "gemini-flash-latest",
-                "gemini-3.1-flash-lite-preview"
+                "gemini-2.5-flash",
+                "gemini-2.0-flash",
+                "gemini-1.5-flash",
+                "gemini-2.5-pro"
             )
 
             var response: okhttp3.Response? = null

@@ -79,6 +79,7 @@ import androidx.compose.material.icons.filled.Replay
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material.icons.filled.VolumeUp
@@ -198,6 +199,17 @@ fun ExplainAyahCameraScreen(
     var imageCapture by remember { mutableStateOf<ImageCapture?>(null) }
     var isFlashOn by remember { mutableStateOf(false) }
     var isFrontCamera by remember { mutableStateOf(false) }
+    var currentScanJob by remember { mutableStateOf<kotlinx.coroutines.Job?>(null) }
+
+    // Instant stop scanning function that cancels any in-flight coroutine, resets UI state and disables auto-scan
+    val stopScanning: () -> Unit = {
+        currentScanJob?.cancel()
+        currentScanJob = null
+        isAnalyzing = false
+        isAutoScanEnabled = false
+        scanErrorMessage = null
+        Toast.makeText(context, "স্ক্যান বন্ধ করা হয়েছে", Toast.LENGTH_SHORT).show()
+    }
 
     // Unified safe capture and AI analysis trigger
     val triggerCapture: () -> Unit = {
@@ -212,7 +224,8 @@ fun ExplainAyahCameraScreen(
                         executor,
                         object : ImageCapture.OnImageCapturedCallback() {
                             override fun onCaptureSuccess(image: ImageProxy) {
-                                coroutineScope.launch(Dispatchers.Default) {
+                                currentScanJob?.cancel()
+                                currentScanJob = coroutineScope.launch(Dispatchers.Default) {
                                     try {
                                         val bitmap = imageProxyToBitmap(image)
                                         image.close()
@@ -284,7 +297,8 @@ fun ExplainAyahCameraScreen(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
         uri?.let {
-            coroutineScope.launch {
+            currentScanJob?.cancel()
+            currentScanJob = coroutineScope.launch {
                 isAnalyzing = true
                 scanErrorMessage = null
                 try {
@@ -429,9 +443,10 @@ fun ExplainAyahCameraScreen(
                 }
             }
 
-            // Scanning Overlay with Animated Laser Reticle
+            // Scanning Overlay with Animated Laser Reticle and Instant Stop Button
             ScannerViewfinderOverlay(
                 isAnalyzing = isAnalyzing,
+                onStopScanning = stopScanning,
                 modifier = Modifier.fillMaxSize()
             )
 
@@ -731,33 +746,48 @@ fun ExplainAyahCameraScreen(
                         Text("গ্যালারি", style = MaterialTheme.typography.labelSmall, color = Color.White, fontFamily = banglaFont)
                     }
 
-                    // Primary Shutter Scan Button
-                    Surface(
-                        shape = CircleShape,
-                        color = IslamicGold,
-                        border = BorderStroke(4.dp, Color.White.copy(alpha = 0.8f)),
-                        modifier = Modifier
-                            .size(76.dp)
-                            .clickable(enabled = !isAnalyzing) {
-                                triggerCapture()
-                            }
-                    ) {
-                        Box(contentAlignment = Alignment.Center) {
-                            if (isAnalyzing) {
-                                CircularProgressIndicator(
-                                    color = Color.Black,
-                                    modifier = Modifier.size(32.dp),
-                                    strokeWidth = 3.dp
-                                )
-                            } else {
-                                Icon(
-                                    imageVector = Icons.Default.CameraAlt,
-                                    contentDescription = "স্ক্যান করুন",
-                                    tint = Color.Black,
-                                    modifier = Modifier.size(36.dp)
-                                )
+                    // Primary Shutter Scan / Instant Stop Button
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Surface(
+                            shape = CircleShape,
+                            color = if (isAnalyzing) Color(0xFFDC2626) else IslamicGold,
+                            border = BorderStroke(4.dp, Color.White.copy(alpha = 0.85f)),
+                            modifier = Modifier
+                                .size(76.dp)
+                                .clickable {
+                                    if (isAnalyzing) {
+                                        stopScanning()
+                                    } else {
+                                        triggerCapture()
+                                    }
+                                }
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                if (isAnalyzing) {
+                                    Icon(
+                                        imageVector = Icons.Default.Stop,
+                                        contentDescription = "স্ক্যান থামান (Stop)",
+                                        tint = Color.White,
+                                        modifier = Modifier.size(38.dp)
+                                    )
+                                } else {
+                                    Icon(
+                                        imageVector = Icons.Default.CameraAlt,
+                                        contentDescription = "স্ক্যান করুন",
+                                        tint = Color.Black,
+                                        modifier = Modifier.size(36.dp)
+                                    )
+                                }
                             }
                         }
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = if (isAnalyzing) "থামান (Stop)" else "স্ক্যান",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = if (isAnalyzing) Color(0xFFEF4444) else Color.White,
+                            fontFamily = banglaFont,
+                            fontWeight = FontWeight.Bold
+                        )
                     }
 
                     // Direct Search by Ayah Ref (e.g. 2:255)
@@ -880,6 +910,7 @@ fun ExplainAyahCameraScreen(
 @Composable
 private fun ScannerViewfinderOverlay(
     isAnalyzing: Boolean,
+    onStopScanning: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val infiniteTransition = rememberInfiniteTransition(label = "scanner")
@@ -968,6 +999,38 @@ private fun ScannerViewfinderOverlay(
                         )
                     )
             )
+
+            // Prominent Instant Stop Button centered inside the viewfinder when analyzing
+            if (isAnalyzing) {
+                Surface(
+                    shape = RoundedCornerShape(24.dp),
+                    color = Color(0xFFDC2626), // High-visibility red
+                    border = BorderStroke(1.5.dp, Color.White),
+                    shadowElevation = 8.dp,
+                    modifier = Modifier
+                        .align(Alignment.Center)
+                        .clickable { onStopScanning() }
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.padding(horizontal = 18.dp, vertical = 10.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Stop,
+                            contentDescription = "Stop",
+                            tint = Color.White,
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = "স্ক্যান থামান (Stop)",
+                            style = MaterialTheme.typography.labelLarge,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White
+                        )
+                    }
+                }
+            }
 
             // Prompt Badge
             Surface(

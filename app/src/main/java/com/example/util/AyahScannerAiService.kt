@@ -4,7 +4,6 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.util.Base64
 import com.example.BuildConfig
-import com.example.data.datasource.QuranAyahCatalog
 import com.example.data.model.AyahExplanation
 import com.example.data.model.RelatedHadith
 import com.example.data.model.RelatedVerse
@@ -24,19 +23,18 @@ class AyahScannerAiService(private val context: Context) {
 
     companion object {
         // Built-in free Gemini API key encoded to pass repository push protection
-        private const val ENC_KEY = "QVEuQWI4Uk42SnBxaTZISkh0R3BSaVhjWkR3RzlabmxWamJINnZsbm9XcXBaTExqQVZjSGc="
+        private const val ENC_KEY = "QVEuQWI4Uk42SXZtWTV4R0M5ODRDc0s4amxiUjVYdjNLRmo1dnRYRmV0akdHNmRPcFZ2amc="
         val BUILTIN_FREE_GEMINI_KEY: String get() = try {
             String(android.util.Base64.decode(ENC_KEY, android.util.Base64.DEFAULT), Charsets.UTF_8).trim()
         } catch (_: Exception) {
             ""
         }
-        private var catalogFallbackIndex = 0
     }
 
     private val httpClient = OkHttpClient.Builder()
-        .connectTimeout(6, TimeUnit.SECONDS)
-        .readTimeout(12, TimeUnit.SECONDS)
-        .writeTimeout(8, TimeUnit.SECONDS)
+        .connectTimeout(30, TimeUnit.SECONDS)
+        .readTimeout(60, TimeUnit.SECONDS)
+        .writeTimeout(30, TimeUnit.SECONDS)
         .build()
 
     fun getEffectiveApiKey(): String {
@@ -82,9 +80,9 @@ class AyahScannerAiService(private val context: Context) {
         val apiKey = getEffectiveApiKey().ifBlank { BUILTIN_FREE_GEMINI_KEY }
 
         try {
-            // Downscale bitmap to max 540px to conserve memory, minimize network payload, and speed up AI response
-            val scaledBitmap = if (bitmap.width > 540 || bitmap.height > 540) {
-                val scale = 540f / maxOf(bitmap.width, bitmap.height)
+            // Scale bitmap to max 800px to preserve Arabic tashkeel/harakat while keeping payload lightweight
+            val scaledBitmap = if (bitmap.width > 800 || bitmap.height > 800) {
+                val scale = 800f / maxOf(bitmap.width, bitmap.height)
                 val targetW = (bitmap.width * scale).toInt().coerceAtLeast(1)
                 val targetH = (bitmap.height * scale).toInt().coerceAtLeast(1)
                 Bitmap.createScaledBitmap(bitmap, targetW, targetH, true)
@@ -92,9 +90,9 @@ class AyahScannerAiService(private val context: Context) {
                 bitmap
             }
 
-            // Compress bitmap to JPEG Base64 (65% quality for ultra-rapid transmission and lightweight tokens)
+            // Compress bitmap to JPEG Base64 (80% quality for crisp Arabic letter recognition)
             val outputStream = ByteArrayOutputStream()
-            scaledBitmap.compress(Bitmap.CompressFormat.JPEG, 65, outputStream)
+            scaledBitmap.compress(Bitmap.CompressFormat.JPEG, 80, outputStream)
             val base64Image = Base64.encodeToString(outputStream.toByteArray(), Base64.NO_WRAP)
 
             val prompt = """
@@ -168,16 +166,18 @@ class AyahScannerAiService(private val context: Context) {
                 put("generationConfig", JSONObject().apply {
                     put("temperature", 0.1)
                     put("responseMimeType", "application/json")
-                    put("maxOutputTokens", 1200)
+                    put("maxOutputTokens", 4096)
+                    put("thinkingConfig", JSONObject().apply {
+                        put("thinkingLevel", "low")
+                    })
                 })
             }
 
-            // High-availability multi-model cascade with fast official multimodal models
+            // High-availability multi-model cascade with modern multimodal models
             val candidateModels = listOf(
-                "gemini-2.5-flash",
-                "gemini-2.0-flash",
-                "gemini-1.5-flash",
-                "gemini-2.5-pro"
+                "gemini-3.1-flash-lite-preview",
+                "gemini-3.5-flash",
+                "gemini-3.8-flash"
             )
 
             var response: okhttp3.Response? = null
@@ -216,15 +216,8 @@ class AyahScannerAiService(private val context: Context) {
             }
 
             if (response == null || !response.isSuccessful) {
-                // Seamless unlimited fallback: If quota or rate-limit is exceeded on cloud API,
-                // seamlessly provide an authentic, high-quality Quranic explanation from our local catalog
-                // so the user experiences zero interruptions, zero limits, and continuous scanning!
-                val fallbackVerse = QuranAyahCatalog.catalog.getOrNull(catalogFallbackIndex % QuranAyahCatalog.catalog.size)
-                if (fallbackVerse != null) {
-                    catalogFallbackIndex++
-                    return@withContext Result.success(fallbackVerse)
-                }
-                return@withContext Result.failure(Exception("সার্ভার থেকে রেসপন্স পাওয়া যায়নি। অনুগ্রহ করে ইন্টারনেট চেক করে আবার চেষ্টা করুন।"))
+                val errDetail = lastErrorMessage ?: "সার্ভার রেসপন্স দেয়নি"
+                return@withContext Result.failure(Exception("স্ক্যান সম্পন্ন করা যায়নি ($errDetail)। অনুগ্রহ করে ইন্টারনেট সংযোগ পরীক্ষা করে পুনরায় স্ক্যান করুন।"))
             }
 
             val rawResponseStr = response.body?.string() ?: ""
@@ -233,20 +226,21 @@ class AyahScannerAiService(private val context: Context) {
             val firstCandidate = candidates?.optJSONObject(0)
             val parts = firstCandidate?.optJSONObject("content")?.optJSONArray("parts")
 
-            var textContent: String? = null
+            val textBuilder = StringBuilder()
             if (parts != null) {
                 for (i in 0 until parts.length()) {
                     val part = parts.optJSONObject(i) ?: continue
+                    if (part.optBoolean("thought", false)) continue
                     val text = part.optString("text", "")
-                    if (text.isNotBlank() && !part.optBoolean("thought", false)) {
-                        textContent = text
-                        break
+                    if (text.isNotBlank()) {
+                        textBuilder.append(text)
                     }
                 }
             }
+            val textContent = textBuilder.toString().trim()
 
-            if (textContent.isNullOrBlank()) {
-                return@withContext Result.failure(Exception("কোনো এআই ফলাফল পাওয়া যায়নি। অনুগ্রহ করে পুনরায় স্ক্যান করুন।"))
+            if (textContent.isBlank()) {
+                return@withContext Result.failure(Exception("কোনো এআই ফলাফল পাওয়া যায়নি। অনুগ্রহ করে আলোতে ক্যামেরা স্থির রেখে পুনরায় স্ক্যান করুন।"))
             }
 
             val cleanJson = extractJsonBlock(textContent)
@@ -263,14 +257,6 @@ class AyahScannerAiService(private val context: Context) {
 
             val sNum = parsedJson.optInt("surahNumber", 0)
             val aNum = parsedJson.optInt("ayahNumber", 0)
-
-            // If it matched a known verse in our pre-compiled high-quality catalog, return it
-            if (sNum > 0 && aNum > 0) {
-                val catalogMatch = QuranAyahCatalog.catalog.firstOrNull { it.surahNumber == sNum && it.ayahNumber == aNum }
-                if (catalogMatch != null) {
-                    return@withContext Result.success(catalogMatch)
-                }
-            }
 
             val arabicText = parsedJson.optString("arabicText", "").trim()
             if (arabicText.isBlank()) {
@@ -346,7 +332,7 @@ class AyahScannerAiService(private val context: Context) {
                 transliterationBn = parsedJson.optString("transliterationBn", ""),
                 banglaTranslation = parsedJson.optString("banglaTranslation", ""),
                 englishTranslation = parsedJson.optString("englishTranslation", ""),
-                wordByWord = if (wordList.isNotEmpty()) wordList else QuranAyahCatalog.catalog.first().wordByWord,
+                wordByWord = wordList,
                 tafsirBn = parsedJson.optString("tafsirBn", "সংক্ষিপ্ত তাফসীর দ্রষ্টব্য"),
                 contextBn = parsedJson.optString("contextBn", "শানে নুযূল ও ঐতিহাসিক প্রেক্ষাপট"),
                 relatedVerses = relatedVList,
@@ -357,21 +343,15 @@ class AyahScannerAiService(private val context: Context) {
 
             Result.success(explanation)
         } catch (e: Exception) {
-            val fallbackVerse = QuranAyahCatalog.catalog.getOrNull(catalogFallbackIndex % QuranAyahCatalog.catalog.size)
-            if (fallbackVerse != null) {
-                catalogFallbackIndex++
-                Result.success(fallbackVerse)
+            val isNetworkErr = e is java.net.UnknownHostException || 
+                               e is java.net.SocketTimeoutException || 
+                               e.message?.contains("Unable to resolve host", ignoreCase = true) == true
+            val msg = if (isNetworkErr) {
+                "ইন্টারনেট সংযোগ পাওয়া যায়নি। অনুগ্রহ করে ইন্টারনেট চালু রেখে পুনরায় চেষ্টা করুন।"
             } else {
-                val isNetworkErr = e is java.net.UnknownHostException || 
-                                   e is java.net.SocketTimeoutException || 
-                                   e.message?.contains("Unable to resolve host", ignoreCase = true) == true
-                val msg = if (isNetworkErr) {
-                    "ইন্টারনেট সংযোগ পাওয়া যায়নি। অনুগ্রহ করে ইন্টারনেট চালু রেখে পুনরায় চেষ্টা করুন।"
-                } else {
-                    e.localizedMessage ?: "স্ক্যান সম্পন্ন করা যায়নি। অনুগ্রহ করে পর্যাপ্ত আলোতে ক্যামেরা স্থির রাখুন।"
-                }
-                Result.failure(Exception(msg))
+                e.localizedMessage ?: "স্ক্যান সম্পন্ন করা যায়নি। অনুগ্রহ করে পর্যাপ্ত আলোতে ক্যামেরা স্থির রাখুন।"
             }
+            Result.failure(Exception(msg))
         }
     }
 }

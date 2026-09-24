@@ -670,48 +670,30 @@ fun ExplainAyahCameraScreen(
                     }
                 }
 
-                // Quick Sample Verses Bar (Instant 1-Tap Testing)
-                Text(
-                    text = "নমুনা পৃষ্ঠা দিয়ে তাৎক্ষণিক পরীক্ষা করুন:",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = Color.White.copy(alpha = 0.75f),
-                    fontFamily = banglaFont,
-                    modifier = Modifier.padding(bottom = 6.dp)
-                )
-
-                LazyRow(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    modifier = Modifier.fillMaxWidth()
+                // Live Real-Time Scanning Instructions
+                Surface(
+                    shape = RoundedCornerShape(20.dp),
+                    color = Color.Black.copy(alpha = 0.55f),
+                    border = BorderStroke(0.8.dp, Color.White.copy(alpha = 0.25f)),
+                    modifier = Modifier.padding(bottom = 8.dp)
                 ) {
-                    items(QuranAyahCatalog.catalog) { sampleAyah ->
-                        Surface(
-                            shape = RoundedCornerShape(16.dp),
-                            color = Color.Black.copy(alpha = 0.6f),
-                            border = BorderStroke(0.8.dp, IslamicGold.copy(alpha = 0.4f)),
-                            modifier = Modifier.clickable {
-                                recognizedAyah = sampleAyah
-                            }
-                        ) {
-                            Row(
-                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.MenuBook,
-                                    contentDescription = null,
-                                    tint = IslamicGold,
-                                    modifier = Modifier.size(13.dp)
-                                )
-                                Spacer(modifier = Modifier.width(5.dp))
-                                Text(
-                                    text = sampleAyah.surahNameBangla,
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = Color.White,
-                                    fontFamily = banglaFont,
-                                    fontWeight = FontWeight.Medium
-                                )
-                            }
-                        }
+                    Row(
+                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.AutoAwesome,
+                            contentDescription = null,
+                            tint = IslamicGold,
+                            modifier = Modifier.size(14.dp)
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = if (isAnalyzing) "এআই ভিশন আয়াত বিশ্লেষণ করছে..." else "কুরআন বা দো'আর পৃষ্ঠার উপর ক্যামেরা সোজা রাখুন",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = Color.White.copy(alpha = 0.9f),
+                            fontFamily = banglaFont
+                        )
                     }
                 }
 

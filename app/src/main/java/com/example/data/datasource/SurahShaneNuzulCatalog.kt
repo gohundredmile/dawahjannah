@@ -22,32 +22,34 @@ object SurahShaneNuzulCatalog {
         return cachedMap?.get(surahNumber)
     }
 
-    private synchronized fun loadFromAssets(context: Context) {
-        if (cachedMap != null) return
-        try {
-            val jsonString = context.assets.open("surah_shane_nuzul.json").use { inputStream ->
-                InputStreamReader(inputStream, Charsets.UTF_8).readText()
+    private fun loadFromAssets(context: Context) {
+        synchronized(this) {
+            if (cachedMap != null) return
+            try {
+                val jsonString = context.assets.open("surah_shane_nuzul.json").use { inputStream ->
+                    InputStreamReader(inputStream, Charsets.UTF_8).readText()
+                }
+                val jsonArray = JSONArray(jsonString)
+                val map = HashMap<Int, SurahShaneNuzul>(120)
+                for (i in 0 until jsonArray.length()) {
+                    val obj = jsonArray.getJSONObject(i)
+                    val surahNumber = obj.getInt("surahNumber")
+                    val item = SurahShaneNuzul(
+                        surahNumber = surahNumber,
+                        surahNameBn = obj.optString("surahNameBn"),
+                        naming = obj.optString("naming"),
+                        period = obj.optString("period"),
+                        shaneNuzul = obj.optString("shaneNuzul"),
+                        themes = obj.optString("themes"),
+                        virtues = obj.optString("virtues"),
+                        tafsirPerspectives = obj.optString("tafsirPerspectives")
+                    )
+                    map[surahNumber] = item
+                }
+                cachedMap = map
+            } catch (e: Exception) {
+                e.printStackTrace()
             }
-            val jsonArray = JSONArray(jsonString)
-            val map = HashMap<Int, SurahShaneNuzul>(120)
-            for (i in 0 until jsonArray.length()) {
-                val obj = jsonArray.getJSONObject(i)
-                val surahNumber = obj.getInt("surahNumber")
-                val item = SurahShaneNuzul(
-                    surahNumber = surahNumber,
-                    surahNameBn = obj.optString("surahNameBn"),
-                    naming = obj.optString("naming"),
-                    period = obj.optString("period"),
-                    shaneNuzul = obj.optString("shaneNuzul"),
-                    themes = obj.optString("themes"),
-                    virtues = obj.optString("virtues"),
-                    tafsirPerspectives = obj.optString("tafsirPerspectives")
-                )
-                map[surahNumber] = item
-            }
-            cachedMap = map
-        } catch (e: Exception) {
-            e.printStackTrace()
         }
     }
 }

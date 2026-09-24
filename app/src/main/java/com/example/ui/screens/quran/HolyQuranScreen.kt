@@ -106,6 +106,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.datasource.QuranSurahCatalog
+import com.example.data.datasource.SurahShaneNuzulCatalog
 import com.example.data.model.DownloadProgressState
 import com.example.data.model.QuranAyah
 import com.example.data.model.QuranReciter
@@ -1007,7 +1008,7 @@ fun SurahDetailScreen(
                     // Bookmark Button for Surah Itself in Top Bar
                     IconButton(
                         onClick = {
-                            coroutineScope.launch {
+                            scope.launch {
                                 quranRepository.toggleSurahBookmark(surah)
                                 val msg = if (isSurahBookmarked) "সূরা ${surah.nameBn} বুকমার্ক থেকে সরানো হয়েছে" else "সূরা ${surah.nameBn} বুকমার্কে যুক্ত করা হয়েছে"
                                 Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
@@ -1148,7 +1149,7 @@ fun SurahDetailScreen(
                     currentDownload = currentDownload,
                     isSurahBookmarked = isSurahBookmarked,
                     onToggleSurahBookmark = {
-                        coroutineScope.launch {
+                        scope.launch {
                             quranRepository.toggleSurahBookmark(surah)
                             val msg = if (isSurahBookmarked) "সূরা ${surah.nameBn} বুকমার্ক থেকে সরানো হয়েছে" else "সূরা ${surah.nameBn} বুকমার্কে যুক্ত করা হয়েছে"
                             Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
@@ -1888,6 +1889,38 @@ fun SurahHeaderCard(
                                     )
                                 )
                             }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.width(10.dp))
+
+                    // Surah Bookmark Button
+                    Surface(
+                        color = if (isSurahBookmarked) IslamicGold else Color.White.copy(alpha = 0.18f),
+                        shape = RoundedCornerShape(20.dp),
+                        border = BorderStroke(1.dp, if (isSurahBookmarked) IslamicGold else Color.White.copy(alpha = 0.35f)),
+                        modifier = Modifier
+                            .testTag("btn_header_surah_bookmark")
+                            .clickable(onClick = onToggleSurahBookmark)
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 7.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(5.dp)
+                        ) {
+                            Icon(
+                                imageVector = if (isSurahBookmarked) Icons.Default.Bookmark else Icons.Default.BookmarkBorder,
+                                contentDescription = if (isSurahBookmarked) "সূরা বুকমার্ক থেকে সরান" else "সূরা বুকমার্ক করুন",
+                                tint = if (isSurahBookmarked) Color(0xFF0D4B37) else Color.White,
+                                modifier = Modifier.size(15.dp)
+                            )
+                            Text(
+                                text = if (isSurahBookmarked) "বুকমার্কড" else "বুকমার্ক",
+                                style = MaterialTheme.typography.labelMedium.copy(
+                                    fontWeight = FontWeight.Bold,
+                                    color = if (isSurahBookmarked) Color(0xFF0D4B37) else Color.White
+                                )
+                            )
                         }
                     }
                 }

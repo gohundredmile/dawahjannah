@@ -1,6 +1,6 @@
 {
   "name": "Dawah to Jannah",
-  "description": "Comprehensive Islamic companion with offline Hadith library (HadithBD / IRD Foundation), Holy Quran with quick Surah & Hadith switching, 'Explain This Ayah' AI camera scanner, authentic Tafsir, prayer times, and verified Masnun Dua.",
+  "description": "Comprehensive Islamic companion featuring 114 Surahs authentic Shan-e-Nuzul (HadithBD / IRD), instant Surah bookmarking, gentle Islamic Habit & Sunnah Tracker, Holy Quran audio recitations, 'Explain This Ayah' AI camera scanner, prayer times, and verified Masnun Dua.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

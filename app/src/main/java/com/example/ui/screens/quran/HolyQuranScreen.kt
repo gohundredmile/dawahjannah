@@ -12,6 +12,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -114,6 +115,7 @@ import com.example.ui.theme.IslamicGold
 import com.example.ui.theme.IslamicGreen
 import com.example.util.BanglaNumberUtils
 import com.example.util.QuranAudioManager
+import com.example.util.QuranBengaliPhoneticTransliteration
 import com.example.util.QuranSettingsManager
 import kotlinx.coroutines.launch
 
@@ -1377,10 +1379,16 @@ fun SurahDetailScreen(
                             audioManager.playAyahAudio(ayah.surahNumber, ayah.ayahNumber)
                         },
                         onShareAyah = {
+                            val healedPronunciation = QuranBengaliPhoneticTransliteration.sanitizeAndHeal(
+                                currentPronunciation = ayah.pronunciationBn,
+                                surahNumber = ayah.surahNumber,
+                                ayahNumber = ayah.ayahNumber,
+                                arabicText = ayah.arabicText
+                            )
                             val shareText = buildString {
                                 append("সূরা ${surah.nameBn} (${surah.number}:${ayah.ayahNumber})\n\n")
                                 append("${ayah.arabicText}\n\n")
-                                append("উচ্চারণ: ${ayah.pronunciationBn}\n\n")
+                                append("উচ্চারণ: ${healedPronunciation}\n\n")
                                 append("অর্থ: ${ayah.translationBn}\n")
                                 append("— [Dawah to Jannah পবিত্র কুরআন]")
                             }
@@ -1709,7 +1717,18 @@ fun AyahCardItem(
     onPlayAyahAudio: () -> Unit,
     onShareAyah: () -> Unit
 ) {
+    val isDark = isSystemInDarkTheme()
     val ayahNumberBn = BanglaNumberUtils.toBanglaDigits(ayah.ayahNumber)
+
+    // Cleaned & healed authentic pronunciation without any broken Unicode marks
+    val displayPronunciation = remember(ayah.pronunciationBn, ayah.arabicText) {
+        QuranBengaliPhoneticTransliteration.sanitizeAndHeal(
+            currentPronunciation = ayah.pronunciationBn,
+            surahNumber = ayah.surahNumber,
+            ayahNumber = ayah.ayahNumber,
+            arabicText = ayah.arabicText
+        )
+    }
 
     Card(
         shape = RoundedCornerShape(16.dp),
@@ -1730,7 +1749,7 @@ fun AyahCardItem(
                 .fillMaxWidth()
                 .padding(14.dp)
         ) {
-            // Action Pills Bar (Exact as specimen screenshot 2)
+            // Action Pills Bar: [📖 তাফসীর] [শেয়ার] (আয়াত নম্বর) [বুকমার্ক] [অডিও]
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
@@ -1787,7 +1806,7 @@ fun AyahCardItem(
                     }
                 }
 
-                // Ayah Number Center Pill
+                // Ayah Number Center Badge
                 Box(
                     modifier = Modifier
                         .size(28.dp)
@@ -1859,76 +1878,200 @@ fun AyahCardItem(
                 }
             }
 
-            Spacer(modifier = Modifier.height(14.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
-            // Arabic Verse Text (Right aligned, large authentic calligraphy)
+            // Part 1: Arabic Ayat Card (Very Lite Mint / Sage Green Tint)
             if (settings.showArabic) {
-                Text(
-                    text = "${ayah.arabicText} ۝$ayahNumberBn",
-                    style = MaterialTheme.typography.headlineSmall.copy(
-                        fontSize = settings.arabicFontSize.sp,
-                        lineHeight = (settings.arabicFontSize * 1.6f).sp,
-                        fontWeight = FontWeight.Medium,
-                        textAlign = TextAlign.End,
-                        color = MaterialTheme.colorScheme.onSurface
+                Card(
+                    shape = RoundedCornerShape(12.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = if (isDark) Color(0xFF13231A) else Color(0xFFF1F8F5)
+                    ),
+                    border = BorderStroke(
+                        1.dp,
+                        if (isDark) Color(0xFF223E2E) else Color(0xFFCBE5D7)
                     ),
                     modifier = Modifier.fillMaxWidth()
-                )
-                Spacer(modifier = Modifier.height(10.dp))
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 14.dp, vertical = 10.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Surface(
+                                shape = RoundedCornerShape(6.dp),
+                                color = IslamicGreen.copy(alpha = 0.12f)
+                            ) {
+                                Text(
+                                    text = "আরবি আয়াত",
+                                    style = MaterialTheme.typography.labelSmall.copy(
+                                        fontWeight = FontWeight.Bold,
+                                        color = IslamicGreen,
+                                        fontSize = 11.sp
+                                    ),
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
+                                )
+                            }
+                            Text(
+                                text = "আয়াত $ayahNumberBn",
+                                style = MaterialTheme.typography.labelSmall.copy(
+                                    color = IslamicGreen,
+                                    fontWeight = FontWeight.SemiBold,
+                                    fontSize = 11.sp
+                                )
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        // Arabic Verse Text (Right aligned, authentic Uthmani script calligraphy)
+                        Text(
+                            text = "${ayah.arabicText} ۝$ayahNumberBn",
+                            style = MaterialTheme.typography.headlineSmall.copy(
+                                fontSize = settings.arabicFontSize.sp,
+                                lineHeight = (settings.arabicFontSize * 1.6f).sp,
+                                fontWeight = FontWeight.Medium,
+                                textAlign = TextAlign.End,
+                                color = MaterialTheme.colorScheme.onSurface
+                            ),
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
+                }
+                Spacer(modifier = Modifier.height(8.dp))
             }
 
-            // Bengali Pronunciation Pill Container (উচ্চারণ)
-            if (settings.showPronunciation && ayah.pronunciationBn.isNotBlank()) {
-                Surface(
-                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+            // Part 2: Bangla Pronunciation Card (Very Lite Warm Honey/Sand Cream Tint)
+            if (settings.showPronunciation && displayPronunciation.isNotBlank()) {
+                Card(
                     shape = RoundedCornerShape(12.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = if (isDark) Color(0xFF272113) else Color(0xFFFFFBEA)
+                    ),
+                    border = BorderStroke(
+                        1.dp,
+                        if (isDark) Color(0xFF453A20) else Color(0xFFF5E3B3)
+                    ),
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text(
-                        text = ayah.pronunciationBn,
-                        style = MaterialTheme.typography.bodyMedium.copy(
-                            fontSize = (settings.banglaFontSize * 0.95f).coerceIn(12f, 22f).sp,
-                            lineHeight = (settings.banglaFontSize * 1.4f).sp,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        ),
-                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)
-                    )
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 14.dp, vertical = 10.dp)
+                    ) {
+                        Surface(
+                            shape = RoundedCornerShape(6.dp),
+                            color = Color(0xFFB57C1E).copy(alpha = 0.14f)
+                        ) {
+                            Text(
+                                text = "বাংলা উচ্চারণ",
+                                style = MaterialTheme.typography.labelSmall.copy(
+                                    fontWeight = FontWeight.Bold,
+                                    color = if (isDark) Color(0xFFE5B25D) else Color(0xFF9E6814),
+                                    fontSize = 11.sp
+                                ),
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.height(6.dp))
+
+                        Text(
+                            text = displayPronunciation,
+                            style = MaterialTheme.typography.bodyMedium.copy(
+                                fontSize = (settings.banglaFontSize * 0.95f).coerceIn(13f, 22f).sp,
+                                lineHeight = (settings.banglaFontSize * 1.45f).sp,
+                                color = MaterialTheme.colorScheme.onSurface
+                            ),
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
                 }
-                Spacer(modifier = Modifier.height(10.dp))
+                Spacer(modifier = Modifier.height(8.dp))
             }
 
-            // Bengali Translation Text
+            // Part 3: Bangla Meaning Card (Very Lite Soft Sky / Ice Blue Tint)
             if (settings.showTranslation) {
                 val activeTranslation = when (selectedTranslator) {
                     QuranTranslator.DR_ZAKARIA -> ayah.translationZakaria ?: ayah.translationBn
                     QuranTranslator.TAISIRUL_QURAN -> ayah.translationTaisirul ?: ayah.translationBn
                     QuranTranslator.MUHIBBUR_RAHMAN -> ayah.translationBn
                 }
+                val translatorName = when (selectedTranslator) {
+                    QuranTranslator.DR_ZAKARIA -> "ড. আবু বকর যাকারিয়া"
+                    QuranTranslator.TAISIRUL_QURAN -> "তাইসীরুল কুরআন"
+                    QuranTranslator.MUHIBBUR_RAHMAN -> "মুহিব্বুর রহমান"
+                }
 
-                Text(
-                    text = activeTranslation,
-                    style = MaterialTheme.typography.bodyLarge.copy(
-                        fontSize = settings.banglaFontSize.sp,
-                        lineHeight = (settings.banglaFontSize * 1.45f).sp,
-                        fontWeight = FontWeight.Normal,
-                        color = MaterialTheme.colorScheme.onSurface
+                Card(
+                    shape = RoundedCornerShape(12.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = if (isDark) Color(0xFF14202E) else Color(0xFFF2F6FC)
+                    ),
+                    border = BorderStroke(
+                        1.dp,
+                        if (isDark) Color(0xFF20354C) else Color(0xFFD0DFEF)
                     ),
                     modifier = Modifier.fillMaxWidth()
-                )
-            }
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 14.dp, vertical = 10.dp)
+                    ) {
+                        Surface(
+                            shape = RoundedCornerShape(6.dp),
+                            color = Color(0xFF1976D2).copy(alpha = 0.12f)
+                        ) {
+                            Text(
+                                text = "বাংলা অর্থ ($translatorName)",
+                                style = MaterialTheme.typography.labelSmall.copy(
+                                    fontWeight = FontWeight.Bold,
+                                    color = if (isDark) Color(0xFF64B5F6) else Color(0xFF1565C0),
+                                    fontSize = 11.sp
+                                ),
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
+                            )
+                        }
 
-            // English Translation Text (Optional)
-            if (settings.showEnglishTranslation && !ayah.translationEn.isNullOrBlank()) {
-                Spacer(modifier = Modifier.height(6.dp))
-                Text(
-                    text = ayah.translationEn,
-                    style = MaterialTheme.typography.bodyMedium.copy(
-                        fontSize = (settings.banglaFontSize * 0.9f).sp,
-                        lineHeight = (settings.banglaFontSize * 1.35f).sp,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    ),
-                    modifier = Modifier.fillMaxWidth()
-                )
+                        Spacer(modifier = Modifier.height(6.dp))
+
+                        Text(
+                            text = activeTranslation,
+                            style = MaterialTheme.typography.bodyLarge.copy(
+                                fontSize = settings.banglaFontSize.sp,
+                                lineHeight = (settings.banglaFontSize * 1.5f).sp,
+                                fontWeight = FontWeight.Normal,
+                                color = MaterialTheme.colorScheme.onSurface
+                            ),
+                            modifier = Modifier.fillMaxWidth()
+                        )
+
+                        // English Translation Text (Optional, if enabled in settings)
+                        if (settings.showEnglishTranslation && !ayah.translationEn.isNullOrBlank()) {
+                            Spacer(modifier = Modifier.height(8.dp))
+                            HorizontalDivider(
+                                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f),
+                                thickness = 0.8.dp
+                            )
+                            Spacer(modifier = Modifier.height(6.dp))
+                            Text(
+                                text = ayah.translationEn,
+                                style = MaterialTheme.typography.bodyMedium.copy(
+                                    fontSize = (settings.banglaFontSize * 0.9f).sp,
+                                    lineHeight = (settings.banglaFontSize * 1.35f).sp,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                ),
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                        }
+                    }
+                }
             }
 
             // Expandable Scholarly Tafsir Card
@@ -1937,7 +2080,7 @@ fun AyahCardItem(
                 enter = fadeIn(),
                 exit = fadeOut()
             ) {
-                Column(modifier = Modifier.padding(top = 12.dp)) {
+                Column(modifier = Modifier.padding(top = 10.dp)) {
                     Surface(
                         color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f),
                         shape = RoundedCornerShape(12.dp),

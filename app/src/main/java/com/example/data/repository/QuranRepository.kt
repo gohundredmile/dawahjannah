@@ -96,14 +96,15 @@ class QuranRepository(private val context: Context) {
             var hasOutdatedPronunciation = false
             val healedEntities = localEntities.map { entity ->
                 val currentPronunciation = entity.pronunciationBn
-                if (currentPronunciation.isBlank() || currentPronunciation.contains("সহীহ মাখরাজ") || currentPronunciation == "—") {
+                val healedPronunciation = QuranBengaliPhoneticTransliteration.sanitizeAndHeal(
+                    currentPronunciation = currentPronunciation,
+                    surahNumber = entity.surahNumber,
+                    ayahNumber = entity.ayahNumber,
+                    arabicText = entity.arabicText
+                )
+                if (healedPronunciation != currentPronunciation) {
                     hasOutdatedPronunciation = true
-                    val accuratePronunciation = QuranBengaliPhoneticTransliteration.getPronunciation(
-                        surahNumber = entity.surahNumber,
-                        ayahNumber = entity.ayahNumber,
-                        arabicText = entity.arabicText
-                    )
-                    entity.copy(pronunciationBn = accuratePronunciation)
+                    entity.copy(pronunciationBn = healedPronunciation)
                 } else {
                     entity
                 }
@@ -139,14 +140,15 @@ class QuranRepository(private val context: Context) {
             var hasOutdatedPronunciation = false
             val healedEntities = local.map { entity ->
                 val currentPronunciation = entity.pronunciationBn
-                if (currentPronunciation.isBlank() || currentPronunciation.contains("সহীহ মাখরাজ") || currentPronunciation == "—") {
+                val healedPronunciation = QuranBengaliPhoneticTransliteration.sanitizeAndHeal(
+                    currentPronunciation = currentPronunciation,
+                    surahNumber = entity.surahNumber,
+                    ayahNumber = entity.ayahNumber,
+                    arabicText = entity.arabicText
+                )
+                if (healedPronunciation != currentPronunciation) {
                     hasOutdatedPronunciation = true
-                    val accuratePronunciation = QuranBengaliPhoneticTransliteration.getPronunciation(
-                        surahNumber = entity.surahNumber,
-                        ayahNumber = entity.ayahNumber,
-                        arabicText = entity.arabicText
-                    )
-                    entity.copy(pronunciationBn = accuratePronunciation)
+                    entity.copy(pronunciationBn = healedPronunciation)
                 } else {
                     entity
                 }

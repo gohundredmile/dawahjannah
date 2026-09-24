@@ -914,13 +914,17 @@ private fun HadithBookDetailView(
                     color = IslamicGreen,
                     shadowElevation = 1.dp
                 ) {
+                    val currentHadith = activeHadiths.getOrNull(currentIndex)
                     Row(
                         modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
-                        verticalAlignment = Alignment.CenterVertically
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
                         Text(
-                            text = if (totalHadiths > 0) {
-                                "হাদীস বদলান (${BanglaNumberUtils.toBanglaDigits(currentIndex + 1)}/${BanglaNumberUtils.toBanglaDigits(totalHadiths)}) ▾"
+                            text = if (currentHadith != null) {
+                                "হাদীস নং ${BanglaNumberUtils.toBanglaDigits(currentHadith.hadithNumber)} ▾"
+                            } else if (totalHadiths > 0) {
+                                "হাদীস নং ${BanglaNumberUtils.toBanglaDigits(currentIndex + 1)} ▾"
                             } else {
                                 "হাদীস নির্বাচন ▾"
                             },

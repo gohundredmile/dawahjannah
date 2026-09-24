@@ -8,6 +8,7 @@ import com.example.data.local.entity.QuranBookmarkEntity
 import com.example.data.local.entity.QuranSurahEntity
 import com.example.data.model.QuranAyah
 import com.example.data.model.QuranSurah
+import com.example.util.QuranBengaliPhoneticTransliteration
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.firstOrNull
@@ -89,10 +90,29 @@ class QuranRepository(private val context: Context) {
     }
 
     fun getAyahsForSurah(surahNumber: Int): Flow<List<QuranAyah>> = flow {
-        // 1. First emit what is in local Room DB
+        // 1. First check local Room DB
         val localEntities = quranDao.getAyahsForSurahSync(surahNumber)
         if (localEntities.isNotEmpty()) {
-            emit(localEntities.map { it.toModel() })
+            var hasOutdatedPronunciation = false
+            val healedEntities = localEntities.map { entity ->
+                val currentPronunciation = entity.pronunciationBn
+                if (currentPronunciation.isBlank() || currentPronunciation.contains("সহীহ মাখরাজ") || currentPronunciation == "—") {
+                    hasOutdatedPronunciation = true
+                    val accuratePronunciation = QuranBengaliPhoneticTransliteration.getPronunciation(
+                        surahNumber = entity.surahNumber,
+                        ayahNumber = entity.ayahNumber,
+                        arabicText = entity.arabicText
+                    )
+                    entity.copy(pronunciationBn = accuratePronunciation)
+                } else {
+                    entity
+                }
+            }
+            if (hasOutdatedPronunciation) {
+                // Permanently persist the healed authentic Bengali pronunciation in Room DB
+                quranDao.insertAyahs(healedEntities)
+            }
+            emit(healedEntities.map { it.toModel() })
         } else {
             // Check pre-bundled catalog
             val bundled = QuranSurahCatalog.preBundledAyahs[surahNumber]
@@ -101,7 +121,7 @@ class QuranRepository(private val context: Context) {
                 quranDao.insertAyahs(entities)
                 emit(bundled)
             } else {
-                // If not pre-bundled, attempt to fetch from verified QuranEnc API (King Fahd Complex verified Bengali translation & footnotes/tafsir)
+                // If not pre-bundled, attempt to fetch from verified QuranEnc API with accurate Bengali pronunciation
                 val fetched = fetchSurahFromApi(surahNumber)
                 if (fetched.isNotEmpty()) {
                     quranDao.insertAyahs(fetched.map { it.toEntity() })
@@ -116,7 +136,25 @@ class QuranRepository(private val context: Context) {
     suspend fun ensureSurahAyahsLoaded(surahNumber: Int): List<QuranAyah> = withContext(Dispatchers.IO) {
         val local = quranDao.getAyahsForSurahSync(surahNumber)
         if (local.isNotEmpty()) {
-            return@withContext local.map { it.toModel() }
+            var hasOutdatedPronunciation = false
+            val healedEntities = local.map { entity ->
+                val currentPronunciation = entity.pronunciationBn
+                if (currentPronunciation.isBlank() || currentPronunciation.contains("সহীহ মাখরাজ") || currentPronunciation == "—") {
+                    hasOutdatedPronunciation = true
+                    val accuratePronunciation = QuranBengaliPhoneticTransliteration.getPronunciation(
+                        surahNumber = entity.surahNumber,
+                        ayahNumber = entity.ayahNumber,
+                        arabicText = entity.arabicText
+                    )
+                    entity.copy(pronunciationBn = accuratePronunciation)
+                } else {
+                    entity
+                }
+            }
+            if (hasOutdatedPronunciation) {
+                quranDao.insertAyahs(healedEntities)
+            }
+            return@withContext healedEntities.map { it.toModel() }
         }
         val bundled = QuranSurahCatalog.preBundledAyahs[surahNumber]
         if (!bundled.isNullOrEmpty()) {
@@ -157,12 +195,18 @@ class QuranRepository(private val context: Context) {
                     "তাফসীর: সূরাটির এই আয়াতে মহান আল্লাহর অপার মহিমা ও বান্দার প্রতি হেদায়েতের সুস্পষ্ট বার্তা দেওয়া হয়েছে।"
                 }
 
+                val pronunciation = QuranBengaliPhoneticTransliteration.getPronunciation(
+                    surahNumber = surahNumber,
+                    ayahNumber = ayaNum,
+                    arabicText = arabic
+                )
+
                 list.add(
                     QuranAyah(
                         surahNumber = surahNumber,
                         ayahNumber = ayaNum,
                         arabicText = arabic,
-                        pronunciationBn = generatePhoneticApproximation(arabic),
+                        pronunciationBn = pronunciation,
                         translationBn = translation,
                         translationZakaria = translation,
                         translationTaisirul = null,
@@ -178,9 +222,7 @@ class QuranRepository(private val context: Context) {
     }
 
     private fun generatePhoneticApproximation(arabic: String): String {
-        // Fallback clean phonetic generator if offline or not pre-bundled
-        if (arabic.isBlank()) return "—"
-        return "উচ্চারণ: সহীহ মাখরাজ ও তাজওয়ীদের সাথে আরবি তিলাওয়াত শ্রবণ করুন।"
+        return QuranBengaliPhoneticTransliteration.transliterate(arabic)
     }
 
     suspend fun toggleBookmark(ayah: QuranAyah, surahNameBn: String) = withContext(Dispatchers.IO) {

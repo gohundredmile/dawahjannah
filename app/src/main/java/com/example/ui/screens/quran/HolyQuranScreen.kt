@@ -11,6 +11,8 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -366,6 +368,110 @@ fun HolyQuranIndexScreen(
                         contentDescription = "কুরআন সেটিংস",
                         tint = MaterialTheme.colorScheme.onSurface
                     )
+                }
+            }
+        }
+
+        // Prominent 2-Card Quick Access Banner for Quran Settings & 1-Click Audio Manager
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 6.dp),
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            // Card 1: কুরআন সেটিংস (Quran Settings)
+            Surface(
+                onClick = onOpenSettings,
+                shape = RoundedCornerShape(12.dp),
+                color = IslamicGold.copy(alpha = 0.12f),
+                border = BorderStroke(1.dp, IslamicGold.copy(alpha = 0.45f)),
+                modifier = Modifier
+                    .weight(1f)
+                    .testTag("banner_card_quran_settings")
+            ) {
+                Row(
+                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(32.dp)
+                            .clip(CircleShape)
+                            .background(IslamicGold.copy(alpha = 0.22f)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Settings,
+                            contentDescription = "কুরআন সেটিংস",
+                            tint = IslamicGold,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Column {
+                        Text(
+                            text = "কুরআন সেটিংস",
+                            style = MaterialTheme.typography.labelMedium.copy(
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                        )
+                        Text(
+                            text = "ফন্ট ও অনুবাদক",
+                            style = MaterialTheme.typography.bodySmall.copy(
+                                fontSize = 10.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        )
+                    }
+                }
+            }
+
+            // Card 2: ১-ক্লিক অডিও ডাউনলোড ম্যানেজার (Audio Manager)
+            Surface(
+                onClick = onOpenAudioManager,
+                shape = RoundedCornerShape(12.dp),
+                color = IslamicGreen.copy(alpha = 0.12f),
+                border = BorderStroke(1.dp, IslamicGreen.copy(alpha = 0.45f)),
+                modifier = Modifier
+                    .weight(1f)
+                    .testTag("banner_card_audio_manager")
+            ) {
+                Row(
+                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(32.dp)
+                            .clip(CircleShape)
+                            .background(IslamicGreen.copy(alpha = 0.22f)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.CloudDownload,
+                            contentDescription = "অডিও ডাউনলোড",
+                            tint = IslamicGreen,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Column {
+                        Text(
+                            text = "অডিও ম্যানেজার",
+                            style = MaterialTheme.typography.labelMedium.copy(
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                        )
+                        Text(
+                            text = "১১৪ সূরার অফলাইন অডিও",
+                            style = MaterialTheme.typography.bodySmall.copy(
+                                fontSize = 10.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        )
+                    }
                 }
             }
         }
@@ -997,6 +1103,101 @@ fun SurahDetailScreen(
                                     )
                                 )
                             }
+                        }
+                    }
+                }
+
+                // Secondary Quick Actions Row: [⚙️ কুরআন সেটিংস] [📥 অডিও ম্যানেজার] [🎙️ ক্বারী]
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .horizontalScroll(rememberScrollState())
+                        .padding(horizontal = 16.dp, vertical = 3.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    // Settings Pill
+                    Surface(
+                        onClick = onOpenSettings,
+                        shape = RoundedCornerShape(12.dp),
+                        color = IslamicGold.copy(alpha = 0.12f),
+                        border = BorderStroke(1.dp, IslamicGold.copy(alpha = 0.45f)),
+                        modifier = Modifier.testTag("pill_quran_settings")
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Settings,
+                                contentDescription = "কুরআন সেটিংস",
+                                tint = IslamicGold,
+                                modifier = Modifier.size(14.dp)
+                            )
+                            Text(
+                                text = "কুরআন সেটিংস",
+                                style = MaterialTheme.typography.labelSmall.copy(
+                                    fontWeight = FontWeight.Bold,
+                                    color = IslamicGold
+                                )
+                            )
+                        }
+                    }
+
+                    // Audio Manager Pill
+                    Surface(
+                        onClick = onOpenAudioManager,
+                        shape = RoundedCornerShape(12.dp),
+                        color = IslamicGreen.copy(alpha = 0.12f),
+                        border = BorderStroke(1.dp, IslamicGreen.copy(alpha = 0.45f)),
+                        modifier = Modifier.testTag("pill_audio_manager")
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.CloudDownload,
+                                contentDescription = "অডিও ডাউনলোড ম্যানেজার",
+                                tint = IslamicGreen,
+                                modifier = Modifier.size(14.dp)
+                            )
+                            Text(
+                                text = "১-ক্লিক অডিও ম্যানেজার",
+                                style = MaterialTheme.typography.labelSmall.copy(
+                                    fontWeight = FontWeight.Bold,
+                                    color = IslamicGreen
+                                )
+                            )
+                        }
+                    }
+
+                    // Reciter Picker Pill
+                    Surface(
+                        onClick = onOpenReciterPicker,
+                        shape = RoundedCornerShape(12.dp),
+                        color = MaterialTheme.colorScheme.surfaceVariant,
+                        modifier = Modifier.testTag("pill_reciter_picker")
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Tune,
+                                contentDescription = "ক্বারী নির্বাচন",
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.size(14.dp)
+                            )
+                            Text(
+                                text = "ক্বারী নির্বাচন",
+                                style = MaterialTheme.typography.labelSmall.copy(
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            )
                         }
                     }
                 }

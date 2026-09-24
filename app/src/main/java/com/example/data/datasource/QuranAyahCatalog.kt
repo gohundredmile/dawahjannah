@@ -324,7 +324,7 @@ object QuranAyahCatalog {
      */
     fun findByQueryOrSnippet(query: String): AyahExplanation? {
         val clean = query.trim().lowercase()
-        if (clean.isBlank()) return catalog.first()
+        if (clean.isBlank()) return null
 
         // 1. Direct Surah:Ayah matching (e.g. "2:255", "112:1", "1:1", "94:5")
         if (clean.contains(":")) {
@@ -358,8 +358,7 @@ object QuranAyahCatalog {
         }
         if (matchByTranslation != null) return matchByTranslation
 
-        // Default to first (Ayatul Kursi)
-        return catalog.first()
+        return null
     }
 
     private fun cleanArabic(text: String): String {

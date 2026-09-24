@@ -814,7 +814,14 @@ fun ExplainAyahCameraScreen(
                             trailingIcon = {
                                 IconButton(onClick = {
                                     if (searchQuery.isNotBlank()) {
-                                        recognizedAyah = QuranAyahCatalog.findByQueryOrSnippet(searchQuery)
+                                        val found = QuranAyahCatalog.findByQueryOrSnippet(searchQuery)
+                                        if (found != null) {
+                                            recognizedAyah = found
+                                            scanErrorMessage = null
+                                            isSearchExpanded = false
+                                        } else {
+                                            scanErrorMessage = "\"$searchQuery\" দিয়ে কোনো আয়াত পাওয়া যায়নি। সরাসরি ক্যামেরা দিয়ে পৃষ্ঠায় স্ক্যান করুন।"
+                                        }
                                     }
                                 }) {
                                     Icon(Icons.Default.Search, contentDescription = null, tint = IslamicGold)

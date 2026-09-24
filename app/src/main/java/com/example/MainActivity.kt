@@ -143,8 +143,8 @@ class MainActivity : ComponentActivity() {
                                     onOpenThemeModal = { viewModel.openThemeModal() },
                                     onOpenAppSettings = { viewModel.openSettings(AppTab.HOME) }
                                 )
-                            } else if (currentTab == AppTab.TOOLS && currentToolsSub == ToolsSubScreen.EXPLAIN_AYAH_CAMERA) {
-                                // ExplainAyahCameraScreen has its own full-screen immersive viewfinder & top controls
+                            } else if (currentTab == AppTab.TOOLS && (currentToolsSub == ToolsSubScreen.EXPLAIN_AYAH_CAMERA || currentToolsSub == ToolsSubScreen.HOLY_QURAN)) {
+                                // ExplainAyahCameraScreen and HolyQuranScreen have their own dedicated full-width top app bars and controls
                             } else if (!(currentTab == AppTab.MORE && currentMoreSub != MoreSubScreen.MAIN)) {
                                 val showTopBarBack = currentTab == AppTab.TASBIH || currentTab == AppTab.DUA || (currentTab == AppTab.TOOLS && currentToolsSub != ToolsSubScreen.MAIN)
                                 DawahTopAppBar(

@@ -80,9 +80,9 @@ class AyahScannerAiService(private val context: Context) {
         val apiKey = getEffectiveApiKey().ifBlank { BUILTIN_FREE_GEMINI_KEY }
 
         try {
-            // Scale bitmap to max 800px to preserve Arabic tashkeel/harakat while keeping payload lightweight
-            val scaledBitmap = if (bitmap.width > 800 || bitmap.height > 800) {
-                val scale = 800f / maxOf(bitmap.width, bitmap.height)
+            // Scale bitmap to max 1200px to preserve crisp Arabic tashkeel/harakat while keeping payload lightweight
+            val scaledBitmap = if (bitmap.width > 1200 || bitmap.height > 1200) {
+                val scale = 1200f / maxOf(bitmap.width, bitmap.height)
                 val targetW = (bitmap.width * scale).toInt().coerceAtLeast(1)
                 val targetH = (bitmap.height * scale).toInt().coerceAtLeast(1)
                 Bitmap.createScaledBitmap(bitmap, targetW, targetH, true)
@@ -90,9 +90,9 @@ class AyahScannerAiService(private val context: Context) {
                 bitmap
             }
 
-            // Compress bitmap to JPEG Base64 (80% quality for crisp Arabic letter recognition)
+            // Compress bitmap to JPEG Base64 (85% quality for crisp Arabic letter recognition)
             val outputStream = ByteArrayOutputStream()
-            scaledBitmap.compress(Bitmap.CompressFormat.JPEG, 80, outputStream)
+            scaledBitmap.compress(Bitmap.CompressFormat.JPEG, 85, outputStream)
             val base64Image = Base64.encodeToString(outputStream.toByteArray(), Base64.NO_WRAP)
 
             val prompt = """
@@ -167,17 +167,14 @@ class AyahScannerAiService(private val context: Context) {
                     put("temperature", 0.1)
                     put("responseMimeType", "application/json")
                     put("maxOutputTokens", 4096)
-                    put("thinkingConfig", JSONObject().apply {
-                        put("thinkingLevel", "low")
-                    })
                 })
             }
 
-            // High-availability multi-model cascade with modern multimodal models
+            // High-availability multi-model cascade prioritizing active ultra-fast models
             val candidateModels = listOf(
-                "gemini-3.1-flash-lite-preview",
                 "gemini-3.5-flash",
-                "gemini-3.8-flash"
+                "gemini-3-flash-preview",
+                "gemini-3.1-flash-lite-preview"
             )
 
             var response: okhttp3.Response? = null
@@ -329,7 +326,9 @@ class AyahScannerAiService(private val context: Context) {
                 revelationTypeBn = parsedJson.optString("revelationTypeBn", "").ifBlank { if (sNum > 0) "মাক্কী" else "সহীহ হাদিস ও সুন্নাহ" },
                 totalAyahsInSurah = parsedJson.optInt("totalAyahsInSurah", 1),
                 arabicText = arabicText,
-                transliterationBn = parsedJson.optString("transliterationBn", ""),
+                transliterationBn = parsedJson.optString("transliterationBn", "").ifBlank {
+                    QuranBengaliPhoneticTransliteration.getPronunciation(sNum, aNum, arabicText)
+                },
                 banglaTranslation = parsedJson.optString("banglaTranslation", ""),
                 englishTranslation = parsedJson.optString("englishTranslation", ""),
                 wordByWord = wordList,

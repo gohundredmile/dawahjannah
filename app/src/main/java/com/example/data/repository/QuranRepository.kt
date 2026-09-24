@@ -247,6 +247,30 @@ class QuranRepository(private val context: Context) {
         }
     }
 
+    suspend fun toggleSurahBookmark(surah: QuranSurah) = withContext(Dispatchers.IO) {
+        val key = "surah:${surah.number}"
+        val isCurrentlyBookmarked = quranDao.isBookmarked(key).firstOrNull() ?: false
+        if (isCurrentlyBookmarked) {
+            quranDao.deleteBookmark(key)
+        } else {
+            quranDao.insertBookmark(
+                QuranBookmarkEntity(
+                    id = key,
+                    surahNumber = surah.number,
+                    ayahNumber = 0,
+                    surahNameBn = surah.nameBn,
+                    arabicText = surah.nameAr,
+                    pronunciationBn = "${surah.nameEn} (${surah.revelationType})",
+                    translationBn = "সূরা ${surah.nameBn} - সম্পূর্ণ সূরা বুকমার্ক (মোট আয়াত: ${surah.totalAyat})"
+                )
+            )
+        }
+    }
+
+    fun isSurahBookmarked(surahNumber: Int): Flow<Boolean> {
+        return quranDao.isBookmarked("surah:$surahNumber")
+    }
+
     fun isAyahBookmarked(surahNumber: Int, ayahNumber: Int): Flow<Boolean> {
         return quranDao.isBookmarked("$surahNumber:$ayahNumber")
     }

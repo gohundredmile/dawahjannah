@@ -674,10 +674,12 @@ fun HolyQuranIndexScreen(
                 }
             } else {
                 items(filteredSurahs, key = { it.number }) { surah ->
+                    val isSurahBookmarked = bookmarks.any { it.surahNumber == surah.number }
                     SurahListItemRow(
                         surah = surah,
                         isDownloaded = audioManager.isSurahDownloaded(surah.number),
                         isCurrentlyPlaying = playerState.isPlaying && playerState.surahNumber == surah.number,
+                        isBookmarked = isSurahBookmarked,
                         onSurahClick = { onSurahSelected(surah) }
                     )
                     HorizontalDivider(
@@ -707,6 +709,7 @@ fun SurahListItemRow(
     surah: QuranSurah,
     isDownloaded: Boolean,
     isCurrentlyPlaying: Boolean,
+    isBookmarked: Boolean = false,
     onSurahClick: () -> Unit
 ) {
     val serialBn = BanglaNumberUtils.toBanglaDigits(surah.number)
@@ -743,6 +746,14 @@ fun SurahListItemRow(
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
+                if (isBookmarked) {
+                    Icon(
+                        imageVector = Icons.Default.Bookmark,
+                        contentDescription = "বুকমার্ক করা",
+                        tint = IslamicGold,
+                        modifier = Modifier.size(15.dp)
+                    )
+                }
                 if (isDownloaded) {
                     Icon(
                         imageVector = Icons.Default.Check,
@@ -862,6 +873,10 @@ fun SurahDetailScreen(
     val currentDownload = downloadStates[surah.number]
     val isDownloaded = audioManager.isSurahDownloaded(surah.number)
 
+    val isSurahBookmarked = remember(bookmarks, surah.number) {
+        bookmarks.any { it.id == "surah:${surah.number}" || (it.surahNumber == surah.number && it.ayahNumber == 0) }
+    }
+
     // Expanded Tafsir state per Ayah number
     var expandedTafsirs by remember { mutableStateOf(setOf<Int>()) }
 
@@ -877,7 +892,7 @@ fun SurahDetailScreen(
     LaunchedEffect(playerState.activeAyahNumber) {
         val activeAyah = playerState.activeAyahNumber
         if (activeAyah != null && settings.autoScrollWithAudio) {
-            val headerOffset = 2 + (if (surah.number != 9) 1 else 0)
+            val headerOffset = 3 + (if (surah.number != 9) 1 else 0)
             val targetIndex = (activeAyah - 1).coerceAtLeast(0) + headerOffset
             listState.animateScrollToItem(targetIndex)
         }
@@ -985,6 +1000,27 @@ fun SurahDetailScreen(
                                 }
                             }
                         }
+                    }
+
+                    Spacer(modifier = Modifier.width(4.dp))
+
+                    // Bookmark Button for Surah Itself in Top Bar
+                    IconButton(
+                        onClick = {
+                            coroutineScope.launch {
+                                quranRepository.toggleSurahBookmark(surah)
+                                val msg = if (isSurahBookmarked) "সূরা ${surah.nameBn} বুকমার্ক থেকে সরানো হয়েছে" else "সূরা ${surah.nameBn} বুকমার্কে যুক্ত করা হয়েছে"
+                                Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
+                            }
+                        },
+                        modifier = Modifier.testTag("btn_top_bar_surah_bookmark")
+                    ) {
+                        Icon(
+                            imageVector = if (isSurahBookmarked) Icons.Default.Bookmark else Icons.Default.BookmarkBorder,
+                            contentDescription = if (isSurahBookmarked) "সূরা বুকমার্ক থেকে সরান" else "সূরা বুকমার্ক করুন",
+                            tint = if (isSurahBookmarked) IslamicGold else MaterialTheme.colorScheme.onSurface,
+                            modifier = Modifier.size(24.dp)
+                        )
                     }
                 }
 
@@ -1110,6 +1146,14 @@ fun SurahDetailScreen(
                     isFullSurahPlaying = isFullSurahPlaying,
                     isDownloaded = isDownloaded,
                     currentDownload = currentDownload,
+                    isSurahBookmarked = isSurahBookmarked,
+                    onToggleSurahBookmark = {
+                        coroutineScope.launch {
+                            quranRepository.toggleSurahBookmark(surah)
+                            val msg = if (isSurahBookmarked) "সূরা ${surah.nameBn} বুকমার্ক থেকে সরানো হয়েছে" else "সূরা ${surah.nameBn} বুকমার্কে যুক্ত করা হয়েছে"
+                            Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
+                        }
+                    },
                     onPlayFullSurah = { audioManager.playSurah(surah.number, surah.nameBn) },
                     onDownloadSurah = {
                         audioManager.downloadSurahAudio(surah.number) { success ->
@@ -1223,6 +1267,19 @@ fun SurahDetailScreen(
                         }
                     }
                 }
+                Spacer(modifier = Modifier.height(12.dp))
+            }
+
+            // Item 3: শানে নযুল ও পরিচিতি (Shan-e-Nuzul Card for every Surah)
+            item {
+                val shaneNuzul = remember(surah.number) {
+                    SurahShaneNuzulCatalog.getShaneNuzul(context, surah.number)
+                }
+                SurahShaneNuzulCard(
+                    surah = surah,
+                    shaneNuzul = shaneNuzul,
+                    initiallyExpanded = false
+                )
                 Spacer(modifier = Modifier.height(12.dp))
             }
 
@@ -1575,6 +1632,8 @@ fun SurahHeaderCard(
     isFullSurahPlaying: Boolean,
     isDownloaded: Boolean,
     currentDownload: DownloadProgressState?,
+    isSurahBookmarked: Boolean = false,
+    onToggleSurahBookmark: () -> Unit = {},
     onPlayFullSurah: () -> Unit,
     onDownloadSurah: () -> Unit,
     onOfflineInfo: () -> Unit

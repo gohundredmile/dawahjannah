@@ -36,6 +36,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.automirrored.filled.VolumeUp
 import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.BookmarkBorder
@@ -182,6 +183,7 @@ fun HolyQuranScreen(
             onOpenSettings = { showSettingsDialog = true },
             onOpenAudioManager = { showAudioManagerDialog = true },
             onBackToIndex = { activeSurahNumber = null },
+            onSelectSurahNumber = { activeSurahNumber = it },
             contentPadding = contentPadding
         )
     }
@@ -831,11 +833,13 @@ fun SurahDetailScreen(
     onOpenSettings: () -> Unit,
     onOpenAudioManager: () -> Unit,
     onBackToIndex: () -> Unit,
+    onSelectSurahNumber: (Int) -> Unit = {},
     contentPadding: PaddingValues
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val settings by settingsManager.settings.collectAsState()
+    var showSurahQuickSwitchDialog by remember { mutableStateOf(false) }
 
     val activity = context as? android.app.Activity
     DisposableEffect(settings.keepScreenAwake) {
@@ -1207,6 +1211,96 @@ fun SurahDetailScreen(
                     thickness = 0.8.dp,
                     modifier = Modifier.padding(top = 4.dp)
                 )
+
+                // Quick Surah Switcher Navigation Strip
+                Surface(
+                    color = IslamicGreen.copy(alpha = 0.08f),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 8.dp, vertical = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        // Previous Surah Button
+                        TextButton(
+                            onClick = {
+                                if (surah.number > 1) {
+                                    onSelectSurahNumber(surah.number - 1)
+                                }
+                            },
+                            enabled = surah.number > 1,
+                            contentPadding = PaddingValues(horizontal = 6.dp, vertical = 2.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = "পূর্ববর্তী সূরা",
+                                modifier = Modifier.size(16.dp),
+                                tint = if (surah.number > 1) IslamicGreen else MaterialTheme.colorScheme.outline.copy(alpha = 0.35f)
+                            )
+                            Spacer(modifier = Modifier.width(3.dp))
+                            Text(
+                                text = if (surah.number > 1) {
+                                    val prevSurah = QuranSurahCatalog.all114Surahs.find { it.number == surah.number - 1 }
+                                    "পূর্ববর্তী: ${prevSurah?.nameBn ?: ""}"
+                                } else "শুরু",
+                                fontSize = 11.5.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = if (surah.number > 1) IslamicGreen else MaterialTheme.colorScheme.outline.copy(alpha = 0.35f)
+                            )
+                        }
+
+                        // Central Switch Surah Dialog trigger
+                        Surface(
+                            onClick = { showSurahQuickSwitchDialog = true },
+                            shape = RoundedCornerShape(10.dp),
+                            color = IslamicGreen,
+                            shadowElevation = 1.dp
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = "সূরা বদলান (${BanglaNumberUtils.toBanglaDigits(surah.number)}/১১৪) ▾",
+                                    color = Color.White,
+                                    fontSize = 11.5.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                        }
+
+                        // Next Surah Button
+                        TextButton(
+                            onClick = {
+                                if (surah.number < 114) {
+                                    onSelectSurahNumber(surah.number + 1)
+                                }
+                            },
+                            enabled = surah.number < 114,
+                            contentPadding = PaddingValues(horizontal = 6.dp, vertical = 2.dp)
+                        ) {
+                            Text(
+                                text = if (surah.number < 114) {
+                                    val nextSurah = QuranSurahCatalog.all114Surahs.find { it.number == surah.number + 1 }
+                                    "পরবর্তী: ${nextSurah?.nameBn ?: ""}"
+                                } else "শেষ",
+                                fontSize = 11.5.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = if (surah.number < 114) IslamicGreen else MaterialTheme.colorScheme.outline.copy(alpha = 0.35f)
+                            )
+                            Spacer(modifier = Modifier.width(3.dp))
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                                contentDescription = "পরবর্তী সূরা",
+                                modifier = Modifier.size(16.dp),
+                                tint = if (surah.number < 114) IslamicGreen else MaterialTheme.colorScheme.outline.copy(alpha = 0.35f)
+                            )
+                        }
+                    }
+                }
             }
         }
 
@@ -1300,6 +1394,75 @@ fun SurahDetailScreen(
                     )
                     Spacer(modifier = Modifier.height(14.dp))
                 }
+
+                // End of Surah Switcher & Navigation Card
+                item {
+                    Card(
+                        shape = RoundedCornerShape(16.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+                        ),
+                        border = BorderStroke(1.dp, IslamicGold.copy(alpha = 0.4f)),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 12.dp)
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(16.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Text(
+                                text = "✨ আলহামদুলিল্লাহ! সূরা ${surah.nameBn} সমাপ্ত",
+                                style = MaterialTheme.typography.titleMedium.copy(
+                                    fontWeight = FontWeight.Bold,
+                                    color = IslamicGreen
+                                )
+                            )
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = "সূরা নম্বর: ${BanglaNumberUtils.toBanglaDigits(surah.number)} • মোট আয়াত: ${BanglaNumberUtils.toBanglaDigits(surah.totalAyat)} টি",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Spacer(modifier = Modifier.height(12.dp))
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                if (surah.number > 1) {
+                                    val prevSurah = QuranSurahCatalog.all114Surahs.find { it.number == surah.number - 1 }
+                                    OutlinedButton(
+                                        onClick = { onSelectSurahNumber(surah.number - 1) },
+                                        shape = RoundedCornerShape(12.dp),
+                                        modifier = Modifier.weight(1f)
+                                    ) {
+                                        Text(
+                                            text = "⏮ ${prevSurah?.nameBn ?: "পূর্ববর্তী"}",
+                                            fontSize = 11.5.sp,
+                                            maxLines = 1
+                                        )
+                                    }
+                                }
+                                if (surah.number < 114) {
+                                    val nextSurah = QuranSurahCatalog.all114Surahs.find { it.number == surah.number + 1 }
+                                    Button(
+                                        onClick = { onSelectSurahNumber(surah.number + 1) },
+                                        colors = ButtonDefaults.buttonColors(containerColor = IslamicGreen),
+                                        shape = RoundedCornerShape(12.dp),
+                                        modifier = Modifier.weight(1f)
+                                    ) {
+                                        Text(
+                                            text = "পরবর্তী: ${nextSurah?.nameBn ?: ""} ⏭",
+                                            fontWeight = FontWeight.Bold,
+                                            fontSize = 11.5.sp,
+                                            maxLines = 1
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
             }
         }
 
@@ -1314,7 +1477,171 @@ fun SurahDetailScreen(
                 onStop = { audioManager.stop() }
             )
         }
+
+        if (showSurahQuickSwitchDialog) {
+            SurahQuickSwitchDialog(
+                currentSurahNumber = surah.number,
+                onSelectSurahNumber = onSelectSurahNumber,
+                onDismiss = { showSurahQuickSwitchDialog = false }
+            )
+        }
     }
+}
+
+/**
+ * Quick Surah Switcher Dialog (Allows instant jump between all 114 Surahs from the reader UI)
+ */
+@Composable
+fun SurahQuickSwitchDialog(
+    currentSurahNumber: Int,
+    onSelectSurahNumber: (Int) -> Unit,
+    onDismiss: () -> Unit
+) {
+    var searchQuery by remember { mutableStateOf("") }
+    val filteredSurahs = remember(searchQuery) {
+        if (searchQuery.isBlank()) {
+            QuranSurahCatalog.all114Surahs
+        } else {
+            val q = searchQuery.trim().lowercase()
+            QuranSurahCatalog.all114Surahs.filter { s ->
+                s.nameBn.lowercase().contains(q) ||
+                    s.nameEn.lowercase().contains(q) ||
+                    s.nameAr.contains(q) ||
+                    s.number.toString() == q ||
+                    BanglaNumberUtils.toBanglaDigits(s.number).contains(q) ||
+                    s.meaningBn.lowercase().contains(q)
+            }
+        }
+    }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(
+                    text = "সূরা নির্বাচন (১১৪)",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold
+                )
+                Text(
+                    text = "বর্তমান: ${BanglaNumberUtils.toBanglaDigits(currentSurahNumber)}",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = IslamicGreen,
+                    fontWeight = FontWeight.SemiBold
+                )
+            }
+        },
+        text = {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(420.dp)
+            ) {
+                OutlinedTextField(
+                    value = searchQuery,
+                    onValueChange = { searchQuery = it },
+                    placeholder = { Text("সূরার নাম বা নম্বর দিয়ে খুঁজুন...", fontSize = 12.sp) },
+                    leadingIcon = {
+                        Icon(
+                            Icons.Default.Search,
+                            contentDescription = null,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    },
+                    trailingIcon = {
+                        if (searchQuery.isNotBlank()) {
+                            IconButton(onClick = { searchQuery = "" }) {
+                                Icon(
+                                    Icons.Default.Clear,
+                                    contentDescription = "মুছুন",
+                                    modifier = Modifier.size(16.dp)
+                                )
+                            }
+                        }
+                    },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    items(filteredSurahs, key = { it.number }) { surahItem ->
+                        val isCurrent = surahItem.number == currentSurahNumber
+                        Surface(
+                            onClick = {
+                                onSelectSurahNumber(surahItem.number)
+                                onDismiss()
+                            },
+                            shape = RoundedCornerShape(10.dp),
+                            color = if (isCurrent) IslamicGreen.copy(alpha = 0.15f) else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                            border = if (isCurrent) BorderStroke(1.2.dp, IslamicGreen) else null,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 12.dp, vertical = 8.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(28.dp)
+                                        .clip(CircleShape)
+                                        .background(if (isCurrent) IslamicGreen else MaterialTheme.colorScheme.primaryContainer),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text(
+                                        text = BanglaNumberUtils.toBanglaDigits(surahItem.number),
+                                        color = if (isCurrent) Color.White else MaterialTheme.colorScheme.onPrimaryContainer,
+                                        fontSize = 11.sp,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                }
+
+                                Spacer(modifier = Modifier.width(10.dp))
+
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = "সূরা ${surahItem.nameBn}",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        fontWeight = if (isCurrent) FontWeight.Bold else FontWeight.SemiBold,
+                                        color = if (isCurrent) IslamicGreen else MaterialTheme.colorScheme.onSurface
+                                    )
+                                    Text(
+                                        text = "${surahItem.meaningBn} • আয়াত ${BanglaNumberUtils.toBanglaDigits(surahItem.totalAyat)}",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+
+                                Text(
+                                    text = surahItem.nameAr,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = if (isCurrent) IslamicGreen else MaterialTheme.colorScheme.onSurface
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text("বন্ধ করুন", color = MaterialTheme.colorScheme.outline)
+            }
+        }
+    )
 }
 
 /**

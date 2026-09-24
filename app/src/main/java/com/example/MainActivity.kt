@@ -42,6 +42,7 @@ import com.example.ui.screens.HomeScreen
 import com.example.ui.screens.MasnunDuaScreen
 import com.example.ui.screens.MoreScreen
 import com.example.ui.screens.RoutineScreen
+import com.example.ui.screens.hadith.HadithMainScreen
 import com.example.ui.screens.quran.HolyQuranScreen
 import com.example.ui.screens.sub.AsmaulHusnaScreen
 import com.example.ui.screens.sub.AyatDetectorAndSolverScreen
@@ -143,8 +144,8 @@ class MainActivity : ComponentActivity() {
                                     onOpenThemeModal = { viewModel.openThemeModal() },
                                     onOpenAppSettings = { viewModel.openSettings(AppTab.HOME) }
                                 )
-                            } else if (currentTab == AppTab.TOOLS && (currentToolsSub == ToolsSubScreen.EXPLAIN_AYAH_CAMERA || currentToolsSub == ToolsSubScreen.HOLY_QURAN)) {
-                                // ExplainAyahCameraScreen and HolyQuranScreen have their own dedicated full-width top app bars and controls
+                            } else if (currentTab == AppTab.TOOLS && (currentToolsSub == ToolsSubScreen.EXPLAIN_AYAH_CAMERA || currentToolsSub == ToolsSubScreen.HOLY_QURAN || currentToolsSub == ToolsSubScreen.HADITH_COLLECTION)) {
+                                // ExplainAyahCameraScreen, HolyQuranScreen and HadithMainScreen have their own dedicated full-width top app bars and controls
                             } else if (!(currentTab == AppTab.MORE && currentMoreSub != MoreSubScreen.MAIN)) {
                                 val showTopBarBack = currentTab == AppTab.TASBIH || currentTab == AppTab.DUA || (currentTab == AppTab.TOOLS && currentToolsSub != ToolsSubScreen.MAIN)
                                 DawahTopAppBar(
@@ -229,6 +230,7 @@ class MainActivity : ComponentActivity() {
                                     when (currentToolsSub) {
                                         ToolsSubScreen.MAIN -> ToolsScreen(
                                             onOpenHolyQuran = { viewModel.openHolyQuran() },
+                                            onOpenHadithCollection = { viewModel.openHadithCollection() },
                                             onOpenDuaBySituation = { viewModel.openDuaBySituation() },
                                             onOpenPersonalDuaBuilder = { viewModel.navigateToToolsSubScreen(ToolsSubScreen.PERSONAL_DUA_BUILDER) },
                                             onOpenExplainAyahCamera = { viewModel.openExplainAyahCamera() },
@@ -249,6 +251,15 @@ class MainActivity : ComponentActivity() {
                                                 quranRepository = viewModel.quranRepository,
                                                 audioManager = viewModel.quranAudioManager,
                                                 initialSurahNumber = initialSurah,
+                                                onNavigateBack = { viewModel.navigateBackToTools() },
+                                                contentPadding = innerPadding
+                                            )
+                                        }
+                                        ToolsSubScreen.HADITH_COLLECTION -> {
+                                            val initialSlug by viewModel.targetHadithBookSlug.collectAsState()
+                                            HadithMainScreen(
+                                                hadithRepository = viewModel.hadithRepository,
+                                                initialBookSlug = initialSlug,
                                                 onNavigateBack = { viewModel.navigateBackToTools() },
                                                 contentPadding = innerPadding
                                             )

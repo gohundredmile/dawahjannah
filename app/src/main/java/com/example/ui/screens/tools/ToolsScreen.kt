@@ -26,6 +26,7 @@ import androidx.compose.material.icons.filled.Calculate
 import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.CollectionsBookmark
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Explore
 import androidx.compose.material.icons.filled.Favorite
@@ -90,6 +91,7 @@ data class IslamicToolItem(
 @Composable
 fun ToolsScreen(
     onOpenHolyQuran: () -> Unit = {},
+    onOpenHadithCollection: () -> Unit = {},
     onOpenDuaBySituation: () -> Unit = {},
     onOpenPersonalDuaBuilder: () -> Unit = {},
     onOpenExplainAyahCamera: () -> Unit,
@@ -1343,6 +1345,15 @@ fun ToolsScreen(
                 badgeBn = "কুরআনুল কারীম",
                 isFeatured = true,
                 onClick = onOpenHolyQuran
+            ),
+            IslamicToolItem(
+                id = "tool_hadith_collection",
+                titleBn = "সহীহ হাদীস সম্ভার (HadithBD / IRD)",
+                subtitleBn = "সিহাহ্ সিত্তাহ (বুখারী, মুসলিম, তিরমিজি, আবু দাউদ, নাসাঈ, ইবনে মাজাহ) এবং রিয়াযুস স্বা-লিহীন, বুলুগুল মারাম ও ৪০ হাদীসের পূর্ণাঙ্গ অফলাইন ডেটাবেজ।",
+                icon = Icons.Default.CollectionsBookmark,
+                badgeBn = "হাদিসবিডি মানদণ্ড",
+                isFeatured = true,
+                onClick = onOpenHadithCollection
             ),
             IslamicToolItem(
                 id = "tool_mosque_mode",

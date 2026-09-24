@@ -25,6 +25,7 @@ import androidx.compose.material.icons.filled.Brightness2
 import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.CollectionsBookmark
 import androidx.compose.material.icons.filled.Explore
 import androidx.compose.material.icons.filled.FindReplace
 import androidx.compose.material.icons.filled.Healing
@@ -147,6 +148,19 @@ fun HomeScreen(
                 iconColor = IslamicGreen,
                 isTopEight = true,
                 onClickAction = { viewModel.openHolyQuran() }
+            ),
+            // সহীহ হাদীস সম্ভার
+            HomeFeatureItem(
+                id = "hadith_collection",
+                serialNumberBn = "০২",
+                titleBn = "২. সহীহ হাদীস সম্ভার",
+                shortTitleBn = "সহীহ হাদীস",
+                subtitleBn = "সিহাহ্ সিত্তাহ (বুখারী, মুসলিম, তিরমিজি...) ও অফলাইন হাদীস ডেটাবেজ",
+                categoryBn = "হাদীস ও সুন্নাহ",
+                icon = Icons.Default.CollectionsBookmark,
+                iconColor = IslamicGold,
+                isTopEight = true,
+                onClickAction = { viewModel.openHadithCollection() }
             ),
             // ১. তাসবিহ
             HomeFeatureItem(

@@ -1,6 +1,6 @@
 {
   "name": "Dawah to Jannah",
-  "description": "Comprehensive Islamic companion with 'Explain This Ayah' AI camera scanner, authentic Tafsir & word-by-word meanings, Islamic Tools Hub, 24h Sunnah routine, prayer times, 99 Names of Allah, and verified Masnun Dua.",
+  "description": "Comprehensive Islamic companion with offline Hadith library (HadithBD / IRD Foundation), Holy Quran with quick Surah & Hadith switching, 'Explain This Ayah' AI camera scanner, authentic Tafsir, prayer times, and verified Masnun Dua.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

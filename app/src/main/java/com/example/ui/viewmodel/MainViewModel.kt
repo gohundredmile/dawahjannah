@@ -56,6 +56,7 @@ import com.example.data.model.TasbihDhikrItem
 import com.example.data.model.ThemeMode
 import com.example.data.model.ThemeStyle
 import com.example.data.repository.AppRepository
+import com.example.data.repository.HadithRepository
 import com.example.data.repository.QuranRepository
 import com.example.ui.components.ModalSectionTab
 import com.example.util.CalendarHelper
@@ -110,7 +111,8 @@ enum class ToolsSubScreen(val titleBn: String) {
     TASBIH("ডিজিটাল তাসবীহ"),
     NAMES_OF_ALLAH("আসমাউল হুসনা"),
     MOSQUE_MODE("মসজিদ মোড (Mosque Mode)"),
-    HOLY_QURAN("আল-কুরআন (অনুবাদ, তাফসীর ও তিলাওয়াত)")
+    HOLY_QURAN("আল-কুরআন (অনুবাদ, তাফসীর ও তিলাওয়াত)"),
+    HADITH_COLLECTION("সহীহ হাদীস সম্ভার (HadithBD / IRD)")
 }
 
 enum class MoreSubScreen(val titleBn: String) {
@@ -143,6 +145,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     val gitHubUpdateManager = GitHubUpdateManager(application)
     val quranRepository = QuranRepository(application)
     val quranAudioManager = QuranAudioManager(application)
+    val hadithRepository = HadithRepository(application)
 
     // NAVIGATION
     private val _currentTab = MutableStateFlow(AppTab.HOME)
@@ -150,6 +153,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     private val _targetQuranSurahNumber = MutableStateFlow<Int?>(null)
     val targetQuranSurahNumber: StateFlow<Int?> = _targetQuranSurahNumber.asStateFlow()
+
+    private val _targetHadithBookSlug = MutableStateFlow<String?>(null)
+    val targetHadithBookSlug: StateFlow<String?> = _targetHadithBookSlug.asStateFlow()
 
     private val _moreSubScreen = MutableStateFlow(MoreSubScreen.MAIN)
     val moreSubScreen: StateFlow<MoreSubScreen> = _moreSubScreen.asStateFlow()
@@ -212,6 +218,12 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     fun openHolyQuran(surahNumber: Int? = null) {
         _targetQuranSurahNumber.value = surahNumber
         _toolsSubScreen.value = ToolsSubScreen.HOLY_QURAN
+        _currentTab.value = AppTab.TOOLS
+    }
+
+    fun openHadithCollection(bookSlug: String? = null) {
+        _targetHadithBookSlug.value = bookSlug
+        _toolsSubScreen.value = ToolsSubScreen.HADITH_COLLECTION
         _currentTab.value = AppTab.TOOLS
     }
 

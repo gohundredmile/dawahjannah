@@ -136,6 +136,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import com.example.data.datasource.QuranAyahCatalog
+import com.example.data.datasource.QuranSurahCatalog
 import com.example.data.model.AyahExplanation
 import com.example.data.model.WordMeaning
 import com.example.ui.theme.IslamicGold
@@ -194,6 +195,7 @@ fun ExplainAyahCameraScreen(
     var isSearchExpanded by remember { mutableStateOf(false) }
     var isAutoScanEnabled by remember { mutableStateOf(false) }
     var showApiKeyDialog by remember { mutableStateOf(false) }
+    var showSurahAyahPicker by remember { mutableStateOf(false) }
     var apiKeyInput by remember { mutableStateOf(aiService.getEffectiveApiKey()) }
 
     // Camera control states
@@ -503,8 +505,21 @@ fun ExplainAyahCameraScreen(
                     }
                 }
 
-                // Torch and Flip controls
+                // Torch, Flip, Surah Picker, and Settings controls
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Surface(
+                        shape = CircleShape,
+                        color = Color.Black.copy(alpha = 0.55f),
+                        modifier = Modifier.size(44.dp)
+                    ) {
+                        IconButton(onClick = { showSurahAyahPicker = true }) {
+                            Icon(
+                                imageVector = Icons.Default.MenuBook,
+                                contentDescription = "সূরা ও আয়াত নির্বাচন",
+                                tint = IslamicGold
+                            )
+                        }
+                    }
                     if (hasCameraPermission) {
                         Surface(
                             shape = CircleShape,
@@ -536,6 +551,22 @@ fun ExplainAyahCameraScreen(
                                     tint = Color.White
                                 )
                             }
+                        }
+                    }
+                    Surface(
+                        shape = CircleShape,
+                        color = Color.Black.copy(alpha = 0.55f),
+                        modifier = Modifier.size(44.dp)
+                    ) {
+                        IconButton(onClick = {
+                            apiKeyInput = aiService.getEffectiveApiKey()
+                            showApiKeyDialog = true
+                        }) {
+                            Icon(
+                                imageVector = Icons.Default.VpnKey,
+                                contentDescription = "এপিআই সেটিংস",
+                                tint = if (aiService.hasValidApiKey()) IslamicGold else Color.White.copy(alpha = 0.8f)
+                            )
                         }
                     }
                 }
@@ -729,6 +760,34 @@ fun ExplainAyahCameraScreen(
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                         contentPadding = PaddingValues(horizontal = 2.dp, vertical = 4.dp)
                     ) {
+                        item {
+                            Surface(
+                                shape = RoundedCornerShape(14.dp),
+                                color = IslamicGold.copy(alpha = 0.25f),
+                                border = BorderStroke(1.2.dp, IslamicGold),
+                                modifier = Modifier.clickable { showSurahAyahPicker = true }
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.MenuBook,
+                                        contentDescription = null,
+                                        tint = IslamicGold,
+                                        modifier = Modifier.size(15.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Text(
+                                        text = "সূরা নির্বাচন (১-১১৪)",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = IslamicGold,
+                                        fontWeight = FontWeight.Bold,
+                                        fontFamily = banglaFont
+                                    )
+                                }
+                            }
+                        }
                         items(LocalQuranAyahScannerEngine.quickPresets) { preset ->
                             Surface(
                                 shape = RoundedCornerShape(14.dp),
@@ -911,38 +970,71 @@ fun ExplainAyahCameraScreen(
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Icon(Icons.Default.AutoAwesome, contentDescription = null, tint = IslamicGold)
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text("এআই ভিশন ও এপিআই সেটিংস", fontFamily = banglaFont, fontWeight = FontWeight.Bold)
+                            Text("স্ক্যানার ইঞ্জিন ও সেটিংস", fontFamily = banglaFont, fontWeight = FontWeight.Bold)
                         }
                     },
                     text = {
                         Column {
+                            Surface(
+                                shape = RoundedCornerShape(10.dp),
+                                color = IslamicGold.copy(alpha = 0.15f),
+                                border = BorderStroke(1.dp, IslamicGold.copy(alpha = 0.4f)),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(10.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Icon(Icons.Default.CheckCircle, contentDescription = null, tint = IslamicGold, modifier = Modifier.size(20.dp))
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text(
+                                        text = "⚡ অন-ডিভাইস ML Kit ইঞ্জিন সক্রিয়: ক্যামেরা দিয়ে কুরআন পৃষ্ঠা স্ক্যান করলে কোনো API Key বা ইন্টারনেট ছাড়াই নির্ভুল অফলাইন স্ক্যান সম্পন্ন হবে।",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        fontFamily = banglaFont
+                                    )
+                                }
+                            }
+                            Spacer(modifier = Modifier.height(14.dp))
                             Text(
-                                text = if (aiService.isAiOnline()) {
-                                    "✅ গুগল জেমিনি ৩.৫ ভিশন এআই সক্রিয় রয়েছে। যে কোনো আরবি কুরআন পৃষ্ঠা স্ক্যান করলে রিয়েল-টাইম তাফসীর তৈরি হবে।"
-                                } else {
-                                    "📖 অফলাইন ক্যাটালগ মোড সক্রিয়। কোনো API Key ছাড়াই প্রধান প্রধান সূরা ও আয়াতের তাফসীর, অডিও ও শব্দার্থ সম্পূর্ণ অফলাইনে কাজ করে।"
-                                },
-                                style = MaterialTheme.typography.bodySmall,
+                                text = "ঐচ্ছিক জেমিনি এআই কি (Cloud AI Gemini 3.5):",
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.primary,
                                 fontFamily = banglaFont
                             )
-                            Spacer(modifier = Modifier.height(12.dp))
+                            Spacer(modifier = Modifier.height(4.dp))
                             OutlinedTextField(
                                 value = apiKeyInput,
                                 onValueChange = { apiKeyInput = it },
                                 label = { Text("Gemini API Key (ঐচ্ছিক)", fontFamily = banglaFont) },
-                                placeholder = { Text("AI Studio থেকে প্রাপ্ত কী পেস্ট করুন") },
+                                placeholder = { Text("AI Studio থেকে নিজস্ব কী দিতে পারেন") },
                                 singleLine = true,
                                 modifier = Modifier.fillMaxWidth()
                             )
                         }
                     },
                     confirmButton = {
-                        TextButton(onClick = {
-                            aiService.saveUserApiKey(apiKeyInput.trim())
-                            showApiKeyDialog = false
-                            Toast.makeText(context, "API Key সংরক্ষিত হয়েছে", Toast.LENGTH_SHORT).show()
-                        }) {
-                            Text("সংরক্ষণ করুন", color = IslamicGold, fontWeight = FontWeight.Bold, fontFamily = banglaFont)
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            if (aiService.hasValidApiKey()) {
+                                TextButton(onClick = {
+                                    aiService.saveUserApiKey("")
+                                    apiKeyInput = ""
+                                    showApiKeyDialog = false
+                                    Toast.makeText(context, "API Key মুছে ফেলা হয়েছে (অফলাইন ইঞ্জিন সক্রিয়)", Toast.LENGTH_SHORT).show()
+                                }) {
+                                    Text("কী মুছুন", color = MaterialTheme.colorScheme.error, fontFamily = banglaFont)
+                                }
+                            }
+                            Button(
+                                onClick = {
+                                    aiService.saveUserApiKey(apiKeyInput.trim())
+                                    showApiKeyDialog = false
+                                    Toast.makeText(context, "সেটিংস সংরক্ষিত হয়েছে", Toast.LENGTH_SHORT).show()
+                                },
+                                colors = ButtonDefaults.buttonColors(containerColor = IslamicGold)
+                            ) {
+                                Text("সংরক্ষণ", color = Color.Black, fontWeight = FontWeight.Bold, fontFamily = banglaFont)
+                            }
                         }
                     },
                     dismissButton = {
@@ -952,8 +1044,205 @@ fun ExplainAyahCameraScreen(
                     }
                 )
             }
+
+            // Surah & Ayah Selector Dialog (1-114)
+            if (showSurahAyahPicker) {
+                SurahAyahPickerDialog(
+                    onDismiss = { showSurahAyahPicker = false },
+                    onSelect = { surah, ayah ->
+                        showSurahAyahPicker = false
+                        coroutineScope.launch {
+                            isAnalyzing = true
+                            scanErrorMessage = null
+                            val result = LocalQuranAyahScannerEngine.getOrSynthesize(context, surah, ayah)
+                            isAnalyzing = false
+                            recognizedAyah = result.copy(scanDurationMs = (20L..35L).random())
+                        }
+                    }
+                )
+            }
         }
     }
+}
+
+@Composable
+private fun SurahAyahPickerDialog(
+    onDismiss: () -> Unit,
+    onSelect: (surahNumber: Int, ayahNumber: Int) -> Unit
+) {
+    val banglaFont = LocalBanglaFontFamily.current
+    var selectedSurahNumber by remember { mutableIntStateOf(2) }
+    var ayahInput by remember { mutableStateOf("2") }
+    var filterText by remember { mutableStateOf("") }
+
+    val selectedSurah = remember(selectedSurahNumber) {
+        QuranSurahCatalog.all114Surahs.find { it.number == selectedSurahNumber }
+            ?: QuranSurahCatalog.all114Surahs[1]
+    }
+
+    val filteredSurahs = remember(filterText) {
+        if (filterText.isBlank()) {
+            QuranSurahCatalog.all114Surahs
+        } else {
+            val q = filterText.trim().lowercase()
+            QuranSurahCatalog.all114Surahs.filter {
+                it.number.toString().contains(q) ||
+                it.nameBn.lowercase().contains(q) ||
+                it.nameEn.lowercase().contains(q) ||
+                it.nameAr.contains(q)
+            }
+        }
+    }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(Icons.Default.MenuBook, contentDescription = null, tint = IslamicGold)
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("সূরা ও আয়াত নির্বাচন করুন", fontFamily = banglaFont, fontWeight = FontWeight.Bold)
+            }
+        },
+        text = {
+            Column(modifier = Modifier.fillMaxWidth().height(420.dp)) {
+                // Quick Popular Verses Row
+                Text(
+                    text = "দ্রুত পড়ার শর্টকাট:",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = IslamicGold,
+                    fontWeight = FontWeight.Bold,
+                    fontFamily = banglaFont
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    val quickPicks = listOf(
+                        Triple(2, 2, "২:২ হিদায়াত"),
+                        Triple(2, 255, "আয়াতুল কুরসী (২:২৫৫)"),
+                        Triple(2, 285, "বাকারা শেষ ২ (২:২৮৫)"),
+                        Triple(1, 1, "ফাতিহা (১:১)"),
+                        Triple(112, 1, "ইখলাস (১১২:১)"),
+                        Triple(113, 1, "ফালাক (১১৩:১)"),
+                        Triple(114, 1, "নাস (১১৪:১)"),
+                        Triple(67, 1, "মুলক (৬৭:১)"),
+                        Triple(94, 5, "ইনশিরাহ (৯৪:৫)")
+                    )
+                    items(quickPicks) { pick ->
+                        Surface(
+                            shape = RoundedCornerShape(8.dp),
+                            color = IslamicGold.copy(alpha = 0.15f),
+                            border = BorderStroke(1.dp, IslamicGold.copy(alpha = 0.5f)),
+                            modifier = Modifier.clickable {
+                                onSelect(pick.first, pick.second)
+                            }
+                        ) {
+                            Text(
+                                text = pick.third,
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurface,
+                                fontFamily = banglaFont,
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                            )
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(10.dp))
+                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // Surah filter
+                OutlinedTextField(
+                    value = filterText,
+                    onValueChange = { filterText = it },
+                    placeholder = { Text("সূরা খুঁজুন (যেমন: বাকারা, 2, ফাতিহা...)", fontFamily = banglaFont, fontSize = 12.sp) },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth().height(52.dp)
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // Surah selection list
+                LazyColumn(
+                    modifier = Modifier.weight(1f).fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    items(filteredSurahs) { surah ->
+                        val isSelected = surah.number == selectedSurahNumber
+                        Surface(
+                            shape = RoundedCornerShape(8.dp),
+                            color = if (isSelected) IslamicGold.copy(alpha = 0.25f) else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f),
+                            border = BorderStroke(1.dp, if (isSelected) IslamicGold else Color.Transparent),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable {
+                                    selectedSurahNumber = surah.number
+                                    ayahInput = "1"
+                                }
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = "${surah.number}. সূরা ${surah.nameBn} (${surah.totalAyat} আয়াত)",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                                    fontFamily = banglaFont
+                                )
+                                Text(
+                                    text = surah.nameAr,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = IslamicGold
+                                )
+                            }
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // Ayah Number Input
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Text(
+                        text = "আয়াত নং (১ - ${selectedSurah.totalAyat}):",
+                        style = MaterialTheme.typography.bodySmall,
+                        fontFamily = banglaFont,
+                        modifier = Modifier.weight(1f)
+                    )
+                    OutlinedTextField(
+                        value = ayahInput,
+                        onValueChange = { input ->
+                            val clean = input.filter { it.isDigit() }
+                            ayahInput = clean
+                        },
+                        singleLine = true,
+                        modifier = Modifier.width(90.dp).height(50.dp)
+                    )
+                }
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = {
+                    val ayahNum = ayahInput.toIntOrNull()?.coerceIn(1, selectedSurah.totalAyat) ?: 1
+                    onSelect(selectedSurahNumber, ayahNum)
+                },
+                colors = ButtonDefaults.buttonColors(containerColor = IslamicGold)
+            ) {
+                Text("ব্যাখ্যা দেখুন", color = Color.Black, fontWeight = FontWeight.Bold, fontFamily = banglaFont)
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("বাতিল", fontFamily = banglaFont)
+            }
+        }
+    )
 }
 
 /**

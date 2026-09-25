@@ -8,6 +8,42 @@ import com.example.data.model.WordMeaning
 object QuranAyahCatalog {
 
     val catalog: List<AyahExplanation> = listOf(
+        // 0. Surah Al-Baqarah (2:2) - The guidance without doubt
+        AyahExplanation(
+            id = "ayah_2_2",
+            surahNumber = 2,
+            ayahNumber = 2,
+            surahNameArabic = "سورة البقرة",
+            surahNameBangla = "সূরা আল-বাক্বারাহ (২:২)",
+            surahNameEnglish = "Surah Al-Baqarah (The Cow)",
+            revelationTypeBn = "মাদানী",
+            totalAyahsInSurah = 286,
+            arabicText = "ذَٰلِكَ الْكِتَابُ لَا رَيْبَ ۛ فِيهِ ۛ هُدًى لِّلْمُتَّقِينَ ﴿٢﴾",
+            transliterationBn = "যা-লিকাল কিতা-বু লা- রাইবা ফী-হি হুদাল লিলমুত্তাক্বীন।",
+            banglaTranslation = "এ সেই কিতাব, যাতে কোনো সন্দেহ নেই; এটি মুত্তাকীদের (আল্লাহভীরুদের) জন্য পথনির্দেশক।",
+            englishTranslation = "This is the Book about which there is no doubt, a guidance for those conscious of Allah.",
+            wordByWord = listOf(
+                WordMeaning("ذَٰلِكَ", "এ / সেই", "That / This", "ইশারা বা নির্দেশক সর্বনাম"),
+                WordMeaning("الْكِتَابُ", "মহিমান্বিত গ্রন্থ (আল-কুরআন)", "The Book", "পবিত্র কুরআন"),
+                WordMeaning("لَا رَيْبَ", "কোনো সন্দেহ বা সংশয় নেই", "No doubt", "লা নাফিয়াহ লিল জিনস"),
+                WordMeaning("فِيهِ", "এর মধ্যে / এতে", "In it", "জার ও মাজরুর"),
+                WordMeaning("هُدًى", "হেদায়েত ও পথপ্রদর্শক", "A guidance", "পথনির্দেশ"),
+                WordMeaning("لِّلْمُتَّقِينَ", "মুত্তাকীদের জন্য (আল্লাহভীরু)", "For the righteous", "আল্লাহভীরু বান্দা")
+            ),
+            tafsirBn = "তাফসীরে ইবনে কাসীর: এটি মহান আল্লাহর কালাম, যার প্রতিটি বাণী সত্য এবং এতে কোনো প্রকার সন্দেহ বা অসঙ্গতি নেই। 'মুত্তাকী' হলেন তাঁরা যাঁরা শিরক ও কবিরা গুনাহ থেকে বেঁচে থাকেন এবং আল্লাহর নির্দেশাবলি নিষ্ঠার সাথে পালন করেন। পবিত্র কুরআন তাঁদের জন্যই হেদায়াতের আলো ও সর্বোত্তম পথপ্রদর্শক। হযরত উমর ইবনুল খাত্তাব (রা.) একবার উবাই ইবনে কা'ব (রা.)-কে তাকওয়া সম্পর্কে জিজ্ঞেস করেছিলেন। উবাই (রা.) বললেন: 'আপনি কি কখনো কাঁটাযুক্ত পথ দিয়ে হেঁটেছেন?' তিনি বললেন: 'হ্যাঁ।' উবাই জিজ্ঞেস করলেন: 'তখন আপনি কীভাবে পথ চলেন?' উমর (রা.) বললেন: 'কাপড় গুটিয়ে অতি সাবধানে পা ফেলি।' উবাই বললেন: 'এটাই হলো তাকওয়া।' তাকওয়া সম্পন্ন ব্যক্তির জন্যই এই কুরআন সত্যের সন্ধান ও মুক্তি দেয়।",
+            contextBn = "সূরা আল-ফাতিহায় বান্দা যখন বিনম্রভাবে দোয়া করেছিল: 'ইহদিনাস সিরাতাল মুস্তাক্বীম' (হে আল্লাহ! আমাদের সরল সঠিক পথ প্রদর্শন করুন), আল্লাহ তাআলা তারই উত্তর হিসেবে সূরা বাকারার প্রারম্ভে ঘোষণা করলেন: 'যালিকাল কিতাবু লা রাইবা ফিহ'—অর্থাৎ তোমাদের প্রার্থিত হেদায়াত হলো এই কুরআনুল কারীম।",
+            relatedVerses = listOf(
+                RelatedVerse("সূরা ইউনুস", "১০:৩৭", "وَمَا كَانَ هَٰذَا الْقُرْآنُ أَن يُفْتَرَىٰ مِن دُونِ اللَّهِ", "আর এই কুরআন আল্লাহ ছাড়া অন্য কারও দ্বারা রচিত হওয়া অসম্ভব।"),
+                RelatedVerse("সূরা আল-ইসরা", "১৭:৯", "إِنَّ هَٰذَا الْقُرْآنَ يَهْدِي لِلَّتِي هِيَ أَقْوَمُ", "নিশ্চয় এই কুরআন এমন এক পথ প্রদর্শন করে, যা সর্বাধিক সুদৃঢ় ও সঠিক।"),
+                RelatedVerse("সূরা আল-ফাতিহা", "১:৬", "اهْدِنَا الصِّرَاطَ الْمُسْتَقِيمَ", "আমাদেরকে সরল সঠিক পথ প্রদর্শন করুন।")
+            ),
+            relatedHadiths = listOf(
+                RelatedHadith("সহীহ তিরমিযী (২৯০৬)", "আলী (রা.)", "রাসূলুল্লাহ (ﷺ) বলেছেন: কুরআনে রয়েছে তোমাদের পূর্ববর্তীদের খবর, পরবর্তীদের সমাধান এবং তোমাদের পারস্পরিক বিষয়ের মীমাংসা। এটি সত্য-মিথ্যার চূড়ান্ত মানদণ্ড।", "সহীহ"),
+                RelatedHadith("সহীহ বুখারী (৫০২৭)", "উসমান (রা.)", "তোমাদের মধ্যে সর্বোত্তম ব্যক্তি সেই, যে নিজে কুরআন শিখে এবং অন্যকে তা শিক্ষা দেয়।", "সহীহ")
+            ),
+            audioUrl = "https://everyayah.com/data/Alafasy_128kbps/002002.mp3"
+        ),
+
         // 1. Ayatul Kursi (Surah Al-Baqarah 2:255)
         AyahExplanation(
             id = "ayah_2_255",
@@ -591,42 +627,86 @@ object QuranAyahCatalog {
      * Search or match by keyword, Surah/Ayah number, or Arabic text snippet
      */
     fun findByQueryOrSnippet(query: String): AyahExplanation? {
-        val clean = query.trim().lowercase()
-        if (clean.isBlank()) return null
+        val raw = query.trim().lowercase()
+        if (raw.isBlank()) return null
 
-        // 1. Direct Surah:Ayah matching (e.g. "2:255", "112:1", "1:1", "94:5")
-        if (clean.contains(":")) {
-            val parts = clean.split(":")
-            val sNum = parts.getOrNull(0)?.filter { it.isDigit() }?.toIntOrNull()
-            val aNum = parts.getOrNull(1)?.filter { it.isDigit() }?.toIntOrNull()
+        // Convert Bengali and Arabic digits to English digits
+        val clean = normalizeDigits(raw)
+
+        // 1. Direct Surah:Ayah matching (e.g. "2:2", "2:255", "112:1", "1:1", "94:5", "2 2", "2-2")
+        val colonRegex = Regex("""(\d{1,3})\s*[:\-\.\s]\s*(\d{1,3})""")
+        val colonMatch = colonRegex.find(clean)
+        if (colonMatch != null) {
+            val sNum = colonMatch.groupValues[1].toIntOrNull()
+            val aNum = colonMatch.groupValues[2].toIntOrNull()
             if (sNum != null) {
                 val match = catalog.find { it.surahNumber == sNum && (aNum == null || it.ayahNumber == aNum) }
                 if (match != null) return match
             }
         }
 
-        // 2. Exact match by Bengali name
+        // 2. Single digit check (e.g. "2" -> Surah 2 Ayah 2 if user searched "2", or top match)
+        val singleDigit = clean.filter { it.isDigit() }.toIntOrNull()
+        if (singleDigit != null) {
+            val byAyah = catalog.find { it.ayahNumber == singleDigit }
+            if (byAyah != null && (raw.contains("বাকারা") || raw.contains("baqarah") || singleDigit == 255 || singleDigit == 2)) {
+                return byAyah
+            }
+        }
+
+        // 3. Exact match by Bengali name or English/Arabic name
         val matchByName = catalog.find {
-            it.surahNameBangla.lowercase().contains(clean) ||
-            it.surahNameEnglish.lowercase().contains(clean) ||
-            it.surahNameArabic.contains(clean)
+            it.surahNameBangla.lowercase().contains(raw) ||
+            it.surahNameEnglish.lowercase().contains(raw) ||
+            it.surahNameArabic.contains(raw)
         }
         if (matchByName != null) return matchByName
 
-        // 3. Match by Arabic text fragment
+        // 4. Match by key Quranic concepts & phrases
+        if (raw.contains("সন্দেহ") || raw.contains("মুত্তাকীন") || raw.contains("কিতাব") || raw.contains("রাইব") || raw.contains("hudan")) {
+            val baqarah2 = catalog.find { it.surahNumber == 2 && it.ayahNumber == 2 }
+            if (baqarah2 != null) return baqarah2
+        }
+        if (raw.contains("কুরসী") || raw.contains("কুরসি") || raw.contains("kursi") || raw.contains("তন্দ্রা") || raw.contains("নিদ্রা") || raw.contains("চিরঞ্জীব")) {
+            val kursi = catalog.find { it.surahNumber == 2 && it.ayahNumber == 255 }
+            if (kursi != null) return kursi
+        }
+
+        // 5. Match by Arabic text fragment
         val matchByArabic = catalog.find {
-            cleanArabic(it.arabicText).contains(cleanArabic(clean)) ||
-            cleanArabic(clean).contains(cleanArabic(it.arabicText).take(15))
+            cleanArabic(it.arabicText).contains(cleanArabic(raw)) ||
+            cleanArabic(raw).contains(cleanArabic(it.arabicText).take(15))
         }
         if (matchByArabic != null) return matchByArabic
 
-        // 4. Match by Bangla translation snippet
+        // 6. Match by Bangla translation snippet
         val matchByTranslation = catalog.find {
-            it.banglaTranslation.contains(clean) || it.transliterationBn.lowercase().contains(clean)
+            it.banglaTranslation.contains(raw) || it.transliterationBn.lowercase().contains(raw)
         }
         if (matchByTranslation != null) return matchByTranslation
 
         return null
+    }
+
+    private fun normalizeDigits(text: String): String {
+        val bengaliDigits = "০১২৩৪৫৬৭৮৯"
+        val arabicDigits = "٠١٢٣٤٥٦٧٨٩"
+        val englishDigits = "0123456789"
+        val sb = StringBuilder()
+        for (ch in text) {
+            val bIdx = bengaliDigits.indexOf(ch)
+            if (bIdx >= 0) {
+                sb.append(englishDigits[bIdx])
+                continue
+            }
+            val aIdx = arabicDigits.indexOf(ch)
+            if (aIdx >= 0) {
+                sb.append(englishDigits[aIdx])
+                continue
+            }
+            sb.append(ch)
+        }
+        return sb.toString()
     }
 
     private fun cleanArabic(text: String): String {

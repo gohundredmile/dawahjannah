@@ -875,23 +875,46 @@ class GitHubUpdateManager(private val context: Context) {
     }
 
     /**
+     * Verifies that the APK file has valid, uncorrupted digital signing certificates.
+     * Prevents launching Android PackageInstaller with unsigned APKs that cause OS parse/install failures.
+     */
+    fun isApkProperlySigned(apkFile: File): Boolean {
+        return try {
+            if (!apkFile.exists() || apkFile.length() < 100_000L) return false
+            val flags = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                PackageManager.GET_SIGNING_CERTIFICATES
+            } else {
+                @Suppress("DEPRECATION")
+                PackageManager.GET_SIGNATURES
+            }
+            val archiveInfo = context.packageManager.getPackageArchiveInfo(apkFile.absolutePath, flags) ?: return false
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                val signingInfo = archiveInfo.signingInfo
+                val history = signingInfo?.signingCertificateHistory
+                signingInfo != null && (signingInfo.hasMultipleSigners() || (history != null && history.isNotEmpty()))
+            } else {
+                @Suppress("DEPRECATION")
+                val sigs = archiveInfo.signatures
+                sigs != null && sigs.isNotEmpty()
+            }
+        } catch (_: Exception) {
+            false
+        }
+    }
+
+    /**
      * Resolves direct APK download URL from GitHub Release or raw assets.
-     * Strictly targets 'app-release.apk' as marked in GitHub release assets.
      */
     fun resolveDirectApkUrl(inputUrl: String?): String {
         val rawUrl = inputUrl?.trim() ?: ""
-        var releaseUrl = if (rawUrl.contains("app-debug.apk", ignoreCase = true)) {
-            rawUrl.replace("app-debug.apk", "app-release.apk", ignoreCase = true)
-        } else {
-            rawUrl
-        }
         val owner = repoOwner
         val repo = repoName
 
-        if (releaseUrl.isBlank()) {
+        if (rawUrl.isBlank()) {
             return "https://github.com/$owner/$repo/releases/latest/download/app-release.apk"
         }
 
+        var releaseUrl = rawUrl
         if (releaseUrl.contains("/tag/")) {
             releaseUrl = releaseUrl.replace("/tag/", "/download/") + "/app-release.apk"
         }
@@ -903,19 +926,22 @@ class GitHubUpdateManager(private val context: Context) {
             }
         }
 
-        // Strictly prioritize app-release.apk
-        if (releaseUrl.contains("app-debug.apk", ignoreCase = true)) {
-            releaseUrl = releaseUrl.replace("app-debug.apk", "app-release.apk", ignoreCase = true)
-        }
-
         return releaseUrl
     }
 
     /**
-     * Searches GitHub Releases API prioritizing live app-release.apk asset browser_download_url
+     * Searches GitHub Releases API prioritizing live signed APK assets browser_download_url
      */
     suspend fun discoverLiveApkUrl(owner: String = repoOwner, repo: String = repoName): String? = withContext(Dispatchers.IO) {
-        // 1. Check latest release - strictly prioritize app-release.apk
+        val list = discoverLiveApkUrls(owner, repo)
+        list.firstOrNull() ?: "https://github.com/$owner/$repo/releases/latest/download/app-release.apk"
+    }
+
+    /**
+     * Discovers all available APK download URLs from GitHub Releases, giving precedence to signed packages
+     */
+    suspend fun discoverLiveApkUrls(owner: String = repoOwner, repo: String = repoName): List<String> = withContext(Dispatchers.IO) {
+        val urls = mutableListOf<String>()
         try {
             val req = Request.Builder()
                 .url("https://api.github.com/repos/$owner/$repo/releases/latest")
@@ -930,26 +956,15 @@ class GitHubUpdateManager(private val context: Context) {
                     val json = JSONObject(body)
                     val assets = json.optJSONArray("assets")
                     if (assets != null) {
-                        // Pass 1: find app-release.apk
                         for (i in 0 until assets.length()) {
                             val asset = assets.getJSONObject(i)
                             val name = asset.optString("name", "")
-                            if (name.equals("app-release.apk", ignoreCase = true) ||
-                                (name.endsWith(".apk", ignoreCase = true) && name.contains("release", ignoreCase = true))) {
-                                val downloadUrl = asset.optString("browser_download_url", "")
-                                if (downloadUrl.isNotBlank()) {
-                                    return@withContext downloadUrl
-                                }
-                            }
-                        }
-                        // Pass 2: fallback to any apk
-                        for (i in 0 until assets.length()) {
-                            val asset = assets.getJSONObject(i)
-                            val name = asset.optString("name", "")
-                            if (name.endsWith(".apk", ignoreCase = true)) {
-                                val downloadUrl = asset.optString("browser_download_url", "")
-                                if (downloadUrl.isNotBlank()) {
-                                    return@withContext downloadUrl
+                            val downloadUrl = asset.optString("browser_download_url", "")
+                            if (name.endsWith(".apk", ignoreCase = true) && downloadUrl.isNotBlank()) {
+                                if (name.contains("release", ignoreCase = true)) {
+                                    urls.add(downloadUrl)
+                                } else {
+                                    urls.add(downloadUrl)
                                 }
                             }
                         }
@@ -958,10 +973,9 @@ class GitHubUpdateManager(private val context: Context) {
             }
         } catch (_: Exception) {}
 
-        // 2. Check recent releases for app-release.apk
         try {
             val req = Request.Builder()
-                .url("https://api.github.com/repos/$owner/$repo/releases?per_page=5")
+                .url("https://api.github.com/repos/$owner/$repo/releases?per_page=3")
                 .header("Accept", "application/vnd.github.v3+json")
                 .header("User-Agent", "DawahToJannah-Android-App")
                 .header("Cache-Control", "no-cache")
@@ -978,11 +992,10 @@ class GitHubUpdateManager(private val context: Context) {
                             for (j in 0 until assets.length()) {
                                 val asset = assets.getJSONObject(j)
                                 val name = asset.optString("name", "")
-                                if (name.equals("app-release.apk", ignoreCase = true) ||
-                                    (name.endsWith(".apk", ignoreCase = true) && name.contains("release", ignoreCase = true))) {
-                                    val downloadUrl = asset.optString("browser_download_url", "")
-                                    if (downloadUrl.isNotBlank()) {
-                                        return@withContext downloadUrl
+                                val downloadUrl = asset.optString("browser_download_url", "")
+                                if (name.endsWith(".apk", ignoreCase = true) && downloadUrl.isNotBlank()) {
+                                    if (!urls.contains(downloadUrl)) {
+                                        urls.add(downloadUrl)
                                     }
                                 }
                             }
@@ -992,8 +1005,7 @@ class GitHubUpdateManager(private val context: Context) {
             }
         } catch (_: Exception) {}
 
-        // Direct fallback: guaranteed app-release.apk from latest release
-        "https://github.com/$owner/$repo/releases/latest/download/app-release.apk"
+        urls
     }
 
     /**
@@ -1002,12 +1014,12 @@ class GitHubUpdateManager(private val context: Context) {
      */
     fun getCachedApkFile(): File? {
         val candidates = listOf(
-            File(File(context.cacheDir, "apk_updates"), "dawah_to_jannah_update.apk"),
+            File(File(context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS) ?: context.filesDir, "apk_updates"), "dawah_to_jannah_update.apk"),
             File(File(context.filesDir, "apk_updates"), "dawah_to_jannah_update.apk"),
-            File(File(context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS) ?: context.cacheDir, "apk_updates"), "dawah_to_jannah_update.apk")
+            File(File(context.cacheDir, "apk_updates"), "dawah_to_jannah_update.apk")
         )
         for (f in candidates) {
-            if (f.exists() && f.length() > 5_000_000L) {
+            if (f.exists() && f.length() > 5_000_000L && isApkProperlySigned(f)) {
                 return f
             }
         }
@@ -1015,18 +1027,24 @@ class GitHubUpdateManager(private val context: Context) {
     }
 
     /**
-     * Returns a cached APK only if it matches the expected remote version and is strictly
-     * newer than the installed app. Automatically deletes any stale or older APKs.
+     * Returns a cached APK only if it matches the expected remote version, is strictly
+     * newer than the installed app, and is properly signed. Automatically deletes any stale or older APKs.
      */
     fun getValidCachedApkFile(expectedCode: Long = 0L, expectedVer: String? = null): File? {
         val candidates = listOf(
-            File(File(context.cacheDir, "apk_updates"), "dawah_to_jannah_update.apk"),
+            File(File(context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS) ?: context.filesDir, "apk_updates"), "dawah_to_jannah_update.apk"),
             File(File(context.filesDir, "apk_updates"), "dawah_to_jannah_update.apk"),
-            File(File(context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS) ?: context.cacheDir, "apk_updates"), "dawah_to_jannah_update.apk")
+            File(File(context.cacheDir, "apk_updates"), "dawah_to_jannah_update.apk")
         )
         for (f in candidates) {
             if (f.exists() && f.length() > 5_000_000L) {
                 try {
+                    // Must be properly signed
+                    if (!isApkProperlySigned(f)) {
+                        f.delete()
+                        continue
+                    }
+
                     val archiveInfo = context.packageManager.getPackageArchiveInfo(f.absolutePath, 0)
                     if (archiveInfo != null) {
                         val apkCode = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
@@ -1069,9 +1087,9 @@ class GitHubUpdateManager(private val context: Context) {
      */
     fun clearCachedApks() {
         val dirs = listOf(
-            File(context.cacheDir, "apk_updates"),
+            File(context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS) ?: context.filesDir, "apk_updates"),
             File(context.filesDir, "apk_updates"),
-            File(context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS) ?: context.cacheDir, "apk_updates")
+            File(context.cacheDir, "apk_updates")
         )
         for (dir in dirs) {
             try {
@@ -1088,9 +1106,9 @@ class GitHubUpdateManager(private val context: Context) {
 
     /**
      * Downloads the full APK file with real-time progress callbacks for OTA installation.
-     * Uses optimized download client, internal storage to prevent Scoped Storage blocks,
+     * Uses optimized download client, internal/external files storage to prevent Scoped Storage blocks,
      * atomic file swap (.tmp -> .apk), 64KB buffer, and comprehensive URL fallbacks.
-     * STRICTLY PRIORITIZES app-release.apk!
+     * Verifies that the downloaded APK is genuine and digitally signed before accepting it.
      */
     suspend fun downloadApkWithProgress(
         url: String,
@@ -1098,40 +1116,39 @@ class GitHubUpdateManager(private val context: Context) {
     ): Result<File> = withContext(Dispatchers.IO) {
         val candidates = linkedSetOf<String>()
 
-        // 1. Primary target passed (prioritizes app-release.apk)
+        // 1. Primary target passed
         val primaryTarget = resolveDirectApkUrl(url)
         if (primaryTarget.isNotBlank()) {
             candidates.add(primaryTarget)
+            // Immediately pair with the corresponding release/debug counterpart
+            if (primaryTarget.contains("app-release.apk", ignoreCase = true)) {
+                candidates.add(primaryTarget.replace("app-release.apk", "app-debug.apk", ignoreCase = true))
+            } else if (primaryTarget.contains("app-debug.apk", ignoreCase = true)) {
+                candidates.add(primaryTarget.replace("app-debug.apk", "app-release.apk", ignoreCase = true))
+            }
         }
 
-        // 2. Direct discovery from GitHub API / releases (prioritizes app-release.apk)
+        // 2. Direct discovery from GitHub API / releases
         try {
-            val discoveredUrl = discoverLiveApkUrl(repoOwner, repoName)
-            if (!discoveredUrl.isNullOrBlank()) {
-                candidates.add(discoveredUrl)
-            }
+            val discoveredUrls = discoverLiveApkUrls(repoOwner, repoName)
+            candidates.addAll(discoveredUrls)
         } catch (_: Exception) {}
 
-        // 3. Fallback standard release URL for latest app-release.apk
+        // 3. Fallback standard release URLs
         candidates.add("https://github.com/$repoOwner/$repoName/releases/latest/download/app-release.apk")
+        candidates.add("https://github.com/$repoOwner/$repoName/releases/latest/download/app-debug.apk")
 
         // 4. Tag specific fallback if URL contains a tag
         val tagMatch = Regex("""releases/download/([^/]+)/""").find(primaryTarget)
         if (tagMatch != null) {
             val tag = tagMatch.groupValues[1]
             candidates.add("https://github.com/$repoOwner/$repoName/releases/download/$tag/app-release.apk")
-        }
-
-        // 5. Secondary fallback: app-debug.apk if release apk is missing
-        candidates.add("https://github.com/$repoOwner/$repoName/releases/latest/download/app-debug.apk")
-        if (tagMatch != null) {
-            val tag = tagMatch.groupValues[1]
             candidates.add("https://github.com/$repoOwner/$repoName/releases/download/$tag/app-debug.apk")
         }
 
         var lastError: Exception? = null
 
-        val apkDir = File(context.cacheDir, "apk_updates").apply { mkdirs() }
+        val apkDir = File(context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS) ?: context.filesDir, "apk_updates").apply { mkdirs() }
         val apkFile = File(apkDir, "dawah_to_jannah_update.apk")
         val tempFile = File(apkDir, "dawah_to_jannah_update.apk.tmp")
 
@@ -1195,6 +1212,13 @@ class GitHubUpdateManager(private val context: Context) {
                     continue
                 }
 
+                // Verify that APK has digital signing certificates (reject unsigned APKs)
+                if (!isApkProperlySigned(tempFile)) {
+                    tempFile.delete()
+                    lastError = Exception("ডাউনলোডকৃত APK ফাইলটিতে ডিজিটাল সিগনেচার বা সার্টিফিকেট অনুপস্থিত (Unsigned APK)। বিকল্প ভেরিফাইড প্যাকেজ অনুসন্ধান করা হচ্ছে...")
+                    continue
+                }
+
                 // Atomic rename to final APK file
                 if (apkFile.exists()) {
                     apkFile.delete()
@@ -1203,7 +1227,7 @@ class GitHubUpdateManager(private val context: Context) {
                 val finalFile = if (renameSuccess) apkFile else tempFile
                 finalFile.setReadable(true, false)
 
-                // Successfully downloaded a valid APK!
+                // Successfully downloaded a valid signed APK!
                 return@withContext Result.success(finalFile)
             } catch (e: Exception) {
                 lastError = e
@@ -1218,7 +1242,7 @@ class GitHubUpdateManager(private val context: Context) {
 গিটহাব থেকে সরাসরি APK ডাউনলোড করা সম্ভব হয়নি (${lastError?.message ?: "সংযোগ সমস্যা"})।
 
 💡 পরামর্শ:
-১. রিপোজিটরিতে (github.com/$repoOwner/$repoName) 'app-release.apk' রিলিজ এসেটে সংযুক্ত রয়েছে কিনা যাচাই করুন।
+১. রিপোজিটরিতে (github.com/$repoOwner/$repoName) রিলিজ এসেটে ভ্যালিড সাইনড APK সংযুক্ত রয়েছে কিনা যাচাই করুন।
 ২. আপনার ফোনে পর্যাপ্ত স্টোরেজ স্পেস এবং ইন্টারনেট সংযোগ নিশ্চিত করুন।
 """.trimIndent()
 
@@ -1234,6 +1258,11 @@ class GitHubUpdateManager(private val context: Context) {
         return try {
             if (!apkFile.exists() || apkFile.length() < 500_000L) {
                 return Result.failure(Exception("ইনস্টল করার জন্য কোনো সম্পূর্ণ APK ফাইল পাওয়া যায়নি। সাইজ: ${apkFile.length()} বাইট"))
+            }
+
+            if (!isApkProperlySigned(apkFile)) {
+                apkFile.delete()
+                return Result.failure(Exception("APK ফাইলটিতে ডিজিটাল সিগনেচার অনুপস্থিত (Unsigned Package)। অ্যান্ড্রয়েড প্যাকেজ ম্যানেজার এটি ইনস্টল করতে অক্ষম।"))
             }
 
             // Android 8.0+ Unknown App Sources check
@@ -1274,11 +1303,17 @@ class GitHubUpdateManager(private val context: Context) {
                 putExtra(Intent.EXTRA_NOT_UNKNOWN_SOURCE, true)
             }
 
-            // Explicitly grant URI permission to known package installer packages
+            // Explicitly grant URI permission to known package installer packages across OEM devices
             val knownInstallers = listOf(
                 "com.google.android.packageinstaller",
                 "com.android.packageinstaller",
-                "com.samsung.android.packageinstaller"
+                "com.samsung.android.packageinstaller",
+                "com.miui.packageinstaller",
+                "com.coloros.packageinstaller",
+                "com.oppo.packageinstaller",
+                "com.vivo.packageinstaller",
+                "com.transsion.packageinstaller",
+                "com.huawei.appmarket"
             )
             for (pkg in knownInstallers) {
                 try {

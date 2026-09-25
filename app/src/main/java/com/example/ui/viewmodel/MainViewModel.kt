@@ -1386,6 +1386,10 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 release?.hasNewerVersion == false
             }
 
+            if (forceDownload) {
+                gitHubUpdateManager.clearCachedApks()
+            }
+
             if (!forceDownload && isSameOrOlder) {
                 // Clear any stale cached APK files so they never cause confusion
                 gitHubUpdateManager.clearCachedApks()
@@ -1394,13 +1398,13 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     isAlreadyUpToDate = true,
                     isSameVersionInstalled = true,
                     upToDatePromptTitle = "This version already installed.",
-                    upToDateMessage = "This version already installed.\n\nআপনার ডিভাইসে ইতিমধ্যে বর্তমান সংস্করণ (v$installedName, কোড: $installedCode) সফলভাবে ইনস্টল রয়েছে। ওটিএ আপডেট বাতিল করা হয়েছে (Update Aborted)।"
+                    upToDateMessage = "This version already installed.\n\nআপনার ডিভাইসে ইতিমধ্যে বর্তমান সংস্করণ (v$installedName, কোড: $installedCode) সফলভাবে ইনস্টল রয়েছে।\n\nআপনি চাইলে নিচের 'জোরপূর্বক রি-ইনস্টল (Force Reinstall)' বাটনে চাপ দিয়ে সরাসরি APK রি-ডাউনলোড ও ইনস্টল/মেরামত করতে পারেন।"
                 )
                 return@launch
             }
 
             // Remote has a newer version: check if a valid cached APK matching this new version exists
-            val existingApk = gitHubUpdateManager.getValidCachedApkFile(remoteCode, remoteVer)
+            val existingApk = if (!forceDownload) gitHubUpdateManager.getValidCachedApkFile(remoteCode, remoteVer) else null
             if (!forceDownload && existingApk != null && existingApk.length() > 5_000_000L) {
                 val sizeMb = existingApk.length().toFloat() / (1024f * 1024f)
                 _apkDownloadState.value = ApkDownloadProgress(

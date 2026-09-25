@@ -53,18 +53,31 @@ class QuranAudioManager(private val context: Context) {
     private val _selectedReciter = MutableStateFlow(QuranReciter.MISHARY_ALAFASY)
     val selectedReciter: StateFlow<QuranReciter> = _selectedReciter.asStateFlow()
 
+    private var currentSurahTotalAyat: Int = 0
+    private var isContinuousAyahPlayback: Boolean = false
+
     fun selectReciter(reciter: QuranReciter) {
         _selectedReciter.value = reciter
+        _playerState.value = _playerState.value.copy(reciter = reciter)
         // If playing currently, switch stream
         val currentSurah = _playerState.value.surahNumber
-        if (currentSurah != null && _playerState.value.isPlaying) {
-            playSurah(currentSurah, _playerState.value.surahNameBn)
+        val activeAyah = _playerState.value.activeAyahNumber
+        if (_playerState.value.isPlaying && currentSurah != null) {
+            if (activeAyah != null) {
+                playAyahAudio(currentSurah, activeAyah)
+            } else {
+                playSurah(currentSurah, _playerState.value.surahNameBn, currentSurahTotalAyat)
+            }
         }
     }
 
-    fun playSurah(surahNumber: Int, surahNameBn: String) {
+    fun playSurah(surahNumber: Int, surahNameBn: String, totalAyat: Int = 0) {
         val current = _playerState.value
-        if (current.surahNumber == surahNumber && mediaPlayer != null) {
+        currentSurahTotalAyat = if (totalAyat > 0) totalAyat else {
+            QuranSurahCatalog.all114Surahs.find { it.number == surahNumber }?.totalAyat ?: 7
+        }
+
+        if (current.surahNumber == surahNumber && mediaPlayer != null && current.activeAyahNumber == null) {
             if (current.isPlaying) {
                 pause()
             } else {
@@ -76,8 +89,9 @@ class QuranAudioManager(private val context: Context) {
         }
 
         stop()
+        isContinuousAyahPlayback = false
 
-        val offlineFile = getOfflineSurahFile(surahNumber)
+        val offlineFile = getOfflineSurahFile(surahNumber, _selectedReciter.value.id)
         val isOffline = offlineFile.exists() && offlineFile.length() > 50000
         val audioSource = if (isOffline) {
             offlineFile.absolutePath
@@ -91,7 +105,8 @@ class QuranAudioManager(private val context: Context) {
             reciter = _selectedReciter.value,
             isPlaying = false,
             isBuffering = true,
-            isOfflineFile = isOffline
+            isOfflineFile = isOffline,
+            activeAyahNumber = 1 // Start at ayah 1 for auto-scrolling
         )
 
         try {
@@ -107,7 +122,8 @@ class QuranAudioManager(private val context: Context) {
                     _playerState.value = _playerState.value.copy(
                         isBuffering = false,
                         isPlaying = true,
-                        durationMs = mp.duration
+                        durationMs = mp.duration,
+                        activeAyahNumber = 1
                     )
                     mp.start()
                     startProgressTracking()
@@ -115,14 +131,16 @@ class QuranAudioManager(private val context: Context) {
                 setOnCompletionListener {
                     _playerState.value = _playerState.value.copy(
                         isPlaying = false,
-                        currentPositionMs = 0
+                        currentPositionMs = 0,
+                        activeAyahNumber = null
                     )
                     stopProgressTracking()
                 }
                 setOnErrorListener { _, _, _ ->
                     _playerState.value = _playerState.value.copy(
                         isPlaying = false,
-                        isBuffering = false
+                        isBuffering = false,
+                        activeAyahNumber = null
                     )
                     stopProgressTracking()
                     true
@@ -131,12 +149,15 @@ class QuranAudioManager(private val context: Context) {
             }
             mediaPlayer = player
         } catch (_: Exception) {
-            _playerState.value = _playerState.value.copy(isPlaying = false, isBuffering = false)
+            _playerState.value = _playerState.value.copy(isPlaying = false, isBuffering = false, activeAyahNumber = null)
         }
     }
 
-    fun playAyahAudio(surahNumber: Int, ayahNumber: Int) {
+    fun playAyahAudio(surahNumber: Int, ayahNumber: Int, continuous: Boolean = false) {
         stop()
+        isContinuousAyahPlayback = continuous
+        val totalAyat = QuranSurahCatalog.all114Surahs.find { it.number == surahNumber }?.totalAyat ?: 7
+        currentSurahTotalAyat = totalAyat
         val url = _selectedReciter.value.getAyahAudioUrl(surahNumber, ayahNumber)
 
         _playerState.value = SurahAudioPlayerState(
@@ -160,18 +181,24 @@ class QuranAudioManager(private val context: Context) {
                     _playerState.value = _playerState.value.copy(
                         isBuffering = false,
                         isPlaying = true,
-                        durationMs = mp.duration
+                        durationMs = mp.duration,
+                        activeAyahNumber = ayahNumber
                     )
                     mp.start()
                     startProgressTracking()
                 }
                 setOnCompletionListener {
-                    _playerState.value = _playerState.value.copy(
-                        isPlaying = false,
-                        activeAyahNumber = null,
-                        currentPositionMs = 0
-                    )
-                    stopProgressTracking()
+                    if (isContinuousAyahPlayback && ayahNumber < currentSurahTotalAyat) {
+                        // Automatically advance and scroll to next Ayah
+                        playAyahAudio(surahNumber, ayahNumber + 1, continuous = true)
+                    } else {
+                        _playerState.value = _playerState.value.copy(
+                            isPlaying = false,
+                            activeAyahNumber = null,
+                            currentPositionMs = 0
+                        )
+                        stopProgressTracking()
+                    }
                 }
                 setOnErrorListener { _, _, _ ->
                     _playerState.value = _playerState.value.copy(
@@ -249,13 +276,23 @@ class QuranAudioManager(private val context: Context) {
             while (isActive) {
                 mediaPlayer?.let { player ->
                     if (player.isPlaying) {
+                        val currentMs = player.currentPosition
+                        val duration = player.duration
+                        val calculatedAyah = if (currentSurahTotalAyat > 0 && duration > 0 && !isContinuousAyahPlayback) {
+                            val fraction = (currentMs.toFloat() / duration.toFloat()).coerceIn(0f, 0.999f)
+                            (1 + (fraction * currentSurahTotalAyat).toInt()).coerceIn(1, currentSurahTotalAyat)
+                        } else {
+                            _playerState.value.activeAyahNumber
+                        }
+
                         _playerState.value = _playerState.value.copy(
-                            currentPositionMs = player.currentPosition,
-                            durationMs = player.duration
+                            currentPositionMs = currentMs,
+                            durationMs = duration,
+                            activeAyahNumber = calculatedAyah
                         )
                     }
                 }
-                delay(500)
+                delay(350)
             }
         }
     }
@@ -268,15 +305,25 @@ class QuranAudioManager(private val context: Context) {
     // --- Offline Surah Download Feature ---
 
     fun isSurahDownloaded(surahNumber: Int): Boolean {
-        val file = getOfflineSurahFile(surahNumber)
+        val file = getOfflineSurahFile(surahNumber, _selectedReciter.value.id)
         return file.exists() && file.length() > 50000
     }
 
-    fun getOfflineSurahFile(surahNumber: Int): File {
+    fun getOfflineSurahFile(surahNumber: Int, reciterId: String = _selectedReciter.value.id): File {
         val dir = context.getExternalFilesDir("quran_audio") ?: context.filesDir
         if (!dir.exists()) dir.mkdirs()
         val padded = surahNumber.toString().padStart(3, '0')
-        return File(dir, "surah_$padded.mp3")
+        val reciterFile = File(dir, "surah_${padded}_$reciterId.mp3")
+        if (reciterFile.exists() && reciterFile.length() > 50000) {
+            return reciterFile
+        }
+        if (reciterId == QuranReciter.MISHARY_ALAFASY.id) {
+            val defaultFile = File(dir, "surah_$padded.mp3")
+            if (defaultFile.exists() && defaultFile.length() > 50000) {
+                return defaultFile
+            }
+        }
+        return reciterFile
     }
 
     fun getHighQualitySurahUrl(surahNumber: Int, reciter: QuranReciter): String {

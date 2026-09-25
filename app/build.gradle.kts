@@ -13,7 +13,7 @@ plugins {
 
 android {
   namespace = "com.example"
-  compileSdk { version = release(36) { minorApiLevel = 1 } }
+  compileSdk = 36
 
   defaultConfig {
     applicationId = "com.dawahtojannah.app"
@@ -25,67 +25,12 @@ android {
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
   }
 
-  val releaseKs = file("${rootDir}/release.keystore")
-  val debugKs = file("${rootDir}/debug.keystore")
-
-  if (!releaseKs.exists() && !debugKs.exists()) {
-    try {
-      val pb = ProcessBuilder(
-        "keytool", "-genkeypair", "-v",
-        "-keystore", debugKs.absolutePath,
-        "-alias", "androiddebugkey",
-        "-keyalg", "RSA",
-        "-keysize", "2048",
-        "-validity", "10000",
-        "-storepass", "android",
-        "-keypass", "android",
-        "-dname", "CN=Android Debug, O=Android, C=US"
-      )
-      pb.redirectErrorStream(true).start().waitFor()
-    } catch (_: Exception) {
-      // Gracefully continue
-    }
-  }
-
   signingConfigs {
-    create("release") {
-      val isReleaseAvailable = file("${rootDir}/release.keystore").exists()
-      val keystorePath = System.getenv("KEYSTORE_PATH")
-        ?: if (isReleaseAvailable) "${rootDir}/release.keystore" else "${rootDir}/debug.keystore"
-      storeFile = file(keystorePath)
-      storePassword = System.getenv("STORE_PASSWORD") ?: if (isReleaseAvailable) "dawahtojannah" else "android"
-      keyAlias = System.getenv("KEY_ALIAS") ?: if (isReleaseAvailable) "dawahkey" else "androiddebugkey"
-      keyPassword = System.getenv("KEY_PASSWORD") ?: if (isReleaseAvailable) "dawahtojannah" else "android"
-      enableV1Signing = true
-      enableV2Signing = true
-    }
     create("debugConfig") {
-      val ksFile = if (file("${rootDir}/debug.keystore").exists()) {
-        file("${rootDir}/debug.keystore")
-      } else if (file("${rootDir}/release.keystore").exists()) {
-        file("${rootDir}/release.keystore")
-      } else {
-        file("${rootDir}/debug.keystore")
-      }
-      var useReleaseCreds = false
-      if (ksFile.exists()) {
-        try {
-          val ks = KeyStore.getInstance("PKCS12")
-          val stream: InputStream = ksFile.inputStream()
-          stream.use { s ->
-            ks.load(s, "dawahtojannah".toCharArray())
-            useReleaseCreds = true
-          }
-        } catch (_: Exception) {
-          useReleaseCreds = false
-        }
-      }
-      storeFile = ksFile
-      storePassword = if (useReleaseCreds) "dawahtojannah" else "android"
-      keyAlias = if (useReleaseCreds) "dawahkey" else "androiddebugkey"
-      keyPassword = if (useReleaseCreds) "dawahtojannah" else "android"
-      enableV1Signing = true
-      enableV2Signing = true
+      storeFile = file("${rootDir}/debug.keystore")
+      storePassword = "android"
+      keyAlias = "androiddebugkey"
+      keyPassword = "android"
     }
   }
 
@@ -94,7 +39,6 @@ android {
       isCrunchPngs = false
       isMinifyEnabled = false
       proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
-      signingConfig = signingConfigs.getByName("release")
     }
     debug { signingConfig = signingConfigs.getByName("debugConfig") }
   }

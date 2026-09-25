@@ -64,18 +64,21 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.example.data.model.QuranReciter
+import com.example.data.model.QuranTafsirSource
 import com.example.data.model.QuranTranslator
 import com.example.ui.theme.IslamicGold
 import com.example.ui.theme.IslamicGreen
 import com.example.ui.theme.LocalArabicFontFamily
 import com.example.ui.theme.LocalBanglaFontFamily
 import com.example.util.BanglaNumberUtils
+import com.example.util.QuranAudioManager
 import com.example.util.QuranSettingsManager
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun QuranSettingsDialog(
     settingsManager: QuranSettingsManager,
+    audioManager: QuranAudioManager,
     onDismiss: () -> Unit,
     onOpenAudioManager: () -> Unit
 ) {
@@ -367,6 +370,15 @@ fun QuranSettingsDialog(
                     // Section 3: Translation Sources
                     item {
                         SettingsSectionCard(title = "অনুবাদ সোর্স নির্বাচন", icon = Icons.Default.Translate) {
+                            Text(
+                                text = "পছন্দের বাংলা অনুবাদক সিলেক্ট করুন:",
+                                style = MaterialTheme.typography.labelMedium.copy(
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    fontFamily = banglaFont
+                                )
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+
                             val translators = listOf(
                                 QuranTranslator.DR_ZAKARIA to "ড. আবু বকর মুহাম্মাদ যাকারিয়া (মদীনা প্রিন্ট ও কিং ফাহাদ কমপ্লেক্স)",
                                 QuranTranslator.TAISIRUL_QURAN to "তাওহীদ পাবলিকেশন্স (তাইসীরুল কুরআন)",
@@ -381,22 +393,21 @@ fun QuranSettingsDialog(
                                         .clip(RoundedCornerShape(10.dp))
                                         .clickable { settingsManager.updatePreferredTranslator(translator.id) }
                                         .background(
-                                            if (isSelected) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.35f)
+                                            if (isSelected) IslamicGreen.copy(alpha = 0.12f)
                                             else Color.Transparent
                                         )
-                                        .padding(10.dp),
+                                        .padding(horizontal = 8.dp, vertical = 6.dp),
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
-                                    Icon(
-                                        imageVector = if (isSelected) Icons.Default.AutoAwesome else Icons.Default.MenuBook,
-                                        contentDescription = null,
-                                        tint = if (isSelected) IslamicGreen else MaterialTheme.colorScheme.onSurfaceVariant,
-                                        modifier = Modifier.size(18.dp)
+                                    androidx.compose.material3.RadioButton(
+                                        selected = isSelected,
+                                        onClick = { settingsManager.updatePreferredTranslator(translator.id) },
+                                        colors = androidx.compose.material3.RadioButtonDefaults.colors(selectedColor = IslamicGreen)
                                     )
-                                    Spacer(modifier = Modifier.width(10.dp))
+                                    Spacer(modifier = Modifier.width(8.dp))
                                     Column(modifier = Modifier.weight(1f)) {
                                         Text(
-                                            text = translator.shortNameBn,
+                                            text = translator.titleBn,
                                             style = MaterialTheme.typography.bodyMedium.copy(
                                                 fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
                                                 color = if (isSelected) IslamicGreen else MaterialTheme.colorScheme.onSurface,
@@ -417,7 +428,62 @@ fun QuranSettingsDialog(
                         }
                     }
 
-                    // Section 4: Reciter & Audio Quality
+                    // Section 4: Tafsir Source Selection (তাফসীর গ্রন্থ নির্বাচন)
+                    item {
+                        SettingsSectionCard(title = "তাফসীর গ্রন্থ নির্বাচন", icon = Icons.Default.MenuBook) {
+                            Text(
+                                text = "পছন্দের প্রামাণ্য তাফসীর গ্রন্থ বেছে নিন:",
+                                style = MaterialTheme.typography.labelMedium.copy(
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    fontFamily = banglaFont
+                                )
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+
+                            QuranTafsirSource.entries.forEach { tafsirSource ->
+                                val isSelected = settings.preferredTafsir == tafsirSource.id
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clip(RoundedCornerShape(10.dp))
+                                        .clickable { settingsManager.updatePreferredTafsir(tafsirSource.id) }
+                                        .background(
+                                            if (isSelected) IslamicGold.copy(alpha = 0.14f)
+                                            else Color.Transparent
+                                        )
+                                        .padding(horizontal = 8.dp, vertical = 6.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    androidx.compose.material3.RadioButton(
+                                        selected = isSelected,
+                                        onClick = { settingsManager.updatePreferredTafsir(tafsirSource.id) },
+                                        colors = androidx.compose.material3.RadioButtonDefaults.colors(selectedColor = IslamicGold)
+                                    )
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Column(modifier = Modifier.weight(1f)) {
+                                        Text(
+                                            text = tafsirSource.titleBn,
+                                            style = MaterialTheme.typography.bodyMedium.copy(
+                                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                                                color = if (isSelected) IslamicGold else MaterialTheme.colorScheme.onSurface,
+                                                fontFamily = banglaFont
+                                            )
+                                        )
+                                        Text(
+                                            text = "${tafsirSource.authorBn} • ${tafsirSource.descriptionBn}",
+                                            style = MaterialTheme.typography.bodySmall.copy(
+                                                fontSize = 11.sp,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                                fontFamily = banglaFont
+                                            )
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    // Section 5: Reciter & Audio Quality
                     item {
                         SettingsSectionCard(title = "তিলাওয়াত ও অডিও কোয়ালিটি", icon = Icons.Default.RecordVoiceOver) {
                             Text(
@@ -429,25 +495,37 @@ fun QuranSettingsDialog(
                             )
                             Spacer(modifier = Modifier.height(8.dp))
 
-                            QuranReciter.values().forEach { reciter ->
+                            QuranReciter.entries.forEach { reciter ->
                                 val isSelected = settings.defaultReciterId == reciter.id
                                 Row(
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .clip(RoundedCornerShape(10.dp))
-                                        .clickable { settingsManager.updateDefaultReciter(reciter.id) }
+                                        .clickable {
+                                            settingsManager.updateDefaultReciter(reciter.id)
+                                            audioManager.selectReciter(reciter)
+                                        }
                                         .background(
                                             if (isSelected) IslamicGold.copy(alpha = 0.15f)
                                             else Color.Transparent
                                         )
-                                        .padding(horizontal = 10.dp, vertical = 8.dp),
+                                        .padding(horizontal = 8.dp, vertical = 6.dp),
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
+                                    androidx.compose.material3.RadioButton(
+                                        selected = isSelected,
+                                        onClick = {
+                                            settingsManager.updateDefaultReciter(reciter.id)
+                                            audioManager.selectReciter(reciter)
+                                        },
+                                        colors = androidx.compose.material3.RadioButtonDefaults.colors(selectedColor = IslamicGold)
+                                    )
+                                    Spacer(modifier = Modifier.width(6.dp))
                                     Text(
                                         text = if (reciter.isFavorite) "⭐" else "🎙️",
-                                        fontSize = 16.sp
+                                        fontSize = 15.sp
                                     )
-                                    Spacer(modifier = Modifier.width(10.dp))
+                                    Spacer(modifier = Modifier.width(8.dp))
                                     Column(modifier = Modifier.weight(1f)) {
                                         Text(
                                             text = reciter.nameBn,

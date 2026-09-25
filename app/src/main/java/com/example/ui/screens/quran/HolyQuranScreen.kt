@@ -106,12 +106,14 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.datasource.QuranSurahCatalog
+import com.example.data.datasource.QuranTafsirAndTranslationProvider
 import com.example.data.datasource.SurahShaneNuzulCatalog
 import com.example.data.model.DownloadProgressState
 import com.example.data.model.QuranAyah
 import com.example.data.model.QuranReciter
 import com.example.data.model.QuranSettings
 import com.example.data.model.QuranSurah
+import com.example.data.model.QuranTafsirSource
 import com.example.data.model.QuranTranslator
 import com.example.data.repository.QuranRepository
 import com.example.ui.theme.IslamicGold
@@ -141,9 +143,12 @@ fun HolyQuranScreen(
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val settingsManager = remember { QuranSettingsManager(context) }
+    val settings by settingsManager.settings.collectAsState()
 
     var activeSurahNumber by remember { mutableStateOf(initialSurahNumber) }
-    var selectedTranslator by remember { mutableStateOf(QuranTranslator.DR_ZAKARIA) }
+    val selectedTranslator = remember(settings.preferredTranslator) {
+        QuranTranslator.entries.find { it.id == settings.preferredTranslator } ?: QuranTranslator.DR_ZAKARIA
+    }
     var showReciterDialog by remember { mutableStateOf(false) }
     var showSettingsDialog by remember { mutableStateOf(false) }
     var showAudioManagerDialog by remember { mutableStateOf(false) }
@@ -151,6 +156,14 @@ fun HolyQuranScreen(
     val reciter by audioManager.selectedReciter.collectAsState()
     val playerState by audioManager.playerState.collectAsState()
     val downloadStates by audioManager.downloadState.collectAsState()
+
+    // Sync preferred reciter from settings
+    LaunchedEffect(settings.defaultReciterId) {
+        val preferred = QuranReciter.entries.find { it.id == settings.defaultReciterId }
+        if (preferred != null && audioManager.selectedReciter.value.id != preferred.id) {
+            audioManager.selectReciter(preferred)
+        }
+    }
 
     LaunchedEffect(Unit) {
         quranRepository.initializeDatabaseIfNeeded()
@@ -183,7 +196,7 @@ fun HolyQuranScreen(
             audioManager = audioManager,
             settingsManager = settingsManager,
             selectedTranslator = selectedTranslator,
-            onSelectTranslator = { selectedTranslator = it },
+            onSelectTranslator = { settingsManager.updatePreferredTranslator(it.id) },
             onOpenReciterPicker = { showReciterDialog = true },
             onOpenSettings = { showSettingsDialog = true },
             onOpenAudioManager = { showAudioManagerDialog = true },
@@ -197,6 +210,7 @@ fun HolyQuranScreen(
         ReciterSelectionDialog(
             currentReciter = reciter,
             onSelectReciter = { newReciter ->
+                settingsManager.updateDefaultReciter(newReciter.id)
                 audioManager.selectReciter(newReciter)
                 showReciterDialog = false
                 Toast.makeText(context, "ক্বারী নির্বাচিত: ${newReciter.nameBn}", Toast.LENGTH_SHORT).show()
@@ -208,6 +222,7 @@ fun HolyQuranScreen(
     if (showSettingsDialog) {
         QuranSettingsDialog(
             settingsManager = settingsManager,
+            audioManager = audioManager,
             onDismiss = { showSettingsDialog = false },
             onOpenAudioManager = {
                 showSettingsDialog = false
@@ -881,21 +896,19 @@ fun SurahDetailScreen(
     // Expanded Tafsir state per Ayah number
     var expandedTafsirs by remember { mutableStateOf(setOf<Int>()) }
 
-    var isFullSurahPlaying by remember {
-        mutableStateOf(playerState.isPlaying && playerState.surahNumber == surah.number && playerState.activeAyahNumber == null)
-    }
-
-    LaunchedEffect(playerState) {
-        isFullSurahPlaying = playerState.isPlaying && playerState.surahNumber == surah.number && playerState.activeAyahNumber == null
-    }
+    val isFullSurahPlaying = playerState.isPlaying && playerState.surahNumber == surah.number
 
     val listState = rememberLazyListState()
-    LaunchedEffect(playerState.activeAyahNumber) {
+    LaunchedEffect(playerState.activeAyahNumber, ayahsState.size, settings.autoScrollWithAudio) {
         val activeAyah = playerState.activeAyahNumber
-        if (activeAyah != null && settings.autoScrollWithAudio) {
+        if (activeAyah != null && settings.autoScrollWithAudio && ayahsState.isNotEmpty()) {
             val headerOffset = 3 + (if (surah.number != 9) 1 else 0)
-            val targetIndex = (activeAyah - 1).coerceAtLeast(0) + headerOffset
-            listState.animateScrollToItem(targetIndex)
+            val targetIndex = (activeAyah - 1).coerceIn(0, ayahsState.size - 1) + headerOffset
+            try {
+                listState.animateScrollToItem(index = targetIndex, scrollOffset = -80)
+            } catch (_: Exception) {
+                listState.scrollToItem(targetIndex)
+            }
         }
     }
 
@@ -1155,7 +1168,13 @@ fun SurahDetailScreen(
                             Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
                         }
                     },
-                    onPlayFullSurah = { audioManager.playSurah(surah.number, surah.nameBn) },
+                    onPlayFullSurah = {
+                        if (isFullSurahPlaying) {
+                            audioManager.pause()
+                        } else {
+                            audioManager.playSurah(surah.number, surah.nameBn, surah.totalAyat)
+                        }
+                    },
                     onDownloadSurah = {
                         audioManager.downloadSurahAudio(surah.number) { success ->
                             if (success) {
@@ -1345,7 +1364,11 @@ fun SurahDetailScreen(
                             }
                         },
                         onPlayAyahAudio = {
-                            audioManager.playAyahAudio(ayah.surahNumber, ayah.ayahNumber)
+                            if (isPlayingThisAyah) {
+                                audioManager.pause()
+                            } else {
+                                audioManager.playAyahAudio(ayah.surahNumber, ayah.ayahNumber, continuous = true)
+                            }
                         },
                         onShareAyah = {
                             val healedPronunciation = QuranBengaliPhoneticTransliteration.sanitizeAndHeal(
@@ -2274,15 +2297,16 @@ fun AyahCardItem(
 
             // Part 3: Bangla Meaning Card (Very Lite Soft Sky / Ice Blue Tint)
             if (settings.showTranslation) {
-                val activeTranslation = when (selectedTranslator) {
-                    QuranTranslator.DR_ZAKARIA -> ayah.translationZakaria ?: ayah.translationBn
-                    QuranTranslator.TAISIRUL_QURAN -> ayah.translationTaisirul ?: ayah.translationBn
-                    QuranTranslator.MUHIBBUR_RAHMAN -> ayah.translationBn
+                val activeTranslation = remember(ayah, selectedTranslator) {
+                    QuranTafsirAndTranslationProvider.getTranslationText(ayah, selectedTranslator)
                 }
-                val translatorName = when (selectedTranslator) {
-                    QuranTranslator.DR_ZAKARIA -> "ড. আবু বকর যাকারিয়া"
-                    QuranTranslator.TAISIRUL_QURAN -> "তাইসীরুল কুরআন"
-                    QuranTranslator.MUHIBBUR_RAHMAN -> "মুহিব্বুর রহমান"
+                val translatorName = selectedTranslator.shortNameBn
+                val englishTranslation = remember(ayah.surahNumber, ayah.ayahNumber, ayah.translationEn) {
+                    QuranTafsirAndTranslationProvider.getEnglishTranslation(
+                        ayah.surahNumber,
+                        ayah.ayahNumber,
+                        ayah.translationEn
+                    )
                 }
 
                 Card(
@@ -2330,15 +2354,30 @@ fun AyahCardItem(
                         )
 
                         // English Translation Text (Optional, if enabled in settings)
-                        if (settings.showEnglishTranslation && !ayah.translationEn.isNullOrBlank()) {
+                        if (settings.showEnglishTranslation && englishTranslation.isNotBlank()) {
                             Spacer(modifier = Modifier.height(8.dp))
                             HorizontalDivider(
                                 color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f),
                                 thickness = 0.8.dp
                             )
                             Spacer(modifier = Modifier.height(6.dp))
+                            Surface(
+                                shape = RoundedCornerShape(4.dp),
+                                color = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.45f)
+                            ) {
+                                Text(
+                                    text = "English (Saheeh International)",
+                                    style = MaterialTheme.typography.labelSmall.copy(
+                                        fontSize = 10.sp,
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = MaterialTheme.colorScheme.onSecondaryContainer
+                                    ),
+                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                )
+                            }
+                            Spacer(modifier = Modifier.height(4.dp))
                             Text(
-                                text = ayah.translationEn,
+                                text = englishTranslation,
                                 style = MaterialTheme.typography.bodyMedium.copy(
                                     fontSize = (settings.banglaFontSize * 0.9f).sp,
                                     lineHeight = (settings.banglaFontSize * 1.35f).sp,
@@ -2357,6 +2396,13 @@ fun AyahCardItem(
                 enter = fadeIn(),
                 exit = fadeOut()
             ) {
+                val tafsirSource = remember(settings.preferredTafsir) {
+                    QuranTafsirSource.fromId(settings.preferredTafsir)
+                }
+                val tafsirContent = remember(ayah, tafsirSource) {
+                    QuranTafsirAndTranslationProvider.getTafsirText(ayah, tafsirSource)
+                }
+
                 Column(modifier = Modifier.padding(top = 10.dp)) {
                     Surface(
                         color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f),
@@ -2369,21 +2415,48 @@ fun AyahCardItem(
                             Box(
                                 modifier = Modifier
                                     .width(3.5.dp)
-                                    .height(28.dp)
+                                    .height(36.dp)
                                     .background(IslamicGold, RoundedCornerShape(2.dp))
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                             Column(modifier = Modifier.weight(1f)) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    Text(
+                                        text = tafsirSource.titleBn,
+                                        style = MaterialTheme.typography.labelMedium.copy(
+                                            fontWeight = FontWeight.Bold,
+                                            color = IslamicGold
+                                        )
+                                    )
+                                    Surface(
+                                        shape = RoundedCornerShape(4.dp),
+                                        color = IslamicGold.copy(alpha = 0.15f)
+                                    ) {
+                                        Text(
+                                            text = tafsirSource.shortNameBn,
+                                            style = MaterialTheme.typography.labelSmall.copy(
+                                                fontSize = 9.5.sp,
+                                                color = IslamicGold,
+                                                fontWeight = FontWeight.SemiBold
+                                            ),
+                                            modifier = Modifier.padding(horizontal = 5.dp, vertical = 1.dp)
+                                        )
+                                    }
+                                }
                                 Text(
-                                    text = "তাফসীর ও ব্যাখ্যাঃ",
-                                    style = MaterialTheme.typography.labelMedium.copy(
-                                        fontWeight = FontWeight.Bold,
-                                        color = IslamicGold
+                                    text = "${tafsirSource.authorBn} • ${tafsirSource.descriptionBn}",
+                                    style = MaterialTheme.typography.bodySmall.copy(
+                                        fontSize = 10.5.sp,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.75f)
                                     )
                                 )
-                                Spacer(modifier = Modifier.height(4.dp))
+                                Spacer(modifier = Modifier.height(6.dp))
                                 Text(
-                                    text = ayah.tafsirText ?: "এই আয়াতের বিস্তারিত তাফসীর ও শানে নুযূল প্রস্তুত রয়েছে।",
+                                    text = tafsirContent,
                                     style = MaterialTheme.typography.bodySmall.copy(
                                         fontSize = 13.sp,
                                         lineHeight = 20.sp,

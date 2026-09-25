@@ -27,6 +27,7 @@ class QuranSettingsManager(private val context: Context) {
             banglaFontSize = prefs.getFloat(KEY_BANGLA_FONT_SIZE, 16f),
             arabicFontFamily = prefs.getString(KEY_ARABIC_FONT_FAMILY, "indopak") ?: "indopak",
             preferredTranslator = prefs.getString(KEY_PREFERRED_TRANSLATOR, "zakaria") ?: "zakaria",
+            preferredTafsir = prefs.getString(KEY_PREFERRED_TAFSIR, "ibn_kathir") ?: "ibn_kathir",
             defaultReciterId = prefs.getString(KEY_DEFAULT_RECITER, QuranReciter.MISHARY_ALAFASY.id)
                 ?: QuranReciter.MISHARY_ALAFASY.id,
             audioQuality = prefs.getString(KEY_AUDIO_QUALITY, "HIGH") ?: "HIGH",
@@ -83,6 +84,11 @@ class QuranSettingsManager(private val context: Context) {
         _settings.value = _settings.value.copy(preferredTranslator = translatorId)
     }
 
+    fun updatePreferredTafsir(tafsirId: String) {
+        prefs.edit().putString(KEY_PREFERRED_TAFSIR, tafsirId).apply()
+        _settings.value = _settings.value.copy(preferredTafsir = tafsirId)
+    }
+
     fun updateDefaultReciter(reciterId: String) {
         prefs.edit().putString(KEY_DEFAULT_RECITER, reciterId).apply()
         _settings.value = _settings.value.copy(defaultReciterId = reciterId)
@@ -124,6 +130,7 @@ class QuranSettingsManager(private val context: Context) {
         private const val KEY_BANGLA_FONT_SIZE = "key_bangla_font_size"
         private const val KEY_ARABIC_FONT_FAMILY = "key_arabic_font_family"
         private const val KEY_PREFERRED_TRANSLATOR = "key_preferred_translator"
+        private const val KEY_PREFERRED_TAFSIR = "key_preferred_tafsir"
         private const val KEY_DEFAULT_RECITER = "key_default_reciter"
         private const val KEY_AUDIO_QUALITY = "key_audio_quality"
         private const val KEY_KEEP_SCREEN_AWAKE = "key_keep_screen_awake"

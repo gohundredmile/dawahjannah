@@ -42,7 +42,7 @@ enum class QuranReciter(
         isFavorite = true,
         audioQuality = "192 kbps HD (ক্রিস্টাল ক্লিয়ার)",
         surahBaseUrl = "https://server8.mp3quran.net/afs/",
-        ayahBaseUrl = "https://everydayayah.com/data/Alafasy_128kbps/"
+        ayahBaseUrl = "https://everyayah.com/data/Alafasy_128kbps/"
     ),
     ABDUL_BASIT(
         id = "abdul_basit",
@@ -51,7 +51,7 @@ enum class QuranReciter(
         isFavorite = false,
         audioQuality = "192 kbps (হাই ডেফিনিশন)",
         surahBaseUrl = "https://server7.mp3quran.net/basit/",
-        ayahBaseUrl = "https://everydayayah.com/data/Abdul_Basit_Murattal_192kbps/"
+        ayahBaseUrl = "https://everyayah.com/data/Abdul_Basit_Murattal_192kbps/"
     ),
     MAHER_AL_MUAIQLY(
         id = "maher_muaiqly",
@@ -60,7 +60,7 @@ enum class QuranReciter(
         isFavorite = false,
         audioQuality = "128 kbps (হাই কোয়ালিটি)",
         surahBaseUrl = "https://server12.mp3quran.net/maher/",
-        ayahBaseUrl = "https://everydayayah.com/data/MaherAlMuaiqly128kbps/"
+        ayahBaseUrl = "https://everyayah.com/data/MaherAlMuaiqly128kbps/"
     ),
     SAAD_AL_GHAMDI(
         id = "saad_ghamdi",
@@ -69,7 +69,7 @@ enum class QuranReciter(
         isFavorite = false,
         audioQuality = "128 kbps (হাই কোয়ালিটি)",
         surahBaseUrl = "https://server7.mp3quran.net/ghamadi/",
-        ayahBaseUrl = "https://everydayayah.com/data/Ghamadi_40kbps/"
+        ayahBaseUrl = "https://everyayah.com/data/Ghamadi_40kbps/"
     ),
     ABDUR_RAHMAN_SUDAIS(
         id = "abdur_rahman_sudais",
@@ -78,7 +78,7 @@ enum class QuranReciter(
         isFavorite = false,
         audioQuality = "192 kbps HD (ক্রিস্টাল ক্লিয়ার)",
         surahBaseUrl = "https://server11.mp3quran.net/sds/",
-        ayahBaseUrl = "https://everydayayah.com/data/Abdurrahmaan_As-Sudais_192kbps/"
+        ayahBaseUrl = "https://everyayah.com/data/Abdurrahmaan_As-Sudais_192kbps/"
     ),
     MAHMOUD_AL_HUSARY(
         id = "mahmoud_husary",
@@ -87,7 +87,7 @@ enum class QuranReciter(
         isFavorite = false,
         audioQuality = "128 kbps (বিশুদ্ধ তাজবীদ)",
         surahBaseUrl = "https://server13.mp3quran.net/husr/",
-        ayahBaseUrl = "https://everydayayah.com/data/Husary_128kbps/"
+        ayahBaseUrl = "https://everyayah.com/data/Husary_128kbps/"
     ),
     MOHAMED_AL_MINSHAWI(
         id = "mohamed_minshawi",
@@ -96,7 +96,7 @@ enum class QuranReciter(
         isFavorite = false,
         audioQuality = "128 kbps (মর্যাদাপূর্ণ সুর)",
         surahBaseUrl = "https://server10.mp3quran.net/minsh/",
-        ayahBaseUrl = "https://everydayayah.com/data/Minshawy_Murattal_128kbps/"
+        ayahBaseUrl = "https://everyayah.com/data/Minshawy_Murattal_128kbps/"
     );
 
     fun getSurahAudioUrl(surahNumber: Int): String {
@@ -119,6 +119,49 @@ enum class QuranTranslator(
     DR_ZAKARIA("zakaria", "ড. আবু বকর মুহাম্মাদ যাকারিয়া (মদীনা প্রিন্ট)", "ড. আবু বকর যাকারিয়া"),
     TAISIRUL_QURAN("taisirul", "তাওহীদ পাবলিকেশন্স (তাইসীরুল কুরআন)", "তাইসীরুল কুরআন"),
     MUHIBBUR_RAHMAN("mujibur", "মাওলানা মুজিবুর রহমান (সহীহ অনুবাদ)", "মুজিবুর রহমান")
+}
+
+enum class QuranTafsirSource(
+    val id: String,
+    val titleBn: String,
+    val authorBn: String,
+    val shortNameBn: String,
+    val descriptionBn: String
+) {
+    IBN_KATHIR(
+        id = "ibn_kathir",
+        titleBn = "তাফসীর ইবনে কাসীর (পূর্ণাঙ্গ)",
+        authorBn = "ইমাম হাফিজ ইবনে কাসীর (রহ.)",
+        shortNameBn = "ইবনে কাসীর",
+        descriptionBn = "কুরআনের বিশ্ববিখ্যাত ও সর্বাধিক প্রামাণ্য ঐতিহাসিক তাফসীর"
+    ),
+    AHSANUL_BAYAN(
+        id = "ahsanul_bayan",
+        titleBn = "তাফসীর আহসানুল বায়ান",
+        authorBn = "মাওলানা সালাহুদ্দীন ইউসুফ",
+        shortNameBn = "আহসানুল বায়ান",
+        descriptionBn = "সহজ, সরল ও সহীহ আকীদাসম্মত সংক্ষিপ্ত বিশ্লেষণধর্মী তাফসীর"
+    ),
+    DR_ZAKARIA(
+        id = "dr_zakaria",
+        titleBn = "সংক্ষিপ্ত তাফসীর (ড. আবু বকর মুহাম্মাদ যাকারিয়া)",
+        authorBn = "ড. আবু বকর মুহাম্মাদ যাকারিয়া (মদীনা প্রিন্ট)",
+        shortNameBn = "ড. আবু বকর যাকারিয়া",
+        descriptionBn = "বাদশাহ ফাহাদ কুরআন প্রিন্টিং কমপ্লেক্স কর্তৃক প্রকাশিত প্রামাণ্য টীকা ও ব্যাখ্যা"
+    ),
+    JALALAYN(
+        id = "jalalayn",
+        titleBn = "তাফসীরে জালালাইন",
+        authorBn = "জালালুদ্দীন আল-মহাল্লী ও সুয়ূতী (রহ.)",
+        shortNameBn = "তাফসীরে জালালাইন",
+        descriptionBn = "শব্দার্থ ও মূল প্রেক্ষাপটভিত্তিক সুবিখ্যাত প্রামাণ্য তাফসীর"
+    );
+
+    companion object {
+        fun fromId(id: String): QuranTafsirSource {
+            return entries.find { it.id == id } ?: IBN_KATHIR
+        }
+    }
 }
 
 data class SurahAudioPlayerState(
@@ -166,6 +209,7 @@ data class QuranSettings(
     val banglaFontSize: Float = 16f,
     val arabicFontFamily: String = "indopak", // "indopak", "uthmani", "amiri"
     val preferredTranslator: String = "zakaria", // "zakaria", "taisirul", "mujibur"
+    val preferredTafsir: String = "ibn_kathir", // "ibn_kathir", "ahsanul_bayan", "dr_zakaria", "jalalayn"
     val defaultReciterId: String = "mishary_alafasy",
     val audioQuality: String = "HIGH", // "HIGH", "STANDARD"
     val keepScreenAwake: Boolean = true,

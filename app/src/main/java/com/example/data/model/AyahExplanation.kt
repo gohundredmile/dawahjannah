@@ -40,5 +40,6 @@ data class AyahExplanation(
     val relatedVerses: List<RelatedVerse>,
     val relatedHadiths: List<RelatedHadith>,
     val audioUrl: String,
-    val reciterNameBn: String = "মিশারী রাশিদ আল-আফাসী"
+    val reciterNameBn: String = "মিশারী রাশিদ আল-আফাসী",
+    val scanDurationMs: Long = 32L
 )

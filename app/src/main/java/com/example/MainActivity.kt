@@ -56,6 +56,7 @@ import com.example.ui.screens.tools.IslamicContextVerifyScreen
 import com.example.ui.screens.tools.IslamicHabitSystemScreen
 import com.example.ui.screens.tools.MosqueModeScreen
 import com.example.ui.screens.tools.PersonalDuaBuilderScreen
+import com.example.ui.screens.tools.QuranActionEngineScreen
 import com.example.ui.screens.tools.RamadanIntelligenceScreen
 import com.example.ui.screens.tools.SmartQuranSearchScreen
 import com.example.ui.screens.tools.ToolsScreen
@@ -240,6 +241,7 @@ class MainActivity : ComponentActivity() {
                                             onOpenNamesOfAllah = { viewModel.navigateToToolsSubScreen(ToolsSubScreen.NAMES_OF_ALLAH) },
                                             onOpenMosqueMode = { viewModel.openMosqueMode() },
                                             onOpenIslamicContextVerify = { viewModel.openIslamicContextVerify() },
+                                            onOpenQuranActionEngine = { viewModel.openQuranActionEngine() },
                                             contentPadding = innerPadding
                                         )
                                         ToolsSubScreen.FRIDAY_MODE -> FridayModeScreen(
@@ -307,6 +309,9 @@ class MainActivity : ComponentActivity() {
                                             viewModel = viewModel
                                         )
                                         ToolsSubScreen.ISLAMIC_CONTEXT_VERIFY -> IslamicContextVerifyScreen(
+                                            onNavigateBack = { viewModel.navigateBack() }
+                                        )
+                                        ToolsSubScreen.QURAN_ACTION_ENGINE -> QuranActionEngineScreen(
                                             onNavigateBack = { viewModel.navigateBack() }
                                         )
                                     }

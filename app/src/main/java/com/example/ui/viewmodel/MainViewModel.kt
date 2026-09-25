@@ -114,7 +114,8 @@ enum class ToolsSubScreen(val titleBn: String) {
     MOSQUE_MODE("মসজিদ মোড (Mosque Mode)"),
     HOLY_QURAN("আল-কুরআন (অনুবাদ, তাফসীর ও তিলাওয়াত)"),
     HADITH_COLLECTION("সহীহ হাদীস সম্ভার (HadithBD / IRD)"),
-    ISLAMIC_CONTEXT_VERIFY("Islamic Context & Verify (ইসলামিক কনটেক্সট ও যাচাই)")
+    ISLAMIC_CONTEXT_VERIFY("Islamic Context & Verify (ইসলামিক কনটেক্সট ও যাচাই)"),
+    QURAN_ACTION_ENGINE("Quran → Action Engine (কুরআন → আমল ইঞ্জিন)")
 }
 
 sealed class AppNavDestination {
@@ -333,6 +334,12 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     fun openIslamicContextVerify(initialClaim: String? = null) {
         pushCurrentState()
         _toolsSubScreen.value = ToolsSubScreen.ISLAMIC_CONTEXT_VERIFY
+        _currentTab.value = AppTab.TOOLS
+    }
+
+    fun openQuranActionEngine() {
+        pushCurrentState()
+        _toolsSubScreen.value = ToolsSubScreen.QURAN_ACTION_ENGINE
         _currentTab.value = AppTab.TOOLS
     }
 

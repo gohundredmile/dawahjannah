@@ -122,6 +122,7 @@ fun ToolsScreen(
     onOpenNamesOfAllah: () -> Unit,
     onOpenMosqueMode: () -> Unit = {},
     onOpenIslamicContextVerify: () -> Unit = {},
+    onOpenQuranActionEngine: () -> Unit = {},
     contentPadding: PaddingValues = PaddingValues(0.dp)
 ) {
     val banglaFont = LocalBanglaFontFamily.current
@@ -135,9 +136,23 @@ fun ToolsScreen(
     // Search query for filtering features
     var searchQuery by remember { mutableStateOf("") }
 
-    // All features list — exactly 21 tools (divisible by 3 = 7 balanced rows)
+    // All features list
     val allFeatures = remember {
         listOf(
+            ToolFeatureItem(
+                id = "tool_quran_action_engine",
+                nameBn = "কুরআন → আমল",
+                fullNameBn = "Quran → Action Engine (Live the Ayah)",
+                subtitleBn = "Turn Quran Reading Into Understanding, Reflection, Practice, and Growth",
+                descriptionBn = "কুরআন পাঠকে নিছক তেলাওয়াত থেকে অর্থপূর্ণ ব্যক্তিগত শিখন লুপে রূপান্তর করুন: পড়া → উপলব্ধি → তাদাব্বুর → প্রয়োগ → আমল → আত্মপর্যালোচনা। ১২টি জীবন ক্ষেত্র, 'One Ayah, One Action' এবং সান্ধ্যকালীন পর্যালোচনার যুগান্তকারী ব্যবস্থা।",
+                icon = Icons.Default.AutoAwesome,
+                emoji = "🌱",
+                badgeBn = "নতুন ফ্ল্যাগশিপ",
+                primaryColor = Color(0xFF047857),
+                softContainerColor = Color(0xFFE8F5E9),
+                highlights = listOf("আয়াত থেকে আমল", "১২টি জীবন ক্ষেত্র", "One Ayah One Action", "সন্ধ্যা পর্যালোচনা", "তাদাব্বুর ডায়েরি"),
+                onClick = onOpenQuranActionEngine
+            ),
             ToolFeatureItem(
                 id = "tool_friday_mode",
                 nameBn = "জুমার মোড",

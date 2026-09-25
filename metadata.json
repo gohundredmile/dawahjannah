@@ -1,6 +1,6 @@
 {
   "name": "Dawah to Jannah",
-  "description": "Comprehensive Islamic companion featuring 'Islamic Context & Verify' AI evidence checker for WhatsApp & social claims, 114 Surahs authentic Shan-e-Nuzul (HadithBD / IRD), Ramadan Intelligence, Quran recitations, and verified Masnun Dua.",
+  "description": "Comprehensive Islamic companion featuring 'Quran → Action Engine (Live the Ayah)' learning loop, 'Islamic Context & Verify' AI evidence checker for WhatsApp & social claims, 114 Surahs authentic Shan-e-Nuzul (HadithBD / IRD), Ramadan Intelligence, and verified Masnun Dua.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

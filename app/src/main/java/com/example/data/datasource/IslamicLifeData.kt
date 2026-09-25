@@ -30,9 +30,6 @@ object IslamicLifeData {
         // ★★★আসমাউল হুসনা (আল্লাহর ৯৯টি পবিত্র নাম) বাংলা অর্থ সহ ফজিলত★★★
         AsmaulHusnaSpecialData.section,
 
-        // ★★★শুক্রবারের বিশেষ দোয়া ও আমল★★★
-        FridaySpecialDuaAmolData.section,
-
         // ★★★৫ ওয়াক্ত সালাত শেষে দো‘আ সমুহ★★★
         FiveWaqtAfterSalatData.section,
 

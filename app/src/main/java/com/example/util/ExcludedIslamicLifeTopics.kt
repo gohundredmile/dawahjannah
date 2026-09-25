@@ -28,7 +28,12 @@ object ExcludedIslamicLifeTopics {
         "শারীরিক সুস্থতার দোয়া",
         "শারীরিক সুস্থ্যতার দোয়া",
         "শারীরিক সুস্থতার দোয়া",
-        "শারীরিক সুস্থ্যতার দোয়া"
+        "শারীরিক সুস্থ্যতার দোয়া",
+        "friday_special_duas",
+        "শুক্রবারের বিশেষ দোয়া ও আমল",
+        "শুক্রবারের বিশেষ দোয়া ও আমল",
+        "★★★শুক্রবারের বিশেষ দোয়া ও আমল★★★",
+        "★★★শুক্রবারের বিশেষ দোয়া ও আমল★★★"
     )
 
     fun isExcluded(titleOrCategory: String?): Boolean {
@@ -72,6 +77,11 @@ object ExcludedIslamicLifeTopics {
 
         // Check 6: শারীরিক সুস্থ্যতার দোয়া
         if (clean.contains("শারীরিক") && clean.contains("সুস্থ")) {
+            return true
+        }
+
+        // Check 7: শুক্রবারের বিশেষ দোয়া ও আমল
+        if (clean.contains("শুক্রবার") && (clean.contains("দোয") || clean.contains("আমল"))) {
             return true
         }
 

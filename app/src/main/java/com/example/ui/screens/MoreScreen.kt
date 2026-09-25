@@ -325,25 +325,6 @@ fun MoreScreen(
                 Spacer(modifier = Modifier.height(10.dp))
             }
 
-            // Featured: Friday Special Duas & Amols (★★★শুক্রবারের বিশেষ দোয়া ও আমল★★★)
-            val fridaySec = viewModel.getIslamicLifeSection("friday_special_duas")
-            item {
-                val countBn = CalendarHelper.toBanglaNumber(fridaySec?.items?.size ?: 16)
-                MoreFeatureItem(
-                    title = "★★★শুক্রবারের বিশেষ দোয়া ও আমল★★★",
-                    subtitle = "জুমার দিনের মর্যাদা, প্রধান ৫ সুন্নাত, অকল্পনীয় সওয়াব, সূরা কাহাফ, সা'আতুল ইজাবাহ ও বিশেষ সহীহ দো'আ",
-                    icon = Icons.Default.Mosque,
-                    iconTint = Color(0xFF0D9488),
-                    badge = "${countBn}টি আমল • নতুন",
-                    onClick = {
-                        (viewModel.getIslamicLifeSection("friday_special_duas") ?: IslamicLifeData.sections.find { it.id == "friday_special_duas" })?.let {
-                            viewModel.openIslamicLifeSection(it)
-                        }
-                    }
-                )
-                Spacer(modifier = Modifier.height(10.dp))
-            }
-
             // Featured: Salam Before Duas (New - 56 Duas with Live Aurora & Tabs)
             item {
                 val countBn = CalendarHelper.toBanglaNumber(salamSec?.items?.size ?: 56)

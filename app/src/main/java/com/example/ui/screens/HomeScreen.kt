@@ -76,6 +76,7 @@ import com.example.ui.components.DetailedSehriIftarDialog
 import com.example.ui.components.HomeFeatureItem
 import com.example.ui.components.renumberedFeatures
 import com.example.ui.components.IslamicHeaderCover
+import com.example.ui.components.LiveAmolTickerBar
 import com.example.ui.components.NamazGuideDialog
 import com.example.ui.components.NamazModeDialog
 import com.example.ui.components.NofolSalatDetailsDialog
@@ -429,11 +430,7 @@ fun HomeScreen(
                 icon = Icons.Default.MenuBook,
                 iconColor = Color(0xFF10B981),
                 onClickAction = {
-                    viewModel.selectTab(AppTab.MORE)
-                    (viewModel.getIslamicLifeSection("friday_special_duas")
-                        ?: IslamicLifeData.sections.find { it.id == "friday_special_duas" })?.let {
-                        viewModel.openIslamicLifeSection(it)
-                    }
+                    viewModel.openFridayMode()
                 }
             ),
             // ১৮. তওবা ও ইস্তিগফার
@@ -553,6 +550,15 @@ fun HomeScreen(
                 onOpenSettings = {
                     viewModel.openSettings(AppTab.HOME)
                 }
+            )
+        }
+
+        // 1.05. Live Interactive Date & Time Based Amol Ticker Bar (Top Region)
+        item {
+            LiveAmolTickerBar(
+                viewModel = viewModel,
+                calendarInfo = tripleCalendar,
+                onOpenTripleCalendar = { showTripleCalendarDialog = true }
             )
         }
 

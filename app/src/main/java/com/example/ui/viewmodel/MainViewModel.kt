@@ -105,7 +105,7 @@ enum class ToolsSubScreen(val titleBn: String) {
     PERSONAL_DUA_BUILDER("Personal Dua Builder (ব্যক্তিগত দো'আ আর্কিটেক্ট)"),
     ASK_BEFORE_YOU_ACT("Ask Before You Act (পদক্ষেপ নেওয়ার আগে জানুন)"),
     SMART_QURAN_SEARCH("Smart Quran Search (ভাবার্থভিত্তিক অনুসন্ধান)"),
-    RAMADAN_INTELLIGENCE("Ramadan Intelligence (রমাদান ইন্টেলিজেন্স ও পূর্ণাঙ্গ রমাদান পদ্ধতি)"),
+    RAMADAN_INTELLIGENCE("All in one Ramadan & Ramadan Intelligence"),
     EXPLAIN_AYAH_CAMERA("Explain This Ayah ক্যামেরা"),
     AYAT_DETECTOR_SOLVER("আয়াত ও হাদীস শুদ্ধিকরণ ল্যাব"),
     QIBLA("ক্বিবলা কম্পাস"),

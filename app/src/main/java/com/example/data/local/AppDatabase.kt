@@ -24,6 +24,8 @@ import com.example.data.local.entity.RamadanCharityEntryEntity
 import com.example.data.local.entity.RamadanChecklistEntity
 import com.example.data.local.entity.RamadanDayLogEntity
 import com.example.data.local.entity.RamadanMissedFastEntity
+import com.example.data.local.entity.RamadanPersonalDuaEntity
+import com.example.data.local.entity.RamadanReflectionEntity
 import com.example.data.local.entity.RamadanSettingsEntity
 import com.example.data.local.entity.RamadanShawwalLogEntity
 import com.example.data.local.entity.ScratchpadNote
@@ -40,6 +42,8 @@ import com.example.data.local.entity.SunnahHabitLog
         RamadanMissedFastEntity::class,
         RamadanShawwalLogEntity::class,
         RamadanCharityEntryEntity::class,
+        RamadanPersonalDuaEntity::class,
+        RamadanReflectionEntity::class,
         RamadanSettingsEntity::class,
         QuranSurahEntity::class,
         QuranAyahEntity::class,
@@ -49,7 +53,7 @@ import com.example.data.local.entity.SunnahHabitLog
         HadithEntity::class,
         HadithBookmarkEntity::class
     ],
-    version = 6,
+    version = 7,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {

@@ -7,36 +7,41 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.GridItemSpan
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AccessTime
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Calculate
 import androidx.compose.material.icons.filled.CameraAlt
-import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.CollectionsBookmark
 import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material.icons.filled.EditNote
 import androidx.compose.material.icons.filled.Explore
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Fingerprint
-import androidx.compose.material.icons.filled.Lightbulb
 import androidx.compose.material.icons.filled.MenuBook
 import androidx.compose.material.icons.filled.Nightlight
-import androidx.compose.material.icons.filled.NotificationsActive
 import androidx.compose.material.icons.filled.NotificationsOff
-import androidx.compose.material.icons.filled.Shield
 import androidx.compose.material.icons.filled.Psychology
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Spa
@@ -48,17 +53,18 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableDoubleStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -70,6 +76,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.ui.theme.IslamicGold
@@ -77,17 +84,26 @@ import com.example.ui.theme.LocalBanglaFontFamily
 import java.text.NumberFormat
 import java.util.Locale
 
-data class IslamicToolItem(
+/**
+ * Data model representing each tool feature in the 3-column grid.
+ */
+data class ToolFeatureItem(
     val id: String,
-    val titleBn: String,
-    val subtitleBn: String,
+    val nameBn: String,          // Visible on the card (clean 1-2 line title)
+    val fullNameBn: String,      // Full title shown inside the card
+    val subtitleBn: String,      // Subtitle shown inside the card
+    val descriptionBn: String,   // Comprehensive details shown inside the card
     val icon: ImageVector,
-    val badgeBn: String,
+    val emoji: String,           // Eye-catching visual emblem
+    val badgeBn: String,         // Category badge
+    val primaryColor: Color,     // Accent color
+    val softContainerColor: Color, // Eye-soothing pastel background color
+    val highlights: List<String> = emptyList(), // Highlight tags shown inside the card
     val isAvailable: Boolean = true,
-    val isFeatured: Boolean = false,
-    val onClick: () -> Unit = {}
+    val onClick: () -> Unit
 )
 
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun ToolsScreen(
     onOpenFridayMode: () -> Unit = {},
@@ -112,1732 +128,707 @@ fun ToolsScreen(
     // Zakat calculator dialog state
     var showZakatDialog by remember { mutableStateOf(false) }
 
-    // Upcoming Tool Info dialog state
-    var upcomingToolTitle by remember { mutableStateOf<String?>(null) }
-    var upcomingToolDesc by remember { mutableStateOf<String?>(null) }
-
-    LazyColumn(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background),
-        contentPadding = PaddingValues(
-            top = contentPadding.calculateTopPadding() + 8.dp,
-            bottom = contentPadding.calculateBottomPadding() + 24.dp,
-            start = 16.dp,
-            end = 16.dp
-        ),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
-    ) {
-        // TOP PREMIER SIGNATURE SPOTLIGHT CARD: "Friday Mode" (জুমার মোড)
-        item {
-            Card(
-                shape = RoundedCornerShape(24.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                border = BorderStroke(2.dp, Color(0xFF047857).copy(alpha = 0.85f)),
-                elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable { onOpenFridayMode() }
-            ) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(
-                            Brush.verticalGradient(
-                                colors = listOf(
-                                    Color(0xFF047857).copy(alpha = 0.22f),
-                                    IslamicGold.copy(alpha = 0.14f),
-                                    MaterialTheme.colorScheme.surface
-                                )
-                            )
-                        )
-                        .padding(20.dp)
-                ) {
-                    Column {
-                        // Badge Row
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Surface(
-                                shape = RoundedCornerShape(12.dp),
-                                color = Color(0xFF047857),
-                                modifier = Modifier.padding(bottom = 8.dp)
-                            ) {
-                                Row(
-                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Default.AutoAwesome,
-                                        contentDescription = null,
-                                        tint = Color.White,
-                                        modifier = Modifier.size(13.dp)
-                                    )
-                                    Spacer(modifier = Modifier.width(4.dp))
-                                    Text(
-                                        text = "নতুন পূর্ণাঙ্গ মোড • শুক্রবার স্বয়ংক্রিয় সক্রিয়",
-                                        color = Color.White,
-                                        style = MaterialTheme.typography.labelSmall,
-                                        fontWeight = FontWeight.Bold,
-                                        fontFamily = banglaFont
-                                    )
-                                }
-                            }
-
-                            Surface(
-                                shape = CircleShape,
-                                color = IslamicGold.copy(alpha = 0.2f),
-                                modifier = Modifier.size(44.dp)
-                            ) {
-                                Box(contentAlignment = Alignment.Center) {
-                                    Text("🕌", fontSize = 22.sp)
-                                }
-                            }
-                        }
-
-                        // Title
-                        Text(
-                            text = "Friday Mode (জুমার মোড)",
-                            style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.ExtraBold,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-
-                        Text(
-                            text = "সাপ্তাহিক ঈদের দিন জুমার প্রস্তুতি, সূরা কাহাফ ও নূরানি পরিবেশ",
-                            style = MaterialTheme.typography.labelLarge,
-                            fontWeight = FontWeight.Bold,
-                            color = Color(0xFF047857),
-                            fontFamily = banglaFont
-                        )
-
-                        Spacer(modifier = Modifier.height(8.dp))
-
-                        // Subtitle
-                        Text(
-                            text = "সূরা আল-কাহফ (প্রথম ও শেষ ১০ আয়াত সহ পূর্ণ ১১৪ সূরা পাঠ), জুমার ১০টি সুন্নাত ও আদব, সালাত রিমাইন্ডার ও প্রস্তুতি, খুতবার নোটবুক, সা'আতুল ইজাবাহ (দোয়া কবুল হওয়ার বিশেষ মুহূর্ত ও দুটি প্রামাণ্য মত), জুমার সাদাকাহ ট্র্যাকার, সহীহ হাদীস ও ৪৫টি তাহকীককৃত আমল চেকলিস্ট।",
-                            style = MaterialTheme.typography.bodyMedium.copy(lineHeight = 22.sp),
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            fontFamily = banglaFont
-                        )
-
-                        Spacer(modifier = Modifier.height(14.dp))
-
-                        // Fast Feature Badges
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(6.dp)
-                        ) {
-                            listOf("📖 সূরা কাহাফ", "🌿 ১০ সুন্নাত", "🤲 দু'আ ক্ষণ", "📝 খুতবা নোট", "✅ চেকলিস্ট").take(4).forEach { pill ->
-                                Surface(
-                                    shape = RoundedCornerShape(8.dp),
-                                    color = Color(0xFF064E3B).copy(alpha = 0.15f),
-                                    border = BorderStroke(0.6.dp, IslamicGold.copy(alpha = 0.35f))
-                                ) {
-                                    Text(
-                                        text = pill,
-                                        style = MaterialTheme.typography.labelSmall,
-                                        color = MaterialTheme.colorScheme.onSurface,
-                                        fontFamily = banglaFont,
-                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
-                                    )
-                                }
-                            }
-                        }
-
-                        Spacer(modifier = Modifier.height(16.dp))
-
-                        // Action Button
-                        Button(
-                            onClick = onOpenFridayMode,
-                            modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(14.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF047857))
-                        ) {
-                            Text("🕌", fontSize = 16.sp)
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(
-                                text = "Friday Mode এ প্রবেশ করুন",
-                                style = MaterialTheme.typography.labelLarge,
-                                fontWeight = FontWeight.Bold,
-                                color = Color.White,
-                                fontFamily = banglaFont
-                            )
-                        }
-                    }
-                }
-            }
-        }
-        // TOP PREMIER SPOTLIGHT CARD: "Mosque Mode" (মসজিদ মোড)
-        item {
-            Card(
-                shape = RoundedCornerShape(24.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                border = BorderStroke(1.8.dp, IslamicGold.copy(alpha = 0.85f)),
-                elevation = CardDefaults.cardElevation(defaultElevation = 5.dp),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable { onOpenMosqueMode() }
-            ) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(
-                            Brush.verticalGradient(
-                                colors = listOf(
-                                    Color(0xFF064E3B).copy(alpha = 0.22f),
-                                    IslamicGold.copy(alpha = 0.12f),
-                                    MaterialTheme.colorScheme.surface
-                                )
-                            )
-                        )
-                        .padding(20.dp)
-                ) {
-                    Column {
-                        // Badge Row
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Surface(
-                                shape = RoundedCornerShape(12.dp),
-                                color = Color(0xFF047857),
-                                modifier = Modifier.padding(bottom = 8.dp)
-                            ) {
-                                Row(
-                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Default.NotificationsOff,
-                                        contentDescription = null,
-                                        tint = Color.White,
-                                        modifier = Modifier.size(13.dp)
-                                    )
-                                    Spacer(modifier = Modifier.width(4.dp))
-                                    Text(
-                                        text = "নতুন সিগনেচার ফিচার • সম্পূর্ণ ডিস্ট্রাকশন-ফ্রি",
-                                        color = Color.White,
-                                        style = MaterialTheme.typography.labelSmall,
-                                        fontWeight = FontWeight.Bold,
-                                        fontFamily = banglaFont
-                                    )
-                                }
-                            }
-
-                            Surface(
-                                shape = CircleShape,
-                                color = IslamicGold.copy(alpha = 0.2f),
-                                modifier = Modifier.size(42.dp)
-                            ) {
-                                Box(contentAlignment = Alignment.Center) {
-                                    Text("🕌", fontSize = 20.sp)
-                                }
-                            }
-                        }
-
-                        // Title
-                        Text(
-                            text = "Mosque Mode (মসজিদ মোড)",
-                            style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.ExtraBold,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-
-                        Text(
-                            text = "মসজিদে প্রবেশের সাথে সাথে একাগ্রতা ও নিঃশব্দ পরিবেশ",
-                            style = MaterialTheme.typography.labelLarge,
-                            fontWeight = FontWeight.Bold,
-                            color = Color(0xFF047857),
-                            fontFamily = banglaFont
-                        )
-
-                        Spacer(modifier = Modifier.height(8.dp))
-
-                        // Subtitle
-                        Text(
-                            text = "মসজিদে প্রবেশ করলেই এক ট্যাপে ফোন সাইলেন্ট, অপ্রয়োজনীয় নোটিফিকেশন বন্ধ এবং সুন্নাত আমলের জন্য প্রস্তুত। বৃহৎ অ্যাকশন বোতাম: কুরআন, আযকার, সালাত গাইড, ক্বিবলা, সাইলেন্ট ও সালাত ট্র্যাকার। সাথে ওয়াক্ত ও জামা'আত সূচী, জুমু'আহ স্পেশাল, নোটিশ বোর্ড, ক্লাস ও সাদাকাহ ফান্ড।",
-                            style = MaterialTheme.typography.bodyMedium.copy(lineHeight = 22.sp),
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            fontFamily = banglaFont
-                        )
-
-                        Spacer(modifier = Modifier.height(14.dp))
-
-                        // Large Buttons Preview Badges
-                        Text(
-                            text = "দ্রুত অ্যাকশন বোতামসমূহ:",
-                            style = MaterialTheme.typography.labelSmall,
-                            fontWeight = FontWeight.Bold,
-                            color = IslamicGold,
-                            fontFamily = banglaFont
-                        )
-                        Spacer(modifier = Modifier.height(6.dp))
-
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(6.dp)
-                        ) {
-                            listOf("📖 কুরআন", "📿 আযকার", "🕋 সালাত", "🧭 ক্বিবলা", "🔕 সাইলেন্ট", "⭐ ট্র্যাকার").take(4).forEach { pill ->
-                                Surface(
-                                    shape = RoundedCornerShape(8.dp),
-                                    color = Color(0xFF064E3B).copy(alpha = 0.15f),
-                                    border = BorderStroke(0.6.dp, IslamicGold.copy(alpha = 0.35f))
-                                ) {
-                                    Text(
-                                        text = pill,
-                                        style = MaterialTheme.typography.labelSmall,
-                                        color = MaterialTheme.colorScheme.onSurface,
-                                        fontFamily = banglaFont,
-                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
-                                    )
-                                }
-                            }
-                        }
-
-                        Spacer(modifier = Modifier.height(16.dp))
-
-                        // Action Button
-                        Button(
-                            onClick = onOpenMosqueMode,
-                            modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(14.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF047857))
-                        ) {
-                            Icon(Icons.Default.NotificationsOff, contentDescription = null, tint = Color.White)
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(
-                                text = "মসজিদ মোড চালু করুন",
-                                style = MaterialTheme.typography.labelLarge,
-                                fontWeight = FontWeight.Bold,
-                                color = Color.White,
-                                fontFamily = banglaFont
-                            )
-                        }
-                    }
-                }
-            }
-        }
-
-        // TOP SIGNATURE SPOTLIGHT CARD: "Dua by Situation" (অনুভূতি ও পরিস্থিতি অনুযায়ী দু'আ)
-        item {
-            Card(
-                shape = RoundedCornerShape(24.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                border = BorderStroke(1.5.dp, Color(0xFF0284C7).copy(alpha = 0.75f)),
-                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable { onOpenDuaBySituation() }
-            ) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(
-                            Brush.verticalGradient(
-                                colors = listOf(
-                                    Color(0xFF0284C7).copy(alpha = 0.14f),
-                                    IslamicGold.copy(alpha = 0.08f)
-                                )
-                            )
-                        )
-                        .padding(20.dp)
-                ) {
-                    Column {
-                        // Badge Row
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Surface(
-                                shape = RoundedCornerShape(12.dp),
-                                color = Color(0xFF0284C7),
-                                modifier = Modifier.padding(bottom = 8.dp)
-                            ) {
-                                Row(
-                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Icon(
-                                        Icons.Default.AutoAwesome,
-                                        contentDescription = null,
-                                        tint = Color.White,
-                                        modifier = Modifier.size(13.dp)
-                                    )
-                                    Spacer(modifier = Modifier.width(4.dp))
-                                    Text(
-                                        text = "নতুন ফিচার • I feel... I need...",
-                                        color = Color.White,
-                                        style = MaterialTheme.typography.labelSmall,
-                                        fontWeight = FontWeight.Bold,
-                                        fontFamily = banglaFont
-                                    )
-                                }
-                            }
-
-                            Surface(
-                                shape = CircleShape,
-                                color = Color(0xFF0284C7).copy(alpha = 0.18f),
-                                modifier = Modifier.size(40.dp)
-                            ) {
-                                Box(contentAlignment = Alignment.Center) {
-                                    Text("🤲", fontSize = 18.sp)
-                                }
-                            }
-                        }
-
-                        // Title
-                        Text(
-                            text = "Dua by Situation",
-                            style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.ExtraBold,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-
-                        Text(
-                            text = "অনুভূতি ও প্রয়োজন অনুযায়ী প্রামাণ্য দু'আ",
-                            style = MaterialTheme.typography.labelLarge,
-                            fontWeight = FontWeight.Bold,
-                            color = Color(0xFF0284C7),
-                            fontFamily = banglaFont
-                        )
-
-                        Spacer(modifier = Modifier.height(8.dp))
-
-                        // Subtitle
-                        Text(
-                            text = "দ্বিমুখী আত্মিক অনুসন্ধান: 'I feel... (anxious, angry, afraid...)' এবং 'I need... (forgiveness, guidance, patience...)' নির্বাচন করে তৎক্ষণাৎ কুরআন ও সহীহ হাদীসের বিশুদ্ধ দু'আ ও আমল জেনে নিন।",
-                            style = MaterialTheme.typography.bodyMedium.copy(lineHeight = 22.sp),
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            fontFamily = banglaFont
-                        )
-
-                        Spacer(modifier = Modifier.height(14.dp))
-
-                        // Quick Pills
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(6.dp)
-                        ) {
-                            listOf("🌪️ anxious", "🔥 angry", "🤲 forgiveness", "💡 guidance", "⛰️ patience").forEach { pill ->
-                                Surface(
-                                    shape = RoundedCornerShape(8.dp),
-                                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f),
-                                    border = BorderStroke(0.6.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
-                                ) {
-                                    Text(
-                                        text = pill,
-                                        style = MaterialTheme.typography.labelSmall,
-                                        color = MaterialTheme.colorScheme.onSurface,
-                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
-                                    )
-                                }
-                            }
-                        }
-
-                        Spacer(modifier = Modifier.height(16.dp))
-
-                        // Big Action Button
-                        Button(
-                            onClick = onOpenDuaBySituation,
-                            modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(14.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF0284C7))
-                        ) {
-                            Text("🤲", fontSize = 16.sp)
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(
-                                text = "পরিস্থিতি অনুযায়ী দু'আ খুঁজুন",
-                                style = MaterialTheme.typography.labelLarge,
-                                fontWeight = FontWeight.Bold,
-                                color = Color.White,
-                                fontFamily = banglaFont
-                            )
-                        }
-                    }
-                }
-            }
-        }
-
-        // TOP SIGNATURE SPOTLIGHT CARD: "Personal Dua Builder" (ব্যক্তিগত দো'আ আর্কিটেক্ট)
-        item {
-            Card(
-                shape = RoundedCornerShape(24.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                border = BorderStroke(1.5.dp, Color(0xFF059669).copy(alpha = 0.7f)),
-                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable { onOpenPersonalDuaBuilder() }
-            ) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(
-                            Brush.verticalGradient(
-                                colors = listOf(
-                                    Color(0xFF059669).copy(alpha = 0.15f),
-                                    IslamicGold.copy(alpha = 0.08f)
-                                )
-                            )
-                        )
-                        .padding(20.dp)
-                ) {
-                    Column {
-                        // Badge Row
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Surface(
-                                shape = RoundedCornerShape(12.dp),
-                                color = Color(0xFF059669),
-                                modifier = Modifier.padding(bottom = 8.dp)
-                            ) {
-                                Row(
-                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Icon(
-                                        Icons.Default.AutoAwesome,
-                                        contentDescription = null,
-                                        tint = Color.White,
-                                        modifier = Modifier.size(13.dp)
-                                    )
-                                    Spacer(modifier = Modifier.width(4.dp))
-                                    Text(
-                                        text = "নতুন সিগনেচার টুল • AI & অথেনটিক হাদীস",
-                                        color = Color.White,
-                                        style = MaterialTheme.typography.labelSmall,
-                                        fontWeight = FontWeight.Bold,
-                                        fontFamily = banglaFont
-                                    )
-                                }
-                            }
-
-                            Surface(
-                                shape = CircleShape,
-                                color = Color(0xFF059669).copy(alpha = 0.18f),
-                                modifier = Modifier.size(40.dp)
-                            ) {
-                                Box(contentAlignment = Alignment.Center) {
-                                    Icon(
-                                        imageVector = Icons.Default.Favorite,
-                                        contentDescription = null,
-                                        tint = Color(0xFF059669),
-                                        modifier = Modifier.size(22.dp)
-                                    )
-                                }
-                            }
-                        }
-
-                        // Title
-                        Text(
-                            text = "Personal Dua Builder",
-                            style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.ExtraBold,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-
-                        Text(
-                            text = "ব্যক্তিগত দো'আ আর্কিটেক্ট ও আমল নির্দেশিকা",
-                            style = MaterialTheme.typography.labelLarge,
-                            fontWeight = FontWeight.Bold,
-                            color = Color(0xFF059669),
-                            fontFamily = banglaFont
-                        )
-
-                        Spacer(modifier = Modifier.height(8.dp))
-
-                        // Subtitle
-                        Text(
-                            text = "শুধু তালিকা নয়—আপনার যেকোনো পরিস্থিতি (যেমন: 'My father is sick and I am worried', ঋণ, মানসিক ক্লান্তি) অনুযায়ী কুরআনী আয়াত, সহীহ নববী দু'আ ও আমলের পদ্ধতি সুবিন্যস্তভাবে সাজিয়ে দেয়।",
-                            style = MaterialTheme.typography.bodyMedium.copy(lineHeight = 22.sp),
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            fontFamily = banglaFont
-                        )
-
-                        Spacer(modifier = Modifier.height(14.dp))
-
-                        // Quick Search Examples Pills
-                        Text(
-                            text = "উদাহরণ পরিস্থিতি সমূহ:",
-                            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
-                            color = Color(0xFF059669),
-                            fontFamily = banglaFont
-                        )
-                        Spacer(modifier = Modifier.height(6.dp))
-
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(6.dp)
-                        ) {
-                            listOf("পিতা-মাতার অসুস্থতা", "কঠিন ঋণ ও অভাব", "হতাশা ও বিষাদ", "তাওবা ও মাগফিরাত").forEach { pill ->
-                                Surface(
-                                    shape = RoundedCornerShape(8.dp),
-                                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f),
-                                    border = BorderStroke(0.6.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
-                                ) {
-                                    Text(
-                                        text = pill,
-                                        style = MaterialTheme.typography.labelSmall,
-                                        color = MaterialTheme.colorScheme.onSurface,
-                                        fontFamily = banglaFont,
-                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
-                                    )
-                                }
-                            }
-                        }
-
-                        Spacer(modifier = Modifier.height(16.dp))
-
-                        // Big Action Button
-                        Button(
-                            onClick = onOpenPersonalDuaBuilder,
-                            modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(14.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF059669))
-                        ) {
-                            Icon(Icons.Default.Favorite, contentDescription = null, tint = Color.White)
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(
-                                text = "Personal Dua Builder চালু করুন",
-                                style = MaterialTheme.typography.labelLarge,
-                                fontWeight = FontWeight.Bold,
-                                color = Color.White,
-                                fontFamily = banglaFont
-                            )
-                        }
-                    }
-                }
-            }
-        }
-
-        // TOP FEATURED HERO BANNER: "Explain This Ayah" Camera
-        item {
-            Card(
-                shape = RoundedCornerShape(24.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                border = BorderStroke(1.5.dp, IslamicGold.copy(alpha = 0.65f)),
-                elevation = CardDefaults.cardElevation(defaultElevation = 3.dp),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable { onOpenExplainAyahCamera() }
-            ) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(
-                            Brush.verticalGradient(
-                                colors = listOf(
-                                    IslamicGold.copy(alpha = 0.12f),
-                                    MaterialTheme.colorScheme.primary.copy(alpha = 0.05f)
-                                )
-                            )
-                        )
-                        .padding(20.dp)
-                ) {
-                    Column {
-                        // Badge Row
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Surface(
-                                shape = RoundedCornerShape(12.dp),
-                                color = IslamicGold,
-                                modifier = Modifier.padding(bottom = 8.dp)
-                            ) {
-                                Row(
-                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Default.AutoAwesome,
-                                        contentDescription = null,
-                                        tint = Color.Black,
-                                        modifier = Modifier.size(14.dp)
-                                    )
-                                    Spacer(modifier = Modifier.width(4.dp))
-                                    Text(
-                                        text = "নতুন ফিচার • স্মার্ট এআই ল্যাব",
-                                        style = MaterialTheme.typography.labelSmall,
-                                        fontWeight = FontWeight.Bold,
-                                        color = Color.Black,
-                                        fontFamily = banglaFont
-                                    )
-                                }
-                            }
-
-                            Surface(
-                                shape = CircleShape,
-                                color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f),
-                                modifier = Modifier.size(40.dp)
-                            ) {
-                                Box(contentAlignment = Alignment.Center) {
-                                    Icon(
-                                        imageVector = Icons.Default.CameraAlt,
-                                        contentDescription = null,
-                                        tint = MaterialTheme.colorScheme.primary,
-                                        modifier = Modifier.size(22.dp)
-                                    )
-                                }
-                            }
-                        }
-
-                        Spacer(modifier = Modifier.height(6.dp))
-
-                        // Title
-                        Text(
-                            text = "\"Explain This Ayah\" ক্যামেরা",
-                            style = MaterialTheme.typography.headlineSmall,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface,
-                            fontFamily = banglaFont
-                        )
-
-                        Spacer(modifier = Modifier.height(6.dp))
-
-                        // Description
-                        Text(
-                            text = "পবিত্র কুরআনের যে কোনো আরবি পৃষ্ঠার ওপর ক্যামেরা ধরুন — মুহূর্তেই সনাক্ত হবে পূর্ণ আয়াত, হরকত, বাংলা ও ইংরেজি অর্থ, শব্দে শব্দে অর্থ (Word-by-word), তাফসীর, শানে নুযূল, সম্পর্কিত আয়াত, সহীহ হাদিস, অডিও ও হিফয অনুশীলন মোড।",
-                            style = MaterialTheme.typography.bodyMedium.copy(lineHeight = 22.sp),
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            fontFamily = banglaFont
-                        )
-
-                        Spacer(modifier = Modifier.height(16.dp))
-
-                        // Feature highlights tags
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(6.dp)
-                        ) {
-                            listOf("শব্দে শব্দে অর্থ", "তাফসীর ও শানে নুযূল", "হিফয লার্নার").forEach { tag ->
-                                Surface(
-                                    shape = RoundedCornerShape(8.dp),
-                                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f),
-                                    border = BorderStroke(0.6.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
-                                ) {
-                                    Text(
-                                        text = tag,
-                                        style = MaterialTheme.typography.labelSmall,
-                                        color = MaterialTheme.colorScheme.primary,
-                                        fontFamily = banglaFont,
-                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
-                                    )
-                                }
-                            }
-                        }
-
-                        Spacer(modifier = Modifier.height(16.dp))
-
-                        // Big Action Button
-                        Button(
-                            onClick = onOpenExplainAyahCamera,
-                            modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(14.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = IslamicGold)
-                        ) {
-                            Icon(Icons.Default.CameraAlt, contentDescription = null, tint = Color.Black)
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(
-                                text = "ক্যামেরা স্ক্যানার চালু করুন",
-                                style = MaterialTheme.typography.labelLarge,
-                                fontWeight = FontWeight.Bold,
-                                color = Color.Black,
-                                fontFamily = banglaFont
-                            )
-                        }
-                    }
-                }
-            }
-        }
-
-        // SIGNATURE SPOTLIGHT CARD: "Smart Quran Search" (Semantic AI)
-        item {
-            Card(
-                shape = RoundedCornerShape(24.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                border = BorderStroke(1.5.dp, Color(0xFF059669).copy(alpha = 0.65f)),
-                elevation = CardDefaults.cardElevation(defaultElevation = 3.dp),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable { onOpenSmartQuranSearch() }
-            ) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(
-                            Brush.verticalGradient(
-                                colors = listOf(
-                                    Color(0xFF059669).copy(alpha = 0.12f),
-                                    IslamicGold.copy(alpha = 0.05f)
-                                )
-                            )
-                        )
-                        .padding(20.dp)
-                ) {
-                    Column {
-                        // Badge Row
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Surface(
-                                shape = RoundedCornerShape(12.dp),
-                                color = Color(0xFF059669),
-                                modifier = Modifier.padding(bottom = 8.dp)
-                            ) {
-                                Row(
-                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Default.Search,
-                                        contentDescription = null,
-                                        tint = Color.White,
-                                        modifier = Modifier.size(14.dp)
-                                    )
-                                    Spacer(modifier = Modifier.width(4.dp))
-                                    Text(
-                                        text = "সিগনেচার ফিচার • সেমান্টিক এআই",
-                                        style = MaterialTheme.typography.labelSmall,
-                                        fontWeight = FontWeight.Bold,
-                                        color = Color.White,
-                                        fontFamily = banglaFont
-                                    )
-                                }
-                            }
-
-                            Surface(
-                                shape = CircleShape,
-                                color = Color(0xFF059669).copy(alpha = 0.18f),
-                                modifier = Modifier.size(40.dp)
-                            ) {
-                                Box(contentAlignment = Alignment.Center) {
-                                    Icon(
-                                        imageVector = Icons.Default.Psychology,
-                                        contentDescription = null,
-                                        tint = Color(0xFF059669),
-                                        modifier = Modifier.size(22.dp)
-                                    )
-                                }
-                            }
-                        }
-
-                        Spacer(modifier = Modifier.height(6.dp))
-
-                        // Title
-                        Text(
-                            text = "Smart Quran Search",
-                            style = MaterialTheme.typography.headlineSmall,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface,
-                            fontFamily = banglaFont
-                        )
-
-                        Spacer(modifier = Modifier.height(6.dp))
-
-                        // Description
-                        Text(
-                            text = "সাধারণ সার্চের মতো শুধু আক্ষরিক শব্দ নয় — মানুষের বাস্তব অনুভূতি, আবেগ বা সংকট লিখে খুঁজুন কুরআনের প্রাসঙ্গিক আয়াত, সহীহ অনুবাদ, তাফসীর ও প্রজ্ঞাপূর্ণ সমাধান।",
-                            style = MaterialTheme.typography.bodyMedium.copy(lineHeight = 22.sp),
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            fontFamily = banglaFont
-                        )
-
-                        Spacer(modifier = Modifier.height(14.dp))
-
-                        // Quick Search Examples Pills
-                        Text(
-                            text = "জনপ্রিয় অনুসন্ধান উদাহরণ:",
-                            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
-                            color = MaterialTheme.colorScheme.primary,
-                            fontFamily = banglaFont
-                        )
-                        Spacer(modifier = Modifier.height(6.dp))
-
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(6.dp)
-                        ) {
-                            listOf("নিরাশ হওয়া", "আল্লাহর ক্ষমা", "রাগ নিয়ন্ত্রণ").forEach { pill ->
-                                Surface(
-                                    shape = RoundedCornerShape(8.dp),
-                                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f),
-                                    border = BorderStroke(0.6.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
-                                ) {
-                                    Text(
-                                        text = pill,
-                                        style = MaterialTheme.typography.labelSmall,
-                                        color = MaterialTheme.colorScheme.onSurface,
-                                        fontFamily = banglaFont,
-                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
-                                    )
-                                }
-                            }
-                        }
-
-                        Spacer(modifier = Modifier.height(16.dp))
-
-                        // Big Action Button
-                        Button(
-                            onClick = onOpenSmartQuranSearch,
-                            modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(14.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF059669))
-                        ) {
-                            Icon(Icons.Default.Search, contentDescription = null, tint = Color.White)
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(
-                                text = "স্মার্ট কুরআন সার্চ চালু করুন",
-                                style = MaterialTheme.typography.labelLarge,
-                                fontWeight = FontWeight.Bold,
-                                color = Color.White,
-                                fontFamily = banglaFont
-                            )
-                        }
-                    }
-                }
-            }
-        }
-
-        // SIGNATURE SPOTLIGHT CARD: "Ramadan Intelligence" (Complete Ramadan System)
-        item {
-            Card(
-                shape = RoundedCornerShape(24.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                border = BorderStroke(1.5.dp, Color(0xFF059669).copy(alpha = 0.85f)),
-                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable { onOpenRamadanIntelligence() }
-            ) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(
-                            Brush.verticalGradient(
-                                colors = listOf(
-                                    Color(0xFF059669).copy(alpha = 0.16f),
-                                    IslamicGold.copy(alpha = 0.10f),
-                                    MaterialTheme.colorScheme.surface
-                                )
-                            )
-                        )
-                        .padding(20.dp)
-                ) {
-                    Column {
-                        // Badge Row
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Surface(
-                                shape = RoundedCornerShape(12.dp),
-                                color = Color(0xFF059669),
-                                modifier = Modifier.padding(bottom = 8.dp)
-                            ) {
-                                Row(
-                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Default.Nightlight,
-                                        contentDescription = null,
-                                        tint = Color.White,
-                                        modifier = Modifier.size(13.dp)
-                                    )
-                                    Spacer(modifier = Modifier.width(4.dp))
-                                    Text(
-                                        text = "নতুন সিগনেচার সিস্টেম • পূর্ণাঙ্গ রমাদান",
-                                        color = Color.White,
-                                        style = MaterialTheme.typography.labelSmall,
-                                        fontWeight = FontWeight.Bold,
-                                        fontFamily = banglaFont
-                                    )
-                                }
-                            }
-
-                            Surface(
-                                shape = CircleShape,
-                                color = IslamicGold.copy(alpha = 0.2f),
-                                modifier = Modifier.size(42.dp)
-                            ) {
-                                Box(contentAlignment = Alignment.Center) {
-                                    Text("🌙", fontSize = 20.sp)
-                                }
-                            }
-                        }
-
-                        // Title
-                        Text(
-                            text = "Ramadan Intelligence",
-                            style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.ExtraBold,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-
-                        Text(
-                            text = "শুধুমাত্র কাউন্টডাউন নয় — একটি পূর্ণাঙ্গ জীবনমুখী রমাদান পদ্ধতি",
-                            style = MaterialTheme.typography.labelLarge,
-                            fontWeight = FontWeight.Bold,
-                            color = Color(0xFF059669),
-                            fontFamily = banglaFont
-                        )
-
-                        Spacer(modifier = Modifier.height(8.dp))
-
-                        // Subtitle
-                        Text(
-                            text = "রমাদানের পূর্ব প্রস্তুতি (চেকলিস্ট, কুরআন পেসিং, সিয়াম ফিকহ, দান পরিকল্পনা) • রমাদানের চলাকালীন সিয়াম, তারাবীহ, কুরআন খতম, লাইলাতুল কদর ও সহীহ দো'আ ভল্ট • রমাদান পরবর্তী কাযা ও শাওয়ালের ৬ রোযা ব্যবস্থাপনা।",
-                            style = MaterialTheme.typography.bodyMedium.copy(lineHeight = 22.sp),
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            fontFamily = banglaFont
-                        )
-
-                        Spacer(modifier = Modifier.height(14.dp))
-
-                        // Quick Pills
-                        Text(
-                            text = "মৌলিক ৩টি পর্যায়:",
-                            style = MaterialTheme.typography.labelSmall,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.primary,
-                            fontFamily = banglaFont
-                        )
-                        Spacer(modifier = Modifier.height(6.dp))
-
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(6.dp)
-                        ) {
-                            listOf("🌙 পূর্বে: প্রস্তুতি ও ফিকহ", "✨ চলাকালীন: সিয়াম ও ক্বিয়াম", "🕊️ পরে: কাযা ও শাওয়াল").forEach { pill ->
-                                Surface(
-                                    shape = RoundedCornerShape(8.dp),
-                                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f),
-                                    border = BorderStroke(0.6.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
-                                ) {
-                                    Text(
-                                        text = pill,
-                                        style = MaterialTheme.typography.labelSmall,
-                                        color = MaterialTheme.colorScheme.onSurface,
-                                        fontFamily = banglaFont,
-                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
-                                    )
-                                }
-                            }
-                        }
-
-                        Spacer(modifier = Modifier.height(16.dp))
-
-                        // Action Button
-                        Button(
-                            onClick = onOpenRamadanIntelligence,
-                            modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(14.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF059669))
-                        ) {
-                            Text("🌙", fontSize = 16.sp)
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(
-                                text = "রমাদান ইন্টেলিজেন্স চালু করুন",
-                                style = MaterialTheme.typography.labelLarge,
-                                fontWeight = FontWeight.Bold,
-                                color = Color.White,
-                                fontFamily = banglaFont
-                            )
-                        }
-                    }
-                }
-            }
-        }
-
-        // SIGNATURE SPOTLIGHT CARD: "Islamic Habit System" (Gentle Sunnah Tracker)
-        item {
-            Card(
-                shape = RoundedCornerShape(24.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                border = BorderStroke(1.5.dp, Color(0xFF059669).copy(alpha = 0.75f)),
-                elevation = CardDefaults.cardElevation(defaultElevation = 3.dp),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable { onOpenIslamicHabitSystem() }
-            ) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(
-                            Brush.verticalGradient(
-                                colors = listOf(
-                                    Color(0xFF059669).copy(alpha = 0.14f),
-                                    IslamicGold.copy(alpha = 0.08f),
-                                    MaterialTheme.colorScheme.surface
-                                )
-                            )
-                        )
-                        .padding(20.dp)
-                ) {
-                    Column {
-                        // Badge Row
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Surface(
-                                shape = RoundedCornerShape(12.dp),
-                                color = Color(0xFF059669),
-                                modifier = Modifier.padding(bottom = 8.dp)
-                            ) {
-                                Row(
-                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Default.Spa,
-                                        contentDescription = null,
-                                        tint = Color.White,
-                                        modifier = Modifier.size(13.dp)
-                                    )
-                                    Spacer(modifier = Modifier.width(4.dp))
-                                    Text(
-                                        text = "নতুন সিগনেচার টুল • মৃদু অভ্যাস পদ্ধতি",
-                                        style = MaterialTheme.typography.labelSmall,
-                                        fontWeight = FontWeight.Bold,
-                                        color = Color.White,
-                                        fontFamily = banglaFont
-                                    )
-                                }
-                            }
-
-                            Surface(
-                                shape = CircleShape,
-                                color = Color(0xFF059669).copy(alpha = 0.18f),
-                                modifier = Modifier.size(40.dp)
-                            ) {
-                                Box(contentAlignment = Alignment.Center) {
-                                    Text("🌿", fontSize = 18.sp)
-                                }
-                            }
-                        }
-
-                        Spacer(modifier = Modifier.height(6.dp))
-
-                        // Title
-                        Text(
-                            text = "Islamic Habit System",
-                            style = MaterialTheme.typography.headlineSmall,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface,
-                            fontFamily = banglaFont
-                        )
-
-                        Text(
-                            text = "সুন্নাহ ট্র্যাকার ও প্রশান্তিময় অভ্যাস পদ্ধতি",
-                            style = MaterialTheme.typography.labelLarge,
-                            fontWeight = FontWeight.Bold,
-                            color = Color(0xFF059669),
-                            fontFamily = banglaFont
-                        )
-
-                        Spacer(modifier = Modifier.height(8.dp))
-
-                        // Description
-                        Text(
-                            text = "ধর্মকে অতিরিক্ত গ্যামিফাই বা প্রতিযোগিতার লিডারবোর্ড না বানিয়ে প্রশান্তিময় সুন্নাহ চর্চা—মেসওয়াক, বিসমিল্লাহ, ডান হাতে পানাহার, সালাম, ঘুমানোর সুন্নাত, সকাল-সন্ধ্যার জিকির, আত্মীয়তার হক ও দান। কোনো অপরাধবোধ ছাড়াই ধারাবাহিকতার আত্মিক আনন্দ।",
-                            style = MaterialTheme.typography.bodyMedium.copy(lineHeight = 22.sp),
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            fontFamily = banglaFont
-                        )
-
-                        Spacer(modifier = Modifier.height(14.dp))
-
-                        // Quick Pills
-                        Text(
-                            text = "সুন্নাহর আলোকচ্ছটা:",
-                            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
-                            color = Color(0xFF059669),
-                            fontFamily = banglaFont
-                        )
-                        Spacer(modifier = Modifier.height(6.dp))
-
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(6.dp)
-                        ) {
-                            listOf("🌿 মেসওয়াক", "✨ বিসমিল্লাহ", "🥣 ডান হাত", "🤝 সালাম", "🌙 ঘুমানোর সুন্নাত").forEach { pill ->
-                                Surface(
-                                    shape = RoundedCornerShape(8.dp),
-                                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f),
-                                    border = BorderStroke(0.6.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
-                                ) {
-                                    Text(
-                                        text = pill,
-                                        style = MaterialTheme.typography.labelSmall,
-                                        color = MaterialTheme.colorScheme.onSurface,
-                                        fontFamily = banglaFont,
-                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
-                                    )
-                                }
-                            }
-                        }
-
-                        Spacer(modifier = Modifier.height(16.dp))
-
-                        // Action Button
-                        Button(
-                            onClick = onOpenIslamicHabitSystem,
-                            modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(14.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF059669))
-                        ) {
-                            Text("🌿", fontSize = 16.sp)
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(
-                                text = "সুন্নাহ হ্যাবিট সিস্টেম চালু করুন",
-                                style = MaterialTheme.typography.labelLarge,
-                                fontWeight = FontWeight.Bold,
-                                color = Color.White,
-                                fontFamily = banglaFont
-                            )
-                        }
-                    }
-                }
-            }
-        }
-
-        // SIGNATURE SPOTLIGHT CARD: "Ask Before You Act" (Structured Jurisprudential Diagnostic)
-        item {
-            Card(
-                shape = RoundedCornerShape(24.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                border = BorderStroke(1.5.dp, Color(0xFF4F46E5).copy(alpha = 0.65f)),
-                elevation = CardDefaults.cardElevation(defaultElevation = 3.dp),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable { onOpenAskBeforeYouAct() }
-            ) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(
-                            Brush.verticalGradient(
-                                colors = listOf(
-                                    Color(0xFF4F46E5).copy(alpha = 0.12f),
-                                    Color(0xFF059669).copy(alpha = 0.05f)
-                                )
-                            )
-                        )
-                        .padding(20.dp)
-                ) {
-                    Column {
-                        // Badge Row
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Surface(
-                                shape = RoundedCornerShape(12.dp),
-                                color = Color(0xFF4F46E5),
-                                modifier = Modifier.padding(bottom = 8.dp)
-                            ) {
-                                Row(
-                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Default.Psychology,
-                                        contentDescription = null,
-                                        tint = Color.White,
-                                        modifier = Modifier.size(14.dp)
-                                    )
-                                    Spacer(modifier = Modifier.width(4.dp))
-                                    Text(
-                                        text = "অনন্য সিগনেচার ফিচার • ফিকহি বিশ্লেষণ",
-                                        style = MaterialTheme.typography.labelSmall,
-                                        fontWeight = FontWeight.Bold,
-                                        color = Color.White,
-                                        fontFamily = banglaFont
-                                    )
-                                }
-                            }
-
-                            Surface(
-                                shape = CircleShape,
-                                color = Color(0xFF4F46E5).copy(alpha = 0.18f),
-                                modifier = Modifier.size(40.dp)
-                            ) {
-                                Box(contentAlignment = Alignment.Center) {
-                                    Icon(
-                                        imageVector = Icons.Default.AutoAwesome,
-                                        contentDescription = null,
-                                        tint = Color(0xFF4F46E5),
-                                        modifier = Modifier.size(22.dp)
-                                    )
-                                }
-                            }
-                        }
-
-                        Spacer(modifier = Modifier.height(6.dp))
-
-                        // Title
-                        Text(
-                            text = "Ask Before You Act",
-                            style = MaterialTheme.typography.headlineSmall,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface,
-                            fontFamily = banglaFont
-                        )
-
-                        Spacer(modifier = Modifier.height(6.dp))
-
-                        // Description
-                        Text(
-                            text = "কোনো আর্থিক পদক্ষেপ বা চুক্তিতে জড়ানোর আগে সরাসরি স্থূল হ্যাঁ/না নয় — বরং কাঠামোগত প্রশ্নের মাধ্যমে চুক্তির স্বরূপ, সুপ্ত সুদ, জরিমানা ও শর্তাবলি স্পষ্ট করে প্রামাণ্য কুরআন-সুন্নাহ ও ফিকহি উসূলভিত্তিক সমাধান জানুন।",
-                            style = MaterialTheme.typography.bodyMedium.copy(lineHeight = 22.sp),
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            fontFamily = banglaFont
-                        )
-
-                        Spacer(modifier = Modifier.height(14.dp))
-
-                        // Quick Search Examples Pills
-                        Text(
-                            text = "উদাহরণ ও ক্ষেত্রসমূহ:",
-                            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
-                            color = Color(0xFF4F46E5),
-                            fontFamily = banglaFont
-                        )
-                        Spacer(modifier = Modifier.height(6.dp))
-
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(6.dp)
-                        ) {
-                            listOf("ঋণ ও ব্যাংক লোন", "শেয়ার বাজার ট্রেডিং", "ড্রপশিপিং", "জীবন বীমা").forEach { pill ->
-                                Surface(
-                                    shape = RoundedCornerShape(8.dp),
-                                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f),
-                                    border = BorderStroke(0.6.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
-                                ) {
-                                    Text(
-                                        text = pill,
-                                        style = MaterialTheme.typography.labelSmall,
-                                        color = MaterialTheme.colorScheme.onSurface,
-                                        fontFamily = banglaFont,
-                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
-                                    )
-                                }
-                            }
-                        }
-
-                        Spacer(modifier = Modifier.height(16.dp))
-
-                        // Big Action Button
-                        Button(
-                            onClick = onOpenAskBeforeYouAct,
-                            modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(14.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4F46E5))
-                        ) {
-                            Icon(Icons.Default.Psychology, contentDescription = null, tint = Color.White)
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(
-                                text = "শরঈ অনুসন্ধান শুরু করুন",
-                                style = MaterialTheme.typography.labelLarge,
-                                fontWeight = FontWeight.Bold,
-                                color = Color.White,
-                                fontFamily = banglaFont
-                            )
-                        }
-                    }
-                }
-            }
-        }
-
-        // SECTION: সক্রিয় ইসলামিক টুলস (Active Tools)
-        item {
-            Text(
-                text = "সক্রিয় ইসলামিক টুলস ও ল্যাব",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.primary,
-                fontFamily = banglaFont,
-                modifier = Modifier.padding(top = 8.dp, bottom = 2.dp)
-            )
-        }
-
-        // Active tools list
-        val activeTools = listOf(
-            IslamicToolItem(
-                id = "tool_holy_quran",
-                titleBn = "The Holy Quran (পবিত্র কুরআন)",
-                subtitleBn = "১১৪ সূরার প্রমিত আরবি পাঠ, বিশুদ্ধ বাংলা উচ্চারণ, প্রামাণ্য অনুবাদ (ড. আবু বকর যাকারিয়া), বিশদ তাফসীর ও অফলাইন অডিও তিলাওয়াত।",
-                icon = Icons.Default.MenuBook,
-                badgeBn = "কুরআনুল কারীম",
-                isFeatured = true,
-                onClick = onOpenHolyQuran
-            ),
-            IslamicToolItem(
-                id = "tool_hadith_collection",
-                titleBn = "সহীহ হাদীস সম্ভার (HadithBD / IRD)",
-                subtitleBn = "সিহাহ্ সিত্তাহ (বুখারী, মুসলিম, তিরমিজি, আবু দাউদ, নাসাঈ, ইবনে মাজাহ) এবং রিয়াযুস স্বা-লিহীন, বুলুগুল মারাম ও ৪০ হাদীসের পূর্ণাঙ্গ অফলাইন ডেটাবেজ।",
-                icon = Icons.Default.CollectionsBookmark,
-                badgeBn = "হাদিসবিডি মানদণ্ড",
-                isFeatured = true,
-                onClick = onOpenHadithCollection
-            ),
-            IslamicToolItem(
-                id = "tool_mosque_mode",
-                titleBn = "Mosque Mode (মসজিদ মোড)",
-                subtitleBn = "মসজিদে প্রবেশের সাথে সাথে সম্পূর্ণ নিঃশব্দ, বিভ্রান্তিমুক্ত একাগ্রতা, জামা'আত সূচী, কুরআন, আযকার ও ট্র্যাকার।",
-                icon = Icons.Default.NotificationsOff,
-                badgeBn = "নতুন সিগনেচার",
-                isFeatured = true,
-                onClick = onOpenMosqueMode
-            ),
-            IslamicToolItem(
-                id = "tool_dua_by_situation",
-                titleBn = "Dua by Situation (অনুভূতি ও পরিস্থিতি অনুযায়ী দু'আ)",
-                subtitleBn = "I feel... I need... দ্বিমুখী আত্মিক অনুসন্ধান ও কুরআন-হাদীসের প্রাসঙ্গিক দু'আ সমাধান।",
+    // Currently selected feature for displaying all its rich details inside the sheet
+    var selectedFeatureForDetails by remember { mutableStateOf<ToolFeatureItem?>(null) }
+
+    // Search query for filtering features
+    var searchQuery by remember { mutableStateOf("") }
+
+    // All features list — exactly 21 tools (divisible by 3 = 7 balanced rows)
+    val allFeatures = remember {
+        listOf(
+            ToolFeatureItem(
+                id = "tool_friday_mode",
+                nameBn = "জুমার মোড",
+                fullNameBn = "Friday Mode (জুমার মোড)",
+                subtitleBn = "আপনার জুমার প্রস্তুতি, খুতবা ও বরকতময় আমল সমূহের সহচর",
+                descriptionBn = "পবিত্র জুমার দিনের বিশেষ মর্যাদা, ৪টি প্রধান স্তর, গোসল, মিসওয়াক, আগে গমন, সূরা কাহাফ, সা'আতুল ইজাবাহ, তাহিয়্যাতুল মসজিদ, সালাতুত তাসবীহ, সুন্নাত ও নফল সালাত এবং বিশেষ তাসবীহাত সহ পূর্ণাঙ্গ ৪৫টি প্রামাণ্য আমল।",
                 icon = Icons.Default.AutoAwesome,
-                badgeBn = "নতুন সিগনেচার",
-                isFeatured = true,
-                onClick = onOpenDuaBySituation
+                emoji = "🕌",
+                badgeBn = "নতুন পূর্ণাঙ্গ মোড",
+                primaryColor = Color(0xFF047857),
+                softContainerColor = Color(0xFFE8F5E9),
+                highlights = listOf("খুতবার আদব", "সূরা কাহাফ", "সা'আতুল ইজাবাহ", "৪০+ আমল", "স্বয়ংক্রিয় সক্রিয়"),
+                onClick = onOpenFridayMode
             ),
-            IslamicToolItem(
-                id = "tool_personal_dua_builder",
-                titleBn = "Personal Dua Builder (ব্যক্তিগত দো'আ আর্কিটেক্ট)",
-                subtitleBn = "পরিস্থিতি অনুযায়ী কুরআনী আয়াত, সহীহ নববী দু'আ ও সুন্নাতী আদবের কাঠামোগত বিন্যাস।",
-                icon = Icons.Default.Favorite,
-                badgeBn = "নতুন সিগনেচার",
-                isFeatured = true,
-                onClick = onOpenPersonalDuaBuilder
-            ),
-            IslamicToolItem(
-                id = "tool_ask_before_you_act",
-                titleBn = "Ask Before You Act (পদক্ষেপ নেওয়ার আগে জানুন)",
-                subtitleBn = "আর্থিক সিদ্ধান্ত বা চুক্তির পূর্বে কাঠামোগত শরঈ প্রশ্নমালা ও প্রামাণ্য দলিলভিত্তিক দিকনির্দেশনা।",
-                icon = Icons.Default.Psychology,
-                badgeBn = "সিগনেচার",
-                isFeatured = true,
-                onClick = onOpenAskBeforeYouAct
-            ),
-            IslamicToolItem(
-                id = "tool_smart_quran_search",
-                titleBn = "স্মার্ট কুরআন সার্চ (ভাবার্থভিত্তিক অনুসন্ধান)",
-                subtitleBn = "বাংলা ভাষায় যে কোনো বিষয়, পরিস্থিতি বা আবেগ লিখে কুরআনের প্রাসঙ্গিক আয়াত ও সমাধান খুঁজুন।",
-                icon = Icons.Default.Search,
-                badgeBn = "এআই সার্চ",
-                onClick = onOpenSmartQuranSearch
-            ),
-            IslamicToolItem(
-                id = "tool_islamic_habit_system",
-                titleBn = "Islamic Habit System (সুন্নাহ ট্র্যাকার)",
-                subtitleBn = "অতিরিক্ত গ্যামিফিকেশন মুক্ত মৃদু অভ্যাস—মেসওয়াক, ডান হাত, সালাম, ঘুমানোর বরকতময় সুন্নাত।",
-                icon = Icons.Default.Spa,
-                badgeBn = "সিগনেচার",
-                isFeatured = true,
-                onClick = onOpenIslamicHabitSystem
-            ),
-            IslamicToolItem(
+            ToolFeatureItem(
                 id = "tool_ramadan_intelligence",
-                titleBn = "Ramadan Intelligence (রমাদান ইন্টেলিজেন্স)",
-                subtitleBn = "রমাদানের পূর্ব প্রস্তুতি, চলাকালীন সিয়াম-কুরআন-তারাবীহ-দোয়া এবং পরবর্তী কাযা ও শাওয়াল রোযার পূর্ণাঙ্গ ব্যবস্থা।",
+                nameBn = "রমাদান ইন্টেলিজেন্স",
+                fullNameBn = "All in one Ramadan & Ramadan Intelligence",
+                subtitleBn = "Your Complete Ramadan Companion — Before, During & After Ramadan",
+                descriptionBn = "একটি সামগ্রিক রমাদান অপারেটিং সিস্টেম: প্রস্তুতি → ইবাদত → কুরআন → দো'আ → সিয়াম → দান → আত্মদর্শন → কদর → ঈদ → শাওয়াল → ধারাবাহিকতা। ১টি প্ল্যাটফর্মেই রমাদানের প্রতিটি মুহূর্তকে সচেতন ও বরকতময় করার পূর্ণাঙ্গ ব্যবস্থা।",
                 icon = Icons.Default.Nightlight,
-                badgeBn = "নতুন সিগনেচার",
-                isFeatured = true,
+                emoji = "🌙",
+                badgeBn = "সিগনেচার",
+                primaryColor = Color(0xFF059669),
+                softContainerColor = Color(0xFFE0F2F1),
+                highlights = listOf("হোম ড্যাশবোর্ড", "১২-মাত্রিক চেকলিস্ট", "খতম ইন্টেলিজেন্স", "দোয়া ভল্ট", "কদর প্ল্যানার", "শাওয়াল রোজা"),
                 onClick = onOpenRamadanIntelligence
             ),
-            IslamicToolItem(
+            ToolFeatureItem(
+                id = "tool_holy_quran",
+                nameBn = "পবিত্র কুরআন",
+                fullNameBn = "The Holy Quran (পবিত্র কুরআনুল কারীম)",
+                subtitleBn = "১১৪ সূরার প্রমিত আরবি, বিশুদ্ধ অনুবাদ ও বিশদ তাফসীর",
+                descriptionBn = "১১৪ সূরার প্রমিত আরবি পাঠ, বিশুদ্ধ বাংলা উচ্চারণ, প্রামাণ্য অনুবাদ (ড. আবু বকর যাকারিয়া), বিশদ তাফসীর ও অফলাইন অডিও তিলাওয়াত। আয়াতভিত্তিক বুকমার্ক ও শব্দে শব্দে পড়ার সুবিধা।",
+                icon = Icons.Default.MenuBook,
+                emoji = "📖",
+                badgeBn = "কুরআনুল কারীম",
+                primaryColor = Color(0xFF0F766E),
+                softContainerColor = Color(0xFFE0F7FA),
+                highlights = listOf("১১৪ সূরা", "আবু বকর যাকারিয়া অনুবাদ", "বিশদ তাফসীর", "অফলাইন অডিও", "শব্দার্থ"),
+                onClick = onOpenHolyQuran
+            ),
+            ToolFeatureItem(
+                id = "tool_hadith_collection",
+                nameBn = "হাদীস সম্ভার",
+                fullNameBn = "সহীহ হাদীস সম্ভার (HadithBD / IRD)",
+                subtitleBn = "সিহাহ্ সিত্তাহ ও বিশ্বস্ত হাদীস গ্রন্থের সুবিশাল অফলাইন ডেটাবেজ",
+                descriptionBn = "সিহাহ্ সিত্তাহ (সহীহ বুখারী, সহীহ মুসলিম, সুনানে তিরমিজি, আবু দাউদ, নাসাঈ, ইবনে মাজাহ) এবং রিয়াযুস স্বা-লিহীন, বুলুগুল মারাম ও ৪০ হাদীসের পূর্ণাঙ্গ প্রামাণ্য অফলাইন ডেটাবেজ।",
+                icon = Icons.Default.CollectionsBookmark,
+                emoji = "📚",
+                badgeBn = "হাদিসবিডি মানদণ্ড",
+                primaryColor = Color(0xFF4338CA),
+                softContainerColor = Color(0xFFEEF2FF),
+                highlights = listOf("সিহাহ্ সিত্তাহ", "বুলুগুল মারাম", "রিয়াযুস স্বা-লিহীন", "৪০ হাদীস", "অধ্যায়ভিত্তিক সার্চ"),
+                onClick = onOpenHadithCollection
+            ),
+            ToolFeatureItem(
+                id = "tool_mosque_mode",
+                nameBn = "মসজিদ মোড",
+                fullNameBn = "Mosque Mode (মসজিদ মোড)",
+                subtitleBn = "মসজিদে প্রবেশের সাথে সাথে সম্পূর্ণ নিঃশব্দ ও একাগ্রতা",
+                descriptionBn = "মসজিদে প্রবেশের সাথে সাথে স্বয়ংক্রিয় নিঃশব্দ মোড, বিভ্রান্তিমুক্ত একাগ্রতা, জামা'আত সূচী, তাহিয়্যাতুল মসজিদ সালাত নির্দেশিকা, কুরআন তিলাওয়াত, আযকার ও সালাত ট্র্যাকার।",
+                icon = Icons.Default.NotificationsOff,
+                emoji = "🔇",
+                badgeBn = "নতুন সিগনেচার",
+                primaryColor = Color(0xFF15803D),
+                softContainerColor = Color(0xFFE8F5E9),
+                highlights = listOf("স্বয়ংক্রিয় সাইলেন্ট", "তাহিয়্যাতুল মসজিদ", "জামা'আত ঘড়ি", "ডিজিটাল একাগ্রতা"),
+                onClick = onOpenMosqueMode
+            ),
+            ToolFeatureItem(
+                id = "tool_dua_by_situation",
+                nameBn = "পরিস্থিতির দু'আ",
+                fullNameBn = "Dua by Situation (অনুভূতি ও পরিস্থিতি অনুযায়ী দু'আ)",
+                subtitleBn = "I feel... I need... দ্বিমুখী আত্মিক অনুসন্ধান ও নববী সমাধান",
+                descriptionBn = "মনের কষ্ট, হতাশা, ভয়, রোগব্যাধি, ক্ষমা প্রার্থনা বা যেকোনো মানবিক পরিস্থিতিতে কুরআন ও সহীহ সুন্নাহর প্রামাণ্য দু'আ সম্ভার। বিশুদ্ধ আরবী হরকত, উচ্চারণ ও অর্থ।",
+                icon = Icons.Default.Favorite,
+                emoji = "🤲",
+                badgeBn = "নতুন সিগনেচার",
+                primaryColor = Color(0xFFBE123C),
+                softContainerColor = Color(0xFFFFF1F2),
+                highlights = listOf("আবেগভিত্তিক অনুসন্ধান", "কুরআনী সমাধান", "সহীহ সুন্নাহ", "অর্থ ও উচ্চারণ"),
+                onClick = onOpenDuaBySituation
+            ),
+            ToolFeatureItem(
+                id = "tool_personal_dua_builder",
+                nameBn = "দো'আ আর্কিটেক্ট",
+                fullNameBn = "Personal Dua Builder (ব্যক্তিগত দো'আ আর্কিটেক্ট)",
+                subtitleBn = "কুরআনী আয়াত ও সহীহ নববী দু'আর কাঠামোগত বিন্যাস",
+                descriptionBn = "আল্লাহর হামদ-সানা, দরূদ শরীফ, তওবা-ইস্তেগফার ও সুন্নাতী আদবের সমন্বয়ে নিজের জন্য নিখুঁত ব্যক্তিগত দো'আ সংকলন তৈরি ও সংরক্ষণ করুন।",
+                icon = Icons.Default.EditNote,
+                emoji = "✍️",
+                badgeBn = "নতুন সিগনেচার",
+                primaryColor = Color(0xFFB45309),
+                softContainerColor = Color(0xFFFFFBEB),
+                highlights = listOf("সুন্নাতী কাঠামো", "দরূদ ও হামদ", "ব্যক্তিগত নোট", "বুকমার্ক সংগ্রহ"),
+                onClick = onOpenPersonalDuaBuilder
+            ),
+            ToolFeatureItem(
+                id = "tool_islamic_habit_system",
+                nameBn = "সুন্নাহ ট্র্যাকার",
+                fullNameBn = "Islamic Habit System (সুন্নাহ ট্র্যাকার)",
+                subtitleBn = "অতিরিক্ত গ্যামিফিকেশন মুক্ত মৃদু বরকতময় সুন্নাত অভ্যাস",
+                descriptionBn = "মেসওয়াক, ডান হাত ব্যবহার, সালামের প্রসার, অজু অবস্থায় নিদ্রা সহ রাসুলুল্লাহ ﷺ এর বরকতময় দৈনন্দিন সুন্নাহ মৃদুভাবে অভ্যাসে পরিণত করার ট্র্যাকার।",
+                icon = Icons.Default.Spa,
+                emoji = "🌱",
+                badgeBn = "সিগনেচার",
+                primaryColor = Color(0xFF0F766E),
+                softContainerColor = Color(0xFFE0F2F1),
+                highlights = listOf("মৃদু ট্র্যাকিং", "দৈনন্দিন সুন্নাহ", "ধারাবাহিকতা", "মানসিক প্রশান্তি"),
+                onClick = onOpenIslamicHabitSystem
+            ),
+            ToolFeatureItem(
+                id = "tool_ask_before_you_act",
+                nameBn = "পদক্ষেপের আগে",
+                fullNameBn = "Ask Before You Act (পদক্ষেপ নেওয়ার আগে জানুন)",
+                subtitleBn = "আর্থিক সিদ্ধান্ত বা চুক্তির পূর্বে কাঠামোগত শরঈ প্রশ্নমালা",
+                descriptionBn = "লেনদেন, চাকরি, চুক্তি, বিনিয়োগ বা সোশ্যাল মিডিয়া আচরণের পূর্বে শরীয়াহ সম্মত বিশুদ্ধতা নিশ্চিত করতে প্রামাণ্য দলীলভিত্তিক প্রশ্ন ও গাইডলাইন।",
+                icon = Icons.Default.Psychology,
+                emoji = "⚖️",
+                badgeBn = "সিগনেচার",
+                primaryColor = Color(0xFF6D28D9),
+                softContainerColor = Color(0xFFF3E8FF),
+                highlights = listOf("হালাল-হারাম ফিল্টার", "আর্থিক চুক্তি", "দলিলভিত্তিক", "শরঈ সতর্কতা"),
+                onClick = onOpenAskBeforeYouAct
+            ),
+            ToolFeatureItem(
+                id = "tool_smart_quran_search",
+                nameBn = "স্মার্ট কুরআন সার্চ",
+                fullNameBn = "স্মার্ট কুরআন সার্চ (ভাবার্থভিত্তিক অনুসন্ধান)",
+                subtitleBn = "বাংলা ভাষায় যে কোনো বিষয় লিখে প্রাসঙ্গিক আয়াত খুঁজুন",
+                descriptionBn = "সহজ বাংলা ভাষায় যেকোনো প্রশ্ন, মনের অবস্থা বা বিষয় টাইপ করুন—কুরআনের সংশ্লিষ্ট আয়াত, অনুবাদ ও প্রেক্ষাপট তাৎক্ষণিক পেয়ে যাবেন।",
+                icon = Icons.Default.Search,
+                emoji = "🔍",
+                badgeBn = "এআই সার্চ",
+                primaryColor = Color(0xFF0369A1),
+                softContainerColor = Color(0xFFE0F2FE),
+                highlights = listOf("ভাবার্থ সার্চ", "বাংলা কি-ওয়ার্ড", "আয়াত ম্যাপিং", "তাৎক্ষণিক ফলাফল"),
+                onClick = onOpenSmartQuranSearch
+            ),
+            ToolFeatureItem(
+                id = "tool_camera_lens",
+                nameBn = "আয়াত ক্যামেরা",
+                fullNameBn = "ক্যামেরায় আয়াত বিশ্লেষণ (Ayah Camera Lens)",
+                subtitleBn = "ক্যামেরা দিয়ে আরবী আয়াত স্ক্যান করে তাৎক্ষণিক তাফসীর ও অনুবাদ",
+                descriptionBn = "মুসহাফ বা বই থেকে যেকোনো আরবী আয়াতের ছবি তুলুন বা স্ক্যান করুন—অ্যাপ তাৎক্ষণিকভাবে আয়াত শনাক্ত করে সঠিক বাংলা অনুবাদ ও নির্ভরযোগ্য তাফসীর উপস্থাপন করবে।",
+                icon = Icons.Default.CameraAlt,
+                emoji = "📷",
+                badgeBn = "স্মার্ট লেন্স",
+                primaryColor = Color(0xFF0D9488),
+                softContainerColor = Color(0xFFE0F2F1),
+                highlights = listOf("অপটিক্যাল স্ক্যান", "স্বয়ংক্রিয় আয়াত ম্যাচ", "তাফসীর ও অনুবাদ", "ক্যামেরা সাপোর্ট"),
+                onClick = onOpenExplainAyahCamera
+            ),
+            ToolFeatureItem(
                 id = "tool_ayat_solver",
-                titleBn = "আয়াত ও হাদীস শুদ্ধিকরণ ল্যাব",
-                subtitleBn = "আরবি হরকত ও নুকতা শুদ্ধিকরণ, বাংলা/ইংরেজি বর্ণ অপসারণ ও সহীহ রেফারেন্স ম্যাচিং।",
+                nameBn = "আয়াত শুদ্ধিকরণ",
+                fullNameBn = "আয়াত ও হাদীস শুদ্ধিকরণ ল্যাব",
+                subtitleBn = "আরবি হরকত-নুকতা শুদ্ধিকরণ ও সহীহ রেফারেন্স ম্যাচিং",
+                descriptionBn = "অশুদ্ধ বা বিকৃত আরবি পাঠ্য দিলে তা স্বয়ংক্রিয়ভাবে বিশুদ্ধ হরকত ও নুকতা দিয়ে বিন্যস্ত করে এবং নির্ভরযোগ্য কুরআন ও হাদীস গ্রন্থ থেকে রেফারেন্স মিলিয়ে দেয়।",
                 icon = Icons.Default.Spellcheck,
-                badgeBn = "সক্রিয়",
+                emoji = "🔬",
+                badgeBn = "সক্রিয় ল্যাব",
+                primaryColor = Color(0xFFC2410C),
+                softContainerColor = Color(0xFFFFEDD5),
+                highlights = listOf("হরকত শুদ্ধিকরণ", "সহীহ ভেরিফিকেশন", "নুকতা ফিক্সিং", "রেফারেন্স ট্র্যাকার"),
                 onClick = onOpenAyatDetector
             ),
-            IslamicToolItem(
+            ToolFeatureItem(
                 id = "tool_qibla",
-                titleBn = "ক্বিবলা কম্পাস ও দিক নির্দেশক",
-                subtitleBn = "ডিভাইসের সেন্সর ও জিপিএস ব্যবহার করে পবিত্র কা'বা শরীফের সঠিক দিক ও কোণ।",
+                nameBn = "ক্বিবলা কম্পাস",
+                fullNameBn = "ক্বিবলা কম্পাস ও দিক নির্দেশক",
+                subtitleBn = "সেন্সর ও জিপিএস ভিত্তিক পবিত্র কা'বা শরীফের নিখুঁত দিক",
+                descriptionBn = "স্মার্টফোনের ম্যাগনেটিক সেন্সর ও অবস্থান ব্যবহার করে পবিত্র কা'বা শরীফের সঠিক দিক ও নিখুঁত ডিগ্রি কোণ তাৎক্ষণিক প্রদর্শন করে।",
                 icon = Icons.Default.Explore,
+                emoji = "🧭",
                 badgeBn = "সক্রিয়",
+                primaryColor = Color(0xFF047857),
+                softContainerColor = Color(0xFFE8F5E9),
+                highlights = listOf("সেন্সর কম্পাস", "ডিগ্রি ও দিক", "কা'বার দূরত্ব", "অফলাইন সাপোর্ট"),
                 onClick = onOpenQibla
             ),
-            IslamicToolItem(
+            ToolFeatureItem(
                 id = "tool_tasbih",
-                titleBn = "ডিজিটাল তাসবীহ ও জিকির কাউন্টার",
-                subtitleBn = "সালাত-পরবর্তী ১০০ তাসবীহ, সুবহানাল্লাহ, আলহামদুলিল্লাহ, আল্লাহু আকবার ও নিজস্ব লক্ষ্যমাত্রা।",
+                nameBn = "ডিজিটাল তাসবীহ",
+                fullNameBn = "ডিজিটাল তাসবীহ ও জিকির কাউন্টার",
+                subtitleBn = "সালাত-পরবর্তী তাসবীহাত ও নিজস্ব জিকির লক্ষ্যমাত্রা",
+                descriptionBn = "সুবহানাল্লাহ, আলহামদুলিল্লাহ, আল্লাহু আকবার ৩৩/১০০ তাসবীহ, ভাইব্রেশন ফিডব্যাক, সাউন্ড ও কাস্টম জিকির গণনার আধুনিক ইসলামিক কাউন্টার।",
                 icon = Icons.Default.Fingerprint,
+                emoji = "📿",
                 badgeBn = "সক্রিয়",
+                primaryColor = Color(0xFF0D9488),
+                softContainerColor = Color(0xFFE0F2F1),
+                highlights = listOf("৩৩/১০০ কাউন্ট", "হ্যাপটিক ভাইব্রেশন", "সাউন্ড অন/অফ", "দৈনিক রেকর্ড"),
                 onClick = onOpenTasbih
             ),
-            IslamicToolItem(
+            ToolFeatureItem(
                 id = "tool_zakat",
-                titleBn = "যাকাত ও নিসাব ক্যালকুলেটর",
-                subtitleBn = "সোনা, রূপা, নগদ অর্থ ও ব্যবসায়িক সম্পদের ওপর শরীয়াহ সম্মত ২.৫% যাকাত গণনা।",
+                nameBn = "যাকাত ক্যালকুলেটর",
+                fullNameBn = "যাকাত ও নিসাব ক্যালকুলেটর",
+                subtitleBn = "স্বর্ণ, রূপা, নগদ অর্থ ও পণ্যের শরীয়াহ সম্মত ২.৫% হিসাব",
+                descriptionBn = "সোনা, রূপা, নগদ টাকা, ব্যাংক ব্যালেন্স ও বাণিজ্যিক পণ্যের মূল্য থেকে ঋণ বাদ দিয়ে উদ্বৃত্ত মালের ওপর নিসাব অনুযায়ী ২.৫% প্রদেয় যাকাত নিখুঁতভাবে গণনা করুন।",
                 icon = Icons.Default.Calculate,
+                emoji = "💰",
                 badgeBn = "ক্যালকুলেটর",
+                primaryColor = Color(0xFFD97706),
+                softContainerColor = Color(0xFFFFFBEB),
+                highlights = listOf("নিসাব যাচাই", "স্বর্ণ-রৌপ্য মূল্য", "ঋণ সমন্বয়", "তাৎক্ষণিক ফলাফল"),
                 onClick = { showZakatDialog = true }
             ),
-            IslamicToolItem(
+            ToolFeatureItem(
                 id = "tool_allah_names",
-                titleBn = "আল্লাহর ৯৯টি গুণবাচক নাম (আসমাউল হুসনা)",
-                subtitleBn = "মহান আল্লাহর বরকতময় নামসমূহ, অর্থ, ব্যাখ্যা ও বিশুদ্ধ ফযিলত।",
+                nameBn = "আল্লাহর ৯৯ নাম",
+                fullNameBn = "আল্লাহর ৯৯টি পবিত্র নাম (আসমাউল হুসনা)",
+                subtitleBn = "অর্থ, বিশদ ব্যাখ্যা, হিফজ গাইড ও বিশুদ্ধ ফযিলত",
+                descriptionBn = "পবিত্র কুরআন ও সুন্নাহ ভিত্তিক মহান আল্লাহর ৯৯টি নামের অর্থ, তাৎপর্য, ফযিলত এবং জীবনের বিভিন্ন প্রয়োজনে কোন নামে দু'আ করবেন তার সুন্দর নির্দেশিকা।",
                 icon = Icons.Default.Stars,
+                emoji = "✨",
                 badgeBn = "সক্রিয়",
+                primaryColor = Color(0xFF7C3AED),
+                softContainerColor = Color(0xFFF5F3FF),
+                highlights = listOf("আরবি ও অর্থ", "আমল ও ফযিলত", "হিফজ চার্ট", "প্রয়োজনীয় দু'আ"),
                 onClick = onOpenNamesOfAllah
+            ),
+            ToolFeatureItem(
+                id = "tool_ramadan_companion_shortcut",
+                nameBn = "রমাদান সময়সূচী",
+                fullNameBn = "সেহেরি ও ইফতারের পূর্ণাঙ্গ সময়সূচী",
+                subtitleBn = "৬৪ জেলা ভিত্তিক প্রতিদিনের সেহেরি ও ইফতারের ক্যালেন্ডার",
+                descriptionBn = "ইসলামিক ফাউন্ডেশন অনুমোদিত পদ্ধতি অনুযায়ী বাংলাদেশের সকল জেলার জন্য রমাদানের সেহেরির শেষ সময় ও ইফতারের নির্ভুল সময়সূচী এবং বিশেষ দো'আ।",
+                icon = Icons.Default.DateRange,
+                emoji = "⏰",
+                badgeBn = "রমাদান সূচী",
+                primaryColor = Color(0xFF047857),
+                softContainerColor = Color(0xFFE8F5E9),
+                highlights = listOf("৬৪ জেলা সূচী", "কাউন্টডাউন", "দো'আ ও নিয়ত", "বিজ্ঞপ্তি"),
+                onClick = onOpenRamadanIntelligence
+            ),
+            ToolFeatureItem(
+                id = "tool_sunnah_guidance",
+                nameBn = "সুন্নাহ গাইড",
+                fullNameBn = "দৈনন্দিন জীবনে প্রিয় নবীর ﷺ সুন্নাত",
+                subtitleBn = "সকাল থেকে রাত পর্যন্ত রাসূলুল্লাহ ﷺ এর জীবনাদর্শ",
+                descriptionBn = "ঘুম থেকে উঠা, অযু, সালাত, আহার, পথচলা, পোশাক ও সামাজিক আচরণের ক্ষেত্রে প্রিয় নবী হযরত মুহাম্মদ ﷺ এর প্রামাণ্য সুন্নাত আমলসমূহ।",
+                icon = Icons.Default.MenuBook,
+                emoji = "🌿",
+                badgeBn = "সুন্নাত নির্দেশিকা",
+                primaryColor = Color(0xFF059669),
+                softContainerColor = Color(0xFFECFDF5),
+                highlights = listOf("দৈনন্দিন আমল", "সহীহ রেফারেন্স", "সুন্নাহর আলো", "আমল চেকলিস্ট"),
+                onClick = onOpenIslamicHabitSystem
+            ),
+            ToolFeatureItem(
+                id = "up_fatwa",
+                nameBn = "ফতোয়া ও মাসআলা",
+                fullNameBn = "ইসলামিক ফতোয়া ও মাসআলা গাইড",
+                subtitleBn = "চার মাজহাব ও সালাফে সালেহীনদের প্রামাণ্য দলীলভিত্তিক নির্দেশিকা",
+                descriptionBn = "দারুল ইফতা ও প্রখ্যাত ফকীহদের নির্ভরযোগ্য কিতাব থেকে বিশুদ্ধ মাসআলা সার্চ ও ক্যাটাগরিভিত্তিক সমাধান নিয়ে শীঘ্রই উন্মুক্ত হচ্ছে।",
+                icon = Icons.Default.MenuBook,
+                emoji = "📜",
+                badgeBn = "শীঘ্রই আসছে",
+                primaryColor = Color(0xFF475569),
+                softContainerColor = Color(0xFFF1F5F9),
+                highlights = listOf("চার মাজহাব", "দৈনন্দিন মাসআলা", "প্রামাণ্য ফতোয়া", "আসন্ন ফিচার"),
+                isAvailable = false,
+                onClick = {}
+            ),
+            ToolFeatureItem(
+                id = "up_audio_gen",
+                nameBn = "কুরআন অডিও",
+                fullNameBn = "কুরআন অডিও তিলাওয়াত জেনারেটর",
+                subtitleBn = "পছন্দের ক্বারী, গতি ও পুনরাবৃত্তি নির্ধারণ করে নিজস্ব অফলাইন অডিও",
+                descriptionBn = "বিশ্ববিখ্যাত ক্বারীদের কণ্ঠ একত্র করে নির্দিষ্ট আয়াতের জন্য অডিও ক্লিপ তৈরি, পুনরাবৃত্তি লুপ ও অফলাইনে শোনার সুবিধা যুক্ত হচ্ছে।",
+                icon = Icons.Default.Tune,
+                emoji = "🎙️",
+                badgeBn = "শীঘ্রই আসছে",
+                primaryColor = Color(0xFF0284C7),
+                softContainerColor = Color(0xFFF0F9FF),
+                highlights = listOf("বিখ্যাত ক্বারী", "রিপিট লুপ", "অফলাইন প্লে", "আসন্ন ফিচার"),
+                isAvailable = false,
+                onClick = {}
+            ),
+            ToolFeatureItem(
+                id = "up_inheritance",
+                nameBn = "মিরাস বণ্টন",
+                fullNameBn = "মিরাস ও উত্তরাধিকার বণ্টন ক্যালকুলেটর",
+                subtitleBn = "সূরা নিসার ফারায়িজ বিধি অনুযায়ী নিখুঁত সম্পত্তি বণ্টন",
+                descriptionBn = "পবিত্র কুরআন ও সুন্নাহর ফারায়িজ বিধি মোতাবেক সন্তান, পিতামাতা, স্ত্রী ও আত্মীয়দের মধ্যে স্বয়ংক্রিয় শরঈ শতাংশ বণ্টন ব্যবস্থা।",
+                icon = Icons.Default.Calculate,
+                emoji = "⚖️",
+                badgeBn = "শীঘ্রই আসছে",
+                primaryColor = Color(0xFF57534E),
+                softContainerColor = Color(0xFFF5F5F4),
+                highlights = listOf("সূরা নিসা", "ফারায়িজ হিসাব", "ওয়ারিশদের অংশ", "আসন্ন ফিচার"),
+                isAvailable = false,
+                onClick = {}
             )
         )
+    }
 
-        items(activeTools.size) { index ->
-            val tool = activeTools[index]
-            Card(
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                border = BorderStroke(0.8.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.2f)),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable { tool.onClick() }
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(14.dp),
-                    verticalAlignment = Alignment.CenterVertically
+    // Filter tools according to search query
+    val filteredFeatures = remember(searchQuery, allFeatures) {
+        if (searchQuery.isBlank()) {
+            allFeatures
+        } else {
+            val q = searchQuery.trim().lowercase()
+            allFeatures.filter {
+                it.nameBn.lowercase().contains(q) ||
+                it.fullNameBn.lowercase().contains(q) ||
+                it.subtitleBn.lowercase().contains(q) ||
+                it.descriptionBn.lowercase().contains(q)
+            }
+        }
+    }
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
+    ) {
+        LazyVerticalGrid(
+            columns = GridCells.Fixed(3),
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(
+                top = contentPadding.calculateTopPadding() + 10.dp,
+                bottom = contentPadding.calculateBottomPadding() + 24.dp,
+                start = 12.dp,
+                end = 12.dp
+            ),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            // TOP HEADER ITEM: Title & Eye-soothing Banner
+            item(span = { GridItemSpan(3) }) {
+                Surface(
+                    shape = RoundedCornerShape(18.dp),
+                    color = MaterialTheme.colorScheme.surface,
+                    border = BorderStroke(0.6.dp, Color(0xFF047857).copy(alpha = 0.25f)),
+                    tonalElevation = 1.dp
                 ) {
-                    Surface(
-                        shape = CircleShape,
-                        color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f),
-                        modifier = Modifier.size(46.dp)
-                    ) {
-                        Box(contentAlignment = Alignment.Center) {
-                            Icon(
-                                imageVector = tool.icon,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.size(24.dp)
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(
+                                Brush.verticalGradient(
+                                    colors = listOf(
+                                        Color(0xFF047857).copy(alpha = 0.12f),
+                                        IslamicGold.copy(alpha = 0.05f),
+                                        MaterialTheme.colorScheme.surface
+                                    )
+                                )
                             )
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.width(14.dp))
-
-                    Column(modifier = Modifier.weight(1f)) {
+                            .padding(horizontal = 14.dp, vertical = 12.dp)
+                    ) {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            modifier = Modifier.fillMaxWidth()
                         ) {
-                            Text(
-                                text = tool.titleBn,
-                                style = MaterialTheme.typography.titleSmall,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onSurface,
-                                fontFamily = banglaFont
-                            )
-                            Surface(
-                                shape = RoundedCornerShape(6.dp),
-                                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)
-                            ) {
+                            Column(modifier = Modifier.weight(1f)) {
                                 Text(
-                                    text = tool.badgeBn,
-                                    style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
-                                    fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.primary,
-                                    fontFamily = banglaFont,
-                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                    text = "ইসলামিক টুলস ও সেবা",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.ExtraBold,
+                                    color = MaterialTheme.colorScheme.onSurface,
+                                    fontFamily = banglaFont
+                                )
+                                Spacer(modifier = Modifier.height(2.dp))
+                                Text(
+                                    text = "আপনার দ্বীনি জীবনকে সহজ ও বরকতময় করার পূর্ণাঙ্গ সম্ভার",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    fontFamily = banglaFont
                                 )
                             }
+                            Surface(
+                                shape = CircleShape,
+                                color = Color(0xFF047857).copy(alpha = 0.15f),
+                                modifier = Modifier.size(36.dp)
+                            ) {
+                                Box(contentAlignment = Alignment.Center) {
+                                    Text("🛠️", fontSize = 16.sp)
+                                }
+                            }
                         }
-                        Spacer(modifier = Modifier.height(3.dp))
-                        Text(
-                            text = tool.subtitleBn,
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            fontFamily = banglaFont,
-                            lineHeight = 18.sp
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        // Compact Search Input
+                        OutlinedTextField(
+                            value = searchQuery,
+                            onValueChange = { searchQuery = it },
+                            placeholder = {
+                                Text(
+                                    "টুল বা ফিচার অনুসন্ধান করুন...",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    fontFamily = banglaFont
+                                )
+                            },
+                            leadingIcon = {
+                                Icon(
+                                    imageVector = Icons.Default.Search,
+                                    contentDescription = "Search",
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                            },
+                            trailingIcon = {
+                                if (searchQuery.isNotEmpty()) {
+                                    IconButton(
+                                        onClick = { searchQuery = "" },
+                                        modifier = Modifier.size(28.dp)
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.Close,
+                                            contentDescription = "Clear",
+                                            modifier = Modifier.size(16.dp)
+                                        )
+                                    }
+                                }
+                            },
+                            singleLine = true,
+                            shape = RoundedCornerShape(12.dp),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(50.dp)
                         )
                     }
                 }
             }
+
+            // GRID ITEMS: Exactly 3 cards per row
+            items(filteredFeatures, key = { it.id }) { item ->
+                ToolGridCard(
+                    item = item,
+                    banglaFont = banglaFont,
+                    onClick = {
+                        // Clicking opens the card to display everything inside it
+                        selectedFeatureForDetails = item
+                    }
+                )
+            }
         }
 
-        // SECTION: আসন্ন নতুন ইসলামিক টুলস (Upcoming Tools)
-        item {
-            Text(
-                text = "আসন্ন নতুন টুলস (শীঘ্রই আসছে)",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.secondary,
-                fontFamily = banglaFont,
-                modifier = Modifier.padding(top = 12.dp, bottom = 2.dp)
-            )
-        }
-
-        val upcomingTools = listOf(
-            IslamicToolItem(
-                id = "up_fatwa",
-                titleBn = "ইসলামিক ফতোয়া ও মাসআলা গাইড",
-                subtitleBn = "চার মাজহাব ও সালাফে সালেহীনদের প্রামাণ্য দলীলভিত্তিক দৈনন্দিন মাসআলা নির্দেশিকা।",
-                icon = Icons.Default.MenuBook,
-                badgeBn = "আসন্ন",
-                isAvailable = false,
-                onClick = {
-                    upcomingToolTitle = "ইসলামিক ফতোয়া ও মাসআলা গাইড"
-                    upcomingToolDesc = "দারুল ইফতা ও প্রখ্যাত ফকীহদের নির্ভরযোগ্য কিতাব থেকে বিশুদ্ধ মাসআলা সার্চ ও ক্যাটাগরিভিত্তিক সমাধান যুক্ত হচ্ছে।"
-                }
-            ),
-            IslamicToolItem(
-                id = "up_audio_gen",
-                titleBn = "কুরআন অডিও তিলাওয়াত জেনারেটর",
-                subtitleBn = "পছন্দের ক্বারী, গতি ও পুনরাবৃত্তি নির্ধারণ করে নিজস্ব অফলাইন অডিও ফাইল তৈরি।",
-                icon = Icons.Default.Tune,
-                badgeBn = "আসন্ন",
-                isAvailable = false,
-                onClick = {
-                    upcomingToolTitle = "কুরআন অডিও তিলাওয়াত জেনারেটর"
-                    upcomingToolDesc = "বিশ্ববিখ্যাত ক্বারীদের কণ্ঠ একত্র করে নির্দিষ্ট আয়াতের জন্য অডিও ক্লিপ তৈরি ও ডাউনলোডের সুবিধা যুক্ত হচ্ছে।"
-                }
-            ),
-            IslamicToolItem(
-                id = "up_inheritance",
-                titleBn = "মিরাস ও উত্তরাধিকার বণ্টন ক্যালকুলেটর",
-                subtitleBn = "পবিত্র কুরআনের সূরা নিসার বিধি অনুযায়ী ওয়ারিশদের মধ্যে নিখুঁত সম্পত্তি বণ্টন হিসাব।",
-                icon = Icons.Default.DateRange,
-                badgeBn = "আসন্ন",
-                isAvailable = false,
-                onClick = {
-                    upcomingToolTitle = "মিরাস ও উত্তরাধিকার বণ্টন ক্যালকুলেটর"
-                    upcomingToolDesc = "পবিত্র কুরআন ও সুন্নাহর ফারায়িজ বিধি মোতাবেক সন্তান, পিতামাতা ও আত্মীয়দের মধ্যে স্বয়ংক্রিয় শতাংশ বণ্টন।"
-                }
-            )
-        )
-
-        items(upcomingTools.size) { index ->
-            val upTool = upcomingTools[index]
-            Card(
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.7f)
-                ),
-                border = BorderStroke(0.6.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.15f)),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable { upTool.onClick() }
+        // FEATURE DETAILS BOTTOM SHEET: Displays "everything now written on it" inside the card
+        if (selectedFeatureForDetails != null) {
+            val feature = selectedFeatureForDetails!!
+            ModalBottomSheet(
+                onDismissRequest = { selectedFeatureForDetails = null },
+                sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+                containerColor = MaterialTheme.colorScheme.surface,
+                shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
             ) {
-                Row(
+                Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(14.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                        .padding(horizontal = 20.dp, vertical = 8.dp)
+                        .verticalScroll(rememberScrollState())
                 ) {
-                    Surface(
-                        shape = CircleShape,
-                        color = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.3f),
-                        modifier = Modifier.size(44.dp)
+                    // Header Row: Emblem + Title + Badge
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Box(contentAlignment = Alignment.Center) {
-                            Icon(
-                                imageVector = upTool.icon,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.secondary,
-                                modifier = Modifier.size(22.dp)
+                        Surface(
+                            shape = RoundedCornerShape(16.dp),
+                            color = feature.softContainerColor,
+                            border = BorderStroke(1.dp, feature.primaryColor.copy(alpha = 0.35f)),
+                            modifier = Modifier.size(54.dp)
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                Text(feature.emoji, fontSize = 26.sp)
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.width(14.dp))
+
+                        Column(modifier = Modifier.weight(1f)) {
+                            Surface(
+                                shape = RoundedCornerShape(8.dp),
+                                color = feature.primaryColor.copy(alpha = 0.12f),
+                                modifier = Modifier.padding(bottom = 4.dp)
+                            ) {
+                                Text(
+                                    text = feature.badgeBn,
+                                    color = feature.primaryColor,
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    fontFamily = banglaFont,
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
+                                )
+                            }
+                            Text(
+                                text = feature.fullNameBn,
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.ExtraBold,
+                                color = MaterialTheme.colorScheme.onSurface,
+                                fontFamily = banglaFont
                             )
                         }
                     }
 
-                    Spacer(modifier = Modifier.width(14.dp))
+                    Spacer(modifier = Modifier.height(10.dp))
 
-                    Column(modifier = Modifier.weight(1f)) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(6.dp)
-                        ) {
-                            Text(
-                                text = upTool.titleBn,
-                                style = MaterialTheme.typography.titleSmall,
-                                fontWeight = FontWeight.SemiBold,
-                                color = MaterialTheme.colorScheme.onSurface,
-                                fontFamily = banglaFont
-                            )
-                            Surface(
-                                shape = RoundedCornerShape(6.dp),
-                                color = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.6f)
-                            ) {
-                                Text(
-                                    text = upTool.badgeBn,
-                                    style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
-                                    fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.onSecondaryContainer,
-                                    fontFamily = banglaFont,
-                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-                                )
-                            }
-                        }
-                        Spacer(modifier = Modifier.height(3.dp))
+                    // Subtitle
+                    Text(
+                        text = feature.subtitleBn,
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.SemiBold,
+                        color = feature.primaryColor,
+                        fontFamily = banglaFont
+                    )
+
+                    Spacer(modifier = Modifier.height(10.dp))
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.15f))
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    // Full Detailed Description (Everything written previously)
+                    Text(
+                        text = "ফিচারের বিস্তারিত বিবরণ:",
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        fontFamily = banglaFont
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = feature.descriptionBn,
+                        style = MaterialTheme.typography.bodyMedium.copy(lineHeight = 22.sp),
+                        color = MaterialTheme.colorScheme.onSurface,
+                        fontFamily = banglaFont
+                    )
+
+                    Spacer(modifier = Modifier.height(14.dp))
+
+                    // Highlights Pills (if available)
+                    if (feature.highlights.isNotEmpty()) {
                         Text(
-                            text = upTool.subtitleBn,
-                            style = MaterialTheme.typography.bodySmall,
+                            text = "প্রধান বৈশিষ্ট্যসমূহ:",
+                            style = MaterialTheme.typography.labelMedium,
+                            fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             fontFamily = banglaFont
                         )
+                        Spacer(modifier = Modifier.height(6.dp))
+                        FlowRow(
+                            horizontalArrangement = Arrangement.spacedBy(6.dp),
+                            verticalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            feature.highlights.forEach { tag ->
+                                Surface(
+                                    shape = RoundedCornerShape(8.dp),
+                                    color = feature.softContainerColor,
+                                    border = BorderStroke(0.6.dp, feature.primaryColor.copy(alpha = 0.25f))
+                                ) {
+                                    Text(
+                                        text = "✦ $tag",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = feature.primaryColor,
+                                        fontFamily = banglaFont,
+                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                                    )
+                                }
+                            }
+                        }
+                        Spacer(modifier = Modifier.height(18.dp))
                     }
+
+                    // Main Action Button
+                    Button(
+                        onClick = {
+                            val action = feature.onClick
+                            selectedFeatureForDetails = null
+                            action()
+                        },
+                        enabled = feature.isAvailable,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(50.dp),
+                        shape = RoundedCornerShape(14.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = feature.primaryColor,
+                            disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant
+                        )
+                    ) {
+                        Text(feature.emoji, fontSize = 16.sp)
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = if (feature.isAvailable) "ফিচারে প্রবেশ করুন" else "শীঘ্রই উন্মুক্ত হবে",
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = if (feature.isAvailable) Color.White else MaterialTheme.colorScheme.onSurfaceVariant,
+                            fontFamily = banglaFont
+                        )
+                        if (feature.isAvailable) {
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                                contentDescription = null,
+                                tint = Color.White,
+                                modifier = Modifier.size(16.dp)
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(28.dp))
                 }
             }
         }
-    }
 
-    // Interactive Zakat Calculator Dialog
-    if (showZakatDialog) {
-        ZakatCalculatorDialog(
-            onDismiss = { showZakatDialog = false },
-            banglaFont = banglaFont
-        )
+        // Interactive Zakat Calculator Dialog
+        if (showZakatDialog) {
+            ZakatCalculatorDialog(
+                onDismiss = { showZakatDialog = false },
+                banglaFont = banglaFont
+            )
+        }
     }
+}
 
-    // Upcoming Tool Dialog
-    if (upcomingToolTitle != null) {
-        AlertDialog(
-            onDismissRequest = {
-                upcomingToolTitle = null
-                upcomingToolDesc = null
-            },
-            title = {
-                Text(
-                    text = upcomingToolTitle ?: "",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    fontFamily = banglaFont
+/**
+ * Individual Card in the 3-Column Grid.
+ * Displays strictly TWO things as requested:
+ * 1. Logo / Picture (Icon / Emblem)
+ * 2. Feature Name
+ * Styled in eye-soothing, beautiful colors.
+ */
+@Composable
+private fun ToolGridCard(
+    item: ToolFeatureItem,
+    banglaFont: androidx.compose.ui.text.font.FontFamily?,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surface
+        ),
+        border = BorderStroke(1.dp, item.primaryColor.copy(alpha = 0.22f)),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.5.dp),
+        modifier = modifier
+            .fillMaxWidth()
+            .aspectRatio(0.92f) // Beautiful proportion for 3-in-a-row
+            .clickable { onClick() }
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(
+                    Brush.verticalGradient(
+                        colors = listOf(
+                            item.softContainerColor.copy(alpha = 0.85f),
+                            MaterialTheme.colorScheme.surface
+                        )
+                    )
                 )
-            },
-            text = {
-                Text(
-                    text = upcomingToolDesc ?: "",
-                    style = MaterialTheme.typography.bodyMedium,
-                    fontFamily = banglaFont
-                )
-            },
-            confirmButton = {
-                Button(onClick = {
-                    upcomingToolTitle = null
-                    upcomingToolDesc = null
-                }) {
-                    Text("ঠিক আছে", fontFamily = banglaFont)
+                .padding(horizontal = 6.dp, vertical = 8.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            // 1. LOGO / PICTURE (Emblem Container)
+            Surface(
+                shape = CircleShape,
+                color = item.softContainerColor,
+                border = BorderStroke(1.dp, item.primaryColor.copy(alpha = 0.35f)),
+                modifier = Modifier.size(46.dp)
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Text(
+                        text = item.emoji,
+                        fontSize = 22.sp
+                    )
                 }
             }
-        )
+
+            Spacer(modifier = Modifier.height(7.dp))
+
+            // 2. FEATURE NAME
+            Text(
+                text = item.nameBn,
+                style = MaterialTheme.typography.bodySmall,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface,
+                fontFamily = banglaFont,
+                textAlign = TextAlign.Center,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+                lineHeight = 15.sp,
+                modifier = Modifier.padding(horizontal = 2.dp)
+            )
+        }
     }
 }
 

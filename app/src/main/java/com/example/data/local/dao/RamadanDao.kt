@@ -9,6 +9,8 @@ import com.example.data.local.entity.RamadanCharityEntryEntity
 import com.example.data.local.entity.RamadanChecklistEntity
 import com.example.data.local.entity.RamadanDayLogEntity
 import com.example.data.local.entity.RamadanMissedFastEntity
+import com.example.data.local.entity.RamadanPersonalDuaEntity
+import com.example.data.local.entity.RamadanReflectionEntity
 import com.example.data.local.entity.RamadanSettingsEntity
 import com.example.data.local.entity.RamadanShawwalLogEntity
 import kotlinx.coroutines.flow.Flow
@@ -22,6 +24,9 @@ interface RamadanDao {
 
     @Query("SELECT * FROM ramadan_day_logs WHERE dayNumber = :dayNumber LIMIT 1")
     suspend fun getDayLog(dayNumber: Int): RamadanDayLogEntity?
+
+    @Query("SELECT * FROM ramadan_day_logs WHERE dayNumber = :dayNumber LIMIT 1")
+    fun getDayLogFlow(dayNumber: Int): Flow<RamadanDayLogEntity?>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertOrUpdateDayLog(log: RamadanDayLogEntity)
@@ -71,6 +76,29 @@ interface RamadanDao {
 
     @Query("DELETE FROM ramadan_charity_entries WHERE id = :id")
     suspend fun deleteCharityEntry(id: Int)
+
+    // --- PERSONAL DUAS ---
+    @Query("SELECT * FROM ramadan_personal_duas ORDER BY id DESC")
+    fun getAllPersonalDuas(): Flow<List<RamadanPersonalDuaEntity>>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertPersonalDua(dua: RamadanPersonalDuaEntity): Long
+
+    @Query("DELETE FROM ramadan_personal_duas WHERE id = :id")
+    suspend fun deletePersonalDua(id: Int)
+
+    // --- REFLECTIONS ---
+    @Query("SELECT * FROM ramadan_reflections ORDER BY dayNumber ASC")
+    fun getAllReflections(): Flow<List<RamadanReflectionEntity>>
+
+    @Query("SELECT * FROM ramadan_reflections WHERE dayNumber = :dayNumber LIMIT 1")
+    suspend fun getReflectionForDay(dayNumber: Int): RamadanReflectionEntity?
+
+    @Query("SELECT * FROM ramadan_reflections WHERE dayNumber = :dayNumber LIMIT 1")
+    fun getReflectionFlowForDay(dayNumber: Int): Flow<RamadanReflectionEntity?>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertOrUpdateReflection(reflection: RamadanReflectionEntity)
 
     // --- SETTINGS ---
     @Query("SELECT * FROM ramadan_settings WHERE id = 1 LIMIT 1")

@@ -188,16 +188,17 @@ object LiveTimeAndEventMatcher {
         // ==========================================
         // 2. DAY OF WEEK MATCHING (FRIDAY, MON, THU, WED)
         // ==========================================
-        if (dayOfWeek == Calendar.FRIDAY) {
+        val isFridayActive = FridayTimingHelper.isFridayModeActive(cal)
+        if (isFridayActive) {
             // Holy Friday Primary Card
             list.add(
-                0, // Place Friday front and center on Fridays!
+                0, // Place Friday front and center when Friday mode is active!
                 LiveDateAmolItem(
                     id = "live_friday_primary",
-                    categoryBn = "আজ জুমার দিন • সাইয়্যিদুল আইয়্যাম",
-                    titleBn = "আজ পবিত্র জুমার দিন — Friday Mode সক্রিয়",
+                    categoryBn = if (dayOfWeek == Calendar.THURSDAY) "পবিত্র জুমার রজনী • সাইয়্যিদুল আইয়্যাম" else "আজ জুমার দিন • সাইয়্যিদুল আইয়্যাম",
+                    titleBn = if (dayOfWeek == Calendar.THURSDAY) "পবিত্র জুমার রজনী — Friday Mode সক্রিয়" else "আজ পবিত্র জুমার দিন — Friday Mode সক্রিয়",
                     shortSubtitleBn = "সূরা কাহাফ পাঠ, নবীজি ﷺ-এর উপর অধিক দরূদ ও প্রধান ৫ সুন্নাত",
-                    badgeBn = "আজকের শ্রেষ্ঠ দিন",
+                    badgeBn = "জুমার বরকতময় সময়",
                     iconKey = "MOSQUE",
                     primaryColor = Color(0xFF047857),
                     arabicText = "إِنَّ اللَّهَ وَمَلَائِكَتَهُ يُصَلُّونَ عَلَى النَّبِيِّ ۚ يَا أَيُّهَا الَّذِينَ آمَنُوا صَلُّوا عَلَيْهِ وَسَلِّمُوا تَسْلِيمًا",
@@ -205,32 +206,34 @@ object LiveTimeAndEventMatcher {
                     meaningBn = "নিশ্চয়ই আল্লাহ ও তাঁর ফেরেশতাগণ নবীর প্রতি দরূদ পাঠান। হে ঈমানদারগণ! তোমরাও তাঁর ওপর দরূদ পাঠ করো এবং যথাযথ সম্মান প্রদর্শনপূর্বক সালাম জানাও।",
                     virtuesBn = "রাসূলুল্লাহ ﷺ বলেছেন: ‘জুমার দিনে আমার ওপর অধিক পরিমাণে দরূদ পাঠ করো, কেননা তোমাদের দরূদ আমার নিকট পেশ করা হয়।’ (আবু দাউদ ১০৪৭) এবং ‘যে ব্যক্তি জুমায় সূরা কাহাফ পড়বে, তার জন্য দুই জুমার মধ্যবর্তী সময় নূর প্রজ্বলিত থাকবে।’",
                     referenceBn = "সুনান আবু দাঊদ: ১০৪৭, মুসতাদরাক হাকিম: ৩৩৯২",
-                    timingContextBn = "বৃহস্পতিবার সূর্যাস্ত থেকে শুক্রবার সূর্যাস্ত পর্যন্ত পুরো জুমার দিনটি বরকতে পরিপূর্ণ।",
+                    timingContextBn = "বৃহস্পতিবার মাগরিব থেকে শুক্রবার মাগরিব পর্যন্ত পুরো জুমার সময়টি বরকতে পরিপূর্ণ।",
                     actionTarget = "friday_mode",
                     actionButtonTextBn = "🕌 Friday Mode খুলুন"
                 )
             )
 
-            // Friday Sa'atul Ijabah (Dua acceptance hour)
-            list.add(
-                LiveDateAmolItem(
-                    id = "live_friday_saatul_ijabah",
-                    categoryBn = "জুমার দোয়া কবুল ক্ষণ",
-                    titleBn = "সা'আতুল ইজাবাহ (দোয়া কবুলের সোনালী ক্ষণ)",
-                    shortSubtitleBn = "আসরের শেষ প্রহরে দো'আ কবুলের নিশ্চিত প্রতিশ্রুত সময়",
-                    badgeBn = "দোয়া কবুল ক্ষণ",
-                    iconKey = "PRAYER",
-                    primaryColor = Color(0xFF0D9488),
-                    arabicText = "يَا حَيُّ يَا قَيُّومُ بِرَحْمَتِكَ أَسْتَغِيثُ، أَصْلِحْ لِي شَأْنِي كُلَّهُ وَلَا تَكِلْنِي إِلَى نَفْسِي طَرْفَةَ عَيْنٍ",
-                    pronunciationBn = "ইয়া হাইয়্যু ইয়া ক্বাইয়্যূমু বিরাহমাতিকা আস্তাগীছ, আসলিহ লী শা’নী কুল্লাহু ওয়ালা তাকিলনী ইলা নাফসী তারফাতা ‘আইন।",
-                    meaningBn = "হে চিরঞ্জীব! হে সমস্ত সৃষ্টির পরিচালক ও রক্ষক! আপনারই রহমতের উসিলায় সাহায্য প্রার্থনা করছি। আমার সার্বিক অবস্থা সংশোধন করে দিন এবং পলকের জন্যও আমাকে আমার নিজের দায়িত্বে ছেড়ে দেবেন না।",
-                    virtuesBn = "নবী করীম ﷺ ইরশাদ করেছেন: ‘জুমার দিনে এমন একটি মুহূর্ত রয়েছে, কোনো মুসলিম বান্দা সালাতরত অবস্থায় সে সময় আল্লাহর কাছে যা চাইবে, আল্লাহ তাকে তা দান করবেনই।’ তোমরা তা আসরের শেষ প্রহরে তালাশ করো।",
-                    referenceBn = "সহীহ আল-বুখারী: ৯৩৫, সুনান আবু দাউদ: ১০৪৮",
-                    timingContextBn = "বিশেষ করে আসরের সালাতের পর থেকে সূর্যাস্ত পর্যন্ত মন খুলে রবের দরবারে হাত তুলে দো'আ করুন।",
-                    actionTarget = "friday_mode",
-                    actionButtonTextBn = "জুমার বিশেষ দো'আ ও আমল"
+            // Friday Sa'atul Ijabah (Dua acceptance hour - featured on Friday)
+            if (dayOfWeek == Calendar.FRIDAY) {
+                list.add(
+                    LiveDateAmolItem(
+                        id = "live_friday_saatul_ijabah",
+                        categoryBn = "জুমার দোয়া কবুল ক্ষণ",
+                        titleBn = "সা'আতুল ইজাবাহ (দোয়া কবুলের সোনালী ক্ষণ)",
+                        shortSubtitleBn = "আসরের শেষ প্রহরে দো'আ কবুলের নিশ্চিত প্রতিশ্রুত সময়",
+                        badgeBn = "দোয়া কবুল ক্ষণ",
+                        iconKey = "PRAYER",
+                        primaryColor = Color(0xFF0D9488),
+                        arabicText = "يَا حَيُّ يَا قَيُّومُ بِرَحْمَتِكَ أَسْتَغِيثُ، أَصْلِحْ لِي شَأْنِي كُلَّهُ وَلَا تَكِلْنِي إِلَى نَفْسِي طَرْفَةَ عَيْنٍ",
+                        pronunciationBn = "ইয়া হাইয়্যু ইয়া ক্বাইয়্যূমু বিরাহমাতিকা আস্তাগীছ, আসলিহ লী শা’নী কুল্লাহু ওয়ালা তাকিলনী ইলা নাফসী তারফাতা ‘আইন।",
+                        meaningBn = "হে চিরঞ্জীব! হে সমস্ত সৃষ্টির পরিচালক ও রক্ষক! আপনারই রহমতের উসিলায় সাহায্য প্রার্থনা করছি। আমার সার্বিক অবস্থা সংশোধন করে দিন এবং পলকের জন্যও আমাকে আমার নিজের দায়িত্বে ছেড়ে দেবেন না।",
+                        virtuesBn = "নবী করীম ﷺ ইরশাদ করেছেন: ‘জুমার দিনে এমন একটি মুহূর্ত রয়েছে, কোনো মুসলিম বান্দা সালাতরত অবস্থায় সে সময় আল্লাহর কাছে যা চাইবে, আল্লাহ তাকে তা দান করবেনই।’ তোমরা তা আসরের শেষ প্রহরে তালাশ করো।",
+                        referenceBn = "সহীহ আল-বুখারী: ৯৩৫, সুনান আবু দাউদ: ১০৪৮",
+                        timingContextBn = "বিশেষ করে আসরের সালাতের পর থেকে সূর্যাস্ত পর্যন্ত মন খুলে রবের দরবারে হাত তুলে দো'আ করুন।",
+                        actionTarget = "friday_mode",
+                        actionButtonTextBn = "জুমার বিশেষ দো'আ ও আমল"
+                    )
                 )
-            )
+            }
         } else if (dayOfWeek == Calendar.THURSDAY) {
             list.add(
                 LiveDateAmolItem(

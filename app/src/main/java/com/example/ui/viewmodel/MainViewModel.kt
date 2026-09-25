@@ -589,6 +589,25 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val _wisdomState = MutableStateFlow(wisdomApiService.getTodayWisdom())
     val wisdomState: StateFlow<DailyWisdomState> = _wisdomState.asStateFlow()
 
+    // HOME SCREEN REFRESH (Pull-to-refresh like computer refresh button)
+    private val _isRefreshingHome = MutableStateFlow(false)
+    val isRefreshingHome: StateFlow<Boolean> = _isRefreshingHome.asStateFlow()
+
+    fun refreshHomeScreen() {
+        viewModelScope.launch {
+            _isRefreshingHome.value = true
+            // 1. Instantly update date and time to trigger live prayer status & calendar re-evaluations
+            _currentDate.value = java.util.Date()
+            // 2. Fetch/shuffle live Islamic wisdom, ayah and hadith
+            try {
+                _wisdomState.value = wisdomApiService.fetchWisdomBundle(shuffle = true)
+            } catch (_: Exception) {}
+            // 3. Tactile delay for smooth pull-to-refresh UX
+            kotlinx.coroutines.delay(550)
+            _isRefreshingHome.value = false
+        }
+    }
+
     fun shuffleWisdom() {
         viewModelScope.launch {
             _wisdomState.value = _wisdomState.value.copy(isLoading = true)

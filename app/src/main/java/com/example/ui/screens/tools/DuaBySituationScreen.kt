@@ -59,6 +59,7 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SuggestionChip
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
@@ -588,7 +589,76 @@ fun DuaBySituationScreen(
                                 textAlign = TextAlign.Center,
                                 fontFamily = banglaFont
                             )
-                            Spacer(modifier = Modifier.height(12.dp))
+                            Spacer(modifier = Modifier.height(14.dp))
+                            Text(
+                                text = "জনপ্রিয় অনুসন্ধানসমূহ স্পর্শ করুন:",
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.primary,
+                                fontFamily = banglaFont
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                            FlowRow(
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                verticalArrangement = Arrangement.spacedBy(8.dp),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                SuggestionChip(
+                                    onClick = {
+                                        selectedFeelingId = "anxious"
+                                        selectedNeedId = "patience"
+                                        customFeelingInput = ""
+                                        customNeedInput = ""
+                                    },
+                                    label = { Text("উদ্বেগ ও প্রশান্তি", fontFamily = banglaFont) }
+                                )
+                                SuggestionChip(
+                                    onClick = {
+                                        selectedFeelingId = "anxious"
+                                        selectedNeedId = "provision"
+                                        customFeelingInput = ""
+                                        customNeedInput = ""
+                                    },
+                                    label = { Text("ঋণমুক্তি ও রিজিক", fontFamily = banglaFont) }
+                                )
+                                SuggestionChip(
+                                    onClick = {
+                                        selectedFeelingId = null
+                                        selectedNeedId = "healing"
+                                        customFeelingInput = "অসুস্থ"
+                                        customNeedInput = "শেফা"
+                                    },
+                                    label = { Text("অসুস্থতা ও শেফা", fontFamily = banglaFont) }
+                                )
+                                SuggestionChip(
+                                    onClick = {
+                                        selectedFeelingId = "afraid"
+                                        selectedNeedId = "protection"
+                                        customFeelingInput = ""
+                                        customNeedInput = ""
+                                    },
+                                    label = { Text("ভয় ও বদনজর রক্ষা", fontFamily = banglaFont) }
+                                )
+                                SuggestionChip(
+                                    onClick = {
+                                        selectedFeelingId = "guilty"
+                                        selectedNeedId = "forgiveness"
+                                        customFeelingInput = ""
+                                        customNeedInput = ""
+                                    },
+                                    label = { Text("পাপের তওবা ও ক্ষমা", fontFamily = banglaFont) }
+                                )
+                                SuggestionChip(
+                                    onClick = {
+                                        selectedFeelingId = "confused"
+                                        selectedNeedId = "knowledge"
+                                        customFeelingInput = ""
+                                        customNeedInput = ""
+                                    },
+                                    label = { Text("পরীক্ষা ও ইলম বৃদ্ধি", fontFamily = banglaFont) }
+                                )
+                            }
+                            Spacer(modifier = Modifier.height(14.dp))
                             Button(
                                 onClick = {
                                     selectedFeelingId = null

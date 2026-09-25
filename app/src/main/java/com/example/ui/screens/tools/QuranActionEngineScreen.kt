@@ -59,6 +59,7 @@ import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -105,6 +106,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.datasource.QuranActionEngineCatalog
+import com.example.ui.components.InteractiveAyahPickerSheet
 import com.example.data.model.ActionHistoryRecord
 import com.example.data.model.ActionMode
 import com.example.data.model.ActionPlanDuration
@@ -300,6 +302,15 @@ fun QuranActionEngineScreen(
                             catalog = catalogList,
                             selectedIndex = selectedAyahIndex,
                             onSelectAyah = { idx -> selectedAyahIndex = idx },
+                            onSelectInsight = { chosen ->
+                                currentInsight = chosen
+                                val idx = catalogList.indexOfFirst { it.ayahId == chosen.ayahId }
+                                if (idx != -1) selectedAyahIndex = idx
+                                currentActionText = chosen.defaultTodayAction
+                                currentActionIdeaIndex = 0
+                                selectedReflectionQuestion = chosen.reflectiveQuestions.firstOrNull()
+                            },
+                            onOpenAyahPicker = { showAyahPickerSheet = true },
                             onApplyThisAyah = { currentPhase = EnginePhase.UNDERSTAND },
                             onOpenDeepDive = { showDeepDiveSheet = true },
                             banglaFont = banglaFont,
@@ -463,6 +474,32 @@ fun QuranActionEngineScreen(
                 )
             }
         }
+
+        // Interactive Ayah Picker Bottom Sheet (Life Essential & 114 Surahs Offline)
+        if (showAyahPickerSheet) {
+            ModalBottomSheet(
+                onDismissRequest = { showAyahPickerSheet = false },
+                sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+            ) {
+                InteractiveAyahPickerSheet(
+                    currentInsight = currentInsight,
+                    onSelectInsight = { chosen ->
+                        currentInsight = chosen
+                        val idx = catalogList.indexOfFirst { it.ayahId == chosen.ayahId }
+                        if (idx != -1) {
+                            selectedAyahIndex = idx
+                        }
+                        currentActionText = chosen.defaultTodayAction
+                        currentActionIdeaIndex = 0
+                        selectedReflectionQuestion = chosen.reflectiveQuestions.firstOrNull()
+                        showAyahPickerSheet = false
+                    },
+                    onDismiss = { showAyahPickerSheet = false },
+                    banglaFont = banglaFont,
+                    arabicFont = arabicFont
+                )
+            }
+        }
     }
 }
 
@@ -556,7 +593,7 @@ fun ContinuityBridgeBanner(
 }
 
 // ==========================================
-// 1. READ AYAH PHASE
+// 1. READ AYAH PHASE (Start With the Ayah - Optimized)
 // ==========================================
 @Composable
 fun ReadAyahPhaseContent(
@@ -564,41 +601,243 @@ fun ReadAyahPhaseContent(
     catalog: List<AyahActionInsight>,
     selectedIndex: Int,
     onSelectAyah: (Int) -> Unit,
+    onSelectInsight: (AyahActionInsight) -> Unit,
+    onOpenAyahPicker: () -> Unit,
     onApplyThisAyah: () -> Unit,
     onOpenDeepDive: () -> Unit,
     banglaFont: FontFamily,
     arabicFont: FontFamily
 ) {
     val context = LocalContext.current
+    var selectedCategoryFilter by remember { mutableStateOf("সকল") }
+
+    val categories = remember {
+        listOf(
+            "সকল",
+            "ধৈর্য ও পরীক্ষা",
+            "রিযিক ও তাওয়াক্কুল",
+            "মানসিক প্রশান্তি",
+            "তাওবাহ ও ক্ষমা",
+            "পিতামাতা ও পরিবার",
+            "আখলাক ও শিষ্টাচার",
+            "তাওহীদ ও সুরক্ষা"
+        )
+    }
+
+    val filteredList = remember(selectedCategoryFilter, catalog) {
+        if (selectedCategoryFilter == "সকল") catalog
+        else {
+            catalog.filter { item ->
+                when (selectedCategoryFilter) {
+                    "ধৈর্য ও পরীক্ষা" -> item.primaryThemes.any { it.contains("ধৈর্য") || it.contains("পরীক্ষা") || it.contains("সবর") }
+                    "রিযিক ও তাওয়াক্কুল" -> item.primaryThemes.any { it.contains("রিযিক") || it.contains("তাওয়াক্কুল") || it.contains("উপার্জন") }
+                    "মানসিক প্রশান্তি" -> item.primaryThemes.any { it.contains("শান্তি") || it.contains("সান্ত্বনা") || it.contains("প্রশান্তি") }
+                    "তাওবাহ ও ক্ষমা" -> item.primaryThemes.any { it.contains("তাওবা") || it.contains("ক্ষমা") || it.contains("মাগফিরাত") }
+                    "পিতামাতা ও পরিবার" -> item.primaryThemes.any { it.contains("পিতা") || it.contains("মাতা") || it.contains("পরিবার") || it.contains("দাম্পত্য") }
+                    "আখলাক ও শিষ্টাচার" -> item.primaryThemes.any { it.contains("বিনয়") || it.contains("আখলাক") || it.contains("গীবত") || it.contains("শিষ্টাচার") }
+                    "তাওহীদ ও সুরক্ষা" -> item.primaryThemes.any { it.contains("তাওহীদ") || it.contains("সুরক্ষা") || it.contains("হেফাযত") || it.contains("রুকইয়াহ") }
+                    else -> true
+                }
+            }
+        }
+    }
 
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+        verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
-        // Ayah Selector Carousel
+        // Optimized Interactive Control Header
         item {
-            Text(
-                text = "আজকের তাদাব্বুরের জন্য আয়াত নির্বাচন করুন:",
-                style = MaterialTheme.typography.labelMedium.copy(
-                    fontWeight = FontWeight.SemiBold,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    fontFamily = banglaFont
-                )
-            )
-            Spacer(modifier = Modifier.height(8.dp))
+            Card(
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.35f)
+                ),
+                border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.25f))
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(14.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text(text = "📖", fontSize = 16.sp)
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text(
+                                    text = "আয়াত নির্বাচন ও পাঠ",
+                                    style = MaterialTheme.typography.titleSmall.copy(
+                                        fontWeight = FontWeight.Bold,
+                                        fontFamily = banglaFont
+                                    )
+                                )
+                            }
+                            Text(
+                                text = "${catalog.size}টি জীবনঘনিষ্ঠ আয়াত • ১১৪টি সূরা অফলাইনে উপলব্ধ",
+                                style = MaterialTheme.typography.labelSmall.copy(
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    fontFamily = banglaFont,
+                                    fontSize = 11.sp
+                                )
+                            )
+                        }
+
+                        // Lucky / Random Ayah Picker Button
+                        FilledTonalButton(
+                            onClick = {
+                                if (catalog.isNotEmpty()) {
+                                    val randomIdx = catalog.indices.random()
+                                    onSelectAyah(randomIdx)
+                                    Toast.makeText(context, "🎲 আজকের নির্বাচিত আয়াত লোড হয়েছে", Toast.LENGTH_SHORT).show()
+                                }
+                            },
+                            contentPadding = PaddingValues(horizontal = 10.dp, vertical = 6.dp),
+                            shape = RoundedCornerShape(10.dp)
+                        ) {
+                            Text(
+                                text = "🎲 দৈবচয়ন",
+                                style = MaterialTheme.typography.labelSmall.copy(
+                                    fontWeight = FontWeight.Bold,
+                                    fontFamily = banglaFont
+                                )
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    // Open Full Ayah & 114 Surah Browser Button
+                    Button(
+                        onClick = onOpenAyahPicker,
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.primary
+                        ),
+                        contentPadding = PaddingValues(vertical = 10.dp)
+                    ) {
+                        Icon(Icons.Default.Search, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = "কুরআনের সকল আয়াত ও ১১৪টি সূরা ব্রাউজ করুন",
+                            style = MaterialTheme.typography.labelMedium.copy(
+                                fontWeight = FontWeight.Bold,
+                                fontFamily = banglaFont
+                            )
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    // Quick Navigation Arrows Row
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        TextButton(
+                            onClick = {
+                                if (selectedIndex > 0) {
+                                    onSelectAyah(selectedIndex - 1)
+                                } else {
+                                    onSelectAyah(catalog.size - 1)
+                                }
+                            },
+                            contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp)
+                        ) {
+                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "আগের আয়াত", modifier = Modifier.size(16.dp))
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(text = "আগের আয়াত", style = MaterialTheme.typography.labelSmall.copy(fontFamily = banglaFont))
+                        }
+
+                        Surface(
+                            shape = RoundedCornerShape(20.dp),
+                            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f)
+                        ) {
+                            Text(
+                                text = "${selectedIndex + 1} / ${catalog.size}",
+                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 3.dp),
+                                style = MaterialTheme.typography.labelSmall.copy(
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 11.sp
+                                )
+                            )
+                        }
+
+                        TextButton(
+                            onClick = {
+                                if (selectedIndex < catalog.size - 1) {
+                                    onSelectAyah(selectedIndex + 1)
+                                } else {
+                                    onSelectAyah(0)
+                                }
+                            },
+                            contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp)
+                        ) {
+                            Text(text = "পরের আয়াত", style = MaterialTheme.typography.labelSmall.copy(fontFamily = banglaFont))
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = "পরের আয়াত", modifier = Modifier.size(16.dp))
+                        }
+                    }
+                }
+            }
+        }
+
+        // Category Filter Chips
+        item {
+            val filterRowScroll = rememberScrollState()
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .horizontalScroll(filterRowScroll),
+                horizontalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                categories.forEach { cat ->
+                    val isSelected = cat == selectedCategoryFilter
+                    FilterChip(
+                        selected = isSelected,
+                        onClick = { selectedCategoryFilter = cat },
+                        label = {
+                            Text(
+                                text = cat,
+                                fontFamily = banglaFont,
+                                style = MaterialTheme.typography.labelSmall.copy(
+                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
+                                )
+                            )
+                        },
+                        colors = FilterChipDefaults.filterChipColors(
+                            selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                            selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
+                    )
+                }
+            }
+        }
+
+        // Ayah Selector Carousel (Filtered)
+        item {
             LazyRow(
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                items(catalog.size) { idx ->
-                    val item = catalog[idx]
-                    val isSelected = idx == selectedIndex
+                items(filteredList.size) { idx ->
+                    val item = filteredList[idx]
+                    val isSelected = item.ayahId == insight.ayahId
                     Surface(
-                        shape = RoundedCornerShape(10.dp),
+                        shape = RoundedCornerShape(12.dp),
                         color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                        border = if (isSelected) androidx.compose.foundation.BorderStroke(1.5.dp, MaterialTheme.colorScheme.primary) else null,
                         modifier = Modifier
-                            .clip(RoundedCornerShape(10.dp))
-                            .clickable { onSelectAyah(idx) }
+                            .clip(RoundedCornerShape(12.dp))
+                            .clickable {
+                                onSelectInsight(item)
+                            }
                     ) {
                         Column(
                             modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)

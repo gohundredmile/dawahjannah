@@ -46,9 +46,11 @@ import androidx.compose.material.icons.filled.WbSunny
 import androidx.compose.material.icons.filled.WorkspacePremium
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -97,8 +99,10 @@ import com.example.ui.viewmodel.MainViewModel
 import com.example.ui.viewmodel.MoreSubScreen
 import androidx.compose.ui.platform.LocalContext
 import com.example.util.CalendarHelper
+import com.example.util.FridayTimingHelper
 import com.example.util.NamazModeManager
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
     viewModel: MainViewModel,
@@ -117,6 +121,7 @@ fun HomeScreen(
     val scorecardCompletedCount by viewModel.scorecardCompletedCount.collectAsState()
     val scorecardStreak by viewModel.scorecardStreak.collectAsState()
     val scorecardTotal = viewModel.scorecardTotalCount
+    val isRefreshing by viewModel.isRefreshingHome.collectAsState()
 
     var showSehriIftarFullScreen by remember { mutableStateOf(false) }
     var showDetailedSehriIftar by remember { mutableStateOf(false) }
@@ -156,17 +161,21 @@ fun HomeScreen(
     val allAppFeatures = remember(prayerStatus, salatConfig, scorecardCompletedCount, scorecardStreak, showNamazModeDialog) {
         val isNamazModeActiveNow = NamazModeManager.isNamazModeActive(context)
         val namazMinutesLeft = NamazModeManager.getRemainingMinutes(context)
+        val isFridayActive = FridayTimingHelper.isFridayModeActive(
+            cal = java.util.Calendar.getInstance(),
+            prayerList = prayerStatus.prayerList
+        )
         listOf(
             // Friday Mode
             HomeFeatureItem(
                 id = "friday_mode",
                 serialNumberBn = "০০",
-                titleBn = "০. Friday Mode (জুমার মোড)",
-                shortTitleBn = "Friday Mode",
-                subtitleBn = "সূরা কাহাফ, ১০ সুন্নাত, সালাত রিমাইন্ডার, খুতবা নোট, সাদাকাহ ও সা'আতুল ইজাবাহ",
+                titleBn = if (isFridayActive) "০. Friday Mode (সক্রিয়)" else "০. Friday Mode (জুমার মোড)",
+                shortTitleBn = if (isFridayActive) "Friday Mode (সক্রিয়)" else "Friday Mode",
+                subtitleBn = "বৃহস্পতিবার মাগরিব থেকে শুক্রবার মাগরিব • সূরা কাহাফ, ১০ সুন্নাত ও আমল",
                 categoryBn = "সিগনেচার টুলস",
                 icon = Icons.Default.Mosque,
-                iconColor = Color(0xFF047857),
+                iconColor = if (isFridayActive) Color(0xFF047857) else IslamicGold,
                 isTopEight = true,
                 onClickAction = { viewModel.openFridayMode() }
             ),
@@ -527,126 +536,143 @@ fun HomeScreen(
         sortedList.renumberedFeatures()
     }
 
-    LazyColumn(
+    val isFridayActiveBanner = remember(prayerStatus) {
+        FridayTimingHelper.isFridayModeActive(
+            cal = java.util.Calendar.getInstance(),
+            prayerList = prayerStatus.prayerList
+        )
+    }
+    val fridayPhaseTitle = remember(prayerStatus) {
+        FridayTimingHelper.getFridayPhaseTitleBn(
+            cal = java.util.Calendar.getInstance(),
+            prayerList = prayerStatus.prayerList
+        )
+    }
+
+    PullToRefreshBox(
+        isRefreshing = isRefreshing,
+        onRefresh = { viewModel.refreshHomeScreen() },
         modifier = Modifier
             .fillMaxSize()
-            .padding(contentPadding),
-        contentPadding = PaddingValues(bottom = 24.dp)
+            .padding(contentPadding)
     ) {
-        // 1. Welcoming Cover & Revamped Salat Timing Card with Relocated Time & Date
-        item {
-            IslamicHeaderCover(
-                salutation = prayerStatus.salutationBn,
-                countdownFormatted = prayerStatus.timeRemainingFormatted,
-                nextPrayerName = prayerStatus.nextPrayer?.nameBn ?: "ওয়াক্ত",
-                presentPrayerName = prayerStatus.presentPrayerNameBn,
-                presentNofolName = prayerStatus.presentNofolNameBn,
-                remainingHours = prayerStatus.remainingHours,
-                remainingMinutes = prayerStatus.remainingMinutes,
-                remainingSeconds = prayerStatus.remainingSeconds,
-                forbiddenTimeInfo = prayerStatus.forbiddenTimeInfo,
-                calendarInfo = tripleCalendar,
-                onTapTimeDate = { showTripleCalendarDialog = true },
-                onOpenSettings = {
-                    viewModel.openSettings(AppTab.HOME)
-                }
-            )
-        }
-
-        // 1.05. Live Interactive Date & Time Based Amol Ticker Bar (Top Region)
-        item {
-            LiveAmolTickerBar(
-                viewModel = viewModel,
-                calendarInfo = tripleCalendar,
-                onOpenTripleCalendar = { showTripleCalendarDialog = true }
-            )
-        }
-
-        // 1.1 Automatic Friday Mode Transform Banner (Every Friday)
-        val isFridayToday = java.util.Calendar.getInstance().get(java.util.Calendar.DAY_OF_WEEK) == java.util.Calendar.FRIDAY
-        if (isFridayToday) {
+        LazyColumn(
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(bottom = 24.dp)
+        ) {
+            // 1. Welcoming Cover & Revamped Salat Timing Card with Relocated Time & Date
             item {
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 12.dp, vertical = 6.dp)
-                        .clickable { viewModel.openFridayMode() },
-                    shape = RoundedCornerShape(18.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color(0xFF064E3B)),
-                    border = BorderStroke(1.5.dp, IslamicGold.copy(alpha = 0.8f)),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
-                ) {
-                    Column(modifier = Modifier.padding(16.dp)) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
-                                Surface(
-                                    shape = CircleShape,
-                                    color = IslamicGold.copy(alpha = 0.2f),
-                                    modifier = Modifier.size(36.dp)
-                                ) {
-                                    Box(contentAlignment = Alignment.Center) {
-                                        Text("🕌", fontSize = 18.sp)
+                IslamicHeaderCover(
+                    salutation = prayerStatus.salutationBn,
+                    countdownFormatted = prayerStatus.timeRemainingFormatted,
+                    nextPrayerName = prayerStatus.nextPrayer?.nameBn ?: "ওয়াক্ত",
+                    presentPrayerName = prayerStatus.presentPrayerNameBn,
+                    presentNofolName = prayerStatus.presentNofolNameBn,
+                    remainingHours = prayerStatus.remainingHours,
+                    remainingMinutes = prayerStatus.remainingMinutes,
+                    remainingSeconds = prayerStatus.remainingSeconds,
+                    forbiddenTimeInfo = prayerStatus.forbiddenTimeInfo,
+                    calendarInfo = tripleCalendar,
+                    onTapTimeDate = { showTripleCalendarDialog = true },
+                    onOpenSettings = {
+                        viewModel.openSettings(AppTab.HOME)
+                    }
+                )
+            }
+
+            // 1.05. Live Interactive Date & Time Based Amol Ticker Bar (Top Region)
+            item {
+                LiveAmolTickerBar(
+                    viewModel = viewModel,
+                    calendarInfo = tripleCalendar,
+                    onOpenTripleCalendar = { showTripleCalendarDialog = true }
+                )
+            }
+
+            // 1.1 Automatic Friday Mode Transform Banner (From Thursday Maghrib to Friday Maghrib)
+            if (isFridayActiveBanner) {
+                item {
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 12.dp, vertical = 6.dp)
+                            .clickable { viewModel.openFridayMode() },
+                        shape = RoundedCornerShape(18.dp),
+                        colors = CardDefaults.cardColors(containerColor = Color(0xFF064E3B)),
+                        border = BorderStroke(1.5.dp, IslamicGold.copy(alpha = 0.8f)),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+                    ) {
+                        Column(modifier = Modifier.padding(16.dp)) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
+                                    Surface(
+                                        shape = CircleShape,
+                                        color = IslamicGold.copy(alpha = 0.2f),
+                                        modifier = Modifier.size(36.dp)
+                                    ) {
+                                        Box(contentAlignment = Alignment.Center) {
+                                            Text("🕌", fontSize = 18.sp)
+                                        }
+                                    }
+                                    Spacer(modifier = Modifier.width(10.dp))
+                                    Column {
+                                        Text(
+                                            text = fridayPhaseTitle,
+                                            style = MaterialTheme.typography.titleSmall,
+                                            fontWeight = FontWeight.Bold,
+                                            color = IslamicGold,
+                                            fontFamily = LocalBanglaFontFamily.current
+                                        )
+                                        Text(
+                                            text = "বৃহস্পতিবার মাগরিব থেকে শুক্রবার মাগরিব • সূরা কাহাফ ও আমল",
+                                            style = MaterialTheme.typography.labelSmall,
+                                            color = Color.White.copy(alpha = 0.85f),
+                                            fontFamily = LocalBanglaFontFamily.current
+                                        )
                                     }
                                 }
-                                Spacer(modifier = Modifier.width(10.dp))
-                                Column {
+                                Surface(
+                                    shape = RoundedCornerShape(10.dp),
+                                    color = Color(0xFF047857),
+                                    modifier = Modifier.clickable { viewModel.openFridayMode() }
+                                ) {
                                     Text(
-                                        text = "আজ পবিত্র জুমার দিন — Friday Mode সক্রিয়",
-                                        style = MaterialTheme.typography.titleSmall,
-                                        fontWeight = FontWeight.Bold,
-                                        color = IslamicGold,
-                                        fontFamily = LocalBanglaFontFamily.current
-                                    )
-                                    Text(
-                                        text = "সূরা কাহাফ, ১০ সুন্নাত, খুতবা নোটস ও দো'আ",
-                                        style = MaterialTheme.typography.labelSmall,
-                                        color = Color.White.copy(alpha = 0.85f),
-                                        fontFamily = LocalBanglaFontFamily.current
+                                        text = "প্রবেশ ➔",
+                                        fontSize = 12.sp,
+                                        color = Color.White,
+                                        fontFamily = LocalBanglaFontFamily.current,
+                                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
                                     )
                                 }
                             }
-                            Surface(
-                                shape = RoundedCornerShape(10.dp),
-                                color = Color(0xFF047857),
-                                modifier = Modifier.clickable { viewModel.openFridayMode() }
+                            Spacer(modifier = Modifier.height(10.dp))
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(6.dp)
                             ) {
-                                Text(
-                                    text = "প্রবেশ ➔",
-                                    fontSize = 12.sp,
-                                    color = Color.White,
-                                    fontFamily = LocalBanglaFontFamily.current,
-                                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
-                                )
-                            }
-                        }
-                        Spacer(modifier = Modifier.height(10.dp))
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(6.dp)
-                        ) {
-                            listOf("📖 সূরা কাহাফ", "🌿 ১০ সুন্নাত", "🤲 দো'আ কবুল ক্ষণ", "📝 খুতবা নোট").forEach { chip ->
-                                Surface(
-                                    shape = RoundedCornerShape(8.dp),
-                                    color = Color.White.copy(alpha = 0.12f)
-                                ) {
-                                    Text(
-                                        text = chip,
-                                        style = MaterialTheme.typography.labelSmall,
-                                        color = Color.White,
-                                        fontFamily = LocalBanglaFontFamily.current,
-                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-                                    )
+                                listOf("📖 সূরা কাহাফ", "🌿 ১০ সুন্নাত", "🤲 দো'আ কবুল ক্ষণ", "📝 খুতবা নোট").forEach { chip ->
+                                    Surface(
+                                        shape = RoundedCornerShape(8.dp),
+                                        color = Color.White.copy(alpha = 0.12f)
+                                    ) {
+                                        Text(
+                                            text = chip,
+                                            style = MaterialTheme.typography.labelSmall,
+                                            color = Color.White,
+                                            fontFamily = LocalBanglaFontFamily.current,
+                                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                                        )
+                                    }
                                 }
                             }
                         }
                     }
                 }
             }
-        }
 
         // 2. Quick Action & Streak Highlights
         item {
@@ -818,6 +844,7 @@ fun HomeScreen(
                 onShuffle = { viewModel.shuffleWisdom() }
             )
         }
+    }
     }
 
     if (showDetailedSehriIftar) {

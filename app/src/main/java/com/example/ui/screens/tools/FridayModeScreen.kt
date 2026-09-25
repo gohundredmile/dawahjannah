@@ -36,6 +36,7 @@ import com.example.data.model.IslamicLifeCardItem
 import com.example.ui.theme.IslamicGold
 import com.example.ui.theme.IslamicGreen
 import com.example.ui.theme.LocalBanglaFontFamily
+import com.example.util.FridayTimingHelper
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -77,7 +78,7 @@ fun FridayModeScreen(
     }
 
     val cal = remember { Calendar.getInstance() }
-    val isTodayFriday = remember { cal.get(Calendar.DAY_OF_WEEK) == Calendar.FRIDAY }
+    val isTodayFriday = remember { FridayTimingHelper.isFridayModeActive(cal) }
     val todayDateFormatted = remember {
         SimpleDateFormat("EEEE, dd MMMM yyyy", Locale("bn", "BD")).format(Date())
     }
@@ -194,7 +195,7 @@ fun FridayModeScreen(
                                     color = if (isTodayFriday) Color(0xFF047857) else IslamicGold
                                 ) {
                                     Text(
-                                        text = if (isTodayFriday) "আজ জুমা" else "প্রস্তুতি",
+                                        text = if (isTodayFriday) "জুমা সক্রিয়" else "প্রস্তুতি",
                                         color = Color.White,
                                         style = MaterialTheme.typography.labelSmall,
                                         fontWeight = FontWeight.Bold,
@@ -364,7 +365,7 @@ fun FridayOverviewContent(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
-                                text = if (isTodayFriday) "🕌 সাইয়্যিদুল আইয়্যাম (দিনের সরদার)" else "শুক্রবার প্রস্তুতি ও আমল গাইড",
+                                text = if (isTodayFriday) "🕌 সাইয়্যিদুল আইয়্যাম (পবিত্র জুমার সময় সক্রিয়)" else "শুক্রবার প্রস্তুতি ও আমল গাইড (বৃহস্পতি মাগরিব থেকে শুরু)",
                                 color = IslamicGold,
                                 style = MaterialTheme.typography.labelMedium,
                                 fontWeight = FontWeight.Bold,

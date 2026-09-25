@@ -608,9 +608,93 @@ object QuranActionEngineCatalog {
         )
     )
 
+    val allEssentialAyahs: List<AyahActionInsight> = catalog + QuranActionEngineExpandedData.essentialLifeAyahs
+
     fun getAyahById(id: String): AyahActionInsight? {
-        return catalog.find { it.ayahId == id }
+        return allEssentialAyahs.find { it.ayahId == id }
     }
 
-    fun getAllAyahs(): List<AyahActionInsight> = catalog
+    fun getAllAyahs(): List<AyahActionInsight> = allEssentialAyahs
+
+    /**
+     * Converts ANY offline Quran Ayah (from Room DB, preBundledAyahs or catalogs) into
+     * an interactive, complete AyahActionInsight ready for the Live the Ayah engine.
+     */
+    fun fromQuranAyah(
+        ayah: com.example.data.model.QuranAyah,
+        surah: com.example.data.model.QuranSurah? = null
+    ): AyahActionInsight {
+        val existing = allEssentialAyahs.find { it.surahNumber == ayah.surahNumber && it.ayahNumber == ayah.ayahNumber }
+        if (existing != null) return existing
+
+        val surahBn = surah?.nameBn ?: "সূরা ${ayah.surahNumber}"
+        val surahAr = surah?.nameAr ?: ""
+        val surahEn = surah?.nameEn ?: "Surah ${ayah.surahNumber}"
+        val revType = surah?.revelationType ?: "মাক্কী"
+
+        val tafsir = ayah.tafsirText?.trim().orEmpty()
+        val transBn = ayah.translationBn.trim()
+        val audio = "https://everyayah.com/data/Alafasy_128kbps/%03d%03d.mp3".format(ayah.surahNumber, ayah.ayahNumber)
+
+        return AyahActionInsight(
+            ayahId = "offline_${ayah.surahNumber}_${ayah.ayahNumber}",
+            surahNumber = ayah.surahNumber,
+            ayahNumber = ayah.ayahNumber,
+            surahNameArabic = surahAr,
+            surahNameBangla = "$surahBn (${ayah.surahNumber}:${ayah.ayahNumber})",
+            surahNameEnglish = "$surahEn (${ayah.surahNumber}:${ayah.ayahNumber})",
+            revelationTypeBn = revType,
+            arabicText = ayah.arabicText,
+            transliterationBn = ayah.pronunciationBn,
+            banglaTranslation = transBn,
+            englishTranslation = QuranTafsirAndTranslationProvider.getEnglishTranslation(ayah.surahNumber, ayah.ayahNumber, null),
+
+            whatDoesItTeachBn = "পবিত্র কুরআনের এই আয়াতটি মুমিনকে তাওহীদ, তাকওয়া, আল্লাহর কুদরত এবং দৈনন্দিন জীবনে নেক আমলের অবিচল তাগিদ দেয়।",
+            whatToNoticeBn = "আল্লাহর বাণীর গভীরতা এবং মানুষের জীবনের দায়িত্ববোধ। আয়াতটির প্রতিটি বাক্য অন্তরে আত্মশুদ্ধি ও খোদাভীতি জাগ্রত করে।",
+            whatToBeCarefulAboutBn = "কুরআনের নির্দেশ অবহেলা করা বা কেবল মুখে পড়ে আমলে বাস্তবায়ন না করা থেকে সতর্ক থাকা।",
+            whatCanIPracticeBn = "আজ সালাতে এই আয়াতটি স্মরণ করা এবং এর শিক্ষা অনুযায়ী নিজের অন্তত একটি ভুল শুধরে নেওয়া।",
+
+            quranSaysBn = "মহান আল্লাহর প্রত্যক্ষ ঘোষণা: $transBn",
+            scholarlyInterpretationBn = if (tafsir.isNotBlank()) tafsir else "সালাফে সালেহীন ও মুফাসসিরীনদের মতে, এই আয়াতটি মুমিনের ঈমানি চরিত্র গঠন ও আল্লাহর সান্নিধ্য অর্জনের জন্য এক অনন্য দিশা।",
+            possiblePersonalApplicationBn = "আজকের দিনে এই আয়াতের আলোকে নিজের একটি কাজকে আল্লাহর সন্তুষ্টির উদ্দেশ্যে উৎসর্গ করা।",
+
+            reflectiveQuestions = listOf(
+                "এই আয়াতটি আমার বর্তমান জীবনের কোন পরিস্থিতির সাথে সবচেয়ে বেশি মিলে যায়?",
+                "আমি কি এই আয়াতের আলোকে আমার আচরণ বা চিন্তায় কোনো ইতিবাচক পরিবর্তন আনতে পারি?"
+            ),
+
+            applicationsBySphere = mapOf(
+                LifeSphere.WORSHIP to listOf("সালাতে এই আয়াতটি তিলাওয়াত করুন বা এর অর্থ নিয়ে নিবিড়ভাবে চিন্তা করুন।"),
+                LifeSphere.CHARACTER to listOf("আয়াতটির শিক্ষা নিজের আখলাক ও ব্যবহারে প্রতিফলিত করুন।"),
+                LifeSphere.SPEECH to listOf("আজ মুখে কোনো অনর্থক বা ক্ষতিকর কথা উচ্চারণ না করার দৃঢ় সংকল্প নিন।")
+            ),
+
+            defaultTodayAction = "আজ এই আয়াতটির অর্থ বারবার পড়ে পরিবার বা কোনো বন্ধুকে এর তাৎপর্য বুঝিয়ে বলুন।",
+            alternativeTodayActions = listOf(
+                "আজকের দিনে এই আয়াতের শিক্ষাকে একটি ব্যক্তিগত দোয়া হিসেবে মোনাজাতে পেশ করুন।",
+                "আয়াতটি মুখস্থ বা সুন্দর করে তিলাওয়াত করার অভ্যাস গড়ে তুলুন।"
+            ),
+
+            primaryThemes = listOf(surahBn, "তাদাব্বুর", "কুরআনিক জীবন"),
+            audioUrl = audio
+        )
+    }
+
+    /**
+     * Search across all essential and curated Ayahs by keywords, Surah name or Ayah reference (e.g. 2:255).
+     */
+    fun searchAyahs(query: String): List<AyahActionInsight> {
+        val q = query.trim().lowercase()
+        if (q.isBlank()) return allEssentialAyahs
+
+        return allEssentialAyahs.filter { item ->
+            item.surahNameBangla.lowercase().contains(q) ||
+            item.surahNameEnglish.lowercase().contains(q) ||
+            item.banglaTranslation.lowercase().contains(q) ||
+            item.arabicText.contains(q) ||
+            "${item.surahNumber}:${item.ayahNumber}".contains(q) ||
+            item.primaryThemes.any { it.lowercase().contains(q) } ||
+            item.whatDoesItTeachBn.lowercase().contains(q)
+        }
+    }
 }

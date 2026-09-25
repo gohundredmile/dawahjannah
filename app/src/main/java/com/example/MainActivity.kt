@@ -51,6 +51,7 @@ import com.example.ui.screens.sub.TasbihScreen
 import com.example.ui.screens.tools.AskBeforeYouActScreen
 import com.example.ui.screens.tools.DuaBySituationScreen
 import com.example.ui.screens.tools.ExplainAyahCameraScreen
+import com.example.ui.screens.tools.FridayModeScreen
 import com.example.ui.screens.tools.IslamicHabitSystemScreen
 import com.example.ui.screens.tools.MosqueModeScreen
 import com.example.ui.screens.tools.PersonalDuaBuilderScreen
@@ -144,8 +145,8 @@ class MainActivity : ComponentActivity() {
                                     onOpenThemeModal = { viewModel.openThemeModal() },
                                     onOpenAppSettings = { viewModel.openSettings(AppTab.HOME) }
                                 )
-                            } else if (currentTab == AppTab.TOOLS && (currentToolsSub == ToolsSubScreen.EXPLAIN_AYAH_CAMERA || currentToolsSub == ToolsSubScreen.HOLY_QURAN || currentToolsSub == ToolsSubScreen.HADITH_COLLECTION)) {
-                                // ExplainAyahCameraScreen, HolyQuranScreen and HadithMainScreen have their own dedicated full-width top app bars and controls
+                            } else if (currentTab == AppTab.TOOLS && (currentToolsSub == ToolsSubScreen.EXPLAIN_AYAH_CAMERA || currentToolsSub == ToolsSubScreen.HOLY_QURAN || currentToolsSub == ToolsSubScreen.HADITH_COLLECTION || currentToolsSub == ToolsSubScreen.FRIDAY_MODE)) {
+                                // ExplainAyahCameraScreen, HolyQuranScreen, HadithMainScreen and FridayModeScreen have their own dedicated full-width top app bars and controls
                             } else if (!(currentTab == AppTab.MORE && currentMoreSub != MoreSubScreen.MAIN)) {
                                 val showTopBarBack = currentTab == AppTab.TASBIH || currentTab == AppTab.DUA || (currentTab == AppTab.TOOLS && currentToolsSub != ToolsSubScreen.MAIN)
                                 DawahTopAppBar(
@@ -160,11 +161,7 @@ class MainActivity : ComponentActivity() {
                                     },
                                     canNavigateBack = showTopBarBack,
                                     onNavigateBack = {
-                                        if (currentTab == AppTab.TOOLS && currentToolsSub != ToolsSubScreen.MAIN) {
-                                            viewModel.navigateBackToTools()
-                                        } else {
-                                            viewModel.selectTab(AppTab.HOME)
-                                        }
+                                        viewModel.navigateBack()
                                     },
                                     actions = {
                                         IconButton(onClick = { viewModel.openFontMenu() }) {
@@ -184,23 +181,20 @@ class MainActivity : ComponentActivity() {
                                     currentTab = currentTab,
                                     onTabSelected = { tab ->
                                         viewModel.selectTab(tab)
-                                        if (tab == AppTab.TOOLS) {
-                                            viewModel.navigateBackToTools()
-                                        } else if (tab == AppTab.MORE) {
-                                            viewModel.navigateBackToMore()
-                                        }
                                     }
                                 )
                             }
                         }
                     ) { innerPadding ->
-                        val canGoBackToHome = currentTab == AppTab.TASBIH || currentTab == AppTab.DUA || currentTab == AppTab.FAVORITE || (currentTab == AppTab.TOOLS && currentToolsSub == ToolsSubScreen.MAIN)
-                        BackHandler(enabled = canGoBackToHome) {
-                            viewModel.selectTab(AppTab.HOME)
-                        }
-                        val canGoBackToTools = currentTab == AppTab.TOOLS && currentToolsSub != ToolsSubScreen.MAIN
-                        BackHandler(enabled = canGoBackToTools) {
-                            viewModel.navigateBackToTools()
+                        val canNavigateBack = viewModel.canNavigateBack() || isFontMenuOpen || isThemeModalOpen
+                        BackHandler(enabled = canNavigateBack) {
+                            if (isFontMenuOpen) {
+                                viewModel.closeFontMenu()
+                            } else if (isThemeModalOpen) {
+                                viewModel.closeThemeModal()
+                            } else {
+                                viewModel.navigateBack()
+                            }
                         }
                         Box(
                             modifier = Modifier.fillMaxSize()
@@ -229,6 +223,7 @@ class MainActivity : ComponentActivity() {
                                 AppTab.TOOLS -> {
                                     when (currentToolsSub) {
                                         ToolsSubScreen.MAIN -> ToolsScreen(
+                                            onOpenFridayMode = { viewModel.openFridayMode() },
                                             onOpenHolyQuran = { viewModel.openHolyQuran() },
                                             onOpenHadithCollection = { viewModel.openHadithCollection() },
                                             onOpenDuaBySituation = { viewModel.openDuaBySituation() },
@@ -245,13 +240,17 @@ class MainActivity : ComponentActivity() {
                                             onOpenMosqueMode = { viewModel.openMosqueMode() },
                                             contentPadding = innerPadding
                                         )
+                                        ToolsSubScreen.FRIDAY_MODE -> FridayModeScreen(
+                                            onNavigateBack = { viewModel.navigateBack() },
+                                            onOpenHolyQuranSurah18 = { viewModel.openHolyQuran(18) }
+                                        )
                                         ToolsSubScreen.HOLY_QURAN -> {
                                             val initialSurah by viewModel.targetQuranSurahNumber.collectAsState()
                                             HolyQuranScreen(
                                                 quranRepository = viewModel.quranRepository,
                                                 audioManager = viewModel.quranAudioManager,
                                                 initialSurahNumber = initialSurah,
-                                                onNavigateBack = { viewModel.navigateBackToTools() },
+                                                onNavigateBack = { viewModel.navigateBack() },
                                                 contentPadding = innerPadding
                                             )
                                         }
@@ -260,43 +259,43 @@ class MainActivity : ComponentActivity() {
                                             HadithMainScreen(
                                                 hadithRepository = viewModel.hadithRepository,
                                                 initialBookSlug = initialSlug,
-                                                onNavigateBack = { viewModel.navigateBackToTools() },
+                                                onNavigateBack = { viewModel.navigateBack() },
                                                 contentPadding = innerPadding
                                             )
                                         }
                                         ToolsSubScreen.MOSQUE_MODE -> MosqueModeScreen(
                                             viewModel = viewModel,
-                                            onNavigateBack = { viewModel.navigateBackToTools() },
+                                            onNavigateBack = { viewModel.navigateBack() },
                                             onOpenQibla = { viewModel.navigateToToolsSubScreen(ToolsSubScreen.QIBLA) }
                                         )
                                         ToolsSubScreen.DUA_BY_SITUATION -> DuaBySituationScreen(
-                                            onNavigateBack = { viewModel.navigateBackToTools() }
+                                            onNavigateBack = { viewModel.navigateBack() }
                                         )
                                         ToolsSubScreen.PERSONAL_DUA_BUILDER -> PersonalDuaBuilderScreen(
-                                            onNavigateBack = { viewModel.navigateBackToTools() }
+                                            onNavigateBack = { viewModel.navigateBack() }
                                         )
                                         ToolsSubScreen.ASK_BEFORE_YOU_ACT -> AskBeforeYouActScreen(
-                                            onNavigateBack = { viewModel.navigateBackToTools() }
+                                            onNavigateBack = { viewModel.navigateBack() }
                                         )
                                         ToolsSubScreen.EXPLAIN_AYAH_CAMERA -> ExplainAyahCameraScreen(
-                                            onNavigateBack = { viewModel.navigateBackToTools() },
+                                            onNavigateBack = { viewModel.navigateBack() },
                                             onOpenHolyQuran = { surahNumber -> viewModel.openHolyQuran(surahNumber) }
                                         )
                                         ToolsSubScreen.SMART_QURAN_SEARCH -> SmartQuranSearchScreen(
-                                            onNavigateBack = { viewModel.navigateBackToTools() }
+                                            onNavigateBack = { viewModel.navigateBack() }
                                         )
                                         ToolsSubScreen.ISLAMIC_HABIT_SYSTEM -> IslamicHabitSystemScreen(
-                                            onNavigateBack = { viewModel.navigateBackToTools() }
+                                            onNavigateBack = { viewModel.navigateBack() }
                                         )
                                         ToolsSubScreen.RAMADAN_INTELLIGENCE -> RamadanIntelligenceScreen(
-                                            onNavigateBack = { viewModel.navigateBackToTools() }
+                                            onNavigateBack = { viewModel.navigateBack() }
                                         )
                                         ToolsSubScreen.AYAT_DETECTOR_SOLVER -> AyatDetectorAndSolverScreen(
                                             viewModel = viewModel
                                         )
                                         ToolsSubScreen.QIBLA -> QiblaCompassScreen(
                                             viewModel = viewModel,
-                                            onBack = { viewModel.navigateBackToTools() }
+                                            onBack = { viewModel.navigateBack() }
                                         )
                                         ToolsSubScreen.TASBIH -> TasbihScreen(
                                             viewModel = viewModel,
@@ -333,6 +332,8 @@ class MainActivity : ComponentActivity() {
                                 initialTab = themeModalInitialTab,
                                 currentScreenEffectMode = screenEffectMode,
                                 onSelectScreenEffectMode = { mode -> viewModel.setScreenEffectMode(mode) },
+                                currentThemeMode = themeMode,
+                                onSelectThemeMode = { mode -> viewModel.setThemeMode(mode) },
                                 onDismiss = { viewModel.closeThemeModal() }
                             )
                         }

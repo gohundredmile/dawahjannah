@@ -1,5 +1,6 @@
 package com.example.ui.screens
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -128,6 +129,25 @@ fun HomeScreen(
     var showNamazGuideDialog by remember { mutableStateOf(false) }
     var showNamazModeDialog by remember { mutableStateOf(false) }
 
+    val isAnyDialogOpen = showSehriIftarFullScreen || showDetailedSehriIftar ||
+        showRamadanSchedule || showNofolScheduleDialog || (selectedNofolSalat != null) ||
+        showAllFeaturesDialog || showSalatCalendarDialog || showTripleCalendarDialog ||
+        showAllahNamesOptionsDialog || showNamazGuideDialog || showNamazModeDialog
+
+    BackHandler(enabled = isAnyDialogOpen) {
+        if (showSehriIftarFullScreen) showSehriIftarFullScreen = false
+        else if (showDetailedSehriIftar) showDetailedSehriIftar = false
+        else if (showRamadanSchedule) showRamadanSchedule = false
+        else if (showNofolScheduleDialog) showNofolScheduleDialog = false
+        else if (selectedNofolSalat != null) selectedNofolSalat = null
+        else if (showAllFeaturesDialog) showAllFeaturesDialog = false
+        else if (showSalatCalendarDialog) showSalatCalendarDialog = false
+        else if (showTripleCalendarDialog) showTripleCalendarDialog = false
+        else if (showAllahNamesOptionsDialog) showAllahNamesOptionsDialog = false
+        else if (showNamazGuideDialog) showNamazGuideDialog = false
+        else if (showNamazModeDialog) showNamazModeDialog = false
+    }
+
     val exploreFeatureOrder by viewModel.exploreFeatureOrder.collectAsState()
     val exploreSortMode by viewModel.exploreSortMode.collectAsState()
 
@@ -136,6 +156,19 @@ fun HomeScreen(
         val isNamazModeActiveNow = NamazModeManager.isNamazModeActive(context)
         val namazMinutesLeft = NamazModeManager.getRemainingMinutes(context)
         listOf(
+            // Friday Mode
+            HomeFeatureItem(
+                id = "friday_mode",
+                serialNumberBn = "০০",
+                titleBn = "০. Friday Mode (জুমার মোড)",
+                shortTitleBn = "Friday Mode",
+                subtitleBn = "সূরা কাহাফ, ১০ সুন্নাত, সালাত রিমাইন্ডার, খুতবা নোট, সাদাকাহ ও সা'আতুল ইজাবাহ",
+                categoryBn = "সিগনেচার টুলস",
+                icon = Icons.Default.Mosque,
+                iconColor = Color(0xFF047857),
+                isTopEight = true,
+                onClickAction = { viewModel.openFridayMode() }
+            ),
             // পবিত্র কুরআন
             HomeFeatureItem(
                 id = "holy_quran",
@@ -523,7 +556,91 @@ fun HomeScreen(
             )
         }
 
-        // 1.1 In-App Active Content & Release Announcement Banner (Hidden for optimized clean UI)
+        // 1.1 Automatic Friday Mode Transform Banner (Every Friday)
+        val isFridayToday = java.util.Calendar.getInstance().get(java.util.Calendar.DAY_OF_WEEK) == java.util.Calendar.FRIDAY
+        if (isFridayToday) {
+            item {
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 12.dp, vertical = 6.dp)
+                        .clickable { viewModel.openFridayMode() },
+                    shape = RoundedCornerShape(18.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color(0xFF064E3B)),
+                    border = BorderStroke(1.5.dp, IslamicGold.copy(alpha = 0.8f)),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
+                                Surface(
+                                    shape = CircleShape,
+                                    color = IslamicGold.copy(alpha = 0.2f),
+                                    modifier = Modifier.size(36.dp)
+                                ) {
+                                    Box(contentAlignment = Alignment.Center) {
+                                        Text("🕌", fontSize = 18.sp)
+                                    }
+                                }
+                                Spacer(modifier = Modifier.width(10.dp))
+                                Column {
+                                    Text(
+                                        text = "আজ পবিত্র জুমার দিন — Friday Mode সক্রিয়",
+                                        style = MaterialTheme.typography.titleSmall,
+                                        fontWeight = FontWeight.Bold,
+                                        color = IslamicGold,
+                                        fontFamily = LocalBanglaFontFamily.current
+                                    )
+                                    Text(
+                                        text = "সূরা কাহাফ, ১০ সুন্নাত, খুতবা নোটস ও দো'আ",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = Color.White.copy(alpha = 0.85f),
+                                        fontFamily = LocalBanglaFontFamily.current
+                                    )
+                                }
+                            }
+                            Surface(
+                                shape = RoundedCornerShape(10.dp),
+                                color = Color(0xFF047857),
+                                modifier = Modifier.clickable { viewModel.openFridayMode() }
+                            ) {
+                                Text(
+                                    text = "প্রবেশ ➔",
+                                    fontSize = 12.sp,
+                                    color = Color.White,
+                                    fontFamily = LocalBanglaFontFamily.current,
+                                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
+                                )
+                            }
+                        }
+                        Spacer(modifier = Modifier.height(10.dp))
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            listOf("📖 সূরা কাহাফ", "🌿 ১০ সুন্নাত", "🤲 দো'আ কবুল ক্ষণ", "📝 খুতবা নোট").forEach { chip ->
+                                Surface(
+                                    shape = RoundedCornerShape(8.dp),
+                                    color = Color.White.copy(alpha = 0.12f)
+                                ) {
+                                    Text(
+                                        text = chip,
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = Color.White,
+                                        fontFamily = LocalBanglaFontFamily.current,
+                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
 
         // 2. Quick Action & Streak Highlights
         item {

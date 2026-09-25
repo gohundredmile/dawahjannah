@@ -28,6 +28,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AutoAwesome
+import androidx.compose.material.icons.filled.BrightnessMedium
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Palette
@@ -74,6 +75,7 @@ import androidx.compose.ui.window.DialogProperties
 import com.example.data.model.AuroraWallpaperConfig
 import com.example.data.model.AuroraWavePreset
 import com.example.data.model.ScreenEffectMode
+import com.example.data.model.ThemeMode
 import com.example.data.model.ThemeStyle
 
 enum class ModalSectionTab(val title: String) {
@@ -184,6 +186,8 @@ fun AuroraThemesModal(
     initialTab: ModalSectionTab = ModalSectionTab.THEMES,
     currentScreenEffectMode: ScreenEffectMode = ScreenEffectMode.GLASS,
     onSelectScreenEffectMode: (ScreenEffectMode) -> Unit = {},
+    currentThemeMode: ThemeMode = ThemeMode.SYSTEM,
+    onSelectThemeMode: (ThemeMode) -> Unit = {},
     onDismiss: () -> Unit
 ) {
     var activeModalTab by remember(initialTab) { mutableStateOf(initialTab) }
@@ -424,6 +428,64 @@ fun AuroraThemesModal(
                                     fontWeight = FontWeight.Bold,
                                     color = Color(0xFF059669)
                                 )
+                            }
+                        }
+                    }
+
+                    // A. Display Mode (Dark / Light / System) Relocated to 'থিম ও কালার শৈলী'
+                    Surface(
+                        shape = RoundedCornerShape(14.dp),
+                        color = Color(0xFFF8FAFC),
+                        border = BorderStroke(1.dp, Color(0xFFE2E8F0)),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Column(modifier = Modifier.padding(10.dp)) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(
+                                    imageVector = Icons.Default.BrightnessMedium,
+                                    contentDescription = null,
+                                    tint = Color(0xFF047857),
+                                    modifier = Modifier.size(15.dp)
+                                )
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text(
+                                    text = "ডিসপ্লে মোড (ডার্ক / লাইট):",
+                                    fontSize = 12.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color(0xFF047857)
+                                )
+                            }
+                            Spacer(modifier = Modifier.height(6.dp))
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                            ) {
+                                listOf(
+                                    ThemeMode.SYSTEM to "সিস্টেম",
+                                    ThemeMode.LIGHT to "☼ লাইট মোড",
+                                    ThemeMode.DARK to "☾ ডার্ক মোড"
+                                ).forEach { (mode, label) ->
+                                    val isSelected = currentThemeMode == mode
+                                    Surface(
+                                        onClick = { onSelectThemeMode(mode) },
+                                        shape = RoundedCornerShape(8.dp),
+                                        color = if (isSelected) Color(0xFF047857) else Color.White,
+                                        border = BorderStroke(1.dp, if (isSelected) Color(0xFF047857) else Color(0xFFCBD5E1)),
+                                        modifier = Modifier.weight(1f)
+                                    ) {
+                                        Box(
+                                            contentAlignment = Alignment.Center,
+                                            modifier = Modifier.padding(vertical = 6.dp)
+                                        ) {
+                                            Text(
+                                                text = label,
+                                                fontSize = 11.5.sp,
+                                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                                color = if (isSelected) Color.White else Color(0xFF334155)
+                                            )
+                                        }
+                                    }
+                                }
                             }
                         }
                     }

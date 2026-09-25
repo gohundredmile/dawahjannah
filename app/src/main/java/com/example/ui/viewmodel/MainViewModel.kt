@@ -99,6 +99,7 @@ enum class AppTab(val index: Int, val titleBn: String) {
 
 enum class ToolsSubScreen(val titleBn: String) {
     MAIN("টুলস"),
+    FRIDAY_MODE("Friday Mode (জুমার মোড)"),
     ISLAMIC_HABIT_SYSTEM("Islamic Habit System (ইসলামিক অভ্যাস ও সুন্নাহ পদ্ধতি)"),
     DUA_BY_SITUATION("Dua by Situation (অনুভূতি ও পরিস্থিতি অনুযায়ী দু'আ)"),
     PERSONAL_DUA_BUILDER("Personal Dua Builder (ব্যক্তিগত দো'আ আর্কিটেক্ট)"),
@@ -113,6 +114,19 @@ enum class ToolsSubScreen(val titleBn: String) {
     MOSQUE_MODE("মসজিদ মোড (Mosque Mode)"),
     HOLY_QURAN("আল-কুরআন (অনুবাদ, তাফসীর ও তিলাওয়াত)"),
     HADITH_COLLECTION("সহীহ হাদীস সম্ভার (HadithBD / IRD)")
+}
+
+sealed class AppNavDestination {
+    data class Tab(val tab: AppTab) : AppNavDestination()
+    data class ToolsSub(
+        val sub: ToolsSubScreen,
+        val targetSurah: Int? = null,
+        val targetHadithBook: String? = null
+    ) : AppNavDestination()
+    data class MoreSub(
+        val sub: MoreSubScreen,
+        val section: IslamicLifeSection? = null
+    ) : AppNavDestination()
 }
 
 enum class MoreSubScreen(val titleBn: String) {
@@ -167,8 +181,80 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     val selectedIslamicSection: StateFlow<IslamicLifeSection?> = _selectedIslamicSection.asStateFlow()
 
     private var previousTabBeforeSettings: AppTab? = null
+    private val navBackStack = java.util.ArrayDeque<AppNavDestination>()
+
+    private fun pushCurrentState() {
+        val dest: AppNavDestination = when {
+            _currentTab.value == AppTab.TOOLS && _toolsSubScreen.value != ToolsSubScreen.MAIN -> {
+                AppNavDestination.ToolsSub(
+                    _toolsSubScreen.value,
+                    _targetQuranSurahNumber.value,
+                    _targetHadithBookSlug.value
+                )
+            }
+            _currentTab.value == AppTab.MORE && _moreSubScreen.value != MoreSubScreen.MAIN -> {
+                AppNavDestination.MoreSub(
+                    _moreSubScreen.value,
+                    _selectedIslamicSection.value
+                )
+            }
+            else -> {
+                AppNavDestination.Tab(_currentTab.value)
+            }
+        }
+        if (navBackStack.isEmpty() || navBackStack.peekLast() != dest) {
+            navBackStack.addLast(dest)
+        }
+    }
+
+    fun canNavigateBack(): Boolean = navBackStack.isNotEmpty() ||
+        (_currentTab.value == AppTab.TOOLS && _toolsSubScreen.value != ToolsSubScreen.MAIN) ||
+        (_currentTab.value == AppTab.MORE && _moreSubScreen.value != MoreSubScreen.MAIN) ||
+        _currentTab.value != AppTab.HOME
+
+    fun navigateBack(): Boolean {
+        if (navBackStack.isNotEmpty()) {
+            val prev = navBackStack.removeLast()
+            when (prev) {
+                is AppNavDestination.ToolsSub -> {
+                    _targetQuranSurahNumber.value = prev.targetSurah
+                    _targetHadithBookSlug.value = prev.targetHadithBook
+                    _toolsSubScreen.value = prev.sub
+                    _currentTab.value = AppTab.TOOLS
+                }
+                is AppNavDestination.MoreSub -> {
+                    _selectedIslamicSection.value = prev.section
+                    _moreSubScreen.value = prev.sub
+                    _currentTab.value = AppTab.MORE
+                }
+                is AppNavDestination.Tab -> {
+                    _toolsSubScreen.value = ToolsSubScreen.MAIN
+                    _moreSubScreen.value = MoreSubScreen.MAIN
+                    _currentTab.value = prev.tab
+                }
+            }
+            return true
+        }
+
+        if (_currentTab.value == AppTab.TOOLS && _toolsSubScreen.value != ToolsSubScreen.MAIN) {
+            _toolsSubScreen.value = ToolsSubScreen.MAIN
+            return true
+        }
+        if (_currentTab.value == AppTab.MORE && _moreSubScreen.value != MoreSubScreen.MAIN) {
+            _moreSubScreen.value = MoreSubScreen.MAIN
+            return true
+        }
+        if (_currentTab.value != AppTab.HOME) {
+            _currentTab.value = AppTab.HOME
+            return true
+        }
+        return false
+    }
 
     fun selectTab(tab: AppTab) {
+        if (_currentTab.value != tab) {
+            pushCurrentState()
+        }
         if (tab == AppTab.ROUTINE) {
             autoSelectCurrentRoutineTimeSlot()
         }
@@ -176,93 +262,105 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun navigateToToolsSubScreen(sub: ToolsSubScreen) {
+        pushCurrentState()
         _toolsSubScreen.value = sub
         _currentTab.value = AppTab.TOOLS
     }
 
+    fun openFridayMode() {
+        pushCurrentState()
+        _toolsSubScreen.value = ToolsSubScreen.FRIDAY_MODE
+        _currentTab.value = AppTab.TOOLS
+    }
+
     fun openDuaBySituation() {
+        pushCurrentState()
         _toolsSubScreen.value = ToolsSubScreen.DUA_BY_SITUATION
         _currentTab.value = AppTab.TOOLS
     }
 
     fun openPersonalDuaBuilder() {
+        pushCurrentState()
         _toolsSubScreen.value = ToolsSubScreen.PERSONAL_DUA_BUILDER
         _currentTab.value = AppTab.TOOLS
     }
 
     fun openExplainAyahCamera() {
+        pushCurrentState()
         _toolsSubScreen.value = ToolsSubScreen.EXPLAIN_AYAH_CAMERA
         _currentTab.value = AppTab.TOOLS
     }
 
     fun openAskBeforeYouAct() {
+        pushCurrentState()
         _toolsSubScreen.value = ToolsSubScreen.ASK_BEFORE_YOU_ACT
         _currentTab.value = AppTab.TOOLS
     }
 
     fun openIslamicHabitSystem() {
+        pushCurrentState()
         _toolsSubScreen.value = ToolsSubScreen.ISLAMIC_HABIT_SYSTEM
         _currentTab.value = AppTab.TOOLS
     }
 
     fun openRamadanIntelligence() {
+        pushCurrentState()
         _toolsSubScreen.value = ToolsSubScreen.RAMADAN_INTELLIGENCE
         _currentTab.value = AppTab.TOOLS
     }
 
     fun openMosqueMode() {
+        pushCurrentState()
         _toolsSubScreen.value = ToolsSubScreen.MOSQUE_MODE
         _currentTab.value = AppTab.TOOLS
     }
 
     fun openHolyQuran(surahNumber: Int? = null) {
+        pushCurrentState()
         _targetQuranSurahNumber.value = surahNumber
         _toolsSubScreen.value = ToolsSubScreen.HOLY_QURAN
         _currentTab.value = AppTab.TOOLS
     }
 
     fun openHadithCollection(bookSlug: String? = null) {
+        pushCurrentState()
         _targetHadithBookSlug.value = bookSlug
         _toolsSubScreen.value = ToolsSubScreen.HADITH_COLLECTION
         _currentTab.value = AppTab.TOOLS
     }
 
     fun navigateBackToTools() {
-        _toolsSubScreen.value = ToolsSubScreen.MAIN
+        navigateBack()
     }
 
     fun navigateToMoreSubScreen(sub: MoreSubScreen) {
+        pushCurrentState()
         _moreSubScreen.value = sub
     }
 
     fun openIslamicLifeSection(section: IslamicLifeSection) {
         if (ExcludedIslamicLifeTopics.isExcluded(section.titleBn)) return
+        pushCurrentState()
         _selectedIslamicSection.value = section
         _moreSubScreen.value = MoreSubScreen.ISLAMIC_LIFE_SECTION_DETAIL
     }
 
     fun openSettings(fromTab: AppTab = AppTab.HOME) {
+        pushCurrentState()
         previousTabBeforeSettings = fromTab
         _moreSubScreen.value = MoreSubScreen.SETTINGS
         _currentTab.value = AppTab.MORE
     }
 
     fun openQibla(fromTab: AppTab = AppTab.HOME) {
+        pushCurrentState()
         previousTabBeforeSettings = fromTab
         _moreSubScreen.value = MoreSubScreen.QIBLA
         _currentTab.value = AppTab.MORE
     }
 
     fun navigateBackToMore() {
-        if (_moreSubScreen.value == MoreSubScreen.SETTINGS && previousTabBeforeSettings != null) {
-            val returnTab = previousTabBeforeSettings ?: AppTab.HOME
-            previousTabBeforeSettings = null
-            _moreSubScreen.value = MoreSubScreen.MAIN
-            _currentTab.value = returnTab
-        } else {
-            _selectedIslamicSection.value = null
-            _moreSubScreen.value = MoreSubScreen.MAIN
-        }
+        navigateBack()
     }
 
     // CALENDAR & CLOCK & PRAYERS

@@ -90,6 +90,7 @@ data class IslamicToolItem(
 
 @Composable
 fun ToolsScreen(
+    onOpenFridayMode: () -> Unit = {},
     onOpenHolyQuran: () -> Unit = {},
     onOpenHadithCollection: () -> Unit = {},
     onOpenDuaBySituation: () -> Unit = {},
@@ -127,6 +128,148 @@ fun ToolsScreen(
         ),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
+        // TOP PREMIER SIGNATURE SPOTLIGHT CARD: "Friday Mode" (জুমার মোড)
+        item {
+            Card(
+                shape = RoundedCornerShape(24.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                border = BorderStroke(2.dp, Color(0xFF047857).copy(alpha = 0.85f)),
+                elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { onOpenFridayMode() }
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(
+                            Brush.verticalGradient(
+                                colors = listOf(
+                                    Color(0xFF047857).copy(alpha = 0.22f),
+                                    IslamicGold.copy(alpha = 0.14f),
+                                    MaterialTheme.colorScheme.surface
+                                )
+                            )
+                        )
+                        .padding(20.dp)
+                ) {
+                    Column {
+                        // Badge Row
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Surface(
+                                shape = RoundedCornerShape(12.dp),
+                                color = Color(0xFF047857),
+                                modifier = Modifier.padding(bottom = 8.dp)
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.AutoAwesome,
+                                        contentDescription = null,
+                                        tint = Color.White,
+                                        modifier = Modifier.size(13.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(4.dp))
+                                    Text(
+                                        text = "নতুন পূর্ণাঙ্গ মোড • শুক্রবার স্বয়ংক্রিয় সক্রিয়",
+                                        color = Color.White,
+                                        style = MaterialTheme.typography.labelSmall,
+                                        fontWeight = FontWeight.Bold,
+                                        fontFamily = banglaFont
+                                    )
+                                }
+                            }
+
+                            Surface(
+                                shape = CircleShape,
+                                color = IslamicGold.copy(alpha = 0.2f),
+                                modifier = Modifier.size(44.dp)
+                            ) {
+                                Box(contentAlignment = Alignment.Center) {
+                                    Text("🕌", fontSize = 22.sp)
+                                }
+                            }
+                        }
+
+                        // Title
+                        Text(
+                            text = "Friday Mode (জুমার মোড)",
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.ExtraBold,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+
+                        Text(
+                            text = "সাপ্তাহিক ঈদের দিন জুমার প্রস্তুতি, সূরা কাহাফ ও নূরানি পরিবেশ",
+                            style = MaterialTheme.typography.labelLarge,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFF047857),
+                            fontFamily = banglaFont
+                        )
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        // Subtitle
+                        Text(
+                            text = "সূরা আল-কাহফ (প্রথম ও শেষ ১০ আয়াত সহ পূর্ণ ১১৪ সূরা পাঠ), জুমার ১০টি সুন্নাত ও আদব, সালাত রিমাইন্ডার ও প্রস্তুতি, খুতবার নোটবুক, সা'আতুল ইজাবাহ (দোয়া কবুল হওয়ার বিশেষ মুহূর্ত ও দুটি প্রামাণ্য মত), জুমার সাদাকাহ ট্র্যাকার, সহীহ হাদীস ও ৪৫টি তাহকীককৃত আমল চেকলিস্ট।",
+                            style = MaterialTheme.typography.bodyMedium.copy(lineHeight = 22.sp),
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            fontFamily = banglaFont
+                        )
+
+                        Spacer(modifier = Modifier.height(14.dp))
+
+                        // Fast Feature Badges
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            listOf("📖 সূরা কাহাফ", "🌿 ১০ সুন্নাত", "🤲 দু'আ ক্ষণ", "📝 খুতবা নোট", "✅ চেকলিস্ট").take(4).forEach { pill ->
+                                Surface(
+                                    shape = RoundedCornerShape(8.dp),
+                                    color = Color(0xFF064E3B).copy(alpha = 0.15f),
+                                    border = BorderStroke(0.6.dp, IslamicGold.copy(alpha = 0.35f))
+                                ) {
+                                    Text(
+                                        text = pill,
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = MaterialTheme.colorScheme.onSurface,
+                                        fontFamily = banglaFont,
+                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                                    )
+                                }
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        // Action Button
+                        Button(
+                            onClick = onOpenFridayMode,
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(14.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF047857))
+                        ) {
+                            Text("🕌", fontSize = 16.sp)
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "Friday Mode এ প্রবেশ করুন",
+                                style = MaterialTheme.typography.labelLarge,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White,
+                                fontFamily = banglaFont
+                            )
+                        }
+                    }
+                }
+            }
+        }
         // TOP PREMIER SPOTLIGHT CARD: "Mosque Mode" (মসজিদ মোড)
         item {
             Card(

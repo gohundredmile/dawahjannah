@@ -52,6 +52,7 @@ import com.example.ui.screens.tools.AskBeforeYouActScreen
 import com.example.ui.screens.tools.DuaBySituationScreen
 import com.example.ui.screens.tools.ExplainAyahCameraScreen
 import com.example.ui.screens.tools.FridayModeScreen
+import com.example.ui.screens.tools.IslamicContextVerifyScreen
 import com.example.ui.screens.tools.IslamicHabitSystemScreen
 import com.example.ui.screens.tools.MosqueModeScreen
 import com.example.ui.screens.tools.PersonalDuaBuilderScreen
@@ -145,8 +146,8 @@ class MainActivity : ComponentActivity() {
                                     onOpenThemeModal = { viewModel.openThemeModal() },
                                     onOpenAppSettings = { viewModel.openSettings(AppTab.HOME) }
                                 )
-                            } else if (currentTab == AppTab.TOOLS && (currentToolsSub == ToolsSubScreen.EXPLAIN_AYAH_CAMERA || currentToolsSub == ToolsSubScreen.HOLY_QURAN || currentToolsSub == ToolsSubScreen.HADITH_COLLECTION || currentToolsSub == ToolsSubScreen.FRIDAY_MODE)) {
-                                // ExplainAyahCameraScreen, HolyQuranScreen, HadithMainScreen and FridayModeScreen have their own dedicated full-width top app bars and controls
+                            } else if (currentTab == AppTab.TOOLS && (currentToolsSub == ToolsSubScreen.EXPLAIN_AYAH_CAMERA || currentToolsSub == ToolsSubScreen.HOLY_QURAN || currentToolsSub == ToolsSubScreen.HADITH_COLLECTION || currentToolsSub == ToolsSubScreen.FRIDAY_MODE || currentToolsSub == ToolsSubScreen.ISLAMIC_CONTEXT_VERIFY)) {
+                                // Dedicated full-width top app bars with custom actions
                             } else if (!(currentTab == AppTab.MORE && currentMoreSub != MoreSubScreen.MAIN)) {
                                 val showTopBarBack = currentTab == AppTab.TASBIH || currentTab == AppTab.DUA || (currentTab == AppTab.TOOLS && currentToolsSub != ToolsSubScreen.MAIN)
                                 DawahTopAppBar(
@@ -238,6 +239,7 @@ class MainActivity : ComponentActivity() {
                                             onOpenTasbih = { viewModel.navigateToToolsSubScreen(ToolsSubScreen.TASBIH) },
                                             onOpenNamesOfAllah = { viewModel.navigateToToolsSubScreen(ToolsSubScreen.NAMES_OF_ALLAH) },
                                             onOpenMosqueMode = { viewModel.openMosqueMode() },
+                                            onOpenIslamicContextVerify = { viewModel.openIslamicContextVerify() },
                                             contentPadding = innerPadding
                                         )
                                         ToolsSubScreen.FRIDAY_MODE -> FridayModeScreen(
@@ -303,6 +305,9 @@ class MainActivity : ComponentActivity() {
                                         )
                                         ToolsSubScreen.NAMES_OF_ALLAH -> AsmaulHusnaScreen(
                                             viewModel = viewModel
+                                        )
+                                        ToolsSubScreen.ISLAMIC_CONTEXT_VERIFY -> IslamicContextVerifyScreen(
+                                            onNavigateBack = { viewModel.navigateBack() }
                                         )
                                     }
                                 }

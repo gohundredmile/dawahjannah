@@ -42,6 +42,9 @@ object IslamicLifeData {
         // ★★★ফযর নামাজের মাঝে ও পরের আমল সমুহ★★★
         FajrAmolData.section,
 
+        // ★★★শুক্রবারের বিশেষ দোয়া ও আমল★★★
+        FridaySpecialDuaAmolData.section,
+
         // 1. ★★★শুধুমাত্র দোয়াঃ শুধুমাত্র দোয়া সালাম ফিরানোর আগে★★ সালাতের ভিতর পঠিতব্য দো'আ সমূহ
         SalamBeforeDuaData.section,
 

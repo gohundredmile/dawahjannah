@@ -209,5 +209,31 @@ class ExampleUnitTest {
     val randomQuery = com.example.data.datasource.QuranAyahCatalog.findByQueryOrSnippet("non_existent_text_12345")
     assertNull(randomQuery)
   }
+
+  @Test
+  fun islamicContextVerifyCatalog_analyzesViralClaimsCorrectly() {
+    val presets = com.example.data.datasource.IslamicContextVerifyCatalog.presetClaims
+    assertTrue(presets.isNotEmpty())
+    assertTrue(presets.size >= 5)
+
+    // Verify Asr sleep claim is detected as unsupported/fabricated
+    val asrReport = com.example.data.datasource.IslamicContextVerifyCatalog.analyzeClaimLocally("আসরের পর ঘুমালে কি মানুষ পাগল হয়ে যায়?")
+    assertEquals(com.example.data.model.ClaimVerificationVerdict.MISQUOTED_OR_UNSUPPORTED, asrReport.verdict)
+    assertTrue(asrReport.hadithReferences.any { it.authenticityGrade.contains("জাল") || it.authenticityGrade.contains("Fabricated") })
+
+    // Verify Cat keeping claim is debunked
+    val catReport = com.example.data.datasource.IslamicContextVerifyCatalog.analyzeClaimLocally("ইসলামে বিড়াল পোষা কি অপবিত্র?")
+    assertEquals(com.example.data.model.ClaimVerificationVerdict.MISQUOTED_OR_UNSUPPORTED, catReport.verdict)
+    assertTrue(catReport.hadithReferences.any { it.translationBn.contains("অপবিত্র নয়") })
+
+    // Verify Black seed claim is context needed
+    val blackSeedReport = com.example.data.datasource.IslamicContextVerifyCatalog.analyzeClaimLocally("কালোজিরায় সকল রোগের নিরাময় আছে তাই ডাক্তার দরকার নেই")
+    assertEquals(com.example.data.model.ClaimVerificationVerdict.CONTEXT_NEEDED, blackSeedReport.verdict)
+    assertTrue(blackSeedReport.hadithReferences.isNotEmpty())
+
+    // Verify what is actually established separates text from interpretation
+    assertNotNull(blackSeedReport.whatIsActuallyEstablished.explicitTextualFact)
+    assertNotNull(blackSeedReport.whatIsActuallyEstablished.scholarlyInference)
+  }
 }
 

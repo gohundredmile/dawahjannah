@@ -121,6 +121,7 @@ fun ToolsScreen(
     onOpenTasbih: () -> Unit,
     onOpenNamesOfAllah: () -> Unit,
     onOpenMosqueMode: () -> Unit = {},
+    onOpenIslamicContextVerify: () -> Unit = {},
     contentPadding: PaddingValues = PaddingValues(0.dp)
 ) {
     val banglaFont = LocalBanglaFontFamily.current
@@ -390,19 +391,18 @@ fun ToolsScreen(
                 onClick = onOpenIslamicHabitSystem
             ),
             ToolFeatureItem(
-                id = "up_fatwa",
-                nameBn = "ফতোয়া ও মাসআলা",
-                fullNameBn = "ইসলামিক ফতোয়া ও মাসআলা গাইড",
-                subtitleBn = "চার মাজহাব ও সালাফে সালেহীনদের প্রামাণ্য দলীলভিত্তিক নির্দেশিকা",
-                descriptionBn = "দারুল ইফতা ও প্রখ্যাত ফকীহদের নির্ভরযোগ্য কিতাব থেকে বিশুদ্ধ মাসআলা সার্চ ও ক্যাটাগরিভিত্তিক সমাধান নিয়ে শীঘ্রই উন্মুক্ত হচ্ছে।",
-                icon = Icons.Default.MenuBook,
-                emoji = "📜",
-                badgeBn = "শীঘ্রই আসছে",
-                primaryColor = Color(0xFF475569),
-                softContainerColor = Color(0xFFF1F5F9),
-                highlights = listOf("চার মাজহাব", "দৈনন্দিন মাসআলা", "প্রামাণ্য ফতোয়া", "আসন্ন ফিচার"),
-                isAvailable = false,
-                onClick = {}
+                id = "tool_islamic_context_verify",
+                nameBn = "কনটেক্সট ও যাচাই",
+                fullNameBn = "Islamic Context & Verify (ইসলামিক কনটেক্সট ও যাচাই)",
+                subtitleBn = "See the claim. Check the evidence. Understand the context.",
+                descriptionBn = "হোয়াটসঅ্যাপ, ফেসবুক, ইউটিউব বা সোশ্যাল মিডিয়ায় ছড়িয়ে পড়া চেইন মেসেজ ও ধর্মীয় দাবিসমূহ কুরআন, সিহাহ্ সিত্তাহ সহীহ হাদিস ও বিজ্ঞ ফকীহগণের মতামতের আলোকে প্রামাণ্যভাবে যাচাই ও প্রেক্ষাপট উন্মোচন করুন।",
+                icon = Icons.Default.AutoAwesome,
+                emoji = "🛡️",
+                badgeBn = "AI ফ্ল্যাগশিপ",
+                primaryColor = Color(0xFF047857),
+                softContainerColor = Color(0xFFE8F5E9),
+                highlights = listOf("WhatsApp দাবি যাচাই", "কুরআন রেফারেন্স", "হাদিস তাহকীক", "প্রেক্ষাপট ও শান-এ-নুযুল", "ভুল তথ্য শনাক্ত"),
+                onClick = onOpenIslamicContextVerify
             ),
             ToolFeatureItem(
                 id = "up_audio_gen",
@@ -564,6 +564,113 @@ fun ToolsScreen(
                                 .fillMaxWidth()
                                 .height(50.dp)
                         )
+                    }
+                }
+            }
+
+            // FLAGSHIP AI TOOL HERO BANNER: Islamic Context & Verify
+            item(span = { GridItemSpan(3) }) {
+                Surface(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(18.dp))
+                        .clickable(onClick = onOpenIslamicContextVerify),
+                    shape = RoundedCornerShape(18.dp),
+                    color = MaterialTheme.colorScheme.surface,
+                    border = BorderStroke(1.2.dp, Color(0xFF047857).copy(alpha = 0.35f)),
+                    tonalElevation = 2.dp
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(
+                                Brush.horizontalGradient(
+                                    colors = listOf(
+                                        Color(0xFF047857).copy(alpha = 0.14f),
+                                        Color(0xFFD97706).copy(alpha = 0.08f),
+                                        MaterialTheme.colorScheme.surface
+                                    )
+                                )
+                            )
+                            .padding(14.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Surface(
+                                shape = RoundedCornerShape(14.dp),
+                                color = Color(0xFF047857).copy(alpha = 0.18f),
+                                border = BorderStroke(1.dp, Color(0xFF047857).copy(alpha = 0.3f)),
+                                modifier = Modifier.size(50.dp)
+                            ) {
+                                Box(contentAlignment = Alignment.Center) {
+                                    Text("🛡️", fontSize = 24.sp)
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.width(12.dp))
+
+                            Column(modifier = Modifier.weight(1f)) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Text(
+                                        text = "Islamic Context & Verify",
+                                        style = MaterialTheme.typography.titleSmall,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.onSurface
+                                    )
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Surface(
+                                        shape = RoundedCornerShape(6.dp),
+                                        color = Color(0xFF047857)
+                                    ) {
+                                        Text(
+                                            text = "AI ফ্ল্যাগশিপ",
+                                            fontSize = 10.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = Color.White,
+                                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                                            fontFamily = banglaFont
+                                        )
+                                    }
+                                }
+                                Spacer(modifier = Modifier.height(3.dp))
+                                Text(
+                                    text = "See the claim. Check the evidence. Understand the context.",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = Color(0xFF047857),
+                                    fontWeight = FontWeight.SemiBold,
+                                    fontSize = 11.sp
+                                )
+                                Spacer(modifier = Modifier.height(2.dp))
+                                Text(
+                                    text = "হোয়াটসঅ্যাপ ও সোশ্যাল মিডিয়ার ধর্মীয় দাবি কুরআন ও সহীহ হাদিস দ্বারা এক ট্যাপে যাচাই করুন",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    fontSize = 11.sp,
+                                    maxLines = 2,
+                                    lineHeight = 16.sp,
+                                    fontFamily = banglaFont
+                                )
+                            }
+
+                            Spacer(modifier = Modifier.width(8.dp))
+
+                            Surface(
+                                shape = CircleShape,
+                                color = Color(0xFF047857),
+                                modifier = Modifier.size(32.dp)
+                            ) {
+                                Box(contentAlignment = Alignment.Center) {
+                                    Icon(
+                                        imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                                        contentDescription = "Open",
+                                        tint = Color.White,
+                                        modifier = Modifier.size(16.dp)
+                                    )
+                                }
+                            }
+                        }
                     }
                 }
             }

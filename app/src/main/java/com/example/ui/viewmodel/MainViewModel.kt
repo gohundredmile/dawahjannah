@@ -113,7 +113,8 @@ enum class ToolsSubScreen(val titleBn: String) {
     NAMES_OF_ALLAH("আসমাউল হুসনা"),
     MOSQUE_MODE("মসজিদ মোড (Mosque Mode)"),
     HOLY_QURAN("আল-কুরআন (অনুবাদ, তাফসীর ও তিলাওয়াত)"),
-    HADITH_COLLECTION("সহীহ হাদীস সম্ভার (HadithBD / IRD)")
+    HADITH_COLLECTION("সহীহ হাদীস সম্ভার (HadithBD / IRD)"),
+    ISLAMIC_CONTEXT_VERIFY("Islamic Context & Verify (ইসলামিক কনটেক্সট ও যাচাই)")
 }
 
 sealed class AppNavDestination {
@@ -326,6 +327,12 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         pushCurrentState()
         _targetHadithBookSlug.value = bookSlug
         _toolsSubScreen.value = ToolsSubScreen.HADITH_COLLECTION
+        _currentTab.value = AppTab.TOOLS
+    }
+
+    fun openIslamicContextVerify(initialClaim: String? = null) {
+        pushCurrentState()
+        _toolsSubScreen.value = ToolsSubScreen.ISLAMIC_CONTEXT_VERIFY
         _currentTab.value = AppTab.TOOLS
     }
 

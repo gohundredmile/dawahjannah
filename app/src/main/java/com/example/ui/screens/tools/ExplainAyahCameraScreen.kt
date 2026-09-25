@@ -495,7 +495,7 @@ fun ExplainAyahCameraScreen(
                         )
                         Spacer(modifier = Modifier.width(6.dp))
                         Text(
-                            text = "Explain This Ayah ক্যামেরা ⚡ ৩০ms",
+                            text = "Explain This Ayah ক্যামেরা",
                             style = MaterialTheme.typography.labelMedium,
                             fontWeight = FontWeight.Bold,
                             color = Color.White
@@ -690,7 +690,7 @@ fun ExplainAyahCameraScreen(
                         )
                         Spacer(modifier = Modifier.width(6.dp))
                         Text(
-                            text = if (isAnalyzing) "⚡ লোকাল কুরআন ও হাদিস ডাটাবেস স্ক্যান (৩০-৪০ms)..." else "⚡ লোকাল ডাটাবেস ইঞ্জিন সক্রিয় (৩০-৪০ms) • শূন্য AI টাইমআউট",
+                            text = if (isAnalyzing) "পবিত্র কুরআনের আয়াত বিশ্লেষণ ও যাচাই করা হচ্ছে..." else "পবিত্র কুরআনের স্পষ্ট পৃষ্ঠার দিকে ক্যামেরা সোজা রাখুন",
                             style = MaterialTheme.typography.labelSmall,
                             color = Color.White.copy(alpha = 0.9f),
                             fontFamily = banglaFont
@@ -698,7 +698,7 @@ fun ExplainAyahCameraScreen(
                     }
                 }
 
-                // Quick Ayah & Surah Shortcuts Carousel (এক ট্যাপে তাৎক্ষণিক স্ক্যান)
+                // Quick Ayah & Surah Shortcuts Carousel (এক ট্যাপে পড়ার সুবিধা)
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -712,14 +712,14 @@ fun ExplainAyahCameraScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = "⚡ এক ট্যাপে স্ক্যান (কুরআন ও হাদিস ক্যাটালগ):",
+                            text = "এক ট্যাপে পড়ুন (কুরআন ও দো'আ ক্যাটালগ):",
                             style = MaterialTheme.typography.labelSmall,
                             color = IslamicGold,
                             fontWeight = FontWeight.Bold,
                             fontFamily = banglaFont
                         )
                         Text(
-                            text = "৩০ms ⚡",
+                            text = "ক্যাটালগ 📖",
                             style = MaterialTheme.typography.labelSmall,
                             color = Color.White.copy(alpha = 0.7f),
                             fontFamily = banglaFont

@@ -308,7 +308,7 @@ class SmartQuranSearchAiService(private val context: Context) {
                     relatedThemes = themesList,
                     primaryTopicBn = a.optString("primaryTopicBn", query),
                     primaryTopicEn = a.optString("primaryTopicEn", query),
-                    relatedHadithBn = a.optString("relatedHadithBn", null),
+                    relatedHadithBn = if (a.has("relatedHadithBn")) a.optString("relatedHadithBn") else null,
                     audioUrl = audioUrl
                 )
             )

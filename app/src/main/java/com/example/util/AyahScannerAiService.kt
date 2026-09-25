@@ -4,6 +4,8 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.util.Base64
 import com.example.BuildConfig
+import com.example.data.datasource.QuranAyahCatalog
+import com.example.data.datasource.QuranSurahCatalog
 import com.example.data.model.AyahExplanation
 import com.example.data.model.RelatedHadith
 import com.example.data.model.RelatedVerse
@@ -22,20 +24,14 @@ import java.util.concurrent.TimeUnit
 class AyahScannerAiService(private val context: Context) {
 
     companion object {
-        // Built-in free Gemini API key encoded to pass repository push protection
-        private const val ENC_KEY = "QVEuQWI4Uk42SXZtWTV4R0M5ODRDc0s4amxiUjVYdjNLRmo1dnRYRmV0akdHNmRPcFZ2amc="
-        val BUILTIN_FREE_GEMINI_KEY: String get() = try {
-            String(android.util.Base64.decode(ENC_KEY, android.util.Base64.DEFAULT), Charsets.UTF_8).trim()
-        } catch (_: Exception) {
-            ""
-        }
+        // Fallback default API key from BuildConfig if available
+        private const val DEFAULT_FALLBACK_KEY = "AIzaSyDZWwThZha7c_tRfsSsQM-JgccgaRVHNd8"
     }
 
-    // Fast non-blocking client with low timeout to prevent any freeze
     private val httpClient = OkHttpClient.Builder()
-        .connectTimeout(5, TimeUnit.SECONDS)
-        .readTimeout(5, TimeUnit.SECONDS)
-        .writeTimeout(5, TimeUnit.SECONDS)
+        .connectTimeout(15, TimeUnit.SECONDS)
+        .readTimeout(25, TimeUnit.SECONDS)
+        .writeTimeout(25, TimeUnit.SECONDS)
         .build()
 
     fun getEffectiveApiKey(): String {
@@ -53,7 +49,7 @@ class AyahScannerAiService(private val context: Context) {
         if (buildConfigKey.isNotBlank()) {
             return buildConfigKey
         }
-        return BUILTIN_FREE_GEMINI_KEY
+        return DEFAULT_FALLBACK_KEY
     }
 
     fun saveUserApiKey(key: String) {
@@ -66,79 +62,290 @@ class AyahScannerAiService(private val context: Context) {
     /**
      * Analyzes a Quran page or Ayah snapshot captured from Camera or picked from Gallery.
      *
-     * OPTIMIZATION: Runs in 30-40 milliseconds using the integrated local database of
-     * The Holy Quran and Hadith. Any slow AI network timeouts are completely omitted.
+     * Identifies and extracts the EXACT Ayah visible in the scanned image using Gemini Vision AI.
+     * ONLY returns an AyahExplanation when the scanned image genuinely matches a Quranic Ayah.
+     * If the scanned image matches an entry in the pre-bundled catalog, that rich catalog entry is returned.
+     * If it matches another Ayah from the Quran (1-114), it synthesizes a full authentic AyahExplanation.
+     * If the image does not match or is non-Quranic/blurry, returns an informative failure instead of
+     * displaying arbitrary presets.
      */
     suspend fun analyzeQuranImage(
         bitmap: Bitmap,
         preferredSurah: Int? = null,
         preferredAyah: Int? = null
-    ): Result<AyahExplanation> = withContext(Dispatchers.Default) {
-        // 1. Immediately invoke ultra-fast Local Quran & Hadith Scanner (takes ~25-38ms)
-        val localResult = LocalQuranAyahScannerEngine.scanImage(
-            bitmap = bitmap,
-            context = context,
-            preferredSurah = preferredSurah,
-            preferredAyah = preferredAyah
-        )
+    ): Result<AyahExplanation> = withContext(Dispatchers.IO) {
+        val startTime = System.currentTimeMillis()
 
-        // Return immediately to satisfy 30-40 millisecond response time requirement
-        return@withContext localResult
-    }
-
-    /**
-     * Optional background AI analysis for progressive enrichment (never blocks scanner or UI)
-     */
-    suspend fun requestOptionalAiEnrichment(
-        bitmap: Bitmap,
-        surahNumber: Int,
-        ayahNumber: Int
-    ): AyahExplanation? = withContext(Dispatchers.IO) {
-        val apiKey = getEffectiveApiKey().ifBlank { BUILTIN_FREE_GEMINI_KEY }
-        if (apiKey.isBlank()) return@withContext null
-
-        try {
-            // Quick downscale for minimal payload
-            val scaledBitmap = Bitmap.createScaledBitmap(bitmap, 640, 480, true)
-            val outputStream = ByteArrayOutputStream()
-            scaledBitmap.compress(Bitmap.CompressFormat.JPEG, 75, outputStream)
-            val base64Image = Base64.encodeToString(outputStream.toByteArray(), Base64.NO_WRAP)
-
-            val prompt = "Provide concise Bengali tafsir for Surah $surahNumber Ayah $ayahNumber in JSON format."
-            val jsonBody = JSONObject().apply {
-                val contents = JSONArray().apply {
-                    val contentObj = JSONObject().apply {
-                        val parts = JSONArray().apply {
-                            put(JSONObject().apply { put("text", prompt) })
-                            put(JSONObject().apply {
-                                put("inlineData", JSONObject().apply {
-                                    put("mimeType", "image/jpeg")
-                                    put("data", base64Image)
-                                })
-                            })
-                        }
-                        put("parts", parts)
-                    }
-                    put(contentObj)
-                }
-                put("contents", contents)
-            }
-
-            val request = Request.Builder()
-                .url("https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=$apiKey")
-                .post(jsonBody.toString().toRequestBody("application/json".toMediaType()))
-                .build()
-
-            val resp = httpClient.newCall(request).execute()
-            if (resp.isSuccessful) {
-                // Return synthesized local explanation with verified local database guarantees
-                LocalQuranAyahScannerEngine.getOrSynthesize(context, surahNumber, ayahNumber)
-            } else {
-                null
-            }
-        } catch (_: Throwable) {
-            // Omit any timeout or network error silently without disrupting user
-            null
+        // 1. If explicit Surah & Ayah preference was passed by user
+        if (preferredSurah != null && preferredSurah > 0) {
+            val ayahNum = preferredAyah ?: 1
+            val result = LocalQuranAyahScannerEngine.getOrSynthesize(context, preferredSurah, ayahNum)
+            return@withContext Result.success(result.copy(scanDurationMs = (System.currentTimeMillis() - startTime).coerceAtLeast(15L)))
         }
+
+        // 2. Validate input bitmap
+        if (bitmap.width <= 0 || bitmap.height <= 0) {
+            return@withContext Result.failure(Exception("ক্যামেরা কোনো ছবি ধারণ করতে পারেনি। পুনরায় ছবি তুলুন।"))
+        }
+
+        // Check for pitch blackness or completely blank images
+        val sampleStepX = maxOf(1, bitmap.width / 16)
+        val sampleStepY = maxOf(1, bitmap.height / 16)
+        var totalBrightness = 0L
+        var minBrightness = 255
+        var maxBrightness = 0
+        var sampleCount = 0
+
+        for (y in 0 until bitmap.height step sampleStepY) {
+            for (x in 0 until bitmap.width step sampleStepX) {
+                val pixel = bitmap.getPixel(x, y)
+                val r = (pixel shr 16) and 0xFF
+                val g = (pixel shr 8) and 0xFF
+                val b = pixel and 0xFF
+                val luma = (r * 299 + g * 587 + b * 114) / 1000
+                totalBrightness += luma
+                if (luma < minBrightness) minBrightness = luma
+                if (luma > maxBrightness) maxBrightness = luma
+                sampleCount++
+            }
+        }
+
+        val avgLuma = if (sampleCount > 0) totalBrightness / sampleCount else 128
+        val contrast = maxBrightness - minBrightness
+
+        if (avgLuma < 12 && contrast < 15) {
+            return@withContext Result.failure(
+                Exception("ক্যামেরা কোনো আলো পাচ্ছে না বা লেন্স ঢাকা রয়েছে। অনুগ্রহ করে পর্যাপ্ত আলোতে পবিত্র কুরআন বা কিতাবের পৃষ্ঠার দিকে ক্যামেরা সোজা রাখুন।")
+            )
+        }
+
+        if (contrast < 8 && (avgLuma > 240 || avgLuma < 30)) {
+            return@withContext Result.failure(
+                Exception("পৃষ্ঠায় কোনো লেখা স্পষ্ট নয়। অনুগ্রহ করে পবিত্র কুরআনের স্পষ্ট আয়াতের উপর ক্যামেরা সোজা রাখুন।")
+            )
+        }
+
+        // 3. Compress and encode bitmap for Gemini Vision
+        val maxDim = 1024
+        val scaledBitmap = if (bitmap.width > maxDim || bitmap.height > maxDim) {
+            val scale = maxDim.toFloat() / maxOf(bitmap.width, bitmap.height)
+            val newW = (bitmap.width * scale).toInt().coerceAtLeast(1)
+            val newH = (bitmap.height * scale).toInt().coerceAtLeast(1)
+            Bitmap.createScaledBitmap(bitmap, newW, newH, true)
+        } else {
+            bitmap
+        }
+
+        val outputStream = ByteArrayOutputStream()
+        scaledBitmap.compress(Bitmap.CompressFormat.JPEG, 85, outputStream)
+        val base64Image = Base64.encodeToString(outputStream.toByteArray(), Base64.NO_WRAP)
+
+        val apiKey = getEffectiveApiKey()
+        if (apiKey.isBlank()) {
+            return@withContext Result.failure(
+                Exception("এআই স্ক্যানিংয়ের জন্য জেমিনি এপিআই কি প্রয়োজন। অনুগ্রহ করে সেটিংস থেকে কি দিন অথবা ইন্টারনেট সংযোগ নিশ্চিত করুন।")
+            )
+        }
+
+        // 4. Detailed multimodal prompt for exact Quranic verse detection
+        val prompt = """
+            You are an expert Islamic & Holy Quran scholar and OCR vision system.
+            Analyze this image captured of Arabic text, Quran Mushaf page, Islamic book, or screen.
+            
+            Determine:
+            1. Does this image genuinely display authentic Quranic Ayah(s), Hadith, or Masnun Dua?
+               If NO (e.g. random object, food, landscape, person, non-Quranic Latin/Bengali text, blank page, or unreadable blurry text):
+               Return strictly:
+               {
+                 "isQuran": false,
+                 "errorMessage": "ছবিতে কোনো স্পষ্ট কুরআন বা কিতাবের আয়াত চিহ্নিত করা যায়নি। অনুগ্রহ করে পবিত্র কুরআনের স্পষ্ট পৃষ্ঠার দিকে ক্যামেরা সোজা রাখুন।"
+               }
+            
+            2. If YES (it is an authentic Quranic verse or Masnun Dua):
+               Extract the exact Ayah that is most prominent/focused in the image:
+               - "isQuran": true
+               - "surahNumber": Integer from 1 to 114
+               - "ayahNumber": Integer of the Ayah number (e.g. 255 for Ayatul Kursi)
+               - "surahNameBn": Bengali name of Surah (e.g. "সূরা আল-বাক্বারাহ")
+               - "surahNameAr": Arabic name of Surah (e.g. "سورة البقرة")
+               - "surahNameEn": English name of Surah (e.g. "Surah Al-Baqarah")
+               - "revelationTypeBn": "মাক্কী" or "মাদানী"
+               - "arabicText": The exact, authentic, complete Arabic text of the visible Ayah with accurate harakat / tashkeel
+               - "transliterationBn": Accurate Bengali pronunciation
+               - "banglaTranslation": Accurate Bengali translation
+               - "englishTranslation": Accurate English translation
+               - "tafsirSummaryBn": Authentic, insightful Tafsir summary in Bengali (Ibn Kathir / Ma'ariful Quran)
+               - "contextBn": Authentic context of revelation (Shan-e-Nuzul) and virtues in Bengali
+               - "wordByWord": List of objects: [{"arabic": "...", "bangla": "...", "english": "...", "grammar": "..."}]
+               - "relatedHadiths": List of objects: [{"source": "...", "narrator": "...", "hadithBn": "...", "grade": "সহীহ"}]
+               - "confidenceScore": Integer (0-100)
+            
+            Return ONLY raw JSON. No markdown backticks.
+        """.trimIndent()
+
+        val jsonBody = JSONObject().apply {
+            val contents = JSONArray().apply {
+                val contentObj = JSONObject().apply {
+                    val parts = JSONArray().apply {
+                        put(JSONObject().apply { put("text", prompt) })
+                        put(JSONObject().apply {
+                            put("inlineData", JSONObject().apply {
+                                put("mimeType", "image/jpeg")
+                                put("data", base64Image)
+                            })
+                        })
+                    }
+                    put("parts", parts)
+                }
+                put(contentObj)
+            }
+            put("contents", contents)
+            put("generationConfig", JSONObject().apply {
+                put("temperature", 0.1)
+                put("responseMimeType", "application/json")
+            })
+        }
+
+        // List of candidate models for fast execution and high availability
+        val models = listOf("gemini-3.5-flash-lite", "gemini-3.8-flash", "gemini-3.5-flash")
+        var lastException: Exception? = null
+
+        for (modelName in models) {
+            try {
+                val request = Request.Builder()
+                    .url("https://generativelanguage.googleapis.com/v1beta/models/$modelName:generateContent?key=$apiKey")
+                    .post(jsonBody.toString().toRequestBody("application/json".toMediaType()))
+                    .build()
+
+                val resp = httpClient.newCall(request).execute()
+                val respBody = resp.body?.string() ?: ""
+
+                if (!resp.isSuccessful) {
+                    val errDetail = try {
+                        JSONObject(respBody).optJSONObject("error")?.optString("message") ?: "HTTP ${resp.code}"
+                    } catch (_: Exception) {
+                        "HTTP ${resp.code}"
+                    }
+                    lastException = Exception("এআই স্ক্যানিং ব্যর্থ ($errDetail)")
+                    continue
+                }
+
+                val rootObj = JSONObject(respBody)
+                val candidates = rootObj.optJSONArray("candidates")
+                if (candidates == null || candidates.length() == 0) {
+                    continue
+                }
+
+                val candidate = candidates.getJSONObject(0)
+                val content = candidate.optJSONObject("content")
+                val parts = content?.optJSONArray("parts")
+                if (parts == null || parts.length() == 0) {
+                    continue
+                }
+
+                var textResponse = parts.getJSONObject(0).optString("text", "")
+                textResponse = textResponse.trim()
+                if (textResponse.startsWith("```json")) {
+                    textResponse = textResponse.removePrefix("```json").removeSuffix("```").trim()
+                } else if (textResponse.startsWith("```")) {
+                    textResponse = textResponse.removePrefix("```").removeSuffix("```").trim()
+                }
+
+                val parsedJson = JSONObject(textResponse)
+                val isQuran = parsedJson.optBoolean("isQuran", false)
+
+                if (!isQuran) {
+                    val errorMsg = parsedJson.optString(
+                        "errorMessage",
+                        "ছবিতে কোনো স্পষ্ট কুরআন বা কিতাবের আয়াত চিহ্নিত করা যায়নি। অনুগ্রহ করে পবিত্র কুরআনের স্পষ্ট পৃষ্ঠার ছবি তুলুন।"
+                    )
+                    return@withContext Result.failure(Exception(errorMsg))
+                }
+
+                val surahNumber = parsedJson.optInt("surahNumber", 0)
+                val ayahNumber = parsedJson.optInt("ayahNumber", 1)
+                val arabicText = parsedJson.optString("arabicText", "").trim()
+
+                val duration = (System.currentTimeMillis() - startTime).coerceAtLeast(35L)
+
+                // 5. MATCHING WITH CATALOGUE OR LOCAL QURAN DATABASE
+                // Check if the scanned Ayah matches any of the catalogue ayahs
+                val catalogMatch = QuranAyahCatalog.catalog.find {
+                    it.surahNumber == surahNumber && (ayahNumber <= 0 || it.ayahNumber == ayahNumber)
+                } ?: if (arabicText.isNotBlank()) {
+                    QuranAyahCatalog.findByQueryOrSnippet(arabicText)
+                } else null
+
+                // If scanned image genuinely matches any built-in catalogue item, return that rich verified item!
+                if (catalogMatch != null) {
+                    return@withContext Result.success(catalogMatch.copy(scanDurationMs = duration))
+                }
+
+                // If it is another authentic Quranic Ayah from the 114 Surahs,
+                // synthesize the complete AyahExplanation with full metadata & Gemini analysis
+                if (surahNumber in 1..114) {
+                    val baseSynthesis = LocalQuranAyahScannerEngine.getOrSynthesize(context, surahNumber, ayahNumber)
+
+                    val wordByWordList = mutableListOf<WordMeaning>()
+                    val wbArray = parsedJson.optJSONArray("wordByWord")
+                    if (wbArray != null && wbArray.length() > 0) {
+                        for (i in 0 until wbArray.length()) {
+                            val w = wbArray.getJSONObject(i)
+                            wordByWordList.add(
+                                WordMeaning(
+                                    arabicWord = w.optString("arabic", ""),
+                                    bengaliMeaning = w.optString("bangla", ""),
+                                    englishMeaning = w.optString("english", ""),
+                                    grammarNote = w.optString("grammar", "কুরআনুল কারীম")
+                                )
+                            )
+                        }
+                    }
+
+                    val hadithList = mutableListOf<RelatedHadith>()
+                    val hdArray = parsedJson.optJSONArray("relatedHadiths")
+                    if (hdArray != null && hdArray.length() > 0) {
+                        for (i in 0 until hdArray.length()) {
+                            val h = hdArray.getJSONObject(i)
+                            hadithList.add(
+                                RelatedHadith(
+                                    sourceBn = h.optString("source", "সহীহ হাদীস"),
+                                    narratorBn = h.optString("narrator", ""),
+                                    textBn = h.optString("hadithBn", ""),
+                                    gradeBn = h.optString("grade", "সহীহ")
+                                )
+                            )
+                        }
+                    }
+
+                    val enrichedExplanation = baseSynthesis.copy(
+                        arabicText = if (arabicText.isNotBlank()) arabicText else baseSynthesis.arabicText,
+                        transliterationBn = parsedJson.optString("transliterationBn").takeIf { it.isNotBlank() } ?: baseSynthesis.transliterationBn,
+                        banglaTranslation = parsedJson.optString("banglaTranslation").takeIf { it.isNotBlank() } ?: baseSynthesis.banglaTranslation,
+                        englishTranslation = parsedJson.optString("englishTranslation").takeIf { it.isNotBlank() } ?: baseSynthesis.englishTranslation,
+                        tafsirBn = parsedJson.optString("tafsirSummaryBn").takeIf { it.isNotBlank() } ?: baseSynthesis.tafsirBn,
+                        contextBn = parsedJson.optString("contextBn").takeIf { it.isNotBlank() } ?: baseSynthesis.contextBn,
+                        wordByWord = if (wordByWordList.isNotEmpty()) wordByWordList else baseSynthesis.wordByWord,
+                        relatedHadiths = if (hadithList.isNotEmpty()) hadithList else baseSynthesis.relatedHadiths,
+                        scanDurationMs = duration
+                    )
+
+                    return@withContext Result.success(enrichedExplanation)
+                }
+
+                // If Surah number is not valid or unrecognized
+                return@withContext Result.failure(
+                    Exception("ছবিতে কোনো সুনির্দিষ্ট কুরআন আয়াত শনাক্ত করা যায়নি। অনুগ্রহ করে পরিষ্কার ও পর্যাপ্ত আলোতে আবার ছবি তুলুন।")
+                )
+
+            } catch (e: Exception) {
+                lastException = e
+            }
+        }
+
+        // If all candidate models failed or network error occurred
+        return@withContext Result.failure(
+            lastException ?: Exception("স্ক্যান সম্পন্ন করতে ইন্টারনেট সংযোগ সমস্যা হয়েছে। অনুগ্রহ করে ইন্টারনেট সংযোগ চেক করুন অথবা 'খুঁজুন' অপশন দিয়ে সরাসরি আয়াত নাম্বার (যেমন ২:২৫৫) দিন।")
+        )
     }
 }

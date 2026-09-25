@@ -197,5 +197,17 @@ class ExampleUnitTest {
     assertNotNull(registered)
     assertEquals(16, registered?.items?.size)
   }
+
+  @Test
+  fun quranAyahCatalog_matchesAuthenticVerses() {
+    val ayatulKursi = com.example.data.datasource.QuranAyahCatalog.findByQueryOrSnippet("2:255")
+    assertNotNull(ayatulKursi)
+    assertEquals(2, ayatulKursi?.surahNumber)
+    assertEquals(255, ayatulKursi?.ayahNumber)
+    assertTrue(ayatulKursi?.arabicText?.contains("اللَّهُ لَا إِلَٰهَ إِلَّا هُوَ") == true)
+
+    val randomQuery = com.example.data.datasource.QuranAyahCatalog.findByQueryOrSnippet("non_existent_text_12345")
+    assertNull(randomQuery)
+  }
 }
 

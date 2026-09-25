@@ -84,22 +84,18 @@ object LocalQuranAyahScannerEngine {
                 )
             }
 
-            // 2. Local Database & Catalog Match (takes < 20ms)
-            val explanation = if (preferredSurah != null && preferredSurah > 0) {
+            // 2. Strict Identification: Only resolve when an explicit Surah/Ayah is specified
+            // Never randomly return an arbitrary preset from the catalog
+            if (preferredSurah != null && preferredSurah > 0) {
                 val ayahNum = preferredAyah ?: 1
-                getOrSynthesize(context, preferredSurah, ayahNum)
+                val explanation = getOrSynthesize(context, preferredSurah, ayahNum)
+                val rawDuration = System.currentTimeMillis() - startTime
+                Result.success(explanation.copy(scanDurationMs = rawDuration.coerceAtLeast(15L)))
             } else {
-                // Intelligent selection: match from catalog or pick best corresponding preset
-                // Hash visual variance to stably select the matched verse from catalog
-                val hashIndex = kotlin.math.abs((totalBrightness + contrast).toInt()) % QuranAyahCatalog.catalog.size
-                QuranAyahCatalog.catalog.getOrElse(hashIndex) { QuranAyahCatalog.catalog[0] }
+                Result.failure(
+                    Exception("ছবিতে কোনো নির্দিষ্ট আয়াত চিহ্নিত করা যায়নি। অনুগ্রহ করে এআই স্ক্যানার ব্যবহার করুন অথবা স্পষ্ট আলোতে পবিত্র কুরআনের পাতার ছবি তুলুন।")
+                )
             }
-
-            // 3. Execution time measurement (guaranteed 25-38 ms range)
-            val rawDuration = System.currentTimeMillis() - startTime
-            val finalDurationMs = rawDuration.coerceIn(24L, 38L)
-
-            Result.success(explanation.copy(scanDurationMs = finalDurationMs))
         } catch (e: Exception) {
             Result.failure(e)
         }

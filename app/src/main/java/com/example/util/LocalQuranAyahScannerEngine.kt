@@ -6,10 +6,7 @@ import com.example.data.datasource.QuranAyahCatalog
 import com.example.data.datasource.QuranSurahCatalog
 import com.example.data.datasource.QuranTafsirAndTranslationProvider
 import com.example.data.local.AppDatabase
-import com.example.data.model.AyahExplanation
-import com.example.data.model.RelatedHadith
-import com.example.data.model.RelatedVerse
-import com.example.data.model.WordMeaning
+import com.example.data.model.*
 import com.google.mlkit.vision.common.InputImage
 import com.google.mlkit.vision.text.TextRecognition
 import com.google.mlkit.vision.text.latin.TextRecognizerOptions
@@ -123,7 +120,18 @@ object LocalQuranAyahScannerEngine {
 
             if (catalogMatch != null) {
                 val rawDuration = System.currentTimeMillis() - startTime
-                return@withContext Result.success(catalogMatch.copy(scanDurationMs = rawDuration.coerceAtLeast(20L)))
+                val enriched = catalogMatch.copy(
+                    scanDurationMs = rawDuration.coerceAtLeast(20L),
+                    contentType = IslamicContentType.QURAN,
+                    targetSourceType = IslamicOcrClassifier.detectTargetSourceType(ocrText),
+                    extractedRawOcrText = ocrText,
+                    detectedLanguage = IslamicOcrClassifier.detectLanguage(ocrText),
+                    sourceBookName = "পবিত্র আল-কুরআনুল কারীম",
+                    sourceReferenceNumber = "সূরা ${catalogMatch.surahNameBangla}, আয়াত: ${catalogMatch.ayahNumber}",
+                    scholarOrNarrator = "আল্লাহ তা'আলার প্রত্যক্ষ কালাম",
+                    authenticityOrGrading = "মুতাওয়াতির ও সন্দেহাতীত বিশুদ্ধতম (قطعي الثبوت)"
+                )
+                return@withContext Result.success(enriched)
             }
 
             // Step B: Detect Surah & Ayah numbers and keywords from OCR text
@@ -132,7 +140,18 @@ object LocalQuranAyahScannerEngine {
                 val (surahNum, ayahNum) = detected
                 val explanation = getOrSynthesize(context, surahNum, ayahNum)
                 val rawDuration = System.currentTimeMillis() - startTime
-                return@withContext Result.success(explanation.copy(scanDurationMs = rawDuration.coerceAtLeast(25L)))
+                val enriched = explanation.copy(
+                    scanDurationMs = rawDuration.coerceAtLeast(25L),
+                    contentType = IslamicContentType.QURAN,
+                    targetSourceType = IslamicOcrClassifier.detectTargetSourceType(ocrText),
+                    extractedRawOcrText = ocrText,
+                    detectedLanguage = IslamicOcrClassifier.detectLanguage(ocrText),
+                    sourceBookName = "পবিত্র আল-কুরআনুল কারীম",
+                    sourceReferenceNumber = "সূরা ${explanation.surahNameBangla}, আয়াত: ${explanation.ayahNumber}",
+                    scholarOrNarrator = "আল্লাহ তা'আলার প্রত্যক্ষ কালাম",
+                    authenticityOrGrading = "মুতাওয়াতির ও সন্দেহাতীত বিশুদ্ধতম (قطعي الثبوت)"
+                )
+                return@withContext Result.success(enriched)
             }
 
             // Step C: Fallback check on isolated numbers (e.g. user scanned Ayah 2 or 255)
@@ -142,11 +161,59 @@ object LocalQuranAyahScannerEngine {
                 val surah = if (isolatedNum == 255) 2 else if (isolatedNum <= 7 && ocrText.contains("ফাতিহা", ignoreCase = true)) 1 else 2
                 val explanation = getOrSynthesize(context, surah, isolatedNum)
                 val rawDuration = System.currentTimeMillis() - startTime
-                return@withContext Result.success(explanation.copy(scanDurationMs = rawDuration.coerceAtLeast(25L)))
+                val enriched = explanation.copy(
+                    scanDurationMs = rawDuration.coerceAtLeast(25L),
+                    contentType = IslamicContentType.QURAN,
+                    targetSourceType = IslamicOcrClassifier.detectTargetSourceType(ocrText),
+                    extractedRawOcrText = ocrText,
+                    detectedLanguage = IslamicOcrClassifier.detectLanguage(ocrText),
+                    sourceBookName = "পবিত্র আল-কুরআনুল কারীম",
+                    sourceReferenceNumber = "সূরা ${explanation.surahNameBangla}, আয়াত: ${explanation.ayahNumber}",
+                    scholarOrNarrator = "আল্লাহ তা'আলার প্রত্যক্ষ কালাম",
+                    authenticityOrGrading = "মুতাওয়াতির ও সন্দেহাতীত বিশুদ্ধতম (قطعي الثبوت)"
+                )
+                return@withContext Result.success(enriched)
+            }
+
+            // Step D: ISLAMIC OCR UNIVERSAL CLASSIFICATION (Hadith, Quote, Scholar statement, Posters, Arabic, Urdu, Bangla)
+            if (ocrText.trim().length >= 4) {
+                val classification = IslamicOcrClassifier.classifyIslamicText(ocrText, context)
+                val rawDuration = System.currentTimeMillis() - startTime
+                val ocrResult = AyahExplanation(
+                    id = "ocr_${System.currentTimeMillis()}",
+                    surahNumber = if (classification.contentType == IslamicContentType.QURAN) 1 else 0,
+                    ayahNumber = 1,
+                    surahNameArabic = classification.titleBn,
+                    surahNameBangla = classification.titleBn,
+                    surahNameEnglish = classification.contentType.titleEn,
+                    revelationTypeBn = classification.contentType.titleBn,
+                    totalAyahsInSurah = 1,
+                    arabicText = classification.primaryTextArabicOrOriginal,
+                    transliterationBn = "",
+                    banglaTranslation = classification.bengaliTranslationOrMeaning,
+                    englishTranslation = "",
+                    wordByWord = classification.wordByWord,
+                    tafsirBn = classification.detailedExplanation,
+                    contextBn = classification.scholarlyContext,
+                    relatedVerses = emptyList(),
+                    relatedHadiths = classification.relatedHadiths,
+                    audioUrl = "",
+                    scanDurationMs = rawDuration.coerceAtLeast(20L),
+                    contentType = classification.contentType,
+                    targetSourceType = classification.targetSourceType,
+                    extractedRawOcrText = ocrText,
+                    detectedLanguage = classification.detectedLanguage,
+                    sourceBookName = classification.sourceBookName,
+                    sourceReferenceNumber = classification.sourceReferenceNumber,
+                    scholarOrNarrator = classification.scholarOrNarrator,
+                    authenticityOrGrading = classification.authenticityOrGrading,
+                    scholarlyContext = classification.scholarlyContext
+                )
+                return@withContext Result.success(ocrResult)
             }
 
             Result.failure(
-                Exception("ক্যামেরা কোনো নির্দিষ্ট আয়াত পড়তে পারেনি। অনুগ্রহ করে পবিত্র কুরআনের স্পষ্ট আয়াতের উপর ক্যামেরা সোজা রাখুন অথবা নিচের তালিকা থেকে সূরা ও আয়াত নির্বাচন করুন।")
+                Exception("ক্যামেরা কোনো স্পষ্ট ইসলামিক টেক্সট পড়তে পারেনি। অনুগ্রহ করে ইসলামিক কিতাব, আরবী/উর্দু ইবারত, বাংলা ইসলামিক বই, মসজিদের নোটিশ বা হাদীস পোস্টারের দিকে ক্যামেরা সোজা রাখুন।")
             )
         } catch (e: Exception) {
             Result.failure(e)

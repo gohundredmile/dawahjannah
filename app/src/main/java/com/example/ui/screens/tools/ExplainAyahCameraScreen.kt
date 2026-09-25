@@ -137,13 +137,13 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import com.example.data.datasource.QuranAyahCatalog
 import com.example.data.datasource.QuranSurahCatalog
-import com.example.data.model.AyahExplanation
-import com.example.data.model.WordMeaning
+import com.example.data.model.*
 import com.example.ui.theme.IslamicGold
 import com.example.ui.theme.LocalArabicFontFamily
 import com.example.ui.theme.LocalBanglaFontFamily
 import com.example.util.AyahAudioPlayerHelper
 import com.example.util.AyahScannerAiService
+import com.example.util.IslamicOcrClassifier
 import com.example.util.LocalQuranAyahScannerEngine
 import com.example.util.LoopMode
 import kotlinx.coroutines.Dispatchers
@@ -705,12 +705,12 @@ fun ExplainAyahCameraScreen(
                 // Live Real-Time Scanning Instructions
                 Surface(
                     shape = RoundedCornerShape(20.dp),
-                    color = Color.Black.copy(alpha = 0.55f),
-                    border = BorderStroke(0.8.dp, Color.White.copy(alpha = 0.25f)),
+                    color = Color.Black.copy(alpha = 0.65f),
+                    border = BorderStroke(0.8.dp, IslamicGold.copy(alpha = 0.4f)),
                     modifier = Modifier.padding(bottom = 6.dp)
                 ) {
                     Row(
-                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                        modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Icon(
@@ -721,11 +721,75 @@ fun ExplainAyahCameraScreen(
                         )
                         Spacer(modifier = Modifier.width(6.dp))
                         Text(
-                            text = if (isAnalyzing) "পবিত্র কুরআনের আয়াত বিশ্লেষণ ও যাচাই করা হচ্ছে..." else "পবিত্র কুরআনের স্পষ্ট পৃষ্ঠার দিকে ক্যামেরা সোজা রাখুন",
+                            text = if (isAnalyzing) "ইসলামিক টেক্সট বিশ্লেষণ ও সূত্র অনুসন্ধান চলছে..." else "Islamic OCR: কিতাব, আরবী/উর্দু টেক্সট বা পোস্টারের দিকে ক্যামেরা ধরুন",
                             style = MaterialTheme.typography.labelSmall,
-                            color = Color.White.copy(alpha = 0.9f),
+                            color = Color.White.copy(alpha = 0.95f),
                             fontFamily = banglaFont
                         )
+                    }
+                }
+
+                // Islamic OCR Target Capabilities Carousel
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 3.dp)
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 4.dp, vertical = 2.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "Islamic OCR স্ক্যান সক্ষমতা:",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = IslamicGold,
+                            fontWeight = FontWeight.Bold,
+                            fontFamily = banglaFont
+                        )
+                        Surface(
+                            shape = RoundedCornerShape(6.dp),
+                            color = Color(0xFF047857)
+                        ) {
+                            Text(
+                                text = "কুরআন • হাদীস • বাণী • উক্তি",
+                                style = MaterialTheme.typography.labelSmall,
+                                fontSize = 9.5.sp,
+                                color = Color.White,
+                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                            )
+                        }
+                    }
+                    LazyRow(
+                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                        contentPadding = PaddingValues(horizontal = 2.dp, vertical = 2.dp)
+                    ) {
+                        val targetChips = listOf(
+                            "📚 ইসলামিক বই",
+                            "🖋️ আরবি টেক্সট",
+                            "🇵🇰 উর্দু বয়ান",
+                            "🇧🇩 বাংলা ইসলামিক বই",
+                            "🕌 মসজিদ পোস্টার",
+                            "📌 হাদিস পোস্টার"
+                        )
+                        items(targetChips) { chip ->
+                            Surface(
+                                shape = RoundedCornerShape(10.dp),
+                                color = Color.Black.copy(alpha = 0.6f),
+                                border = BorderStroke(0.6.dp, Color.White.copy(alpha = 0.25f))
+                            ) {
+                                Text(
+                                    text = chip,
+                                    style = MaterialTheme.typography.labelSmall,
+                                    fontSize = 10.sp,
+                                    color = Color.White.copy(alpha = 0.9f),
+                                    fontFamily = banglaFont,
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
+                                )
+                            }
+                        }
                     }
                 }
 
@@ -1566,7 +1630,222 @@ private fun AyahExplanationDetailView(
             }
         }
 
-        // Quick Audio Player Strip (Always accessible)
+        // Islamic OCR Identification & Verified Source Card
+        item {
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 6.dp),
+                shape = RoundedCornerShape(18.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = Color(ayah.contentType.colorHex).copy(alpha = 0.12f)
+                ),
+                border = BorderStroke(1.2.dp, Color(ayah.contentType.colorHex).copy(alpha = 0.7f))
+            ) {
+                Column(modifier = Modifier.padding(14.dp)) {
+                    // Header: Genre Badge & Target Material Badge
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Surface(
+                            shape = RoundedCornerShape(10.dp),
+                            color = Color(ayah.contentType.colorHex)
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(ayah.contentType.icon, fontSize = 14.sp)
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text(
+                                    text = ayah.contentType.titleBn,
+                                    style = MaterialTheme.typography.labelMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color.White,
+                                    fontFamily = banglaFont
+                                )
+                            }
+                        }
+
+                        Surface(
+                            shape = RoundedCornerShape(8.dp),
+                            color = MaterialTheme.colorScheme.surfaceVariant,
+                            border = BorderStroke(0.5.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.3f))
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(ayah.targetSourceType.icon, fontSize = 12.sp)
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text(
+                                    text = ayah.targetSourceType.titleBn,
+                                    style = MaterialTheme.typography.labelSmall,
+                                    fontFamily = banglaFont
+                                )
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    // Source Details Grid
+                    Surface(
+                        shape = RoundedCornerShape(12.dp),
+                        color = MaterialTheme.colorScheme.surface,
+                        border = BorderStroke(0.8.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.15f)),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                            if (ayah.sourceBookName.isNotBlank()) {
+                                Row(verticalAlignment = Alignment.Top) {
+                                    Text(
+                                        text = "📖 কিতাব / গ্রন্থ: ",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.primary,
+                                        fontFamily = banglaFont
+                                    )
+                                    Text(
+                                        text = ayah.sourceBookName,
+                                        style = MaterialTheme.typography.bodySmall,
+                                        fontWeight = FontWeight.SemiBold,
+                                        fontFamily = banglaFont
+                                    )
+                                }
+                            }
+                            if (ayah.sourceReferenceNumber.isNotBlank()) {
+                                Row(verticalAlignment = Alignment.Top) {
+                                    Text(
+                                        text = "📌 রেফারেন্স নং: ",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.primary,
+                                        fontFamily = banglaFont
+                                    )
+                                    Text(
+                                        text = ayah.sourceReferenceNumber,
+                                        style = MaterialTheme.typography.bodySmall,
+                                        fontFamily = banglaFont
+                                    )
+                                }
+                            }
+                            if (ayah.scholarOrNarrator.isNotBlank()) {
+                                Row(verticalAlignment = Alignment.Top) {
+                                    Text(
+                                        text = "👤 বর্ণনাকারী / আলেম: ",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.primary,
+                                        fontFamily = banglaFont
+                                    )
+                                    Text(
+                                        text = ayah.scholarOrNarrator,
+                                        style = MaterialTheme.typography.bodySmall,
+                                        fontFamily = banglaFont
+                                    )
+                                }
+                            }
+                            if (ayah.authenticityOrGrading.isNotBlank()) {
+                                Row(verticalAlignment = Alignment.Top) {
+                                    Text(
+                                        text = "✅ মানদণ্ড / সনদ: ",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        fontWeight = FontWeight.Bold,
+                                        color = Color(0xFF047857),
+                                        fontFamily = banglaFont
+                                    )
+                                    Text(
+                                        text = ayah.authenticityOrGrading,
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = Color(0xFF047857),
+                                        fontWeight = FontWeight.Bold,
+                                        fontFamily = banglaFont
+                                    )
+                                }
+                            }
+                            if (ayah.detectedLanguage.isNotBlank()) {
+                                Row(verticalAlignment = Alignment.Top) {
+                                    Text(
+                                        text = "🌐 ভাষা সনাক্তকরণ: ",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        fontFamily = banglaFont
+                                    )
+                                    Text(
+                                        text = ayah.detectedLanguage,
+                                        style = MaterialTheme.typography.bodySmall,
+                                        fontFamily = banglaFont
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    // Extracted Raw OCR Text Box
+                    if (ayah.extractedRawOcrText.isNotBlank()) {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        var isRawTextExpanded by remember { mutableStateOf(false) }
+                        Surface(
+                            shape = RoundedCornerShape(10.dp),
+                            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Column(modifier = Modifier.padding(10.dp)) {
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clickable { isRawTextExpanded = !isRawTextExpanded },
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Icon(
+                                            imageVector = Icons.Default.MenuBook,
+                                            contentDescription = null,
+                                            tint = MaterialTheme.colorScheme.primary,
+                                            modifier = Modifier.size(15.dp)
+                                        )
+                                        Spacer(modifier = Modifier.width(6.dp))
+                                        Text(
+                                            text = "ক্যামেরা থেকে স্ক্যানকৃত মূল টেক্সট (OCR)",
+                                            style = MaterialTheme.typography.labelSmall,
+                                            fontWeight = FontWeight.Bold,
+                                            fontFamily = banglaFont
+                                        )
+                                    }
+                                    IconButton(
+                                        onClick = {
+                                            val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                                            val clip = ClipData.newPlainText("OCR Text", ayah.extractedRawOcrText)
+                                            clipboard.setPrimaryClip(clip)
+                                            Toast.makeText(context, "টেক্সট কপি করা হয়েছে", Toast.LENGTH_SHORT).show()
+                                        },
+                                        modifier = Modifier.size(24.dp)
+                                    ) {
+                                        Icon(Icons.Default.ContentCopy, contentDescription = "Copy", modifier = Modifier.size(14.dp))
+                                    }
+                                }
+                                if (isRawTextExpanded) {
+                                    Spacer(modifier = Modifier.height(6.dp))
+                                    Text(
+                                        text = ayah.extractedRawOcrText,
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        fontFamily = banglaFont
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // Quick Audio Player Strip (Always accessible when audio URL exists)
         item {
             Card(
                 modifier = Modifier

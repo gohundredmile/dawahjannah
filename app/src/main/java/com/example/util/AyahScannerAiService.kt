@@ -6,10 +6,7 @@ import android.util.Base64
 import com.example.BuildConfig
 import com.example.data.datasource.QuranAyahCatalog
 import com.example.data.datasource.QuranSurahCatalog
-import com.example.data.model.AyahExplanation
-import com.example.data.model.RelatedHadith
-import com.example.data.model.RelatedVerse
-import com.example.data.model.WordMeaning
+import com.example.data.model.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okhttp3.MediaType.Companion.toMediaType
@@ -149,39 +146,55 @@ class AyahScannerAiService(private val context: Context) {
             scaledBitmap.compress(Bitmap.CompressFormat.JPEG, 85, outputStream)
             val base64Image = Base64.encodeToString(outputStream.toByteArray(), Base64.NO_WRAP)
 
-        // 4. Detailed multimodal prompt for exact Quranic verse detection
+        // 4. Detailed multimodal prompt for Islamic OCR and classification
         val prompt = """
-            You are an expert Islamic & Holy Quran scholar and OCR vision system.
-            Analyze this image captured of Arabic text, Quran Mushaf page, Islamic book, or screen.
-            
-            Determine:
-            1. Does this image genuinely display authentic Quranic Ayah(s), Hadith, or Masnun Dua?
-               If NO (e.g. random object, food, landscape, person, non-Quranic Latin/Bengali text, blank page, or unreadable blurry text):
-               Return strictly:
-               {
-                 "isQuran": false,
-                 "errorMessage": "ছবিতে কোনো স্পষ্ট কুরআন বা কিতাবের আয়াত চিহ্নিত করা যায়নি। অনুগ্রহ করে পবিত্র কুরআনের স্পষ্ট পৃষ্ঠার দিকে ক্যামেরা সোজা রাখুন।"
-               }
-            
-            2. If YES (it is an authentic Quranic verse or Masnun Dua):
-               Extract the exact Ayah that is most prominent/focused in the image:
-               - "isQuran": true
-               - "surahNumber": Integer from 1 to 114
-               - "ayahNumber": Integer of the Ayah number (e.g. 255 for Ayatul Kursi)
-               - "surahNameBn": Bengali name of Surah (e.g. "সূরা আল-বাক্বারাহ")
-               - "surahNameAr": Arabic name of Surah (e.g. "سورة البقرة")
-               - "surahNameEn": English name of Surah (e.g. "Surah Al-Baqarah")
-               - "revelationTypeBn": "মাক্কী" or "মাদানী"
-               - "arabicText": The exact, authentic, complete Arabic text of the visible Ayah with accurate harakat / tashkeel
-               - "transliterationBn": Accurate Bengali pronunciation
-               - "banglaTranslation": Accurate Bengali translation
-               - "englishTranslation": Accurate English translation
-               - "tafsirSummaryBn": Authentic, insightful Tafsir summary in Bengali (Ibn Kathir / Ma'ariful Quran)
-               - "contextBn": Authentic context of revelation (Shan-e-Nuzul) and virtues in Bengali
-               - "wordByWord": List of objects: [{"arabic": "...", "bangla": "...", "english": "...", "grammar": "..."}]
-               - "relatedHadiths": List of objects: [{"source": "...", "narrator": "...", "hadithBn": "...", "grade": "সহীহ"}]
-               - "confidenceScore": Integer (0-100)
-            
+            You are an expert Islamic Scholar, Mufti, and OCR Vision System.
+            Analyze this image captured of Islamic materials:
+            - Islamic book (কিতাব/বই)
+            - Arabic text (আরবি ক্যালিগ্রাফি/ইবারত)
+            - Urdu text (উর্দু কিতাব/বয়ান)
+            - Bangla Islamic book (বাংলা ইসলামিক বই/তাফসীর)
+            - Mosque poster (মসজিদের নোটিশ/দেয়ালিকা/পোস্টার)
+            - Hadith poster (হাদিস পোস্টার/সোশ্যাল ব্যানার)
+
+            Extract the text and strictly identify which of the 4 Islamic genres it is:
+            1. "QURAN" (পবিত্র কুরআনের আয়াত)
+            2. "HADITH" (সহীহ বা প্রামাণ্য হাদীস)
+            3. "QUOTE" (সাহাবী বা সালাফদের ইসলামিক বাণী ও হিকমাহ)
+            4. "SCHOLAR_STATEMENT" (উলামায়ে কেরামের বক্তব্য / ফতোয়া / ফিকহী অভিমত)
+
+            Determine "targetSourceType": One of "ISLAMIC_BOOK", "ARABIC_TEXT", "URDU_TEXT", "BANGLA_BOOK", "MOSQUE_POSTER", "HADITH_POSTER", "GENERAL"
+            Determine "detectedLanguage": e.g. "আরবী", "উর্দু", "বাংলা", "আরবী ও বাংলা"
+            Extract "extractedRawOcrText": Complete raw text visible in original script
+
+            If non-Islamic or unreadable:
+            {
+              "isRecognized": false,
+              "errorMessage": "ছবিতে কোনো স্পষ্ট ইসলামিক কিতাব, আরবী/উর্দু টেক্সট, পোস্টার বা হাদীস চিহ্নিত করা যায়নি।"
+            }
+
+            If recognized, return JSON with:
+            {
+              "isRecognized": true,
+              "contentType": "QURAN" | "HADITH" | "QUOTE" | "SCHOLAR_STATEMENT",
+              "targetSourceType": "ISLAMIC_BOOK" | "ARABIC_TEXT" | "URDU_TEXT" | "BANGLA_BOOK" | "MOSQUE_POSTER" | "HADITH_POSTER",
+              "detectedLanguage": "আরবী ও বাংলা",
+              "extractedRawOcrText": "...",
+              "titleBn": "শিরোনাম বা বিষয়",
+              "arabicText": "মূল আরবী বা মূল উদ্ধৃতি হরকত সহ",
+              "banglaTranslation": "সহজ ও প্রাঞ্জল বাংলা অনুবাদ",
+              "sourceBookName": "কিতাব বা গ্রন্থের নাম (যেমন: সহীহ বুখারী, মাজমুউল ফাতাওয়া, তাফসীরে ইবনে কাসীর)",
+              "sourceReferenceNumber": "হাদিস নং বা আয়াত নং বা পৃষ্ঠা নং (যেমন: হাদিস নং ১, সূরা বাকারা: ২৫৫)",
+              "scholarOrNarrator": "রাবী সাহাবী বা আলেমের নাম (যেমন: হযরত আবু হুরায়রা (রা.), ইমাম আবু হানিফা (রহ.))",
+              "authenticityOrGrading": "সহীহ / মুতাওয়াতির / হাসান / প্রামাণ্য ফতোয়া",
+              "scholarlyContext": "প্রেক্ষাপট, শিক্ষার সারসংক্ষেপ ও ফিকহী দৃষ্টিভঙ্গি",
+              "tafsirSummaryBn": "বিশদ ব্যাখ্যা ও মানবজীবনের শিক্ষা",
+              "surahNumber": 1 to 114 (if Quran, else 0),
+              "ayahNumber": Ayah number (if Quran, else 1),
+              "revelationTypeBn": "মাক্কী" | "মাদানী" (if Quran),
+              "transliterationBn": "বাংলা উচ্চারণ (if available)"
+            }
+
             Return ONLY raw JSON. No markdown backticks.
         """.trimIndent()
 
@@ -254,89 +267,101 @@ class AyahScannerAiService(private val context: Context) {
                 }
 
                 val parsedJson = JSONObject(textResponse)
-                val isQuran = parsedJson.optBoolean("isQuran", false)
+                val isRecognized = parsedJson.optBoolean("isRecognized", parsedJson.optBoolean("isQuran", false))
 
-                if (!isQuran) {
+                if (!isRecognized && !parsedJson.has("arabicText") && !parsedJson.has("banglaTranslation")) {
                     val errorMsg = parsedJson.optString(
                         "errorMessage",
-                        "ছবিতে কোনো স্পষ্ট কুরআন বা কিতাবের আয়াত চিহ্নিত করা যায়নি। অনুগ্রহ করে পবিত্র কুরআনের স্পষ্ট পৃষ্ঠার ছবি তুলুন।"
+                        "ছবিতে কোনো স্পষ্ট ইসলামিক কিতাব, আরবী/উর্দু টেক্সট, পোস্টার বা হাদীস চিহ্নিত করা যায়নি।"
                     )
                     return@withContext Result.failure(Exception(errorMsg))
                 }
 
+                val duration = (System.currentTimeMillis() - startTime).coerceAtLeast(35L)
+                val contentTypeStr = parsedJson.optString("contentType", "QURAN").uppercase()
+                val contentType = when (contentTypeStr) {
+                    "HADITH" -> IslamicContentType.HADITH
+                    "QUOTE" -> IslamicContentType.QUOTE
+                    "SCHOLAR_STATEMENT" -> IslamicContentType.SCHOLAR_STATEMENT
+                    else -> IslamicContentType.QURAN
+                }
+
+                val targetSourceTypeStr = parsedJson.optString("targetSourceType", "GENERAL").uppercase()
+                val targetSourceType = try {
+                    TargetSourceType.valueOf(targetSourceTypeStr)
+                } catch (_: Exception) {
+                    TargetSourceType.GENERAL
+                }
+
+                val arabicText = parsedJson.optString("arabicText", "").trim()
+                val banglaTranslation = parsedJson.optString("banglaTranslation", "").trim()
+                val sourceBookName = parsedJson.optString("sourceBookName", "")
+                val sourceReferenceNumber = parsedJson.optString("sourceReferenceNumber", "")
+                val scholarOrNarrator = parsedJson.optString("scholarOrNarrator", "")
+                val authenticityOrGrading = parsedJson.optString("authenticityOrGrading", "")
+                val scholarlyContext = parsedJson.optString("scholarlyContext", "")
+                val titleBn = parsedJson.optString("titleBn", contentType.titleBn)
+                val rawOcrText = parsedJson.optString("extractedRawOcrText", arabicText)
+                val detectedLanguage = parsedJson.optString("detectedLanguage", "আরবী ও বাংলা")
                 val surahNumber = parsedJson.optInt("surahNumber", 0)
                 val ayahNumber = parsedJson.optInt("ayahNumber", 1)
-                val arabicText = parsedJson.optString("arabicText", "").trim()
 
-                val duration = (System.currentTimeMillis() - startTime).coerceAtLeast(35L)
-
-                // 5. MATCHING WITH CATALOGUE OR LOCAL QURAN DATABASE
-                // Check if the scanned Ayah matches any of the catalogue ayahs
-                val catalogMatch = QuranAyahCatalog.catalog.find {
-                    it.surahNumber == surahNumber && (ayahNumber <= 0 || it.ayahNumber == ayahNumber)
-                } ?: if (arabicText.isNotBlank()) {
-                    QuranAyahCatalog.findByQueryOrSnippet(arabicText)
-                } else null
-
-                // If scanned image genuinely matches any built-in catalogue item, return that rich verified item!
-                if (catalogMatch != null) {
-                    return@withContext Result.success(catalogMatch.copy(scanDurationMs = duration))
-                }
-
-                // If it is another authentic Quranic Ayah from the 114 Surahs,
-                // synthesize the complete AyahExplanation with full metadata & Gemini analysis
-                if (surahNumber in 1..114) {
+                // 5. If Quran with valid Surah number
+                if (contentType == IslamicContentType.QURAN && surahNumber in 1..114) {
                     val baseSynthesis = LocalQuranAyahScannerEngine.getOrSynthesize(context, surahNumber, ayahNumber)
-
-                    val wordByWordList = mutableListOf<WordMeaning>()
-                    val wbArray = parsedJson.optJSONArray("wordByWord")
-                    if (wbArray != null && wbArray.length() > 0) {
-                        for (i in 0 until wbArray.length()) {
-                            val w = wbArray.getJSONObject(i)
-                            wordByWordList.add(
-                                WordMeaning(
-                                    arabicWord = w.optString("arabic", ""),
-                                    bengaliMeaning = w.optString("bangla", ""),
-                                    englishMeaning = w.optString("english", ""),
-                                    grammarNote = w.optString("grammar", "কুরআনুল কারীম")
-                                )
-                            )
-                        }
-                    }
-
-                    val hadithList = mutableListOf<RelatedHadith>()
-                    val hdArray = parsedJson.optJSONArray("relatedHadiths")
-                    if (hdArray != null && hdArray.length() > 0) {
-                        for (i in 0 until hdArray.length()) {
-                            val h = hdArray.getJSONObject(i)
-                            hadithList.add(
-                                RelatedHadith(
-                                    sourceBn = h.optString("source", "সহীহ হাদীস"),
-                                    narratorBn = h.optString("narrator", ""),
-                                    textBn = h.optString("hadithBn", ""),
-                                    gradeBn = h.optString("grade", "সহীহ")
-                                )
-                            )
-                        }
-                    }
-
-                    val enrichedExplanation = baseSynthesis.copy(
-                        arabicText = if (arabicText.isNotBlank()) arabicText else baseSynthesis.arabicText,
-                        transliterationBn = parsedJson.optString("transliterationBn").takeIf { it.isNotBlank() } ?: baseSynthesis.transliterationBn,
-                        banglaTranslation = parsedJson.optString("banglaTranslation").takeIf { it.isNotBlank() } ?: baseSynthesis.banglaTranslation,
-                        englishTranslation = parsedJson.optString("englishTranslation").takeIf { it.isNotBlank() } ?: baseSynthesis.englishTranslation,
-                        tafsirBn = parsedJson.optString("tafsirSummaryBn").takeIf { it.isNotBlank() } ?: baseSynthesis.tafsirBn,
-                        contextBn = parsedJson.optString("contextBn").takeIf { it.isNotBlank() } ?: baseSynthesis.contextBn,
-                        wordByWord = if (wordByWordList.isNotEmpty()) wordByWordList else baseSynthesis.wordByWord,
-                        relatedHadiths = if (hadithList.isNotEmpty()) hadithList else baseSynthesis.relatedHadiths,
-                        scanDurationMs = duration
+                    return@withContext Result.success(
+                        baseSynthesis.copy(
+                            arabicText = if (arabicText.isNotBlank()) arabicText else baseSynthesis.arabicText,
+                            transliterationBn = parsedJson.optString("transliterationBn").takeIf { it.isNotBlank() } ?: baseSynthesis.transliterationBn,
+                            banglaTranslation = if (banglaTranslation.isNotBlank()) banglaTranslation else baseSynthesis.banglaTranslation,
+                            tafsirBn = parsedJson.optString("tafsirSummaryBn").takeIf { it.isNotBlank() } ?: baseSynthesis.tafsirBn,
+                            contextBn = if (scholarlyContext.isNotBlank()) scholarlyContext else baseSynthesis.contextBn,
+                            scanDurationMs = duration,
+                            contentType = IslamicContentType.QURAN,
+                            targetSourceType = targetSourceType,
+                            extractedRawOcrText = rawOcrText,
+                            detectedLanguage = detectedLanguage,
+                            sourceBookName = if (sourceBookName.isNotBlank()) sourceBookName else "পবিত্র আল-কুরআনুল কারীম",
+                            sourceReferenceNumber = if (sourceReferenceNumber.isNotBlank()) sourceReferenceNumber else "সূরা ${baseSynthesis.surahNameBangla}, আয়াত: ${baseSynthesis.ayahNumber}",
+                            scholarOrNarrator = if (scholarOrNarrator.isNotBlank()) scholarOrNarrator else "আল্লাহ তা'আলার প্রত্যক্ষ কালাম",
+                            authenticityOrGrading = if (authenticityOrGrading.isNotBlank()) authenticityOrGrading else "মুতাওয়াতির ও সন্দেহাতীত বিশুদ্ধতম",
+                            scholarlyContext = scholarlyContext
+                        )
                     )
-
-                    return@withContext Result.success(enrichedExplanation)
                 }
 
-                // If Surah number is not valid or unrecognized
-                return@withContext localScanResult
+                // 6. Generic synthesis for Hadith, Quote, Scholar Statement, or other Islamic material
+                val genericResult = AyahExplanation(
+                    id = "gemini_ocr_${System.currentTimeMillis()}",
+                    surahNumber = if (contentType == IslamicContentType.QURAN) surahNumber.coerceAtLeast(1) else 0,
+                    ayahNumber = ayahNumber.coerceAtLeast(1),
+                    surahNameArabic = titleBn,
+                    surahNameBangla = titleBn,
+                    surahNameEnglish = contentType.titleEn,
+                    revelationTypeBn = contentType.titleBn,
+                    totalAyahsInSurah = 1,
+                    arabicText = arabicText,
+                    transliterationBn = parsedJson.optString("transliterationBn", ""),
+                    banglaTranslation = banglaTranslation,
+                    englishTranslation = "",
+                    wordByWord = emptyList(),
+                    tafsirBn = parsedJson.optString("tafsirSummaryBn", scholarlyContext),
+                    contextBn = scholarlyContext,
+                    relatedVerses = emptyList(),
+                    relatedHadiths = emptyList(),
+                    audioUrl = "",
+                    scanDurationMs = duration,
+                    contentType = contentType,
+                    targetSourceType = targetSourceType,
+                    extractedRawOcrText = rawOcrText,
+                    detectedLanguage = detectedLanguage,
+                    sourceBookName = sourceBookName,
+                    sourceReferenceNumber = sourceReferenceNumber,
+                    scholarOrNarrator = scholarOrNarrator,
+                    authenticityOrGrading = authenticityOrGrading,
+                    scholarlyContext = scholarlyContext
+                )
+                return@withContext Result.success(genericResult)
 
             } catch (e: Exception) {
                 lastException = e

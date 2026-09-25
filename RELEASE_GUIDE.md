@@ -9,7 +9,7 @@
 - যখনই আপনি Google AI Studio থেকে গিটহাবে কোড পুশ করবেন, সাথে সাথে GitHub Actions স্বয়ংক্রিয়ভাবে রান করবে:
   1. সোর্স কোড থেকে অ্যান্ড্রয়েড APK (`app-release.apk`) বিল্ড করবে (Java 21 ও Android SDK 36 সহ)।
   2. GitHub Actions Artifacts-এ ফাইল ব্যাকআপ রাখবে।
-  3. GitHub Releases-এ নতুন রিলিজ হিসেবে `v1.4.0` ও `latest` ট্যাগ সহ APK ফাইল আপলোড করবে।
+  3. GitHub Releases-এ নতুন রিলিজ হিসেবে `v2.0.0` ও `latest` ট্যাগ সহ APK ফাইল আপলোড করবে।
   4. **স্বয়ংক্রিয় প্রতিস্থাপন (Auto-Replace):** নতুন রিলিজ হলে পুরনো APK স্বয়ংক্রিয়ভাবে নতুন APK ফাইল দ্বারা রিপ্লেস হয়ে যাবে।
 
 > ⚠️ **গুরুত্বপূর্ণ সেটিংস (GitHub Repository Settings - একবারই করতে হয়):**

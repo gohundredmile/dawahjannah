@@ -3,7 +3,9 @@ package com.example.ui.screens.tools
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
+import android.content.Intent
 import android.widget.Toast
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
@@ -28,35 +30,41 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.automirrored.filled.Help
+import androidx.compose.material.icons.automirrored.filled.MenuBook
 import androidx.compose.material.icons.filled.AccountBalance
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Bookmark
+import androidx.compose.material.icons.filled.BookmarkBorder
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.ContentCopy
+import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.Error
+import androidx.compose.material.icons.filled.Hub
 import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.MenuBook
+import androidx.compose.material.icons.filled.Paid
 import androidx.compose.material.icons.filled.Psychology
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Restaurant
 import androidx.compose.material.icons.filled.Security
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material.icons.filled.Spa
 import androidx.compose.material.icons.filled.TrendingUp
 import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material.icons.filled.Work
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -71,15 +79,18 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.ScrollableTabRow
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Tab
+import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -97,17 +108,20 @@ import com.example.data.model.AskBeforeYouActReport
 import com.example.data.model.AskScenario
 import com.example.data.model.DiagnosticOption
 import com.example.data.model.DiagnosticQuestion
+import com.example.data.model.DocumentClauseAnalysis
 import com.example.data.model.FiqhMaxim
 import com.example.data.model.HalalAlternative
 import com.example.data.model.IslamicSourceType
 import com.example.data.model.ScholarlyPosition
-import com.example.data.model.ShariahRiskLevel
+import com.example.data.model.ShariahAssessmentStatus
 import com.example.data.model.VerifiedHadithProof
 import com.example.data.model.VerifiedQuranProof
 import com.example.ui.theme.IslamicGold
 import com.example.ui.theme.LocalArabicFontFamily
 import com.example.ui.theme.LocalBanglaFontFamily
+import com.example.util.AskBeforeYouActAiService
 import com.example.util.CalendarHelper
+import kotlinx.coroutines.launch
 
 private enum class ScreenStage {
     INPUT_SCENARIO,
@@ -122,38 +136,111 @@ fun AskBeforeYouActScreen(
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
     val banglaFont = LocalBanglaFontFamily.current
     val arabicFont = LocalArabicFontFamily.current
+    val aiService = remember { AskBeforeYouActAiService(context) }
 
     var currentStage by remember { mutableStateOf(ScreenStage.INPUT_SCENARIO) }
+    var selectedHomeTab by remember { mutableIntStateOf(0) } // 0: Scenarios & Ask, 1: Document/Contract Analyzer, 2: Saved
     var userQueryText by remember { mutableStateOf("") }
+    var documentInputText by remember { mutableStateOf("") }
+
     var selectedScenario by remember { mutableStateOf(AskActionKnowledgeBase.scenarios.first()) }
+    var activeQuestions by remember { mutableStateOf(selectedScenario.diagnosticQuestions) }
     var currentQuestionIndex by remember { mutableIntStateOf(0) }
     val userAnswers = remember { mutableStateMapOf<String, String>() }
+
+    var isAnalyzing by remember { mutableStateOf(false) }
+    var analyzedClauses = remember { mutableStateListOf<DocumentClauseAnalysis>() }
     var generatedReport by remember { mutableStateOf<AskBeforeYouActReport?>(null) }
     var selectedReportTab by remember { mutableIntStateOf(0) }
+    var isReportSaved by remember { mutableStateOf(false) }
 
-    fun startDiagnosticForScenario(scenario: AskScenario, customQuery: String = "") {
-        selectedScenario = scenario
-        userQueryText = customQuery.ifBlank { scenario.sampleQuery }
-        userAnswers.clear()
-        scenario.diagnosticQuestions.forEach { q ->
-            q.options.firstOrNull()?.let { firstOpt ->
-                userAnswers[q.id] = firstOpt.id
+    // BackHandler for custom stages
+    BackHandler {
+        when (currentStage) {
+            ScreenStage.INPUT_SCENARIO -> onNavigateBack()
+            ScreenStage.DIAGNOSTIC_QUESTIONS -> {
+                if (currentQuestionIndex > 0) {
+                    currentQuestionIndex--
+                } else {
+                    currentStage = ScreenStage.INPUT_SCENARIO
+                }
+            }
+            ScreenStage.SCHOLARLY_REPORT -> {
+                currentStage = ScreenStage.DIAGNOSTIC_QUESTIONS
             }
         }
-        currentQuestionIndex = 0
-        currentStage = ScreenStage.DIAGNOSTIC_QUESTIONS
+    }
+
+    fun startDiagnosticForScenario(scenario: AskScenario, customQuery: String = "", pastedDoc: String = "") {
+        selectedScenario = scenario
+        userQueryText = customQuery.ifBlank { scenario.sampleQuery }
+        documentInputText = pastedDoc
+        userAnswers.clear()
+        analyzedClauses.clear()
+
+        isAnalyzing = true
+        coroutineScope.launch {
+            try {
+                if (pastedDoc.isNotBlank()) {
+                    val clauses = aiService.analyzeDocumentClauses(pastedDoc)
+                    analyzedClauses.clear()
+                    analyzedClauses.addAll(clauses)
+                }
+
+                // If user entered a custom novel query, let AI determine 2-4 targeted questions
+                val dynamicQs = if (customQuery.isNotBlank() && customQuery != scenario.sampleQuery) {
+                    aiService.generateDynamicQuestions(customQuery, pastedDoc)
+                } else {
+                    scenario.diagnosticQuestions
+                }
+                activeQuestions = dynamicQs
+
+                activeQuestions.forEach { q ->
+                    q.options.firstOrNull()?.let { firstOpt ->
+                        userAnswers[q.id] = firstOpt.id
+                    }
+                }
+                currentQuestionIndex = 0
+                currentStage = ScreenStage.DIAGNOSTIC_QUESTIONS
+            } finally {
+                isAnalyzing = false
+            }
+        }
     }
 
     fun finishAndGenerateReport() {
-        val report = AskActionKnowledgeBase.evaluateAnswers(
-            scenario = selectedScenario,
-            userQuery = userQueryText,
-            selectedOptionIds = userAnswers
-        )
-        generatedReport = report
-        currentStage = ScreenStage.SCHOLARLY_REPORT
+        isAnalyzing = true
+        coroutineScope.launch {
+            try {
+                val report = aiService.evaluateAction(
+                    intendedAction = userQueryText,
+                    answers = userAnswers,
+                    documentText = documentInputText,
+                    fallbackScenario = selectedScenario
+                )
+                generatedReport = report
+                selectedReportTab = 0
+                isReportSaved = false
+                currentStage = ScreenStage.SCHOLARLY_REPORT
+            } catch (e: Exception) {
+                // Guaranteed fallback
+                val fallback = AskActionKnowledgeBase.evaluateAnswers(
+                    scenario = selectedScenario,
+                    userQuery = userQueryText,
+                    selectedOptionIds = userAnswers,
+                    documentClauses = analyzedClauses
+                )
+                generatedReport = fallback
+                selectedReportTab = 0
+                isReportSaved = false
+                currentStage = ScreenStage.SCHOLARLY_REPORT
+            } finally {
+                isAnalyzing = false
+            }
+        }
     }
 
     Scaffold(
@@ -174,7 +261,7 @@ fun AskBeforeYouActScreen(
                                 color = Color(0xFF059669).copy(alpha = 0.15f)
                             ) {
                                 Text(
-                                    text = "শরঈ অনুসন্ধান",
+                                    text = "শরঈ সিদ্ধান্ত-সহায়িকা",
                                     style = MaterialTheme.typography.labelSmall.copy(
                                         fontSize = 10.sp,
                                         fontWeight = FontWeight.Bold,
@@ -187,9 +274,9 @@ fun AskBeforeYouActScreen(
                         }
                         Text(
                             text = when (currentStage) {
-                                ScreenStage.INPUT_SCENARIO -> "পদক্ষেপ নেওয়ার আগে শরঈ যাচাই"
-                                ScreenStage.DIAGNOSTIC_QUESTIONS -> "কাঠামোগত অনুসন্ধানী প্রশ্নমালা (${currentQuestionIndex + 1}/${selectedScenario.diagnosticQuestions.size})"
-                                ScreenStage.SCHOLARLY_REPORT -> "সার্বিক শরঈ পর্যালোচনা ও দলিল"
+                                ScreenStage.INPUT_SCENARIO -> "পদক্ষেপ নেওয়ার আগে শরঈ যাচাই ও চুক্তি পরীক্ষা"
+                                ScreenStage.DIAGNOSTIC_QUESTIONS -> "কাঠামোগত অনুসন্ধানী প্রশ্নমালা (${currentQuestionIndex + 1}/${activeQuestions.size})"
+                                ScreenStage.SCHOLARLY_REPORT -> "সার্বিক শরঈ সিদ্ধান্ত-সহায়িকা প্রতিবেদন"
                             },
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -223,27 +310,78 @@ fun AskBeforeYouActScreen(
                 },
                 actions = {
                     if (currentStage == ScreenStage.SCHOLARLY_REPORT) {
+                        // Bookmark / Save Action
+                        IconButton(
+                            onClick = {
+                                isReportSaved = !isReportSaved
+                                val msg = if (isReportSaved) "প্রতিবেদনটি সফলভাবে সংরক্ষিত হয়েছে" else "সংরক্ষণ বাতিল করা হয়েছে"
+                                Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
+                            }
+                        ) {
+                            Icon(
+                                imageVector = if (isReportSaved) Icons.Default.Bookmark else Icons.Default.BookmarkBorder,
+                                contentDescription = "সংরক্ষণ করুন",
+                                tint = if (isReportSaved) IslamicGold else MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+
+                        // Share Action
+                        IconButton(
+                            onClick = {
+                                generatedReport?.let { rep ->
+                                    val shareText = buildString {
+                                        appendLine("【 Ask Before You Act • শরঈ বিশ্লেষণ প্রতিবেদন 】")
+                                        appendLine("বিষয়: ${rep.query}")
+                                        appendLine("মর্যাদা: ${rep.assessment.titleBn}")
+                                        appendLine("----------------------------------------")
+                                        appendLine(rep.assessmentSummaryBn)
+                                        appendLine("\n[করণীয় পরবর্তী পদক্ষেপ]:")
+                                        rep.practicalNextSteps.forEach { appendLine("• $it") }
+                                        appendLine("\nউৎস: দা'ওয়াহ টু জান্নাহ - Ask Before You Act")
+                                    }
+                                    val sendIntent = Intent().apply {
+                                        action = Intent.ACTION_SEND
+                                        putExtra(Intent.EXTRA_TEXT, shareText)
+                                        type = "text/plain"
+                                    }
+                                    context.startActivity(Intent.createChooser(sendIntent, "প্রতিবেদন শেয়ার করুন"))
+                                }
+                            }
+                        ) {
+                            Icon(Icons.Default.Share, contentDescription = "শেয়ার করুন")
+                        }
+
+                        // Copy Action
                         IconButton(
                             onClick = {
                                 generatedReport?.let { rep ->
                                     val fullSummary = buildString {
-                                        appendLine("【 Ask Before You Act • শরঈ বিশ্লেষণ প্রতিবেদন 】")
-                                        appendLine("অনুসন্ধান: ${rep.query}")
-                                        appendLine("মর্যাদা: ${rep.riskLevel.titleBn}")
+                                        appendLine("【 Ask Before You Act • শরঈ সিদ্ধান্ত-সহায়িকা প্রতিবেদন 】")
+                                        appendLine("বিষয়: ${rep.query}")
+                                        appendLine("মর্যাদা: ${rep.assessment.titleBn} (${rep.assessment.labelBn})")
                                         appendLine("----------------------------------------")
-                                        appendLine(rep.executiveSummaryBn)
-                                        if (rep.redFlagsIdentified.isNotEmpty()) {
-                                            appendLine("\n[চিহ্নিত সতর্কতা / রেড ফ্ল্যাগ]:")
-                                            rep.redFlagsIdentified.forEach { appendLine("• $it") }
+                                        appendLine("\n[পরিস্থিতির সারসংক্ষেপ]:\n${rep.whatIUnderstandBn}")
+                                        appendLine("\n[মূল্যায়ন]:\n${rep.assessmentSummaryBn}")
+                                        if (rep.importantFacts.isNotEmpty()) {
+                                            appendLine("\n[গুরুত্বপূর্ণ শর্ত ও উপাদানসমূহ]:")
+                                            rep.importantFacts.forEach { appendLine("• $it") }
                                         }
-                                        appendLine("\n[মূল কুরআন ও সুন্নাহর দলিল]:")
+                                        if (rep.whatIsStillUnclear.isNotEmpty()) {
+                                            appendLine("\n[অস্পষ্ট বিষয়সমূহ]:")
+                                            rep.whatIsStillUnclear.forEach { appendLine("• $it") }
+                                        }
+                                        appendLine("\n[পরবর্তী বাস্তব পদক্ষেপ]:")
+                                        rep.practicalNextSteps.forEach { appendLine("• $it") }
+                                        appendLine("\n[মূল কুরআন ও সুন্নাহর প্রামাণ্য দলিল]:")
                                         rep.quranProofs.take(2).forEach {
                                             appendLine("• ${it.surahNameBn} [${it.surahNumber}:${it.ayahNumber}]: ${it.banglaTranslation}")
                                         }
+                                        appendLine("----------------------------------------")
+                                        appendLine("দ্রষ্টব্য: এটি কোনো ব্যক্তিগত ফতোয়া নয়; জটিল বিষয়ে অভিজ্ঞ মুফতির শরণাপন্ন হোন।")
                                     }
                                     val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
                                     clipboard.setPrimaryClip(ClipData.newPlainText("Ask Before You Act Report", fullSummary))
-                                    Toast.makeText(context, "প্রতিবেদন ক্লিপবোর্ডে কপি করা হয়েছে", Toast.LENGTH_SHORT).show()
+                                    Toast.makeText(context, "পূর্ণাঙ্গ প্রতিবেদন ক্লিপবোর্ডে কপি করা হয়েছে", Toast.LENGTH_SHORT).show()
                                 }
                             }
                         ) {
@@ -273,22 +411,41 @@ fun AskBeforeYouActScreen(
             ) { stage ->
                 when (stage) {
                     ScreenStage.INPUT_SCENARIO -> InputAndScenarioSelectionView(
+                        selectedTab = selectedHomeTab,
+                        onTabChange = { selectedHomeTab = it },
                         userQuery = userQueryText,
                         onQueryChange = { userQueryText = it },
+                        documentText = documentInputText,
+                        onDocumentTextChange = { documentInputText = it },
                         onStartDiagnostic = {
                             val matched = AskActionKnowledgeBase.findScenario(userQueryText)
                                 ?: AskActionKnowledgeBase.scenarios.first()
-                            startDiagnosticForScenario(matched, userQueryText)
+                            startDiagnosticForScenario(matched, userQueryText, documentInputText)
                         },
                         onSelectCuratedScenario = { scenario ->
-                            startDiagnosticForScenario(scenario, scenario.sampleQuery)
-                        }
+                            startDiagnosticForScenario(scenario, scenario.sampleQuery, documentInputText)
+                        },
+                        onAnalyzeDocumentOnly = {
+                            coroutineScope.launch {
+                                isAnalyzing = true
+                                val clauses = aiService.analyzeDocumentClauses(documentInputText)
+                                analyzedClauses.clear()
+                                analyzedClauses.addAll(clauses)
+                                val matched = AskActionKnowledgeBase.findScenario(documentInputText)
+                                    ?: AskActionKnowledgeBase.scenarios.first()
+                                startDiagnosticForScenario(matched, "চুক্তিপত্র ও শর্তাবলি পরীক্ষা", documentInputText)
+                                isAnalyzing = false
+                            }
+                        },
+                        isAnalyzing = isAnalyzing
                     )
 
                     ScreenStage.DIAGNOSTIC_QUESTIONS -> StructuredQuestionnaireView(
                         scenario = selectedScenario,
+                        questions = activeQuestions,
                         currentQuestionIndex = currentQuestionIndex,
                         userAnswers = userAnswers,
+                        isAnalyzing = isAnalyzing,
                         onSelectOption = { questionId, optionId ->
                             userAnswers[questionId] = optionId
                         },
@@ -296,7 +453,7 @@ fun AskBeforeYouActScreen(
                             if (currentQuestionIndex > 0) currentQuestionIndex--
                         },
                         onNextQuestion = {
-                            if (currentQuestionIndex < selectedScenario.diagnosticQuestions.size - 1) {
+                            if (currentQuestionIndex < activeQuestions.size - 1) {
                                 currentQuestionIndex++
                             } else {
                                 finishAndGenerateReport()
@@ -311,6 +468,8 @@ fun AskBeforeYouActScreen(
                             onTabChange = { selectedReportTab = it },
                             onStartNewQuery = {
                                 userQueryText = ""
+                                documentInputText = ""
+                                analyzedClauses.clear()
                                 currentStage = ScreenStage.INPUT_SCENARIO
                             }
                         )
@@ -322,192 +481,395 @@ fun AskBeforeYouActScreen(
 }
 
 /**
- * Stage 1: Input Query & Featured Curated Scenarios
+ * Stage 1: Input Query, Curated Scenarios, and Document/Contract Clause Analyzer
  */
 @Composable
 private fun InputAndScenarioSelectionView(
+    selectedTab: Int,
+    onTabChange: (Int) -> Unit,
     userQuery: String,
     onQueryChange: (String) -> Unit,
+    documentText: String,
+    onDocumentTextChange: (String) -> Unit,
     onStartDiagnostic: () -> Unit,
-    onSelectCuratedScenario: (AskScenario) -> Unit
+    onSelectCuratedScenario: (AskScenario) -> Unit,
+    onAnalyzeDocumentOnly: () -> Unit,
+    isAnalyzing: Boolean
 ) {
     val banglaFont = LocalBanglaFontFamily.current
 
-    LazyColumn(
-        modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
-    ) {
-        // Hero Card Explaining the Philosophy
-        item {
-            Card(
-                shape = RoundedCornerShape(20.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                border = BorderStroke(1.2.dp, Color(0xFF059669).copy(alpha = 0.5f)),
-                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-                modifier = Modifier.fillMaxWidth()
+    Column(modifier = Modifier.fillMaxSize()) {
+        // Tab Row: Scenarios vs Contract Clause Scanner
+        TabRow(
+            selectedTabIndex = selectedTab,
+            containerColor = MaterialTheme.colorScheme.surface,
+            contentColor = Color(0xFF059669)
+        ) {
+            Tab(
+                selected = selectedTab == 0,
+                onClick = { onTabChange(0) },
+                text = {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Default.Psychology, contentDescription = null, modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text("অনুসন্ধান ও বিষয়সমূহ", fontFamily = banglaFont, fontWeight = if (selectedTab == 0) FontWeight.Bold else FontWeight.Normal)
+                    }
+                }
+            )
+            Tab(
+                selected = selectedTab == 1,
+                onClick = { onTabChange(1) },
+                text = {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Default.Description, contentDescription = null, modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text("চুক্তি ও শর্ত স্ক্যানার", fontFamily = banglaFont, fontWeight = if (selectedTab == 1) FontWeight.Bold else FontWeight.Normal)
+                    }
+                }
+            )
+        }
+
+        if (selectedTab == 0) {
+            // TAB 0: Guided Scenario & Query
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(
-                            Brush.verticalGradient(
-                                colors = listOf(
-                                    Color(0xFF059669).copy(alpha = 0.12f),
-                                    IslamicGold.copy(alpha = 0.04f)
+                // Hero Card Explaining the Non-Binary Philosophy
+                item {
+                    Card(
+                        shape = RoundedCornerShape(20.dp),
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                        border = BorderStroke(1.2.dp, Color(0xFF059669).copy(alpha = 0.5f)),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .background(
+                                    Brush.verticalGradient(
+                                        colors = listOf(
+                                            Color(0xFF059669).copy(alpha = 0.12f),
+                                            IslamicGold.copy(alpha = 0.04f)
+                                        )
+                                    )
                                 )
+                                .padding(18.dp)
+                        ) {
+                            Column {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Surface(
+                                        shape = CircleShape,
+                                        color = Color(0xFF059669),
+                                        modifier = Modifier.size(36.dp)
+                                    ) {
+                                        Box(contentAlignment = Alignment.Center) {
+                                            Icon(
+                                                imageVector = Icons.Default.Psychology,
+                                                contentDescription = null,
+                                                tint = Color.White,
+                                                modifier = Modifier.size(20.dp)
+                                            )
+                                        }
+                                    }
+                                    Spacer(modifier = Modifier.width(10.dp))
+                                    Column {
+                                        Text(
+                                            text = "পদক্ষেপ নেওয়ার আগে জানুন",
+                                            style = MaterialTheme.typography.titleMedium,
+                                            fontWeight = FontWeight.Bold,
+                                            color = MaterialTheme.colorScheme.onSurface,
+                                            fontFamily = banglaFont
+                                        )
+                                        Text(
+                                            text = "Islamic Decision-Support & Guidance Engine",
+                                            style = MaterialTheme.typography.labelSmall,
+                                            color = MaterialTheme.colorScheme.primary
+                                        )
+                                    }
+                                }
+
+                                Spacer(modifier = Modifier.height(10.dp))
+
+                                Text(
+                                    text = "বাস্তব জীবনের জটিল আর্থিক চুক্তি বা কর্মকাণ্ডকে সরাসরি কোনো বাইনারি 'হালাল/হারাম' বাটনে সংকুচিত করা অনুচিত। এই ইঞ্জিনটি প্রয়োজনীয় প্রশ্ন তুলে ধরে, সুপ্ত সুদী বা ঝুঁকিপূর্ণ ধারা চিহ্নিত করে এবং প্রামাণ্য কুরআন ও সুন্নাহর আলোকে সচেতন সিদ্ধান্ত নিতে সাহায্য করে।",
+                                    style = MaterialTheme.typography.bodyMedium.copy(lineHeight = 22.sp),
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    fontFamily = banglaFont
+                                )
+
+                                Spacer(modifier = Modifier.height(12.dp))
+
+                                Surface(
+                                    shape = RoundedCornerShape(10.dp),
+                                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f)
+                                ) {
+                                    Row(
+                                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.Info,
+                                            contentDescription = null,
+                                            tint = Color(0xFF059669),
+                                            modifier = Modifier.size(16.dp)
+                                        )
+                                        Spacer(modifier = Modifier.width(6.dp))
+                                        Text(
+                                            text = "উসূলুল ফিকহ: \"الحكم على الشيء فرع عن تصوره\" — কোনো বিষয়ের হুকুম দেওয়ার পূর্বে তার পূর্ণ বাস্তবতা উপলব্ধি অপরিহার্য।",
+                                            style = MaterialTheme.typography.labelSmall.copy(fontSize = 11.sp),
+                                            color = MaterialTheme.colorScheme.onSurface,
+                                            fontFamily = banglaFont
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // Custom Query Input Field
+                item {
+                    Card(
+                        shape = RoundedCornerShape(16.dp),
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.2f)),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Column(modifier = Modifier.padding(16.dp)) {
+                            Text(
+                                text = "আপনার উদ্দিষ্ট পদক্ষেপ বা লেনদেন লিখুন:",
+                                style = MaterialTheme.typography.titleSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSurface,
+                                fontFamily = banglaFont
                             )
-                        )
-                        .padding(18.dp)
-                ) {
-                    Column {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Surface(
-                                shape = CircleShape,
-                                color = Color(0xFF059669),
-                                modifier = Modifier.size(36.dp)
+                            Spacer(modifier = Modifier.height(8.dp))
+
+                            OutlinedTextField(
+                                value = userQuery,
+                                onValueChange = onQueryChange,
+                                placeholder = {
+                                    Text(
+                                        text = "যেমন: \"আমি ক্লায়েন্টের জন্য ফিনটেক অ্যাপ বানাচ্ছি\" অথবা \"ব্যাংক থেকে হোম লোন নেওয়ার কথা ভাবছি\"",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                                        fontFamily = banglaFont
+                                    )
+                                },
+                                modifier = Modifier.fillMaxWidth(),
+                                shape = RoundedCornerShape(12.dp),
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    focusedBorderColor = Color(0xFF059669),
+                                    unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.4f)
+                                ),
+                                trailingIcon = {
+                                    if (userQuery.isNotBlank()) {
+                                        IconButton(onClick = { onQueryChange("") }) {
+                                            Icon(Icons.Default.Clear, contentDescription = "মুছুন")
+                                        }
+                                    }
+                                }
+                            )
+
+                            Spacer(modifier = Modifier.height(12.dp))
+
+                            Button(
+                                onClick = onStartDiagnostic,
+                                enabled = userQuery.isNotBlank() && !isAnalyzing,
+                                modifier = Modifier.fillMaxWidth(),
+                                shape = RoundedCornerShape(12.dp),
+                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF059669))
                             ) {
-                                Box(contentAlignment = Alignment.Center) {
-                                    Icon(
-                                        imageVector = Icons.Default.Psychology,
-                                        contentDescription = null,
-                                        tint = Color.White,
-                                        modifier = Modifier.size(20.dp)
+                                if (isAnalyzing) {
+                                    CircularProgressIndicator(color = Color.White, modifier = Modifier.size(18.dp), strokeWidth = 2.dp)
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text("শরঈ উপাদান বিশ্লেষণ হচ্ছে...", fontFamily = banglaFont)
+                                } else {
+                                    Icon(Icons.Default.AutoAwesome, contentDescription = null, tint = Color.White)
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text(
+                                        text = "শরঈ অনুসন্ধানী চেকার চালু করুন",
+                                        style = MaterialTheme.typography.labelLarge,
+                                        fontWeight = FontWeight.Bold,
+                                        color = Color.White,
+                                        fontFamily = banglaFont
                                     )
                                 }
                             }
-                            Spacer(modifier = Modifier.width(10.dp))
-                            Column {
-                                Text(
-                                    text = "পদক্ষেপ নেওয়ার আগে জানুন",
-                                    style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.onSurface,
-                                    fontFamily = banglaFont
-                                )
-                                Text(
-                                    text = "Ask Before You Act • শরঈ পূর্ব-অনুসন্ধান",
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = MaterialTheme.colorScheme.primary
-                                )
-                            }
-                        }
-
-                        Spacer(modifier = Modifier.height(10.dp))
-
-                        Text(
-                            text = "কোনো আর্থিক সিদ্ধান্ত বা চুক্তিতে জড়ানোর আগে সরাসরি একটি 'হালাল' বা 'হারাম' বাটন চাপা বিভ্রান্তিকর। ইসলামী ফিকহে হুকুম দেওয়ার আগে চুক্তির প্রকৃতি, শর্তাবলি ও গোপন বিষয়গুলো স্পষ্ট জানা আবশ্যক।",
-                            style = MaterialTheme.typography.bodyMedium.copy(lineHeight = 22.sp),
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            fontFamily = banglaFont
-                        )
-
-                        Spacer(modifier = Modifier.height(12.dp))
-
-                        Surface(
-                            shape = RoundedCornerShape(10.dp),
-                            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f)
-                        ) {
-                            Row(
-                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.Info,
-                                    contentDescription = null,
-                                    tint = Color(0xFF059669),
-                                    modifier = Modifier.size(16.dp)
-                                )
-                                Spacer(modifier = Modifier.width(6.dp))
-                                Text(
-                                    text = "উসূলুল ফিকহ: \"الحكم على الشيء فرع عن تصوره\" — কোনো বিষয়ের হুকুম দেওয়ার পূর্বে তার পূর্ণ বাস্তবতা উপলব্ধি অপরিহার্য।",
-                                    style = MaterialTheme.typography.labelSmall.copy(fontSize = 11.sp),
-                                    color = MaterialTheme.colorScheme.onSurface,
-                                    fontFamily = banglaFont
-                                )
-                            }
                         }
                     }
                 }
-            }
-        }
 
-        // Custom Query Input Field
-        item {
-            Card(
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.2f)),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Column(modifier = Modifier.padding(16.dp)) {
+                // Featured 8 Life Situations
+                item {
                     Text(
-                        text = "আপনার পরিকল্পনা বা চুক্তিটি লিখুন:",
+                        text = "অথবা সর্বাধিক জিজ্ঞাসিত ৮টি মৌলিক ক্ষেত্র থেকে নির্বাচন করুন:",
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface,
+                        color = MaterialTheme.colorScheme.primary,
                         fontFamily = banglaFont
                     )
-                    Spacer(modifier = Modifier.height(8.dp))
+                }
 
-                    OutlinedTextField(
-                        value = userQuery,
-                        onValueChange = onQueryChange,
-                        placeholder = {
+                items(AskActionKnowledgeBase.scenarios) { scenario ->
+                    ScenarioCard(
+                        scenario = scenario,
+                        onClick = { onSelectCuratedScenario(scenario) }
+                    )
+                }
+            }
+        } else {
+            // TAB 1: Document & Contract Clause Analyzer (Section 17)
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                item {
+                    Card(
+                        shape = RoundedCornerShape(16.dp),
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                        border = BorderStroke(1.2.dp, Color(0xFF4F46E5).copy(alpha = 0.4f)),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Column(modifier = Modifier.padding(16.dp)) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Surface(
+                                    shape = CircleShape,
+                                    color = Color(0xFF4F46E5).copy(alpha = 0.15f),
+                                    modifier = Modifier.size(36.dp)
+                                ) {
+                                    Box(contentAlignment = Alignment.Center) {
+                                        Icon(Icons.Default.Description, contentDescription = null, tint = Color(0xFF4F46E5), modifier = Modifier.size(20.dp))
+                                    }
+                                }
+                                Spacer(modifier = Modifier.width(10.dp))
+                                Column {
+                                    Text(
+                                        text = "চুক্তি ও শর্তাবলি স্ক্যানার (Contract Analyzer)",
+                                        style = MaterialTheme.typography.titleMedium,
+                                        fontWeight = FontWeight.Bold,
+                                        fontFamily = banglaFont
+                                    )
+                                    Text(
+                                        text = "Document-Aware Islamic Legal Inspector",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = Color(0xFF4F46E5)
+                                    )
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.height(10.dp))
+
                             Text(
-                                text = "যেমন: \"I am planning to take a loan\" অথবা \"আমি ব্যাংক লোন নেওয়ার চিন্তা করছি\"",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                                text = "আপনার লোন চুক্তি, ক্রেডিট কার্ড পলিসি, ফ্রিল্যান্স কন্ট্রাক্ট, ই-কমার্স ড্রপশিপিং শর্তাবলি বা পণ্যের ব্রোশারের সংশ্লিষ্ট ধারাগুলো এখানে পেস্ট করুন। ইঞ্জিনটি প্রতিটি ধারা উদ্ধৃত করে তার শরঈ তাৎপর্য বিশ্লেষণ করবে।",
+                                style = MaterialTheme.typography.bodySmall.copy(lineHeight = 20.sp),
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 fontFamily = banglaFont
                             )
-                        },
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(12.dp),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = Color(0xFF059669),
-                            unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.4f)
-                        )
-                    )
 
-                    Spacer(modifier = Modifier.height(12.dp))
+                            Spacer(modifier = Modifier.height(12.dp))
 
-                    Button(
-                        onClick = onStartDiagnostic,
-                        enabled = userQuery.isNotBlank(),
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(12.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF059669))
-                    ) {
-                        Icon(Icons.Default.Psychology, contentDescription = null, tint = Color.White)
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = "শরঈ অনুসন্ধানী চেকার চালু করুন",
-                            style = MaterialTheme.typography.labelLarge,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.White,
-                            fontFamily = banglaFont
-                        )
+                            // Sample Presets for Fast Testing
+                            Text(
+                                text = "দ্রুত পরীক্ষার জন্য নমুনা চুক্তি বেছে নিন:",
+                                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                                color = MaterialTheme.colorScheme.onSurface,
+                                fontFamily = banglaFont
+                            )
+                            Spacer(modifier = Modifier.height(6.dp))
+                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                Surface(
+                                    shape = RoundedCornerShape(8.dp),
+                                    color = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.6f),
+                                    modifier = Modifier.clickable {
+                                        onDocumentTextChange(
+                                            "Clause 4.1: The Borrower agrees to repay the principal amount with an annual interest rate of 12.5% calculated monthly.\n" +
+                                            "Clause 8.3: In case of any delayed installment, a late fee penalty of 3% per month will compound and be charged to the account.\n" +
+                                            "Clause 11: The Bank reserves the right to amend fees and charges at its sole discretion."
+                                        )
+                                    }
+                                ) {
+                                    Text(
+                                        text = "ব্যাংক লোন চুক্তি",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                                        fontFamily = banglaFont
+                                    )
+                                }
+
+                                Surface(
+                                    shape = RoundedCornerShape(8.dp),
+                                    color = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.6f),
+                                    modifier = Modifier.clickable {
+                                        onDocumentTextChange(
+                                            "Clause 2: Freelancer shall develop software modules for online lottery and casino simulation.\n" +
+                                            "Clause 5: Payment shall be disbursed upon delivery, and all intellectual property transfers exclusively to Client."
+                                        )
+                                    }
+                                ) {
+                                    Text(
+                                        text = "ফ্রিল্যান্স আইটি চুক্তি",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                                        fontFamily = banglaFont
+                                    )
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.height(12.dp))
+
+                            OutlinedTextField(
+                                value = documentText,
+                                onValueChange = onDocumentTextChange,
+                                placeholder = {
+                                    Text(
+                                        text = "চুক্তির ধারা বা শর্তাবলি এখানে পেস্ট করুন...",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        fontFamily = banglaFont
+                                    )
+                                },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(150.dp),
+                                shape = RoundedCornerShape(12.dp),
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    focusedBorderColor = Color(0xFF4F46E5),
+                                    unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.4f)
+                                )
+                            )
+
+                            Spacer(modifier = Modifier.height(12.dp))
+
+                            Button(
+                                onClick = onAnalyzeDocumentOnly,
+                                enabled = documentText.isNotBlank() && !isAnalyzing,
+                                modifier = Modifier.fillMaxWidth(),
+                                shape = RoundedCornerShape(12.dp),
+                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4F46E5))
+                            ) {
+                                if (isAnalyzing) {
+                                    CircularProgressIndicator(color = Color.White, modifier = Modifier.size(18.dp), strokeWidth = 2.dp)
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text("নথির ধারা পরীক্ষা হচ্ছে...", fontFamily = banglaFont)
+                                } else {
+                                    Icon(Icons.Default.CheckCircle, contentDescription = null, tint = Color.White)
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text(
+                                        text = "চুক্তির ধারা ও ঝুঁকি পরীক্ষা করুন",
+                                        fontWeight = FontWeight.Bold,
+                                        color = Color.White,
+                                        fontFamily = banglaFont
+                                    )
+                                }
+                            }
+                        }
                     }
                 }
             }
-        }
-
-        // Featured Life Situations
-        item {
-            Text(
-                text = "অথবা সর্বাধিক জিজ্ঞাসিত বিষয়সমূহ থেকে নির্বাচন করুন:",
-                style = MaterialTheme.typography.titleSmall,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.primary,
-                fontFamily = banglaFont
-            )
-        }
-
-        items(AskActionKnowledgeBase.scenarios) { scenario ->
-            ScenarioCard(
-                scenario = scenario,
-                onClick = { onSelectCuratedScenario(scenario) }
-            )
         }
     }
 }
@@ -524,6 +886,10 @@ private fun ScenarioCard(
         "TrendingUp" -> Icons.Default.TrendingUp
         "ShoppingCart" -> Icons.Default.ShoppingCart
         "Security" -> Icons.Default.Security
+        "Work" -> Icons.Default.Work
+        "Restaurant" -> Icons.Default.Restaurant
+        "Hub" -> Icons.Default.Hub
+        "Paid" -> Icons.Default.Paid
         else -> Icons.Default.Spa
     }
 
@@ -609,16 +975,18 @@ private fun ScenarioCard(
 @Composable
 private fun StructuredQuestionnaireView(
     scenario: AskScenario,
+    questions: List<DiagnosticQuestion>,
     currentQuestionIndex: Int,
     userAnswers: Map<String, String>,
+    isAnalyzing: Boolean,
     onSelectOption: (String, String) -> Unit,
     onPreviousQuestion: () -> Unit,
     onNextQuestion: () -> Unit
 ) {
     val banglaFont = LocalBanglaFontFamily.current
-    val currentQuestion = scenario.diagnosticQuestions.getOrNull(currentQuestionIndex) ?: return
+    val currentQuestion = questions.getOrNull(currentQuestionIndex) ?: return
     val selectedOptionId = userAnswers[currentQuestion.id] ?: currentQuestion.options.firstOrNull()?.id ?: ""
-    val progress = (currentQuestionIndex + 1).toFloat() / scenario.diagnosticQuestions.size.toFloat()
+    val progress = (currentQuestionIndex + 1).toFloat() / questions.size.toFloat()
 
     Column(
         modifier = Modifier
@@ -632,7 +1000,7 @@ private fun StructuredQuestionnaireView(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = "${scenario.titleBn} • প্রশ্ন ${CalendarHelper.toBanglaNumber(currentQuestionIndex + 1)} / ${CalendarHelper.toBanglaNumber(scenario.diagnosticQuestions.size)}",
+                text = "${scenario.titleBn} • প্রশ্ন ${CalendarHelper.toBanglaNumber(currentQuestionIndex + 1)} / ${CalendarHelper.toBanglaNumber(questions.size)}",
                 style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
                 color = Color(0xFF059669),
                 fontFamily = banglaFont
@@ -753,7 +1121,7 @@ private fun StructuredQuestionnaireView(
                 }
             }
 
-            // Options List
+            // Options List (including unknown / skip options)
             items(currentQuestion.options) { option ->
                 QuestionOptionCard(
                     option = option,
@@ -773,7 +1141,7 @@ private fun StructuredQuestionnaireView(
         ) {
             OutlinedButton(
                 onClick = onPreviousQuestion,
-                enabled = currentQuestionIndex > 0,
+                enabled = currentQuestionIndex > 0 && !isAnalyzing,
                 shape = RoundedCornerShape(12.dp)
             ) {
                 Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null, modifier = Modifier.size(16.dp))
@@ -783,20 +1151,27 @@ private fun StructuredQuestionnaireView(
 
             Button(
                 onClick = onNextQuestion,
+                enabled = !isAnalyzing,
                 shape = RoundedCornerShape(12.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF059669))
             ) {
-                Text(
-                    text = if (currentQuestionIndex < scenario.diagnosticQuestions.size - 1) "পরবর্তী প্রশ্ন" else "সম্পূর্ণ শরঈ প্রতিবেদন দেখুন",
-                    fontWeight = FontWeight.Bold,
-                    fontFamily = banglaFont
-                )
-                Spacer(modifier = Modifier.width(4.dp))
-                Icon(
-                    imageVector = if (currentQuestionIndex < scenario.diagnosticQuestions.size - 1) Icons.AutoMirrored.Filled.ArrowForward else Icons.Default.CheckCircle,
-                    contentDescription = null,
-                    modifier = Modifier.size(16.dp)
-                )
+                if (isAnalyzing) {
+                    CircularProgressIndicator(color = Color.White, modifier = Modifier.size(18.dp), strokeWidth = 2.dp)
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text("প্রতিবেদন তৈরি হচ্ছে...", fontFamily = banglaFont)
+                } else {
+                    Text(
+                        text = if (currentQuestionIndex < questions.size - 1) "পরবর্তী প্রশ্ন" else "সম্পূর্ণ শরঈ প্রতিবেদন দেখুন",
+                        fontWeight = FontWeight.Bold,
+                        fontFamily = banglaFont
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Icon(
+                        imageVector = if (currentQuestionIndex < questions.size - 1) Icons.AutoMirrored.Filled.ArrowForward else Icons.Default.CheckCircle,
+                        contentDescription = null,
+                        modifier = Modifier.size(16.dp)
+                    )
+                }
             }
         }
     }
@@ -863,7 +1238,7 @@ private fun QuestionOptionCard(
 }
 
 /**
- * Stage 3: Comprehensive Scholarly Report & Verified Sources
+ * Stage 3: Comprehensive Scholarly Decision-Support Report (Sections 9, 20 & 25)
  */
 @Composable
 private fun ComprehensiveScholarlyReportView(
@@ -875,17 +1250,17 @@ private fun ComprehensiveScholarlyReportView(
     val banglaFont = LocalBanglaFontFamily.current
     val arabicFont = LocalArabicFontFamily.current
 
-    val tabTitles = listOf(
-        "সারসংক্ষেপ ও সতর্কতা",
-        "কুরআন ও হাদীস দলিল",
-        "ফিকহি মূলনীতি ও মাযহাব",
-        "হালাল বিকল্পসমূহ"
-    )
+    val hasClauses = report.clauseAnalyses.isNotEmpty()
+    val tabTitles = if (hasClauses) {
+        listOf("🧭 সারসংক্ষেপ ও পরিস্থিতি", "📄 চুক্তির ধারা বিশ্লেষণ", "📖 কুরআন ও সুন্নাহ দলিল", "⚖️ ফিকহ ও মাযহাব", "💡 হালাল বিকল্প")
+    } else {
+        listOf("🧭 সারসংক্ষেপ ও পরিস্থিতি", "📖 কুরআন ও সুন্নাহ দলিল", "⚖️ ফিকহ ও মাযহাব", "💡 হালাল বিকল্প")
+    }
 
     Column(modifier = Modifier.fillMaxSize()) {
-        // Status Banner
+        // Status Banner with Nuanced Classification (NO HALAL PERCENTAGES)
         Surface(
-            color = Color(report.riskLevel.primaryColorHex).copy(alpha = 0.12f),
+            color = Color(report.assessment.primaryColorHex).copy(alpha = 0.12f),
             modifier = Modifier.fillMaxWidth()
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
@@ -896,10 +1271,10 @@ private fun ComprehensiveScholarlyReportView(
                 ) {
                     Surface(
                         shape = RoundedCornerShape(8.dp),
-                        color = Color(report.riskLevel.primaryColorHex)
+                        color = Color(report.assessment.primaryColorHex)
                     ) {
                         Text(
-                            text = report.riskLevel.labelBn,
+                            text = report.assessment.labelBn,
                             style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
                             color = Color.White,
                             modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
@@ -918,17 +1293,17 @@ private fun ComprehensiveScholarlyReportView(
                 Spacer(modifier = Modifier.height(8.dp))
 
                 Text(
-                    text = report.riskLevel.titleBn,
+                    text = report.assessment.titleBn,
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
-                    color = Color(report.riskLevel.primaryColorHex),
+                    color = Color(report.assessment.primaryColorHex),
                     fontFamily = banglaFont
                 )
 
                 Spacer(modifier = Modifier.height(4.dp))
 
                 Text(
-                    text = report.riskLevel.subtitleBn,
+                    text = report.assessment.subtitleBn,
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurface,
                     fontFamily = banglaFont
@@ -938,7 +1313,7 @@ private fun ComprehensiveScholarlyReportView(
 
         // Scrollable Tabs
         ScrollableTabRow(
-            selectedTabIndex = selectedTab,
+            selectedTabIndex = selectedTab.coerceIn(0, tabTitles.size - 1),
             containerColor = MaterialTheme.colorScheme.surface,
             contentColor = Color(0xFF059669),
             edgePadding = 16.dp
@@ -966,27 +1341,33 @@ private fun ComprehensiveScholarlyReportView(
             contentPadding = PaddingValues(16.dp),
             verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
-            when (selectedTab) {
+            val adjustedTab = if (hasClauses) selectedTab else if (selectedTab >= 1) selectedTab + 1 else selectedTab
+
+            when (adjustedTab) {
                 0 -> {
-                    // TAB 0: Executive Breakdown & Red Flags
+                    // TAB 0: What I Understand & Important Facts
                     item {
-                        ExecutiveSummaryCard(report = report)
-                    }
-
-                    if (report.redFlagsIdentified.isNotEmpty()) {
-                        item {
-                            RedFlagsCard(redFlags = report.redFlagsIdentified)
-                        }
-                    }
-
-                    if (report.criticalCheckpoints.isNotEmpty()) {
-                        item {
-                            CriticalCheckpointsCard(checkpoints = report.criticalCheckpoints)
-                        }
+                        WhatIUnderstandCard(report = report)
                     }
 
                     item {
-                        RecommendedNextStepsCard(steps = report.recommendedNextSteps)
+                        AssessmentSummaryCard(report = report)
+                    }
+
+                    if (report.importantFacts.isNotEmpty()) {
+                        item {
+                            ImportantFactsCard(facts = report.importantFacts)
+                        }
+                    }
+
+                    if (report.whatIsStillUnclear.isNotEmpty()) {
+                        item {
+                            WhatIsStillUnclearCard(unclearPoints = report.whatIsStillUnclear)
+                        }
+                    }
+
+                    item {
+                        PracticalNextStepsCard(steps = report.practicalNextSteps)
                     }
 
                     item {
@@ -995,7 +1376,21 @@ private fun ComprehensiveScholarlyReportView(
                 }
 
                 1 -> {
-                    // TAB 1: Quran & Hadith Proofs
+                    // TAB 1: Document Clause Analysis (Section 17)
+                    item {
+                        SectionHeaderBadge(
+                            title = "চুক্তির ধারাসমূহ পরীক্ষা (Clause-by-Clause Inspection)",
+                            badgeType = IslamicSourceType.AI_DIAGNOSTIC
+                        )
+                    }
+
+                    items(report.clauseAnalyses) { clause ->
+                        DocumentClauseCard(clause = clause)
+                    }
+                }
+
+                2 -> {
+                    // TAB 2: Quran & Hadith Proofs
                     item {
                         SectionHeaderBadge(
                             title = "পবিত্র কুরআনুল কারীম (কালামুল্লাহ)",
@@ -1020,8 +1415,8 @@ private fun ComprehensiveScholarlyReportView(
                     }
                 }
 
-                2 -> {
-                    // TAB 2: Fiqh Maxims & Scholarly Positions
+                3 -> {
+                    // TAB 3: Fiqh Maxims & Scholarly Positions
                     item {
                         SectionHeaderBadge(
                             title = "কাওয়াইদে ফিকহিয়্যাহ (শাস্ত্রীয় মূলনীতি)",
@@ -1046,8 +1441,8 @@ private fun ComprehensiveScholarlyReportView(
                     }
                 }
 
-                3 -> {
-                    // TAB 3: Halal Alternatives
+                4 -> {
+                    // TAB 4: Halal Alternatives
                     item {
                         Surface(
                             shape = RoundedCornerShape(12.dp),
@@ -1116,7 +1511,7 @@ private fun SectionHeaderBadge(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Icon(
-                imageVector = Icons.Default.MenuBook,
+                imageVector = Icons.AutoMirrored.Filled.MenuBook,
                 contentDescription = null,
                 tint = Color(badgeType.badgeColorHex),
                 modifier = Modifier.size(16.dp)
@@ -1142,7 +1537,7 @@ private fun SectionHeaderBadge(
 }
 
 @Composable
-private fun ExecutiveSummaryCard(report: AskBeforeYouActReport) {
+private fun WhatIUnderstandCard(report: AskBeforeYouActReport) {
     val banglaFont = LocalBanglaFontFamily.current
 
     Card(
@@ -1162,7 +1557,7 @@ private fun ExecutiveSummaryCard(report: AskBeforeYouActReport) {
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    text = "বিশ্লেষণ সারাংশ (Executive Synthesis):",
+                    text = "🧭 পরিস্থিতির বিবরণ (What I Understand):",
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface,
@@ -1173,81 +1568,73 @@ private fun ExecutiveSummaryCard(report: AskBeforeYouActReport) {
             Spacer(modifier = Modifier.height(10.dp))
 
             Text(
-                text = report.executiveSummaryBn,
+                text = report.whatIUnderstandBn,
                 style = MaterialTheme.typography.bodyMedium.copy(lineHeight = 22.sp),
                 color = MaterialTheme.colorScheme.onSurface,
                 fontFamily = banglaFont
             )
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            Surface(
-                shape = RoundedCornerShape(10.dp),
-                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Column(modifier = Modifier.padding(12.dp)) {
-                    Text(
-                        text = "আপনার নির্বাচিত প্রধান উপাদানসমূহ:",
-                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
-                        color = MaterialTheme.colorScheme.primary,
-                        fontFamily = banglaFont
-                    )
-                    Spacer(modifier = Modifier.height(6.dp))
-                    report.selectedOptionLabels.forEach { (question, answer) ->
-                        Text(
-                            text = "• $question: $answer",
-                            style = MaterialTheme.typography.bodySmall.copy(lineHeight = 18.sp),
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            fontFamily = banglaFont
-                        )
-                        Spacer(modifier = Modifier.height(3.dp))
-                    }
-                }
-            }
         }
     }
 }
 
 @Composable
-private fun RedFlagsCard(redFlags: List<String>) {
+private fun AssessmentSummaryCard(report: AskBeforeYouActReport) {
     val banglaFont = LocalBanglaFontFamily.current
 
     Card(
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFFDC2626).copy(alpha = 0.08f)),
-        border = BorderStroke(1.2.dp, Color(0xFFDC2626).copy(alpha = 0.5f)),
+        colors = CardDefaults.cardColors(containerColor = Color(report.assessment.primaryColorHex).copy(alpha = 0.08f)),
+        border = BorderStroke(1.2.dp, Color(report.assessment.primaryColorHex).copy(alpha = 0.4f)),
         modifier = Modifier.fillMaxWidth()
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(
-                    imageVector = Icons.Default.Error,
-                    contentDescription = null,
-                    tint = Color(0xFFDC2626),
-                    modifier = Modifier.size(20.dp)
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    text = "চিহ্নিত চরম ঝুঁকি / নিষিদ্ধ শর্ত (Red Flags):",
-                    style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.Bold,
-                    color = Color(0xFFDC2626),
-                    fontFamily = banglaFont
-                )
-            }
+            Text(
+                text = "📝 শরঈ মূল্যায়ন ও মূল বক্তব্য:",
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.Bold,
+                color = Color(report.assessment.primaryColorHex),
+                fontFamily = banglaFont
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Text(
+                text = report.assessmentSummaryBn,
+                style = MaterialTheme.typography.bodyMedium.copy(lineHeight = 22.sp),
+                color = MaterialTheme.colorScheme.onSurface,
+                fontFamily = banglaFont
+            )
+        }
+    }
+}
+
+@Composable
+private fun ImportantFactsCard(facts: List<String>) {
+    val banglaFont = LocalBanglaFontFamily.current
+
+    Card(
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.2f)),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Text(
+                text = "🔎 চিহ্নিত গুরুত্বপূর্ণ শরঈ উপাদানসমূহ:",
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.primary,
+                fontFamily = banglaFont
+            )
 
             Spacer(modifier = Modifier.height(10.dp))
 
-            redFlags.forEach { flag ->
-                Row(
-                    modifier = Modifier.padding(vertical = 4.dp),
-                    verticalAlignment = Alignment.Top
-                ) {
-                    Text(text = "⚠️", fontSize = 14.sp)
-                    Spacer(modifier = Modifier.width(6.dp))
+            facts.forEach { fact ->
+                Row(modifier = Modifier.padding(vertical = 3.dp), verticalAlignment = Alignment.Top) {
+                    Text(text = "•", color = Color(0xFF059669), fontWeight = FontWeight.Bold)
+                    Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = flag,
+                        text = fact,
                         style = MaterialTheme.typography.bodySmall.copy(lineHeight = 18.sp),
                         color = MaterialTheme.colorScheme.onSurface,
                         fontFamily = banglaFont
@@ -1259,50 +1646,45 @@ private fun RedFlagsCard(redFlags: List<String>) {
 }
 
 @Composable
-private fun CriticalCheckpointsCard(checkpoints: List<String>) {
+private fun WhatIsStillUnclearCard(unclearPoints: List<String>) {
     val banglaFont = LocalBanglaFontFamily.current
 
     Card(
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFFD97706).copy(alpha = 0.08f)),
-        border = BorderStroke(1.dp, Color(0xFFD97706).copy(alpha = 0.4f)),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFF0284C7).copy(alpha = 0.08f)),
+        border = BorderStroke(1.dp, Color(0xFF0284C7).copy(alpha = 0.4f)),
         modifier = Modifier.fillMaxWidth()
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(
-                    imageVector = Icons.Default.Warning,
-                    contentDescription = null,
-                    tint = Color(0xFFD97706),
-                    modifier = Modifier.size(18.dp)
-                )
+                Icon(Icons.Default.Info, contentDescription = null, tint = Color(0xFF0284C7), modifier = Modifier.size(18.dp))
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    text = "সতর্কতামূলক শর্ত ও যাচাই চেকলিস্ট:",
+                    text = "⚠️ যা এখনো অস্পষ্ট ও যাচাই আবশ্যক (What Is Still Unclear):",
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.Bold,
-                    color = Color(0xFFD97706),
+                    color = Color(0xFF0284C7),
                     fontFamily = banglaFont
                 )
             }
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            checkpoints.forEach { cp ->
+            unclearPoints.forEach { point ->
                 Text(
-                    text = "🔍 $cp",
+                    text = "❓ $point",
                     style = MaterialTheme.typography.bodySmall.copy(lineHeight = 18.sp),
                     color = MaterialTheme.colorScheme.onSurface,
-                    fontFamily = banglaFont
+                    fontFamily = banglaFont,
+                    modifier = Modifier.padding(vertical = 2.dp)
                 )
-                Spacer(modifier = Modifier.height(4.dp))
             }
         }
     }
 }
 
 @Composable
-private fun RecommendedNextStepsCard(steps: List<String>) {
+private fun PracticalNextStepsCard(steps: List<String>) {
     val banglaFont = LocalBanglaFontFamily.current
 
     Card(
@@ -1321,7 +1703,7 @@ private fun RecommendedNextStepsCard(steps: List<String>) {
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    text = "পরবর্তী করণীয় পদক্ষেপ (Next Steps):",
+                    text = "✅ বাস্তবসম্মত পরবর্তী পদক্ষেপ (Practical Next Steps):",
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.Bold,
                     color = Color(0xFF059669),
@@ -1348,6 +1730,86 @@ private fun RecommendedNextStepsCard(steps: List<String>) {
                     )
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun DocumentClauseCard(clause: DocumentClauseAnalysis) {
+    val banglaFont = LocalBanglaFontFamily.current
+
+    val borderColor = if (clause.isConcerning) Color(0xFFDC2626).copy(alpha = 0.5f) else MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
+    val cardBg = if (clause.isConcerning) Color(0xFFDC2626).copy(alpha = 0.05f) else MaterialTheme.colorScheme.surface
+
+    Card(
+        shape = RoundedCornerShape(14.dp),
+        colors = CardDefaults.cardColors(containerColor = cardBg),
+        border = BorderStroke(1.dp, borderColor),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Column(modifier = Modifier.padding(14.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = clause.clauseTitle,
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = if (clause.isConcerning) Color(0xFFDC2626) else MaterialTheme.colorScheme.primary,
+                    fontFamily = banglaFont
+                )
+                Surface(
+                    shape = RoundedCornerShape(6.dp),
+                    color = if (clause.isConcerning) Color(0xFFDC2626).copy(alpha = 0.15f) else Color(0xFF059669).copy(alpha = 0.15f)
+                ) {
+                    Text(
+                        text = clause.riskCategoryBn,
+                        style = MaterialTheme.typography.labelSmall.copy(
+                            fontSize = 10.5.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = if (clause.isConcerning) Color(0xFFDC2626) else Color(0xFF059669)
+                        ),
+                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                        fontFamily = banglaFont
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // Quoted Text
+            Surface(
+                shape = RoundedCornerShape(8.dp),
+                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(
+                    text = "\"${clause.quotedText}\"",
+                    style = MaterialTheme.typography.bodySmall.copy(fontStyle = androidx.compose.ui.text.font.FontStyle.Italic),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(8.dp)
+                )
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Text(
+                text = "নথির প্রত্যক্ষ অর্থ: ${clause.documentMeaningBn}",
+                style = MaterialTheme.typography.bodySmall.copy(lineHeight = 18.sp),
+                color = MaterialTheme.colorScheme.onSurface,
+                fontFamily = banglaFont
+            )
+
+            Spacer(modifier = Modifier.height(4.dp))
+
+            Text(
+                text = "শরঈ তাৎপর্য: ${clause.islamicSignificanceBn}",
+                style = MaterialTheme.typography.bodySmall.copy(lineHeight = 18.sp, fontWeight = FontWeight.Medium),
+                color = if (clause.isConcerning) Color(0xFFDC2626) else Color(0xFF059669),
+                fontFamily = banglaFont
+            )
         }
     }
 }
@@ -1487,7 +1949,6 @@ private fun VerifiedQuranProofCard(proof: VerifiedQuranProof) {
 private fun VerifiedHadithProofCard(hadith: VerifiedHadithProof) {
     val banglaFont = LocalBanglaFontFamily.current
     val arabicFont = LocalArabicFontFamily.current
-    val context = LocalContext.current
 
     Card(
         shape = RoundedCornerShape(16.dp),
@@ -1786,7 +2247,7 @@ private fun ScholarlyDisclaimerCard() {
             }
             Spacer(modifier = Modifier.height(4.dp))
             Text(
-                text = "এই টুলটি কোনো ব্যক্তিগত আইনি ফতোয়া নয়; এটি কুরআন, সুন্নাহ ও নির্ভরযোগ্য ফিকহ একাডেমিগুলোর নীতিমালার আলোকে ব্যবহারকারীকে সঠিক প্রশ্ন করতে এবং সুপ্ত হারাম/ঝুঁকিপূর্ণ ধারা চিহ্নিত করতে সাহায্য করার একটি শিক্ষামূলক মাধ্যম। নির্দিষ্ট ও জটিল চুক্তিপত্র চূড়ান্ত করার পূর্বে বিশ্বস্ত যোগ্য মুফতি বা শরীয়াহ কনসালট্যান্টের সাথে ব্যক্তিগত নথিপত্র প্রদর্শনপূর্বক পরামর্শ নেওয়া বাঞ্ছনীয়।",
+                text = "এই তথ্য কেবল ইসলামিক মূলনীতি ও প্রাসঙ্গিক দলিল বোঝার জন্য প্রস্তুত করা হয়েছে। আপনার ব্যক্তিগত নির্দিষ্ট পরিস্থিতির উপর কোনো বাধ্যতামূলক ও চূড়ান্ত ফতোয়া গ্রহণের জন্য একজন নির্ভরযোগ্য বিজ্ঞ মুফতি বা শরীয়াহ কনসালট্যান্টের সাথে পরামর্শ করুন।",
                 style = MaterialTheme.typography.labelSmall.copy(lineHeight = 17.sp),
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 fontFamily = banglaFont

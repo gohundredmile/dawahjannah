@@ -100,10 +100,10 @@ enum class AppTab(val index: Int, val titleBn: String) {
 enum class ToolsSubScreen(val titleBn: String) {
     MAIN("টুলস"),
     FRIDAY_MODE("Friday Mode (জুমার মোড)"),
-    ISLAMIC_HABIT_SYSTEM("Islamic Habit System (ইসলামিক অভ্যাস ও সুন্নাহ পদ্ধতি)"),
+    ISLAMIC_HABIT_SYSTEM("Sunnah Guide & Tracker (সুন্নাহ গাইড ও ট্র্যাকার)"),
     DUA_BY_SITUATION("Dua by Situation (অনুভূতি ও পরিস্থিতি অনুযায়ী দু'আ)"),
     PERSONAL_DUA_BUILDER("Personal Dua Builder (ব্যক্তিগত দো'আ আর্কিটেক্ট)"),
-    ASK_BEFORE_YOU_ACT("Ask Before You Act (পদক্ষেপ নেওয়ার আগে জানুন)"),
+    ASK_BEFORE_YOU_ACT("Ask Before You Act (সিদ্ধান্ত-সহায়িকা ও চুক্তি স্ক্যানার)"),
     SMART_QURAN_SEARCH("Smart Quran Search (ভাবার্থভিত্তিক অনুসন্ধান)"),
     RAMADAN_INTELLIGENCE("All in one Ramadan & Ramadan Intelligence"),
     EXPLAIN_AYAH_CAMERA("Explain This Ayah ক্যামেরা"),

@@ -7,6 +7,9 @@ import com.example.data.datasource.IslamicHabitCatalog
 import com.example.data.local.AppDatabase
 import com.example.data.local.entity.SunnahHabitLog
 import com.example.data.model.HabitCategory
+import com.example.data.model.HabitDevelopmentStage
+import com.example.data.model.HabitFocusPreferences
+import com.example.data.model.HabitSystemMode
 import com.example.data.model.SunnahHabitItem
 import com.example.data.model.SunnahWeeklyStats
 import kotlinx.coroutines.Dispatchers
@@ -33,6 +36,7 @@ data class SunnahHabitUiModel(
     val isCompletedToday: Boolean,
     val completionsThisWeek: Int,
     val journeyStatus: HabitJourneyStatus,
+    val developmentStage: HabitDevelopmentStage,
     val note: String = ""
 )
 
@@ -44,6 +48,10 @@ class IslamicHabitViewModel(application: Application) : AndroidViewModel(applica
     private val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.ENGLISH)
     private val displayDateFormat = SimpleDateFormat("EEEE, d MMMM yyyy", Locale("bn", "BD"))
 
+    // Active mode: Guide or Tracker
+    private val _systemMode = MutableStateFlow(HabitSystemMode.GUIDE)
+    val systemMode: StateFlow<HabitSystemMode> = _systemMode.asStateFlow()
+
     private val _selectedDate = MutableStateFlow(getTodayDateString())
     val selectedDate: StateFlow<String> = _selectedDate.asStateFlow()
 
@@ -53,8 +61,18 @@ class IslamicHabitViewModel(application: Application) : AndroidViewModel(applica
     private val _searchQuery = MutableStateFlow("")
     val searchQuery: StateFlow<String> = _searchQuery.asStateFlow()
 
+    private val _stageFilter = MutableStateFlow<HabitDevelopmentStage?>(null)
+    val stageFilter: StateFlow<HabitDevelopmentStage?> = _stageFilter.asStateFlow()
+
     private val _selectedHabitForDetail = MutableStateFlow<SunnahHabitItem?>(null)
     val selectedHabitForDetail: StateFlow<SunnahHabitItem?> = _selectedHabitForDetail.asStateFlow()
+
+    // Preferences for onboarding & focus
+    private val _focusPreferences = MutableStateFlow(HabitFocusPreferences())
+    val focusPreferences: StateFlow<HabitFocusPreferences> = _focusPreferences.asStateFlow()
+
+    // Featured Habit of the Day
+    val featuredHabit: SunnahHabitItem = IslamicHabitCatalog.getFeaturedHabitOfDay()
 
     // Week range strings
     private val weekStartDate = getWeekStartDateString()
@@ -78,8 +96,9 @@ class IslamicHabitViewModel(application: Application) : AndroidViewModel(applica
         todayLogsFlow,
         weeklyLogsFlow,
         _selectedCategory,
-        _searchQuery
-    ) { todayLogs, weeklyLogs, category, query ->
+        _searchQuery,
+        _stageFilter
+    ) { todayLogs, weeklyLogs, category, query, stageFilter ->
         val todayLogMap = todayLogs.associateBy { it.habitId }
         val weeklyCountMap = weeklyLogs.groupingBy { it.habitId }.eachCount()
 
@@ -89,8 +108,11 @@ class IslamicHabitViewModel(application: Application) : AndroidViewModel(applica
                 (query.isBlank() ||
                  item.titleBn.contains(query, ignoreCase = true) ||
                  item.titleEn.contains(query, ignoreCase = true) ||
+                 item.arabicTitle.contains(query, ignoreCase = true) ||
                  item.translationBn.contains(query, ignoreCase = true) ||
-                 item.fiqhStatusBn.contains(query, ignoreCase = true))
+                 item.legalClassification.contains(query, ignoreCase = true) ||
+                 item.timeOfDay.contains(query, ignoreCase = true) ||
+                 item.sourceReference.contains(query, ignoreCase = true))
             }
             .map { item ->
                 val isCompleted = todayLogMap.containsKey(item.id)
@@ -103,13 +125,25 @@ class IslamicHabitViewModel(application: Application) : AndroidViewModel(applica
                     else -> HabitJourneyStatus.TO_REVISIT
                 }
 
+                val stage = when {
+                    countThisWeek >= 5 -> HabitDevelopmentStage.ESTABLISHED
+                    countThisWeek in 2..4 -> HabitDevelopmentStage.DEVELOPING
+                    countThisWeek == 1 -> HabitDevelopmentStage.TRYING
+                    isCompleted -> HabitDevelopmentStage.TRYING
+                    else -> HabitDevelopmentStage.REVISIT
+                }
+
                 SunnahHabitUiModel(
                     habit = item,
                     isCompletedToday = isCompleted,
                     completionsThisWeek = countThisWeek,
                     journeyStatus = status,
+                    developmentStage = stage,
                     note = note
                 )
+            }
+            .filter { uiModel ->
+                stageFilter == null || uiModel.developmentStage == stageFilter
             }
     }.stateIn(
         scope = viewModelScope,
@@ -117,12 +151,20 @@ class IslamicHabitViewModel(application: Application) : AndroidViewModel(applica
         initialValue = emptyList()
     )
 
+    fun setSystemMode(mode: HabitSystemMode) {
+        _systemMode.value = mode
+    }
+
     fun selectCategory(category: HabitCategory) {
         _selectedCategory.value = category
     }
 
     fun setSearchQuery(query: String) {
         _searchQuery.value = query
+    }
+
+    fun setStageFilter(stage: HabitDevelopmentStage?) {
+        _stageFilter.value = stage
     }
 
     fun openHabitDetail(habit: SunnahHabitItem?) {
@@ -159,6 +201,14 @@ class IslamicHabitViewModel(application: Application) : AndroidViewModel(applica
             )
             habitDao.insertOrUpdate(log)
         }
+    }
+
+    fun saveFocusPreferences(areas: Set<String>, density: Int) {
+        _focusPreferences.value = HabitFocusPreferences(
+            selectedAreas = areas,
+            habitDensityTarget = density,
+            isOnboarded = true
+        )
     }
 
     private fun calculateWeeklyStats(weeklyLogs: List<SunnahHabitLog>): SunnahWeeklyStats {

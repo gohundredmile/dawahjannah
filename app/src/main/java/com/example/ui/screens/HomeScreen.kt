@@ -86,6 +86,7 @@ import com.example.ui.components.NofolSalatIndependentCard
 import com.example.ui.components.NofolSalatScheduleDialog
 import com.example.ui.components.QuickActionCard
 import com.example.ui.components.RamadanMoonScheduleDialog
+import com.example.ui.components.RamadanOptionsDialog
 import com.example.ui.components.SalatTimingsSection
 import com.example.ui.components.SehriIftarFullScreenDialog
 import com.example.ui.components.SehriIftarSummaryCard
@@ -132,11 +133,12 @@ fun HomeScreen(
     var showSalatCalendarDialog by remember { mutableStateOf(false) }
     var showTripleCalendarDialog by remember { mutableStateOf(false) }
     var showAllahNamesOptionsDialog by remember { mutableStateOf(false) }
+    var showRamadanOptionsDialog by remember { mutableStateOf(false) }
     var showNamazGuideDialog by remember { mutableStateOf(false) }
     var showNamazModeDialog by remember { mutableStateOf(false) }
 
     val isAnyDialogOpen = showSehriIftarFullScreen || showDetailedSehriIftar ||
-        showRamadanSchedule || showNofolScheduleDialog || (selectedNofolSalat != null) ||
+        showRamadanSchedule || showRamadanOptionsDialog || showNofolScheduleDialog || (selectedNofolSalat != null) ||
         showAllFeaturesDialog || showSalatCalendarDialog || showTripleCalendarDialog ||
         showAllahNamesOptionsDialog || showNamazGuideDialog || showNamazModeDialog
 
@@ -144,6 +146,7 @@ fun HomeScreen(
         if (showSehriIftarFullScreen) showSehriIftarFullScreen = false
         else if (showDetailedSehriIftar) showDetailedSehriIftar = false
         else if (showRamadanSchedule) showRamadanSchedule = false
+        else if (showRamadanOptionsDialog) showRamadanOptionsDialog = false
         else if (showNofolScheduleDialog) showNofolScheduleDialog = false
         else if (selectedNofolSalat != null) selectedNofolSalat = null
         else if (showAllFeaturesDialog) showAllFeaturesDialog = false
@@ -166,19 +169,6 @@ fun HomeScreen(
             prayerList = prayerStatus.prayerList
         )
         listOf(
-            // Friday Mode
-            HomeFeatureItem(
-                id = "friday_mode",
-                serialNumberBn = "০০",
-                titleBn = if (isFridayActive) "০. Friday Mode (সক্রিয়)" else "০. Friday Mode (জুমার মোড)",
-                shortTitleBn = if (isFridayActive) "Friday Mode (সক্রিয়)" else "Friday Mode",
-                subtitleBn = "বৃহস্পতিবার মাগরিব থেকে শুক্রবার মাগরিব • সূরা কাহাফ, ১০ সুন্নাত ও আমল",
-                categoryBn = "সিগনেচার টুলস",
-                icon = Icons.Default.Mosque,
-                iconColor = if (isFridayActive) Color(0xFF047857) else IslamicGold,
-                isTopEight = true,
-                onClickAction = { viewModel.openFridayMode() }
-            ),
             // পবিত্র কুরআন
             HomeFeatureItem(
                 id = "holy_quran",
@@ -250,12 +240,12 @@ fun HomeScreen(
                 serialNumberBn = "০৪",
                 titleBn = "৪. রমাদান",
                 shortTitleBn = "রমাদান",
-                subtitleBn = "লাইভ চাঁদ দেখা, ৩০ দিনের রোজা, তারাবীহ ও হিজরি ক্যালেন্ডার",
+                subtitleBn = "রমাদান সময়সূচী, সেহেরি-ইফতার ও রমাদান ইন্টেলিজেন্স",
                 categoryBn = "সিয়াম ও রমাদান",
                 icon = Icons.Default.Brightness2,
                 iconColor = Color(0xFF0D9488),
                 isTopEight = true,
-                onClickAction = { showRamadanSchedule = true }
+                onClickAction = { showRamadanOptionsDialog = true }
             ),
             // ৫. নামাজ গাইড
             HomeFeatureItem(
@@ -428,16 +418,17 @@ fun HomeScreen(
                     }
                 }
             ),
-            // ১৭. জুম্মাবারের আমল
+            // ১৭. Friday Mode (জুমার মোড)
             HomeFeatureItem(
-                id = "jummah_amal",
+                id = "friday_mode",
                 serialNumberBn = "১৭",
-                titleBn = "১৭. জুম্মাবারের আমল",
-                shortTitleBn = "জুম্মার আমল",
-                subtitleBn = "জুমার দিনের ৫টি শ্রেষ্ঠ সুন্নাত, সূরা কাহাফ ও সা’আতুল ইজাবাহ",
+                titleBn = if (isFridayActive) "১৭. Friday Mode (সক্রিয়)" else "১৭. Friday Mode (জুমার মোড)",
+                shortTitleBn = if (isFridayActive) "Friday Mode (সক্রিয়)" else "Friday Mode",
+                subtitleBn = "বৃহস্পতিবার মাগরিব থেকে শুক্রবার মাগরিব • সূরা কাহাফ, ১০ সুন্নাত ও আমল",
                 categoryBn = "বিশেষ আমল",
-                icon = Icons.Default.MenuBook,
-                iconColor = Color(0xFF10B981),
+                icon = Icons.Default.Mosque,
+                iconColor = if (isFridayActive) Color(0xFF047857) else IslamicGold,
+                isTopEight = false,
                 onClickAction = {
                     viewModel.openFridayMode()
                 }
@@ -965,6 +956,16 @@ fun HomeScreen(
                     viewModel.openIslamicLifeSection(it)
                 }
             }
+        )
+    }
+
+    // Ramadan Options Dialog (Option 1: Ramadan Schedule, Option 2: Sehri & Iftar Schedule, Option 3: Ramadan Intelligence)
+    if (showRamadanOptionsDialog) {
+        RamadanOptionsDialog(
+            onDismiss = { showRamadanOptionsDialog = false },
+            onSelectRamadanSchedule = { showRamadanSchedule = true },
+            onSelectSehriIftarSchedule = { showDetailedSehriIftar = true },
+            onSelectRamadanIntelligence = { viewModel.openRamadanIntelligence() }
         )
     }
 }

@@ -134,16 +134,24 @@ enum class EnginePhase(val titleBn: String, val icon: String) {
     JOURNEY("আমার জার্নি", "📜")
 }
 
+enum class QuranEngineMode(val titleBn: String, val iconEmoji: String) {
+    ACTION_ENGINE("কুরআন → আমল", "🌱"),
+    SMART_SEARCH("স্মার্ট ভাবার্থ সন্ধান", "🔍")
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun QuranActionEngineScreen(
     onNavigateBack: () -> Unit,
+    initialMode: QuranEngineMode = QuranEngineMode.ACTION_ENGINE,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val banglaFont = LocalBanglaFontFamily.current
     val arabicFont = LocalArabicFontFamily.current
+
+    var currentMode by remember { mutableStateOf(initialMode) }
 
     val repository = remember { QuranActionEngineRepository(context) }
     val aiService = remember { QuranActionEngineAiService(context) }
@@ -206,7 +214,7 @@ fun QuranActionEngineScreen(
                     Column {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Text(
-                                text = "Quran → Action Engine",
+                                text = if (currentMode == QuranEngineMode.ACTION_ENGINE) "Quran → Action Engine" else "Smart Quran Search",
                                 style = MaterialTheme.typography.titleMedium.copy(
                                     fontWeight = FontWeight.Bold,
                                     letterSpacing = 0.5.sp
@@ -215,20 +223,23 @@ fun QuranActionEngineScreen(
                             Spacer(modifier = Modifier.width(6.dp))
                             Surface(
                                 shape = RoundedCornerShape(6.dp),
-                                color = MaterialTheme.colorScheme.primaryContainer
+                                color = if (currentMode == QuranEngineMode.ACTION_ENGINE) MaterialTheme.colorScheme.primaryContainer else Color(0xFF0369A1).copy(alpha = 0.15f)
                             ) {
                                 Text(
-                                    text = "Live the Ayah",
+                                    text = if (currentMode == QuranEngineMode.ACTION_ENGINE) "Live the Ayah" else "Semantic AI",
                                     modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
                                     style = MaterialTheme.typography.labelSmall.copy(
-                                        color = MaterialTheme.colorScheme.onPrimaryContainer,
+                                        color = if (currentMode == QuranEngineMode.ACTION_ENGINE) MaterialTheme.colorScheme.onPrimaryContainer else Color(0xFF0369A1),
                                         fontWeight = FontWeight.Bold
                                     )
                                 )
                             }
                         }
                         Text(
-                            text = "পড়া • উপলব্ধি • তাদাব্বুর • প্রয়োগ • আমল • শিখন",
+                            text = if (currentMode == QuranEngineMode.ACTION_ENGINE)
+                                "পড়া • উপলব্ধি • তাদাব্বুর • প্রয়োগ • আমল • শিখন"
+                            else
+                                "ভাবার্থ, মানবিক আবেগ ও জীবনের সংকট অনুযায়ী সন্ধান",
                             style = MaterialTheme.typography.labelSmall.copy(
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 fontFamily = banglaFont
@@ -273,50 +284,127 @@ fun QuranActionEngineScreen(
                 .fillMaxSize()
                 .padding(innerPadding)
         ) {
-            // Horizontal Phase Tabs
-            ScrollablePhaseTabs(
-                currentPhase = currentPhase,
-                onSelectPhase = { currentPhase = it },
-                banglaFont = banglaFont
-            )
-
-            // Continuity Bridge Banner (if available)
-            if (continuityPair != null && currentPhase != EnginePhase.JOURNEY) {
-                ContinuityBridgeBanner(
-                    headline = continuityPair.first,
-                    message = continuityPair.second,
-                    banglaFont = banglaFont
-                )
+            // Seamless Merged Mode Switcher Tabs
+            Surface(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 14.dp, vertical = 6.dp),
+                shape = RoundedCornerShape(14.dp),
+                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(4.dp),
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    QuranEngineMode.values().forEach { mode ->
+                        val isSelected = currentMode == mode
+                        Surface(
+                            modifier = Modifier
+                                .weight(1f)
+                                .clickable { currentMode = mode },
+                            shape = RoundedCornerShape(10.dp),
+                            color = if (isSelected) MaterialTheme.colorScheme.surface else Color.Transparent,
+                            shadowElevation = if (isSelected) 2.dp else 0.dp,
+                            border = if (isSelected) androidx.compose.foundation.BorderStroke(
+                                1.dp,
+                                if (mode == QuranEngineMode.ACTION_ENGINE) Color(0xFF047857).copy(alpha = 0.4f) else Color(0xFF0369A1).copy(alpha = 0.4f)
+                            ) else null
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 8.dp),
+                                horizontalArrangement = Arrangement.Center,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = mode.iconEmoji,
+                                    fontSize = 15.sp
+                                )
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text(
+                                    text = mode.titleBn,
+                                    style = MaterialTheme.typography.labelMedium.copy(
+                                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                        color = if (isSelected) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant
+                                    ),
+                                    fontFamily = banglaFont
+                                )
+                            }
+                        }
+                    }
+                }
             }
 
-            // Phase Content
+            AnimatedVisibility(visible = currentMode == QuranEngineMode.ACTION_ENGINE) {
+                Column {
+                    // Horizontal Phase Tabs
+                    ScrollablePhaseTabs(
+                        currentPhase = currentPhase,
+                        onSelectPhase = { currentPhase = it },
+                        banglaFont = banglaFont
+                    )
+
+                    // Continuity Bridge Banner (if available)
+                    if (continuityPair != null && currentPhase != EnginePhase.JOURNEY) {
+                        ContinuityBridgeBanner(
+                            headline = continuityPair.first,
+                            message = continuityPair.second,
+                            banglaFont = banglaFont
+                        )
+                    }
+                }
+            }
+
+            // Phase Content or Smart Search Content
             Box(
                 modifier = Modifier
                     .fillMaxSize()
                     .weight(1f)
             ) {
-                when (currentPhase) {
-                    EnginePhase.READ -> {
-                        ReadAyahPhaseContent(
-                            insight = currentInsight,
-                            catalog = catalogList,
-                            selectedIndex = selectedAyahIndex,
-                            onSelectAyah = { idx -> selectedAyahIndex = idx },
-                            onSelectInsight = { chosen ->
-                                currentInsight = chosen
-                                val idx = catalogList.indexOfFirst { it.ayahId == chosen.ayahId }
-                                if (idx != -1) selectedAyahIndex = idx
-                                currentActionText = chosen.defaultTodayAction
-                                currentActionIdeaIndex = 0
-                                selectedReflectionQuestion = chosen.reflectiveQuestions.firstOrNull()
-                            },
-                            onOpenAyahPicker = { showAyahPickerSheet = true },
-                            onApplyThisAyah = { currentPhase = EnginePhase.UNDERSTAND },
-                            onOpenDeepDive = { showDeepDiveSheet = true },
-                            banglaFont = banglaFont,
-                            arabicFont = arabicFont
-                        )
-                    }
+                if (currentMode == QuranEngineMode.SMART_SEARCH) {
+                    SmartQuranSearchContent(
+                        showHeader = false,
+                        onSelectAyahForActionEngine = { semanticAyah ->
+                            val insight = QuranActionEngineCatalog.fromSemanticAyah(semanticAyah)
+                            currentInsight = insight
+                            val idx = catalogList.indexOfFirst { it.ayahId == insight.ayahId }
+                            if (idx != -1) selectedAyahIndex = idx
+                            currentActionText = insight.defaultTodayAction
+                            currentActionIdeaIndex = 0
+                            selectedReflectionQuestion = insight.reflectiveQuestions.firstOrNull()
+                            currentMode = QuranEngineMode.ACTION_ENGINE
+                            currentPhase = EnginePhase.READ
+                            Toast.makeText(context, "আয়াতটি আমল ইঞ্জিনে লোড হয়েছে! এবার পড়ুন ও আমল নির্ধারণ করুন।", Toast.LENGTH_SHORT).show()
+                        }
+                    )
+                } else {
+                    when (currentPhase) {
+                        EnginePhase.READ -> {
+                            ReadAyahPhaseContent(
+                                insight = currentInsight,
+                                catalog = catalogList,
+                                selectedIndex = selectedAyahIndex,
+                                onSelectAyah = { idx -> selectedAyahIndex = idx },
+                                onSelectInsight = { chosen ->
+                                    currentInsight = chosen
+                                    val idx = catalogList.indexOfFirst { it.ayahId == chosen.ayahId }
+                                    if (idx != -1) selectedAyahIndex = idx
+                                    currentActionText = chosen.defaultTodayAction
+                                    currentActionIdeaIndex = 0
+                                    selectedReflectionQuestion = chosen.reflectiveQuestions.firstOrNull()
+                                },
+                                onOpenAyahPicker = { showAyahPickerSheet = true },
+                                onOpenSmartSearch = { currentMode = QuranEngineMode.SMART_SEARCH },
+                                onApplyThisAyah = { currentPhase = EnginePhase.UNDERSTAND },
+                                onOpenDeepDive = { showDeepDiveSheet = true },
+                                banglaFont = banglaFont,
+                                arabicFont = arabicFont
+                            )
+                        }
                     EnginePhase.UNDERSTAND -> {
                         UnderstandPhaseContent(
                             insight = currentInsight,
@@ -444,6 +532,7 @@ fun QuranActionEngineScreen(
                     }
                 }
             }
+        }
         }
 
         // Sources Bottom Sheet
@@ -603,6 +692,7 @@ fun ReadAyahPhaseContent(
     onSelectAyah: (Int) -> Unit,
     onSelectInsight: (AyahActionInsight) -> Unit,
     onOpenAyahPicker: () -> Unit,
+    onOpenSmartSearch: () -> Unit,
     onApplyThisAyah: () -> Unit,
     onOpenDeepDive: () -> Unit,
     banglaFont: FontFamily,
@@ -712,25 +802,51 @@ fun ReadAyahPhaseContent(
 
                     Spacer(modifier = Modifier.height(10.dp))
 
-                    // Open Full Ayah & 114 Surah Browser Button
-                    Button(
-                        onClick = onOpenAyahPicker,
+                    // Open Full Ayah & 114 Surah Browser or Smart Search Buttons
+                    Row(
                         modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(12.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.primary
-                        ),
-                        contentPadding = PaddingValues(vertical = 10.dp)
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        Icon(Icons.Default.Search, contentDescription = null, modifier = Modifier.size(18.dp))
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = "কুরআনের সকল আয়াত ও ১১৪টি সূরা ব্রাউজ করুন",
-                            style = MaterialTheme.typography.labelMedium.copy(
-                                fontWeight = FontWeight.Bold,
-                                fontFamily = banglaFont
+                        Button(
+                            onClick = onOpenAyahPicker,
+                            modifier = Modifier.weight(1f),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.primary
+                            ),
+                            contentPadding = PaddingValues(vertical = 10.dp)
+                        ) {
+                            Icon(Icons.Default.MenuBook, contentDescription = null, modifier = Modifier.size(16.dp))
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(
+                                text = "১১৪ সূরা ব্রাউজ",
+                                style = MaterialTheme.typography.labelMedium.copy(
+                                    fontWeight = FontWeight.Bold,
+                                    fontFamily = banglaFont
+                                )
                             )
-                        )
+                        }
+
+                        FilledTonalButton(
+                            onClick = onOpenSmartSearch,
+                            modifier = Modifier.weight(1f),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = ButtonDefaults.filledTonalButtonColors(
+                                containerColor = Color(0xFF0369A1).copy(alpha = 0.15f),
+                                contentColor = Color(0xFF0369A1)
+                            ),
+                            contentPadding = PaddingValues(vertical = 10.dp)
+                        ) {
+                            Icon(Icons.Default.Psychology, contentDescription = null, modifier = Modifier.size(16.dp))
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(
+                                text = "🔍 ভাবার্থ সন্ধান",
+                                style = MaterialTheme.typography.labelMedium.copy(
+                                    fontWeight = FontWeight.Bold,
+                                    fontFamily = banglaFont
+                                )
+                            )
+                        }
                     }
 
                     Spacer(modifier = Modifier.height(10.dp))

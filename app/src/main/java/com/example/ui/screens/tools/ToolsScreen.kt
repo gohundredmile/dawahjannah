@@ -142,16 +142,16 @@ fun ToolsScreen(
         listOf(
             ToolFeatureItem(
                 id = "tool_quran_action_engine",
-                nameBn = "কুরআন → আমল",
-                fullNameBn = "Quran → Action Engine (Live the Ayah)",
-                subtitleBn = "Turn Quran Reading Into Understanding, Reflection, Practice, and Growth",
-                descriptionBn = "কুরআন পাঠকে নিছক তেলাওয়াত থেকে অর্থপূর্ণ ব্যক্তিগত শিখন লুপে রূপান্তর করুন: পড়া → উপলব্ধি → তাদাব্বুর → প্রয়োগ → আমল → আত্মপর্যালোচনা। ১২টি জীবন ক্ষেত্র, 'One Ayah, One Action' এবং সান্ধ্যকালীন পর্যালোচনার যুগান্তকারী ব্যবস্থা।",
+                nameBn = "কুরআন আমল ও ভাবার্থ ইঞ্জিন",
+                fullNameBn = "Quran Action Engine & Smart Search (কুরআন ভাবার্থ ও আমল)",
+                subtitleBn = "ভাবার্থভিত্তিক অনুসন্ধান • তাদাব্বুর • বাস্তব জীবনের ১২টি ক্ষেত্রে প্রয়োগ ও আমল",
+                descriptionBn = "কুরআনকে নিছক তেলাওয়াত নয়, জীবনের প্রতিটি ভাবনা ও সংকটের ঐশী সমাধান হিসেবে আবিষ্কার করুন। সহজ বাংলায় ভাবার্থ দিয়ে আয়াত খুঁজুন (AI Semantic Search) এবং সাথে সাথে রূপান্তর করুন ব্যক্তিগত আমল লুপে: পড়া → উপলব্ধি → তাদাব্বুর → প্রয়োগ → আমল → আত্মপর্যালোচনা।",
                 icon = Icons.Default.AutoAwesome,
                 emoji = "🌱",
-                badgeBn = "নতুন ফ্ল্যাগশিপ",
+                badgeBn = "একীভূত ফ্ল্যাগশিপ",
                 primaryColor = Color(0xFF047857),
                 softContainerColor = Color(0xFFE8F5E9),
-                highlights = listOf("আয়াত থেকে আমল", "১২টি জীবন ক্ষেত্র", "One Ayah One Action", "সন্ধ্যা পর্যালোচনা", "তাদাব্বুর ডায়েরি"),
+                highlights = listOf("ভাবার্থ সার্চ (AI)", "আয়াত থেকে আমল", "১২টি জীবন ক্ষেত্র", "One Ayah One Action", "সন্ধ্যা পর্যালোচনা", "তাদাব্বুর ডায়েরি"),
                 onClick = onOpenQuranActionEngine
             ),
             ToolFeatureItem(
@@ -255,15 +255,15 @@ fun ToolsScreen(
             ToolFeatureItem(
                 id = "tool_personal_dua_builder",
                 nameBn = "দো'আ আর্কিটেক্ট",
-                fullNameBn = "Personal Dua Builder (ব্যক্তিগত দো'আ আর্কিটেক্ট)",
-                subtitleBn = "কুরআনী আয়াত ও সহীহ নববী দু'আর কাঠামোগত বিন্যাস",
-                descriptionBn = "আল্লাহর হামদ-সানা, দরূদ শরীফ, তওবা-ইস্তেগফার ও সুন্নাতী আদবের সমন্বয়ে নিজের জন্য নিখুঁত ব্যক্তিগত দো'আ সংকলন তৈরি ও সংরক্ষণ করুন।",
+                fullNameBn = "Dua Architect — Personal Dua Builder",
+                subtitleBn = "কুরআন ও সহীহ হাদীসের ভিত্তিতে ব্যক্তিগত দো'আ আর্কিটেক্ট",
+                descriptionBn = "পবিত্র কুরআন ও সহীহ হাদীসের ১০০% প্রামাণ্য ভিত্তিতে আপনার পরিস্থিতি ও মনের আকুতি অনুযায়ী অর্থ ও সনদসহ ব্যক্তিগত দো'আ প্রস্তুত, অডিও তিলাওয়াত, উৎস পরিদর্শন ও সংরক্ষণ করুন।",
                 icon = Icons.Default.EditNote,
-                emoji = "✍️",
-                badgeBn = "নতুন সিগনেচার",
+                emoji = "🌙",
+                badgeBn = "সিগনেচার আর্কিটেক্ট",
                 primaryColor = Color(0xFFB45309),
                 softContainerColor = Color(0xFFFFFBEB),
-                highlights = listOf("সুন্নাতী কাঠামো", "দরূদ ও হামদ", "ব্যক্তিগত নোট", "বুকমার্ক সংগ্রহ"),
+                highlights = listOf("কুরআন ও সুন্নাহ", "৩টি বিন্যাস মোড", "উৎস পরিদর্শন", "আমল ও অডিও"),
                 onClick = onOpenPersonalDuaBuilder
             ),
             ToolFeatureItem(
@@ -293,20 +293,6 @@ fun ToolsScreen(
                 softContainerColor = Color(0xFFF3E8FF),
                 highlights = listOf("হালাল-হারাম ফিল্টার", "আর্থিক চুক্তি", "দলিলভিত্তিক", "শরঈ সতর্কতা"),
                 onClick = onOpenAskBeforeYouAct
-            ),
-            ToolFeatureItem(
-                id = "tool_smart_quran_search",
-                nameBn = "স্মার্ট কুরআন সার্চ",
-                fullNameBn = "স্মার্ট কুরআন সার্চ (ভাবার্থভিত্তিক অনুসন্ধান)",
-                subtitleBn = "বাংলা ভাষায় যে কোনো বিষয় লিখে প্রাসঙ্গিক আয়াত খুঁজুন",
-                descriptionBn = "সহজ বাংলা ভাষায় যেকোনো প্রশ্ন, মনের অবস্থা বা বিষয় টাইপ করুন—কুরআনের সংশ্লিষ্ট আয়াত, অনুবাদ ও প্রেক্ষাপট তাৎক্ষণিক পেয়ে যাবেন।",
-                icon = Icons.Default.Search,
-                emoji = "🔍",
-                badgeBn = "এআই সার্চ",
-                primaryColor = Color(0xFF0369A1),
-                softContainerColor = Color(0xFFE0F2FE),
-                highlights = listOf("ভাবার্থ সার্চ", "বাংলা কি-ওয়ার্ড", "আয়াত ম্যাপিং", "তাৎক্ষণিক ফলাফল"),
-                onClick = onOpenSmartQuranSearch
             ),
             ToolFeatureItem(
                 id = "tool_camera_lens",

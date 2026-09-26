@@ -681,6 +681,66 @@ object QuranActionEngineCatalog {
     }
 
     /**
+     * Converts a SemanticQuranAyah (from Smart Quran Search) into
+     * an interactive, complete AyahActionInsight ready for the Live the Ayah engine.
+     */
+    fun fromSemanticAyah(item: com.example.data.model.SemanticQuranAyah): AyahActionInsight {
+        val existing = allEssentialAyahs.find { it.surahNumber == item.surahNumber && it.ayahNumber == item.ayahNumber }
+        if (existing != null) return existing
+
+        val audio = item.audioUrl.ifBlank {
+            "https://everyayah.com/data/Alafasy_128kbps/%03d%03d.mp3".format(item.surahNumber, item.ayahNumber)
+        }
+
+        val teaching = item.divineWisdomBn.ifBlank { item.tafsirSummaryBn }
+
+        return AyahActionInsight(
+            ayahId = "semantic_${item.surahNumber}_${item.ayahNumber}",
+            surahNumber = item.surahNumber,
+            ayahNumber = item.ayahNumber,
+            surahNameArabic = item.surahNameAr,
+            surahNameBangla = "${item.surahNameBn} (${item.surahNumber}:${item.ayahNumber})",
+            surahNameEnglish = "${item.surahNameEn} (${item.surahNumber}:${item.ayahNumber})",
+            revelationTypeBn = item.revelationTypeBn,
+            arabicText = item.arabicText,
+            transliterationBn = item.transliterationBn,
+            banglaTranslation = item.banglaTranslation,
+            englishTranslation = item.englishTranslation,
+
+            whatDoesItTeachBn = teaching.ifBlank {
+                "এই আয়াতে আল্লাহ মুমিনের অন্তরের উদ্বেগ, আশা ও জীবনের বাস্তব সমস্যা সমাধানের ঐশী দিশা দান করেছেন।"
+            },
+            whatToNoticeBn = "আল্লাহর বাণীর গভীরতা এবং মানুষের জীবনের দায়িত্ববোধ। আয়াতটির প্রতিটি বাক্য অন্তরে আত্মশুদ্ধি ও খোদাভীতি জাগ্রত করে।",
+            whatToBeCarefulAboutBn = "কুরআনের নির্দেশ অবহেলা করা বা কেবল মুখে পড়ে আমলে বাস্তবায়ন না করা থেকে সতর্ক থাকা।",
+            whatCanIPracticeBn = "আজকের দিনে এই আয়াতের শিক্ষাকে নিজের বাস্তব জীবনে চর্চা করা ও হৃদয়ে ধারণ করা।",
+
+            quranSaysBn = "মহান আল্লাহর প্রত্যক্ষ ঘোষণা: ${item.banglaTranslation}",
+            scholarlyInterpretationBn = item.tafsirSummaryBn.ifBlank { item.divineWisdomBn },
+            possiblePersonalApplicationBn = "আজকের দিনে এই আয়াতের আলোকে নিজের একটি কাজকে আল্লাহর সন্তুষ্টির উদ্দেশ্যে উৎসর্গ করা।",
+
+            reflectiveQuestions = listOf(
+                "এই আয়াতটি আমার বর্তমান জীবনের কোন ভাবনা বা অনুভূতির সাথে সবচেয়ে বেশি মিলে যায়?",
+                "আমি কি এই আয়াতের আলোকে আমার আচরণ বা চিন্তায় কোনো ইতিবাচক পরিবর্তন আনতে পারি?"
+            ),
+
+            applicationsBySphere = mapOf(
+                LifeSphere.CHARACTER to listOf("আয়াতটির শিক্ষা নিজের আখলাক ও ব্যবহারে প্রতিফলিত করুন।"),
+                LifeSphere.SPEECH to listOf("আজ মুখে কোনো অনর্থক বা ক্ষতিকর কথা উচ্চারণ না করে আয়াতের শিক্ষা স্মরণ রাখুন।"),
+                LifeSphere.WORSHIP to listOf("সালাতে এই আয়াতটির অর্থ নিয়ে নিবিড়ভাবে চিন্তা করুন ও মোনাজাতে পেশ করুন।")
+            ),
+
+            defaultTodayAction = "আজ এই আয়াতটির অর্থ বারবার পড়ে এর শিক্ষা ও সান্ত্বনা অন্তরে ধারণ করুন।",
+            alternativeTodayActions = listOf(
+                "আজকের দিনে এই আয়াতের শিক্ষাকে একটি ব্যক্তিগত দোয়া হিসেবে মোনাজাতে পেশ করুন।",
+                "আয়াতটি মুখস্থ বা সুন্দর করে তিলাওয়াত করার অভ্যাস গড়ে তুলুন।"
+            ),
+
+            primaryThemes = item.relatedThemes.ifEmpty { listOf(item.surahNameBn, item.primaryTopicBn) },
+            audioUrl = audio
+        )
+    }
+
+    /**
      * Search across all essential and curated Ayahs by keywords, Surah name or Ayah reference (e.g. 2:255).
      */
     fun searchAyahs(query: String): List<AyahActionInsight> {

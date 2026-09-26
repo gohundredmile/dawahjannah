@@ -41,6 +41,7 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.BookmarkBorder
@@ -107,6 +108,21 @@ fun SmartQuranSearchScreen(
     onNavigateBack: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    SmartQuranSearchContent(
+        modifier = modifier,
+        showHeader = true,
+        onNavigateBack = onNavigateBack,
+        onSelectAyahForActionEngine = null
+    )
+}
+
+@Composable
+fun SmartQuranSearchContent(
+    modifier: Modifier = Modifier,
+    showHeader: Boolean = true,
+    onNavigateBack: (() -> Unit)? = null,
+    onSelectAyahForActionEngine: ((SemanticQuranAyah) -> Unit)? = null
+) {
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
     val banglaFont = LocalBanglaFontFamily.current
@@ -152,8 +168,9 @@ fun SmartQuranSearchScreen(
             contentPadding = PaddingValues(bottom = 32.dp)
         ) {
             // Top App Bar / Header
-            item {
-                Surface(
+            if (showHeader && onNavigateBack != null) {
+                item {
+                    Surface(
                     modifier = Modifier.fillMaxWidth(),
                     color = MaterialTheme.colorScheme.surface,
                     border = BorderStroke(0.5.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)),
@@ -209,6 +226,7 @@ fun SmartQuranSearchScreen(
                         }
                     }
                 }
+            }
             }
 
             // Hero Semantic Search Input Box
@@ -589,7 +607,8 @@ fun SmartQuranSearchScreen(
                                 searchResult = aiService.search(theme)
                                 isSearching = false
                             }
-                        }
+                        },
+                        onSelectForAction = onSelectAyahForActionEngine
                     )
                 }
             }
@@ -606,7 +625,8 @@ private fun SemanticAyahResultCard(
     audioPlayer: AyahAudioPlayerHelper,
     isBookmarked: Boolean,
     onToggleBookmark: () -> Unit,
-    onThemeClick: (String) -> Unit
+    onThemeClick: (String) -> Unit,
+    onSelectForAction: ((SemanticQuranAyah) -> Unit)? = null
 ) {
     val context = LocalContext.current
     val banglaFont = LocalBanglaFontFamily.current
@@ -1139,6 +1159,38 @@ private fun SemanticAyahResultCard(
                             modifier = Modifier.size(18.dp)
                         )
                     }
+                }
+            }
+
+            if (onSelectForAction != null) {
+                Spacer(modifier = Modifier.height(12.dp))
+                Button(
+                    onClick = { onSelectForAction(ayah) },
+                    shape = RoundedCornerShape(12.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFF047857),
+                        contentColor = Color.White
+                    ),
+                    modifier = Modifier.fillMaxWidth(),
+                    contentPadding = PaddingValues(horizontal = 14.dp, vertical = 10.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.AutoAwesome,
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "এই আয়াত দিয়ে আমল শুরু করুন (Live this Ayah)",
+                        style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
+                        fontFamily = banglaFont
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                        contentDescription = null,
+                        modifier = Modifier.size(16.dp)
+                    )
                 }
             }
         }

@@ -57,6 +57,7 @@ import com.example.ui.screens.tools.IslamicHabitSystemScreen
 import com.example.ui.screens.tools.MosqueModeScreen
 import com.example.ui.screens.tools.PersonalDuaBuilderScreen
 import com.example.ui.screens.tools.QuranActionEngineScreen
+import com.example.ui.screens.tools.QuranEngineMode
 import com.example.ui.screens.tools.RamadanIntelligenceScreen
 import com.example.ui.screens.tools.SmartQuranSearchScreen
 import com.example.ui.screens.tools.ToolsScreen
@@ -286,8 +287,9 @@ class MainActivity : ComponentActivity() {
                                             onNavigateBack = { viewModel.navigateBack() },
                                             onOpenHolyQuran = { surahNumber -> viewModel.openHolyQuran(surahNumber) }
                                         )
-                                        ToolsSubScreen.SMART_QURAN_SEARCH -> SmartQuranSearchScreen(
-                                            onNavigateBack = { viewModel.navigateBack() }
+                                        ToolsSubScreen.SMART_QURAN_SEARCH -> QuranActionEngineScreen(
+                                            onNavigateBack = { viewModel.navigateBack() },
+                                            initialMode = QuranEngineMode.SMART_SEARCH
                                         )
                                         ToolsSubScreen.ISLAMIC_HABIT_SYSTEM -> IslamicHabitSystemScreen(
                                             onNavigateBack = { viewModel.navigateBack() }

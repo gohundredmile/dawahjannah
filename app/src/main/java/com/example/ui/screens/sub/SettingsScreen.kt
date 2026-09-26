@@ -42,6 +42,9 @@ import androidx.compose.material.icons.filled.FormatSize
 import androidx.compose.material.icons.filled.HelpOutline
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material.icons.filled.DragHandle
+import androidx.compose.material.icons.filled.SwapVert
 import androidx.compose.material.icons.filled.Layers
 import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.PhoneAndroid
@@ -100,12 +103,15 @@ import com.example.data.model.EnglishFont
 import com.example.data.model.FlipClockFont
 import com.example.data.model.FontSizeScale
 import com.example.data.model.HighLatitudeRule
+import com.example.data.model.HomeScreenCardId
 import com.example.data.model.PrayerCalculationMethod
 import com.example.data.model.SalatConfiguration
 import com.example.data.model.ScreenEffectMode
 import com.example.data.model.ThemeMode
 import com.example.data.model.ThemeStyle
 import com.example.ui.components.ModalSectionTab
+import com.example.ui.components.RearrangeHomeScreenCardsDialog
+import com.example.util.CalendarHelper
 import com.example.ui.theme.getBanglaFontFamily
 import com.example.ui.theme.getEnglishFontFamily
 import com.example.ui.theme.getFlipClockFontFamily
@@ -142,7 +148,11 @@ fun SettingsScreen(viewModel: MainViewModel) {
 
     var isThemeExpanded by remember { mutableStateOf(true) }
     var isFontsExpanded by remember { mutableStateOf(false) }
+    var isRearrangeCardsExpanded by remember { mutableStateOf(false) }
     var isSalatExpanded by remember { mutableStateOf(false) }
+    var showRearrangeCardsDialog by remember { mutableStateOf(false) }
+
+    val homeScreenCardOrder by viewModel.homeScreenCardOrder.collectAsState()
 
     val salatConfig by viewModel.salatConfig.collectAsState()
 
@@ -905,6 +915,201 @@ fun SettingsScreen(viewModel: MainViewModel) {
                                 shape = RoundedCornerShape(10.dp)
                             ) {
                                 Text("ফন্ট ও টাইপোগ্রাফি স্টুডিও খুলুন (সম্পূর্ণ প্রিভিউ)")
+                            }
+                        }
+                    }
+                }
+            }
+            Spacer(modifier = Modifier.height(16.dp))
+        }
+
+        // 3. REARRANGE HOMESCREEN CARDS (COLLAPSIBLE + FULL SCREEN DRAG & ARROW DIALOG)
+        item {
+            val rearrangeBadgeText = "${CalendarHelper.toBanglaNumber(homeScreenCardOrder.size)}টি কার্ড • সাজাতে ট্যাপ করুন"
+
+            CollapsibleSettingHeader(
+                title = "Rearrange HomeScreen Cards",
+                icon = Icons.Default.SwapVert,
+                badgeText = rearrangeBadgeText,
+                isExpanded = isRearrangeCardsExpanded,
+                onToggle = { isRearrangeCardsExpanded = !isRearrangeCardsExpanded }
+            )
+
+            AnimatedVisibility(
+                visible = isRearrangeCardsExpanded,
+                enter = expandVertically() + fadeIn(),
+                exit = shrinkVertically() + fadeOut()
+            ) {
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(16.dp),
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.15f))
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(14.dp),
+                            verticalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            // Instruction & Reset Button
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = "হোমস্ক্রিনের কার্ড পুনর্বিন্যাস",
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 14.sp,
+                                        color = MaterialTheme.colorScheme.primary
+                                    )
+                                    Text(
+                                        text = "কার্ডগুলো উপরে-নিচে টেনে বা অ্যারো দিয়ে সাজান",
+                                        fontSize = 11.5.sp,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+
+                                OutlinedButton(
+                                    onClick = { viewModel.resetHomeScreenCardOrder() },
+                                    shape = RoundedCornerShape(8.dp),
+                                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp),
+                                    modifier = Modifier.height(32.dp)
+                                ) {
+                                    Icon(Icons.Default.Refresh, contentDescription = null, modifier = Modifier.size(13.dp))
+                                    Spacer(modifier = Modifier.width(4.dp))
+                                    Text("রিসেট", fontSize = 11.sp)
+                                }
+                            }
+
+                            // Full screen Drag & Drop Launcher Button
+                            Button(
+                                onClick = { showRearrangeCardsDialog = true },
+                                modifier = Modifier.fillMaxWidth(),
+                                shape = RoundedCornerShape(12.dp),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = MaterialTheme.colorScheme.primary
+                                )
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.SwapVert,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    text = "আঙুল দিয়ে টেনে সাজান (Drag & Reorder Dialog)",
+                                    fontSize = 13.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+
+                            HorizontalDivider(
+                                color = MaterialTheme.colorScheme.outline.copy(alpha = 0.15f)
+                            )
+
+                            // Inline list of cards with Up / Down arrows
+                            Text(
+                                text = "কার্ডসমূহের বর্তমান ক্রম:",
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+
+                            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                homeScreenCardOrder.forEachIndexed { index, card ->
+                                    Surface(
+                                        shape = RoundedCornerShape(12.dp),
+                                        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f),
+                                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.12f)),
+                                        modifier = Modifier.fillMaxWidth()
+                                    ) {
+                                        Row(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .padding(horizontal = 10.dp, vertical = 8.dp),
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            // Number
+                                            Surface(
+                                                shape = RoundedCornerShape(6.dp),
+                                                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
+                                                modifier = Modifier.size(24.dp)
+                                            ) {
+                                                Box(contentAlignment = Alignment.Center) {
+                                                    Text(
+                                                        text = CalendarHelper.toBanglaNumber(index + 1),
+                                                        fontSize = 11.sp,
+                                                        fontWeight = FontWeight.Bold,
+                                                        color = MaterialTheme.colorScheme.primary
+                                                    )
+                                                }
+                                            }
+
+                                            Spacer(modifier = Modifier.width(10.dp))
+
+                                            Icon(
+                                                imageVector = card.icon,
+                                                contentDescription = null,
+                                                tint = card.iconColor,
+                                                modifier = Modifier.size(20.dp)
+                                            )
+
+                                            Spacer(modifier = Modifier.width(8.dp))
+
+                                            Column(modifier = Modifier.weight(1f)) {
+                                                Text(
+                                                    text = card.titleBn,
+                                                    fontSize = 13.sp,
+                                                    fontWeight = FontWeight.Bold,
+                                                    color = MaterialTheme.colorScheme.onSurface,
+                                                    maxLines = 1,
+                                                    overflow = TextOverflow.Ellipsis
+                                                )
+                                                Text(
+                                                    text = card.subtitleBn,
+                                                    fontSize = 10.5.sp,
+                                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                                    maxLines = 1,
+                                                    overflow = TextOverflow.Ellipsis
+                                                )
+                                            }
+
+                                            // Up Button
+                                            IconButton(
+                                                onClick = { viewModel.moveHomeScreenCard(index, index - 1) },
+                                                enabled = index > 0,
+                                                modifier = Modifier.size(30.dp)
+                                            ) {
+                                                Icon(
+                                                    imageVector = Icons.Default.KeyboardArrowUp,
+                                                    contentDescription = "Move Up",
+                                                    tint = if (index > 0) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline.copy(alpha = 0.25f),
+                                                    modifier = Modifier.size(18.dp)
+                                                )
+                                            }
+
+                                            // Down Button
+                                            IconButton(
+                                                onClick = { viewModel.moveHomeScreenCard(index, index + 1) },
+                                                enabled = index < homeScreenCardOrder.size - 1,
+                                                modifier = Modifier.size(30.dp)
+                                            ) {
+                                                Icon(
+                                                    imageVector = Icons.Default.KeyboardArrowDown,
+                                                    contentDescription = "Move Down",
+                                                    tint = if (index < homeScreenCardOrder.size - 1) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline.copy(alpha = 0.25f),
+                                                    modifier = Modifier.size(18.dp)
+                                                )
+                                            }
+                                        }
+                                    }
+                                }
                             }
                         }
                     }
@@ -2003,6 +2208,16 @@ fun SettingsScreen(viewModel: MainViewModel) {
                     }
                 }
             } else null
+        )
+    }
+
+    // Rearrange HomeScreen Cards Full-Screen/Modal Dialog
+    if (showRearrangeCardsDialog) {
+        RearrangeHomeScreenCardsDialog(
+            currentOrder = homeScreenCardOrder,
+            onSaveOrder = { newOrder -> viewModel.saveHomeScreenCardOrder(newOrder) },
+            onResetOrder = { viewModel.resetHomeScreenCardOrder() },
+            onDismiss = { showRearrangeCardsDialog = false }
         )
     }
 }

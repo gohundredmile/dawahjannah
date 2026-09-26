@@ -67,6 +67,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.datasource.IslamicLifeData
+import com.example.data.model.HomeScreenCardId
 import com.example.data.model.NofolSalatItem
 import com.example.data.model.NofolSalatRepository
 import com.example.ui.components.AllFeaturesDialog
@@ -87,6 +88,7 @@ import com.example.ui.components.NofolSalatScheduleDialog
 import com.example.ui.components.QuickActionCard
 import com.example.ui.components.RamadanMoonScheduleDialog
 import com.example.ui.components.RamadanOptionsDialog
+import com.example.ui.components.SalatHubDialog
 import com.example.ui.components.SalatTimingsSection
 import com.example.ui.components.SehriIftarFullScreenDialog
 import com.example.ui.components.SehriIftarSummaryCard
@@ -123,6 +125,7 @@ fun HomeScreen(
     val scorecardStreak by viewModel.scorecardStreak.collectAsState()
     val scorecardTotal = viewModel.scorecardTotalCount
     val isRefreshing by viewModel.isRefreshingHome.collectAsState()
+    val homeScreenCardOrder by viewModel.homeScreenCardOrder.collectAsState()
 
     var showSehriIftarFullScreen by remember { mutableStateOf(false) }
     var showDetailedSehriIftar by remember { mutableStateOf(false) }
@@ -136,14 +139,16 @@ fun HomeScreen(
     var showRamadanOptionsDialog by remember { mutableStateOf(false) }
     var showNamazGuideDialog by remember { mutableStateOf(false) }
     var showNamazModeDialog by remember { mutableStateOf(false) }
+    var showSalatHubDialog by remember { mutableStateOf(false) }
 
     val isAnyDialogOpen = showSehriIftarFullScreen || showDetailedSehriIftar ||
         showRamadanSchedule || showRamadanOptionsDialog || showNofolScheduleDialog || (selectedNofolSalat != null) ||
         showAllFeaturesDialog || showSalatCalendarDialog || showTripleCalendarDialog ||
-        showAllahNamesOptionsDialog || showNamazGuideDialog || showNamazModeDialog
+        showAllahNamesOptionsDialog || showNamazGuideDialog || showNamazModeDialog || showSalatHubDialog
 
     BackHandler(enabled = isAnyDialogOpen) {
-        if (showSehriIftarFullScreen) showSehriIftarFullScreen = false
+        if (showSalatHubDialog) showSalatHubDialog = false
+        else if (showSehriIftarFullScreen) showSehriIftarFullScreen = false
         else if (showDetailedSehriIftar) showDetailedSehriIftar = false
         else if (showRamadanSchedule) showRamadanSchedule = false
         else if (showRamadanOptionsDialog) showRamadanOptionsDialog = false
@@ -169,6 +174,19 @@ fun HomeScreen(
             prayerList = prayerStatus.prayerList
         )
         listOf(
+            // সালাত (নতুন সমন্বিত ফিচার হাব)
+            HomeFeatureItem(
+                id = "salat_hub",
+                serialNumberBn = "০১",
+                titleBn = "১. সালাত",
+                shortTitleBn = "সালাত",
+                subtitleBn = "সালাতের সময়সূচী, নামাজ গাইড, নফল ও ফরজ সালাতের দো‘আ ও আমল",
+                categoryBn = "সালাত ও সময়",
+                icon = Icons.Default.Mosque,
+                iconColor = Color(0xFF0284C7),
+                isTopEight = true,
+                onClickAction = { showSalatHubDialog = true }
+            ),
             // পবিত্র কুরআন
             HomeFeatureItem(
                 id = "holy_quran",
@@ -340,16 +358,17 @@ fun HomeScreen(
                 iconColor = Color(0xFFE11D48),
                 onClickAction = { showNofolScheduleDialog = true }
             ),
-            // ১২. মাসনুন দোয়া
+            // ১২. হিসনুল মুসলিম
             HomeFeatureItem(
                 id = "masnun_dua",
                 serialNumberBn = "১২",
-                titleBn = "১২. মাসনুন দোয়া",
-                shortTitleBn = "মাসনুন দোয়া",
-                subtitleBn = "কুরআন ও সিহাহ সিত্তাহর ১০০০+ নির্ভরযোগ্য সহীহ দো‘আ",
+                titleBn = "১২. হিসনুল মুসলিম",
+                shortTitleBn = "হিসনুল মুসলিম",
+                subtitleBn = "কুরআন ও সিহাহ সিত্তাহর ১০০০+ নির্ভরযোগ্য সহীহ দো‘আ ও যিকির (হিসনুল মুসলিম)",
                 categoryBn = "দো‘আ ও যিকির",
                 icon = Icons.Default.MenuBook,
                 iconColor = Color(0xFF059669),
+                isTopEight = true,
                 onClickAction = { viewModel.selectTab(AppTab.DUA) }
             ),
             // ১৩. আল্লাহর ৯৯ নাম
@@ -565,290 +584,305 @@ fun HomeScreen(
             modifier = Modifier.fillMaxSize(),
             contentPadding = PaddingValues(bottom = 24.dp)
         ) {
-            // 1. Welcoming Cover & Revamped Salat Timing Card with Relocated Time & Date
-            item {
-                IslamicHeaderCover(
-                    salutation = prayerStatus.salutationBn,
-                    countdownFormatted = prayerStatus.timeRemainingFormatted,
-                    nextPrayerName = prayerStatus.nextPrayer?.nameBn ?: "ওয়াক্ত",
-                    presentPrayerName = prayerStatus.presentPrayerNameBn,
-                    presentNofolName = prayerStatus.presentNofolNameBn,
-                    remainingHours = prayerStatus.remainingHours,
-                    remainingMinutes = prayerStatus.remainingMinutes,
-                    remainingSeconds = prayerStatus.remainingSeconds,
-                    forbiddenTimeInfo = prayerStatus.forbiddenTimeInfo,
-                    calendarInfo = tripleCalendar,
-                    onTapTimeDate = { showTripleCalendarDialog = true },
-                    onOpenSettings = {
-                        viewModel.openSettings(AppTab.HOME)
+            homeScreenCardOrder.forEach { cardId ->
+                when (cardId) {
+                    HomeScreenCardId.HEADER_COVER -> {
+                        // 1. Welcoming Cover & Revamped Salat Timing Card with Relocated Time & Date
+                        item(key = "card_header_cover") {
+                            IslamicHeaderCover(
+                                salutation = prayerStatus.salutationBn,
+                                countdownFormatted = prayerStatus.timeRemainingFormatted,
+                                nextPrayerName = prayerStatus.nextPrayer?.nameBn ?: "ওয়াক্ত",
+                                presentPrayerName = prayerStatus.presentPrayerNameBn,
+                                presentNofolName = prayerStatus.presentNofolNameBn,
+                                remainingHours = prayerStatus.remainingHours,
+                                remainingMinutes = prayerStatus.remainingMinutes,
+                                remainingSeconds = prayerStatus.remainingSeconds,
+                                forbiddenTimeInfo = prayerStatus.forbiddenTimeInfo,
+                                calendarInfo = tripleCalendar,
+                                onTapTimeDate = { showTripleCalendarDialog = true },
+                                onOpenSettings = {
+                                    viewModel.openSettings(AppTab.HOME)
+                                }
+                            )
+                        }
                     }
-                )
-            }
-
-            // 1.05. Live Interactive Date & Time Based Amol Ticker Bar (Top Region)
-            item {
-                LiveAmolTickerBar(
-                    viewModel = viewModel,
-                    calendarInfo = tripleCalendar,
-                    onOpenTripleCalendar = { showTripleCalendarDialog = true }
-                )
-            }
-
-            // 1.1 Automatic Friday Mode Transform Banner (From Thursday Maghrib to Friday Maghrib)
-            if (isFridayActiveBanner) {
-                item {
-                    Card(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 12.dp, vertical = 6.dp)
-                            .clickable { viewModel.openFridayMode() },
-                        shape = RoundedCornerShape(18.dp),
-                        colors = CardDefaults.cardColors(containerColor = Color(0xFF064E3B)),
-                        border = BorderStroke(1.5.dp, IslamicGold.copy(alpha = 0.8f)),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
-                    ) {
-                        Column(modifier = Modifier.padding(16.dp)) {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
-                                    Surface(
-                                        shape = CircleShape,
-                                        color = IslamicGold.copy(alpha = 0.2f),
-                                        modifier = Modifier.size(36.dp)
-                                    ) {
-                                        Box(contentAlignment = Alignment.Center) {
-                                            Text("🕌", fontSize = 18.sp)
+                    HomeScreenCardId.AMOL_TICKER -> {
+                        // 1.05. Live Interactive Date & Time Based Amol Ticker Bar (Top Region)
+                        item(key = "card_amol_ticker") {
+                            LiveAmolTickerBar(
+                                viewModel = viewModel,
+                                calendarInfo = tripleCalendar,
+                                onOpenTripleCalendar = { showTripleCalendarDialog = true }
+                            )
+                        }
+                    }
+                    HomeScreenCardId.FRIDAY_BANNER -> {
+                        // 1.1 Automatic Friday Mode Transform Banner (From Thursday Maghrib to Friday Maghrib)
+                        if (isFridayActiveBanner) {
+                            item(key = "card_friday_banner") {
+                                Card(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(horizontal = 12.dp, vertical = 6.dp)
+                                        .clickable { viewModel.openFridayMode() },
+                                    shape = RoundedCornerShape(18.dp),
+                                    colors = CardDefaults.cardColors(containerColor = Color(0xFF064E3B)),
+                                    border = BorderStroke(1.5.dp, IslamicGold.copy(alpha = 0.8f)),
+                                    elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+                                ) {
+                                    Column(modifier = Modifier.padding(16.dp)) {
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            horizontalArrangement = Arrangement.SpaceBetween,
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
+                                                Surface(
+                                                    shape = CircleShape,
+                                                    color = IslamicGold.copy(alpha = 0.2f),
+                                                    modifier = Modifier.size(36.dp)
+                                                ) {
+                                                    Box(contentAlignment = Alignment.Center) {
+                                                        Text("🕌", fontSize = 18.sp)
+                                                    }
+                                                }
+                                                Spacer(modifier = Modifier.width(10.dp))
+                                                Column {
+                                                    Text(
+                                                        text = fridayPhaseTitle,
+                                                        style = MaterialTheme.typography.titleSmall,
+                                                        fontWeight = FontWeight.Bold,
+                                                        color = IslamicGold,
+                                                        fontFamily = LocalBanglaFontFamily.current
+                                                    )
+                                                    Text(
+                                                        text = "বৃহস্পতিবার মাগরিব থেকে শুক্রবার মাগরিব • সূরা কাহাফ ও আমল",
+                                                        style = MaterialTheme.typography.labelSmall,
+                                                        color = Color.White.copy(alpha = 0.85f),
+                                                        fontFamily = LocalBanglaFontFamily.current
+                                                    )
+                                                }
+                                            }
+                                            Surface(
+                                                shape = RoundedCornerShape(10.dp),
+                                                color = Color(0xFF047857),
+                                                modifier = Modifier.clickable { viewModel.openFridayMode() }
+                                            ) {
+                                                Text(
+                                                    text = "প্রবেশ ➔",
+                                                    fontSize = 12.sp,
+                                                    color = Color.White,
+                                                    fontFamily = LocalBanglaFontFamily.current,
+                                                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
+                                                )
+                                            }
+                                        }
+                                        Spacer(modifier = Modifier.height(10.dp))
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                        ) {
+                                            listOf("📖 সূরা কাহাফ", "🌿 ১০ সুন্নাত", "🤲 দো'আ কবুল ক্ষণ", "📝 খুতবা নোট").forEach { chip ->
+                                                Surface(
+                                                    shape = RoundedCornerShape(8.dp),
+                                                    color = Color.White.copy(alpha = 0.12f)
+                                                ) {
+                                                    Text(
+                                                        text = chip,
+                                                        style = MaterialTheme.typography.labelSmall,
+                                                        color = Color.White,
+                                                        fontFamily = LocalBanglaFontFamily.current,
+                                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                                                    )
+                                                }
+                                            }
                                         }
                                     }
-                                    Spacer(modifier = Modifier.width(10.dp))
-                                    Column {
-                                        Text(
-                                            text = fridayPhaseTitle,
-                                            style = MaterialTheme.typography.titleSmall,
-                                            fontWeight = FontWeight.Bold,
-                                            color = IslamicGold,
-                                            fontFamily = LocalBanglaFontFamily.current
-                                        )
-                                        Text(
-                                            text = "বৃহস্পতিবার মাগরিব থেকে শুক্রবার মাগরিব • সূরা কাহাফ ও আমল",
-                                            style = MaterialTheme.typography.labelSmall,
-                                            color = Color.White.copy(alpha = 0.85f),
-                                            fontFamily = LocalBanglaFontFamily.current
-                                        )
-                                    }
-                                }
-                                Surface(
-                                    shape = RoundedCornerShape(10.dp),
-                                    color = Color(0xFF047857),
-                                    modifier = Modifier.clickable { viewModel.openFridayMode() }
-                                ) {
-                                    Text(
-                                        text = "প্রবেশ ➔",
-                                        fontSize = 12.sp,
-                                        color = Color.White,
-                                        fontFamily = LocalBanglaFontFamily.current,
-                                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
-                                    )
                                 }
                             }
-                            Spacer(modifier = Modifier.height(10.dp))
+                        }
+                    }
+                    HomeScreenCardId.QUICK_ACTION -> {
+                        // 2. Quick Action & Streak Highlights
+                        item(key = "card_quick_action") {
                             Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 12.dp, vertical = 3.dp),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
-                                listOf("📖 সূরা কাহাফ", "🌿 ১০ সুন্নাত", "🤲 দো'আ কবুল ক্ষণ", "📝 খুতবা নোট").forEach { chip ->
-                                    Surface(
-                                        shape = RoundedCornerShape(8.dp),
-                                        color = Color.White.copy(alpha = 0.12f)
-                                    ) {
-                                        Text(
-                                            text = chip,
-                                            style = MaterialTheme.typography.labelSmall,
-                                            color = Color.White,
-                                            fontFamily = LocalBanglaFontFamily.current,
-                                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-                                        )
+                                QuickActionCard(
+                                    title = "ধারাবাহিকতা",
+                                    value = "${CalendarHelper.toBanglaNumber(scorecardStreak)} দিন স্ট্রিক",
+                                    icon = Icons.Default.LocalFireDepartment,
+                                    iconTint = Color(0xFFEA580C),
+                                    modifier = Modifier.weight(1f),
+                                    onClick = { viewModel.openScorecard() }
+                                )
+
+                                QuickActionCard(
+                                    title = "আজকের আমল",
+                                    value = "${CalendarHelper.toBanglaNumber(scorecardCompletedCount)}/${CalendarHelper.toBanglaNumber(scorecardTotal)} সম্পন্ন",
+                                    icon = Icons.Default.CheckCircle,
+                                    iconTint = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.weight(1f),
+                                    onClick = { viewModel.openScorecard() }
+                                )
+
+                                QuickActionCard(
+                                    title = "তাসবীহ",
+                                    value = "জিকির করুন",
+                                    icon = Icons.Default.TouchApp,
+                                    iconTint = IslamicGold,
+                                    modifier = Modifier.weight(1f),
+                                    onClick = {
+                                        viewModel.selectTab(AppTab.TASBIH)
                                     }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-
-        // 2. Quick Action & Streak Highlights
-        item {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 12.dp, vertical = 3.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                QuickActionCard(
-                    title = "ধারাবাহিকতা",
-                    value = "${CalendarHelper.toBanglaNumber(scorecardStreak)} দিন স্ট্রিক",
-                    icon = Icons.Default.LocalFireDepartment,
-                    iconTint = Color(0xFFEA580C),
-                    modifier = Modifier.weight(1f),
-                    onClick = { viewModel.openScorecard() }
-                )
-
-                QuickActionCard(
-                    title = "আজকের আমল",
-                    value = "${CalendarHelper.toBanglaNumber(scorecardCompletedCount)}/${CalendarHelper.toBanglaNumber(scorecardTotal)} সম্পন্ন",
-                    icon = Icons.Default.CheckCircle,
-                    iconTint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.weight(1f),
-                    onClick = { viewModel.openScorecard() }
-                )
-
-                QuickActionCard(
-                    title = "তাসবীহ",
-                    value = "জিকির করুন",
-                    icon = Icons.Default.TouchApp,
-                    iconTint = IslamicGold,
-                    modifier = Modifier.weight(1f),
-                    onClick = {
-                        viewModel.selectTab(AppTab.TASBIH)
-                    }
-                )
-            }
-        }
-
-        // 2.3 Explain This Ayah ক্যামেরা Highlight Card
-        item {
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 12.dp, vertical = 5.dp)
-                    .clickable { viewModel.openExplainAyahCamera() },
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.28f)
-                ),
-                border = BorderStroke(1.2.dp, IslamicGold.copy(alpha = 0.65f))
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(14.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Surface(
-                        shape = RoundedCornerShape(12.dp),
-                        color = IslamicGold.copy(alpha = 0.2f),
-                        border = BorderStroke(1.dp, IslamicGold),
-                        modifier = Modifier.size(46.dp)
-                    ) {
-                        Box(contentAlignment = Alignment.Center) {
-                            Icon(
-                                imageVector = Icons.Default.PhotoCamera,
-                                contentDescription = "Explain This Ayah",
-                                tint = IslamicGold,
-                                modifier = Modifier.size(26.dp)
-                            )
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.width(12.dp))
-
-                    Column(modifier = Modifier.weight(1f)) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text(
-                                text = "Explain This Ayah ক্যামেরা",
-                                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                                fontFamily = LocalBanglaFontFamily.current,
-                                color = MaterialTheme.colorScheme.onSurface
-                            )
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Surface(
-                                shape = RoundedCornerShape(4.dp),
-                                color = Color(0xFF059669)
-                            ) {
-                                Text(
-                                    text = "AI স্মার্ট",
-                                    style = MaterialTheme.typography.labelSmall.copy(
-                                        fontSize = 10.sp,
-                                        fontWeight = FontWeight.Bold,
-                                        color = Color.White
-                                    ),
-                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
-                                    fontFamily = LocalBanglaFontFamily.current
                                 )
                             }
                         }
+                    }
+                    HomeScreenCardId.CAMERA_AI -> {
+                        // 2.3 Explain This Ayah ক্যামেরা Highlight Card
+                        item(key = "card_camera_ai") {
+                            Card(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 12.dp, vertical = 5.dp)
+                                    .clickable { viewModel.openExplainAyahCamera() },
+                                shape = RoundedCornerShape(16.dp),
+                                colors = CardDefaults.cardColors(
+                                    containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.28f)
+                                ),
+                                border = BorderStroke(1.2.dp, IslamicGold.copy(alpha = 0.65f))
+                            ) {
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(14.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Surface(
+                                        shape = RoundedCornerShape(12.dp),
+                                        color = IslamicGold.copy(alpha = 0.2f),
+                                        border = BorderStroke(1.dp, IslamicGold),
+                                        modifier = Modifier.size(46.dp)
+                                    ) {
+                                        Box(contentAlignment = Alignment.Center) {
+                                            Icon(
+                                                imageVector = Icons.Default.PhotoCamera,
+                                                contentDescription = "Explain This Ayah",
+                                                tint = IslamicGold,
+                                                modifier = Modifier.size(26.dp)
+                                            )
+                                        }
+                                    }
 
-                        Spacer(modifier = Modifier.height(3.dp))
+                                    Spacer(modifier = Modifier.width(12.dp))
 
-                        Text(
-                            text = "কুরআনের যেকোনো পাতার ওপর ক্যামেরা তাক করুন — অর্থ, তফসির, শানে নুযূল ও অডিও তিলাওয়াত জানুন",
-                            style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.5.sp),
-                            fontFamily = LocalBanglaFontFamily.current,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
+                                    Column(modifier = Modifier.weight(1f)) {
+                                        Row(verticalAlignment = Alignment.CenterVertically) {
+                                            Text(
+                                                text = "Explain This Ayah ক্যামেরা",
+                                                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                                                fontFamily = LocalBanglaFontFamily.current,
+                                                color = MaterialTheme.colorScheme.onSurface
+                                            )
+                                            Spacer(modifier = Modifier.width(6.dp))
+                                            Surface(
+                                                shape = RoundedCornerShape(4.dp),
+                                                color = Color(0xFF059669)
+                                            ) {
+                                                Text(
+                                                    text = "AI স্মার্ট",
+                                                    style = MaterialTheme.typography.labelSmall.copy(
+                                                        fontSize = 10.sp,
+                                                        fontWeight = FontWeight.Bold,
+                                                        color = Color.White
+                                                    ),
+                                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                                                    fontFamily = LocalBanglaFontFamily.current
+                                                )
+                                            }
+                                        }
+
+                                        Spacer(modifier = Modifier.height(3.dp))
+
+                                        Text(
+                                            text = "কুরআনের যেকোনো পাতার ওপর ক্যামেরা তাক করুন — অর্থ, তফসির, শানে নুযূল ও অডিও তিলাওয়াত জানুন",
+                                            style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.5.sp),
+                                            fontFamily = LocalBanglaFontFamily.current,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    HomeScreenCardId.TOP_FEATURES -> {
+                        // 2.5 টপ ফিচার (Top Features Section - 8 items in 2x4 grid as per specimen + 'আরও / More')
+                        item(key = "card_top_features") {
+                            TopFeaturesSection(
+                                topFeatures = orderedAppFeatures.filter { it.id != "articles" }.take(8),
+                                onOpenAllFeatures = { showAllFeaturesDialog = true }
+                            )
+                        }
+                    }
+                    HomeScreenCardId.SEHRI_IFTAR -> {
+                        // 4. সেহরি এবং ইফতারের সময়সূচী (Sehri & Ifter Timing)
+                        item(key = "card_sehri_iftar") {
+                            SehriIftarSummaryCard(
+                                prayerStatus = prayerStatus,
+                                salatConfig = salatConfig,
+                                onOpenDetailedSchedule = { showDetailedSehriIftar = true },
+                                onOpenRamadanSchedule = { showRamadanSchedule = true },
+                                onOpenFullScreen = { showDetailedSehriIftar = true }
+                            )
+                        }
+                    }
+                    HomeScreenCardId.SALAT_TIMINGS -> {
+                        // 5. Daily Prayer Times (Salat Timings & Forbidden Time)
+                        item(key = "card_salat_timings") {
+                            SalatTimingsSection(
+                                prayerStatus = prayerStatus,
+                                salatConfig = salatConfig,
+                                gpsStatusMessage = gpsStatusMessage,
+                                onTrackGps = { viewModel.trackCurrentLocationWithGps() },
+                                onSelectPlace = { place -> viewModel.updateSalatPlace(place) },
+                                onCustomPlace = { nameBn, nameEn, lat, lng -> viewModel.setCustomSalatLocation(nameBn, nameEn, lat, lng) },
+                                onSetManualOffset = { offset -> viewModel.setSalatManualOffset(offset) },
+                                onToggleHanafiAsr = { isHanafi -> viewModel.setHanafiAsr(isHanafi) },
+                                onSelectCalculationMethod = { method -> viewModel.setCalculationMethod(method) },
+                                onSelectAsrMethod = { asr -> viewModel.setAsrJuristicMethod(asr) },
+                                onSelectHighLatitudeRule = { rule -> viewModel.setHighLatitudeRule(rule) },
+                                onResetSalatPreferences = { viewModel.resetSalatPreferencesToStandard() },
+                                onClearGpsMessage = { viewModel.clearGpsMessage() },
+                                onOpenQibla = { viewModel.openQibla() }
+                            )
+                        }
+                    }
+                    HomeScreenCardId.NOFOL_SALAT -> {
+                        // 6. নফল সালাতের সময়সূচী (Independent Home Screen Card)
+                        item(key = "card_nofol_salat") {
+                            NofolSalatIndependentCard(
+                                prayerStatus = prayerStatus,
+                                salatConfig = salatConfig,
+                                onOpenScheduleWindow = { showNofolScheduleDialog = true }
+                            )
+                        }
+                    }
+                    HomeScreenCardId.DAILY_WISDOM -> {
+                        // 7. Daily Light & Inspiration: Holy Quran, Hadith, and Inspirational Quotes
+                        item(key = "card_daily_wisdom") {
+                            DailyWisdomSection(
+                                wisdomState = wisdomState,
+                                onShuffle = { viewModel.shuffleWisdom() }
+                            )
+                        }
                     }
                 }
             }
-        }
-
-        // 2.5 টপ ফিচার (Top Features Section - 8 items in 2x4 grid as per specimen + 'আরও / More')
-        item {
-            TopFeaturesSection(
-                topFeatures = orderedAppFeatures.filter { it.id != "articles" }.take(8),
-                onOpenAllFeatures = { showAllFeaturesDialog = true }
-            )
-        }
-
-        // 4. সেহরি এবং ইফতারের সময়সূচী (Sehri & Ifter Timing)
-        item {
-            SehriIftarSummaryCard(
-                prayerStatus = prayerStatus,
-                salatConfig = salatConfig,
-                onOpenDetailedSchedule = { showDetailedSehriIftar = true },
-                onOpenRamadanSchedule = { showRamadanSchedule = true },
-                onOpenFullScreen = { showDetailedSehriIftar = true }
-            )
-        }
-
-        // 5. Daily Prayer Times (Salat Timings & Forbidden Time)
-        item {
-            SalatTimingsSection(
-                prayerStatus = prayerStatus,
-                salatConfig = salatConfig,
-                gpsStatusMessage = gpsStatusMessage,
-                onTrackGps = { viewModel.trackCurrentLocationWithGps() },
-                onSelectPlace = { place -> viewModel.updateSalatPlace(place) },
-                onCustomPlace = { nameBn, nameEn, lat, lng -> viewModel.setCustomSalatLocation(nameBn, nameEn, lat, lng) },
-                onSetManualOffset = { offset -> viewModel.setSalatManualOffset(offset) },
-                onToggleHanafiAsr = { isHanafi -> viewModel.setHanafiAsr(isHanafi) },
-                onSelectCalculationMethod = { method -> viewModel.setCalculationMethod(method) },
-                onSelectAsrMethod = { asr -> viewModel.setAsrJuristicMethod(asr) },
-                onSelectHighLatitudeRule = { rule -> viewModel.setHighLatitudeRule(rule) },
-                onResetSalatPreferences = { viewModel.resetSalatPreferencesToStandard() },
-                onClearGpsMessage = { viewModel.clearGpsMessage() },
-                onOpenQibla = { viewModel.openQibla() }
-            )
-        }
-
-        // 6. নফল সালাতের সময়সূচী (Independent Home Screen Card)
-        item {
-            NofolSalatIndependentCard(
-                prayerStatus = prayerStatus,
-                salatConfig = salatConfig,
-                onOpenScheduleWindow = { showNofolScheduleDialog = true }
-            )
-        }
-
-        // 7. Daily Light & Inspiration: Holy Quran, Hadith, and Inspirational Quotes
-        item {
-            DailyWisdomSection(
-                wisdomState = wisdomState,
-                onShuffle = { viewModel.shuffleWisdom() }
-            )
-        }
     }
     }
 
@@ -966,6 +1000,58 @@ fun HomeScreen(
             onSelectRamadanSchedule = { showRamadanSchedule = true },
             onSelectSehriIftarSchedule = { showDetailedSehriIftar = true },
             onSelectRamadanIntelligence = { viewModel.openRamadanIntelligence() }
+        )
+    }
+
+    // Salat Hub Dialog (Tapping "সালাত" in Top Features displays 9 connected Salat feature cards)
+    if (showSalatHubDialog) {
+        SalatHubDialog(
+            onDismiss = { showSalatHubDialog = false },
+            onOpenSalatCalendar = { showSalatCalendarDialog = true },
+            onOpenNamazGuide = { showNamazGuideDialog = true },
+            onOpenNofolSalat = { showNofolScheduleDialog = true },
+            onOpenSalatAndDua = {
+                viewModel.selectTab(AppTab.MORE)
+                (viewModel.getIslamicLifeSection("salat_and_dua_special")
+                    ?: IslamicLifeData.sections.find { it.id == "salat_and_dua_special" })?.let {
+                    viewModel.openIslamicLifeSection(it)
+                }
+            },
+            onOpenFiveWaqtAfterSalat = {
+                viewModel.selectTab(AppTab.MORE)
+                (viewModel.getIslamicLifeSection("five_waqt_after_salat")
+                    ?: IslamicLifeData.sections.find { it.id == "five_waqt_after_salat" })?.let {
+                    viewModel.openIslamicLifeSection(it)
+                }
+            },
+            onOpenSalamBeforeDua = {
+                viewModel.selectTab(AppTab.MORE)
+                (viewModel.getIslamicLifeSection("salam_before")
+                    ?: IslamicLifeData.sections.find { it.id == "salam_before" })?.let {
+                    viewModel.openIslamicLifeSection(it)
+                }
+            },
+            onOpenFarzAfterDua = {
+                viewModel.selectTab(AppTab.MORE)
+                (viewModel.getIslamicLifeSection("farz_after")
+                    ?: IslamicLifeData.sections.find { it.id == "farz_after" })?.let {
+                    viewModel.openIslamicLifeSection(it)
+                }
+            },
+            onOpenFajrMaghribAmol = {
+                viewModel.selectTab(AppTab.MORE)
+                (viewModel.getIslamicLifeSection("fajr_between_and_after")
+                    ?: IslamicLifeData.sections.find { it.id == "fajr_between_and_after" })?.let {
+                    viewModel.openIslamicLifeSection(it)
+                }
+            },
+            onOpenTahajjudGuide = {
+                viewModel.selectTab(AppTab.MORE)
+                (viewModel.getIslamicLifeSection("tahajjud_guide")
+                    ?: IslamicLifeData.sections.find { it.id == "tahajjud_guide" })?.let {
+                    viewModel.openIslamicLifeSection(it)
+                }
+            }
         )
     }
 }

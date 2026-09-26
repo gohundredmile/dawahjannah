@@ -74,6 +74,7 @@ class AppRepository(private val context: Context) {
         val KEY_AURORA_RAYS = booleanPreferencesKey("aurora_rays")
         val KEY_EXPLORE_FEATURE_ORDER = stringPreferencesKey("explore_feature_order")
         val KEY_EXPLORE_SORT_MODE = stringPreferencesKey("explore_sort_mode")
+        val KEY_HOMESCREEN_CARD_ORDER = stringPreferencesKey("homescreen_card_order")
     }
 
     fun getTodayDateString(): String {
@@ -539,6 +540,23 @@ class AppRepository(private val context: Context) {
         context.dataStore.edit { prefs ->
             prefs.remove(KEY_EXPLORE_FEATURE_ORDER)
             prefs[KEY_EXPLORE_SORT_MODE] = "DEFAULT"
+        }
+    }
+
+    // HOMESCREEN CARD ORDER CUSTOMIZATION & RELOCATION
+    val homeScreenCardOrderFlow: Flow<String> = context.dataStore.data.map { prefs ->
+        prefs[KEY_HOMESCREEN_CARD_ORDER] ?: ""
+    }
+
+    suspend fun setHomeScreenCardOrder(orderCsv: String) {
+        context.dataStore.edit { prefs ->
+            prefs[KEY_HOMESCREEN_CARD_ORDER] = orderCsv
+        }
+    }
+
+    suspend fun resetHomeScreenCardOrder() {
+        context.dataStore.edit { prefs ->
+            prefs.remove(KEY_HOMESCREEN_CARD_ORDER)
         }
     }
 }

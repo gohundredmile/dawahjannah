@@ -92,7 +92,7 @@ fun FavoriteScreen(
     // Categories available from the current bookmarks
     val filterOptions = listOf(
         "ALL" to "সব (${CalendarHelper.toBanglaNumber(allBookmarks.size)})",
-        "DUA" to "মাসনুন দোয়া",
+        "DUA" to "হিসনুল মুসলিম",
         "ISLAMIC_LIFE" to "ইসলামী জীবন",
         "DUROOD" to "দরূদ ও আমল",
         "HEALTH_DUA" to "রোগ নিরাময়",
@@ -103,7 +103,7 @@ fun FavoriteScreen(
     val filteredBookmarks = allBookmarks.filter { item ->
         val matchesCategory = when (selectedCategoryFilter) {
             "ALL" -> true
-            "DUA" -> item.type == "DUA" || item.categoryBn.contains("দোয়া")
+            "DUA" -> item.type == "DUA" || item.categoryBn.contains("দোয়া") || item.categoryBn.contains("হিসনুল")
             "ISLAMIC_LIFE" -> item.type == "ISLAMIC_LIFE"
             "DUROOD" -> item.type == "DUROOD" || item.categoryBn.contains("দরূদ")
             "HEALTH_DUA" -> item.type == "HEALTH_DUA" || item.categoryBn.contains("রোগ") || item.categoryBn.contains("শিফা")
@@ -320,7 +320,7 @@ fun FavoriteScreen(
                         )
 
                         Text(
-                            text = "অ্যাপের যেকোনো মাসনুন দু'আ, দরূদ শরীফ, আসমাউল হুসনা বা ইসলামী জীবন প্রবন্ধের পাশের বুকমার্ক (🔖) আইকনে চাপুন। সেগুলো দ্রুত ফিরে পাওয়ার জন্য এই পাতায় জমা থাকবে।",
+                            text = "অ্যাপের যেকোনো হিসনুল মুসলিম দু'আ, দরূদ শরীফ, আসমাউল হুসনা বা ইসলামী জীবন প্রবন্ধের পাশের বুকমার্ক (🔖) আইকনে চাপুন। সেগুলো দ্রুত ফিরে পাওয়ার জন্য এই পাতায় জমা থাকবে।",
                             fontFamily = banglaFont,
                             style = MaterialTheme.typography.bodySmall,
                             textAlign = TextAlign.Center,
@@ -347,7 +347,7 @@ fun FavoriteScreen(
                                 )
                                 Spacer(modifier = Modifier.width(6.dp))
                                 Text(
-                                    text = "মাসনুন দোয়া",
+                                    text = "হিসনুল মুসলিম",
                                     fontFamily = banglaFont,
                                     fontWeight = FontWeight.Bold
                                 )

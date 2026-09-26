@@ -1017,7 +1017,7 @@ fun IslamicHabitSystemScreen(
                         // 4. Related Du'a if any (Section 23)
                         if (detailHabit.relatedDuaArabic.isNotBlank()) {
                             Spacer(modifier = Modifier.height(14.dp))
-                            DetailSection(titleBn = "সংশ্লিষ্ট মাসনুন দো'আ ও জিকির", icon = "🤲") {
+                            DetailSection(titleBn = "সংশ্লিষ্ট হিসনুল মুসলিম দো'আ ও জিকির", icon = "🤲") {
                                 Surface(
                                     shape = RoundedCornerShape(12.dp),
                                     color = Color(0xFF0F766E).copy(alpha = 0.08f),

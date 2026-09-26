@@ -37,6 +37,7 @@ import com.example.ui.components.HomeIslamicTopAppBar
 import com.example.ui.components.LiveAuroraWallpaperBackground
 import com.example.ui.components.LocalFontScaleController
 import com.example.ui.components.LocalScreenEffectMode
+import com.example.ui.components.RearrangeHomeScreenCardsDialog
 import com.example.ui.screens.FavoriteScreen
 import com.example.ui.screens.HomeScreen
 import com.example.ui.screens.MasnunDuaScreen
@@ -93,6 +94,8 @@ class MainActivity : ComponentActivity() {
             val currentTab by viewModel.currentTab.collectAsState()
             val currentMoreSub by viewModel.moreSubScreen.collectAsState()
             val currentToolsSub by viewModel.toolsSubScreen.collectAsState()
+            val isRearrangeCardsDialogOpen by viewModel.isRearrangeCardsDialogOpen.collectAsState()
+            val homeScreenCardOrder by viewModel.homeScreenCardOrder.collectAsState()
 
             val baseDensity = LocalDensity.current
             val adjustedDensity = Density(
@@ -146,7 +149,8 @@ class MainActivity : ComponentActivity() {
                                 HomeIslamicTopAppBar(
                                     onOpenFontMenu = { viewModel.openFontMenu() },
                                     onOpenThemeModal = { viewModel.openThemeModal() },
-                                    onOpenAppSettings = { viewModel.openSettings(AppTab.HOME) }
+                                    onOpenAppSettings = { viewModel.openSettings(AppTab.HOME) },
+                                    onOpenRearrangeCards = { viewModel.openRearrangeHomeScreenCards() }
                                 )
                             } else if (currentTab == AppTab.TOOLS && (currentToolsSub == ToolsSubScreen.EXPLAIN_AYAH_CAMERA || currentToolsSub == ToolsSubScreen.HOLY_QURAN || currentToolsSub == ToolsSubScreen.HADITH_COLLECTION || currentToolsSub == ToolsSubScreen.FRIDAY_MODE || currentToolsSub == ToolsSubScreen.ISLAMIC_CONTEXT_VERIFY)) {
                                 // Dedicated full-width top app bars with custom actions
@@ -154,7 +158,7 @@ class MainActivity : ComponentActivity() {
                                 val showTopBarBack = currentTab == AppTab.TASBIH || currentTab == AppTab.DUA || (currentTab == AppTab.TOOLS && currentToolsSub != ToolsSubScreen.MAIN) || (currentTab == AppTab.MORE && viewModel.canNavigateBack())
                                 DawahTopAppBar(
                                     title = when (currentTab) {
-                                        AppTab.DUA -> "মাসনুন দোয়া"
+                                        AppTab.DUA -> "হিসনুল মুসলিম"
                                         AppTab.ROUTINE -> "২৪ ঘণ্টার সুন্নাত আমল"
                                         AppTab.TASBIH -> "ডিজিটাল তাসবিহ ও জিকির"
                                         AppTab.FAVORITE -> "ফেভারিট (বুকমার্ক)"
@@ -189,9 +193,11 @@ class MainActivity : ComponentActivity() {
                             }
                         }
                     ) { innerPadding ->
-                        val canNavigateBack = viewModel.canNavigateBack() || isFontMenuOpen || isThemeModalOpen
+                        val canNavigateBack = viewModel.canNavigateBack() || isFontMenuOpen || isThemeModalOpen || isRearrangeCardsDialogOpen
                         BackHandler(enabled = canNavigateBack) {
-                            if (isFontMenuOpen) {
+                            if (isRearrangeCardsDialogOpen) {
+                                viewModel.closeRearrangeHomeScreenCards()
+                            } else if (isFontMenuOpen) {
                                 viewModel.closeFontMenu()
                             } else if (isThemeModalOpen) {
                                 viewModel.closeThemeModal()
@@ -348,6 +354,16 @@ class MainActivity : ComponentActivity() {
                                 currentThemeMode = themeMode,
                                 onSelectThemeMode = { mode -> viewModel.setThemeMode(mode) },
                                 onDismiss = { viewModel.closeThemeModal() }
+                            )
+                        }
+
+                        // Rearrange HomeScreen Cards Modal
+                        if (isRearrangeCardsDialogOpen) {
+                            RearrangeHomeScreenCardsDialog(
+                                currentOrder = homeScreenCardOrder,
+                                onSaveOrder = { newOrder -> viewModel.saveHomeScreenCardOrder(newOrder) },
+                                onResetOrder = { viewModel.resetHomeScreenCardOrder() },
+                                onDismiss = { viewModel.closeRearrangeHomeScreenCards() }
                             )
                         }
                     }

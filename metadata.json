@@ -1,6 +1,6 @@
 {
   "name": "Dawah to Jannah",
-  "description": "Comprehensive Islamic companion featuring unified 'Sunnah Guide & Tracker' (Islamic Habit System), 'Ask Before You Act' (Islamic Decision-Support & Document Clause Inspector), 'Dua Architect — Personal Dua Builder', 'Quran Action Engine & Smart Search', 'Islamic Context & Verify', 114 Surahs Shan-e-Nuzul, and verified Masnun Dua.",
+  "description": "Comprehensive Islamic companion featuring unified 'Sunnah Guide & Tracker' (Islamic Habit System), 'Ask Before You Act' (Islamic Decision-Support & Document Clause Inspector), 'Dua Architect — Personal Dua Builder', 'Quran Action Engine & Smart Search', 'Islamic Context & Verify', 114 Surahs Shan-e-Nuzul, and verified Hisnul Muslim (হিসনুল মুসলিম).",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

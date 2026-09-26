@@ -43,6 +43,7 @@ import com.example.data.model.FlipClockFont
 import com.example.data.model.FontSizeScale
 import com.example.data.model.HealthDuaItem
 import com.example.data.model.HighLatitudeRule
+import com.example.data.model.HomeScreenCardId
 import com.example.data.model.IslamicLifeCardItem
 import com.example.data.model.IslamicLifeSection
 import com.example.data.model.PRESET_SALAT_PLACES
@@ -89,12 +90,12 @@ data class AnnouncementData(
 
 enum class AppTab(val index: Int, val titleBn: String) {
     HOME(0, "হোম"),
-    DUA(1, "মাসনুন\u00A0দোয়া"),
-    ROUTINE(2, "২৪ঘণ্টা\u00A0আমল"),
+    DUA(1, "হিসনুল মুসলিম"),
+    ROUTINE(2, "২৪ঘণ্টা আমল"),
     TASBIH(3, "তাসবিহ"),
     FAVORITE(4, "ফেভারিট"),
     TOOLS(5, "টুলস"),
-    MORE(6, "ইসলামী\u00A0জীবন")
+    MORE(6, "ইসলামী জীবন")
 }
 
 enum class ToolsSubScreen(val titleBn: String) {
@@ -355,6 +356,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     fun openIslamicLifeSection(section: IslamicLifeSection) {
         if (ExcludedIslamicLifeTopics.isExcluded(section.titleBn)) return
         pushCurrentState()
+        _currentTab.value = AppTab.MORE
         _selectedIslamicSection.value = section
         _moreSubScreen.value = MoreSubScreen.ISLAMIC_LIFE_SECTION_DETAIL
     }
@@ -662,7 +664,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             type = "DUA",
             titleBn = dua.titleBn,
             subtitleBn = dua.categoryNameBn,
-            categoryBn = "মাসনুন দোয়া",
+            categoryBn = "হিসনুল মুসলিম",
             arabicText = dua.arabicText,
             pronunciationBn = dua.pronunciationBn,
             meaningBn = dua.meaningBn,
@@ -1391,6 +1393,47 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             repository.resetExploreOrder()
         }
+    }
+
+    // HOMESCREEN CARD ORDER CUSTOMIZATION & RELOCATION
+    val homeScreenCardOrder: StateFlow<List<HomeScreenCardId>> = repository.homeScreenCardOrderFlow
+        .map { csv -> HomeScreenCardId.parseOrder(csv) }
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = HomeScreenCardId.defaultList
+        )
+
+    fun saveHomeScreenCardOrder(orderedCards: List<HomeScreenCardId>) {
+        viewModelScope.launch {
+            repository.setHomeScreenCardOrder(HomeScreenCardId.toCsv(orderedCards))
+        }
+    }
+
+    fun moveHomeScreenCard(fromIndex: Int, toIndex: Int) {
+        val current = homeScreenCardOrder.value.toMutableList()
+        if (fromIndex in current.indices && toIndex in current.indices && fromIndex != toIndex) {
+            val moved = current.removeAt(fromIndex)
+            current.add(toIndex, moved)
+            saveHomeScreenCardOrder(current)
+        }
+    }
+
+    fun resetHomeScreenCardOrder() {
+        viewModelScope.launch {
+            repository.resetHomeScreenCardOrder()
+        }
+    }
+
+    private val _isRearrangeCardsDialogOpen = MutableStateFlow(false)
+    val isRearrangeCardsDialogOpen: StateFlow<Boolean> = _isRearrangeCardsDialogOpen.asStateFlow()
+
+    fun openRearrangeHomeScreenCards() {
+        _isRearrangeCardsDialogOpen.value = true
+    }
+
+    fun closeRearrangeHomeScreenCards() {
+        _isRearrangeCardsDialogOpen.value = false
     }
 
     // IN-APP PUSH UPDATE & GITHUB RELEASES ENGINE

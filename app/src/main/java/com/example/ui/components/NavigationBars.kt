@@ -35,6 +35,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowForwardIos
 import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.FontDownload
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.SwapVert
 import androidx.compose.material.icons.filled.FormatSize
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.MenuBook
@@ -106,7 +107,8 @@ val IslamicTitleFontFamily: FontFamily by lazy {
 fun HomeIslamicTopAppBar(
     onOpenFontMenu: () -> Unit = {},
     onOpenThemeModal: () -> Unit = {},
-    onOpenAppSettings: () -> Unit = {}
+    onOpenAppSettings: () -> Unit = {},
+    onOpenRearrangeCards: () -> Unit = {}
 ) {
     val isDark = isSystemInDarkTheme()
     val goldDivider = IslamicGold.copy(alpha = if (isDark) 0.35f else 0.45f)
@@ -332,6 +334,61 @@ fun HomeIslamicTopAppBar(
                                 )
                                 Text(
                                     text = "নামাজের হিসাব পদ্ধতি, জেলা ও কনফিগারেশন",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    fontSize = 10.5.sp,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowForwardIos,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                                modifier = Modifier.size(12.dp)
+                            )
+                        }
+
+                        HorizontalDivider(
+                            modifier = Modifier.padding(horizontal = 4.dp, vertical = 4.dp),
+                            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)
+                        )
+
+                        // 2: Rearrange HomeScreen Cards
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(12.dp))
+                                .clickable {
+                                    showSettingsMenu = false
+                                    onOpenRearrangeCards()
+                                }
+                                .padding(horizontal = 8.dp, vertical = 8.dp)
+                        ) {
+                            Surface(
+                                shape = CircleShape,
+                                color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = if (isDark) 0.45f else 0.7f),
+                                border = BorderStroke(1.dp, IslamicGold.copy(alpha = 0.5f)),
+                                modifier = Modifier.size(36.dp)
+                            ) {
+                                Box(contentAlignment = Alignment.Center) {
+                                    Icon(
+                                        imageVector = Icons.Default.SwapVert,
+                                        contentDescription = "Rearrange HomeScreen Cards",
+                                        tint = MaterialTheme.colorScheme.primary,
+                                        modifier = Modifier.size(19.dp)
+                                    )
+                                }
+                            }
+                            Spacer(modifier = Modifier.width(10.dp))
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    text = "Rearrange HomeScreen Cards",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                                Text(
+                                    text = "হোমস্ক্রিনের কার্ডগুলো টেনে বা অ্যারো দিয়ে সাজান",
                                     style = MaterialTheme.typography.bodySmall,
                                     fontSize = 10.5.sp,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -638,14 +695,17 @@ fun DawahBottomNavigationBar(
     currentTab: AppTab,
     onTabSelected: (AppTab) -> Unit
 ) {
+    val isDark = isSystemInDarkTheme()
     Surface(
         modifier = Modifier.fillMaxWidth(),
-        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.92f),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)),
-        tonalElevation = 2.dp
+        color = MaterialTheme.colorScheme.surface.copy(alpha = if (isDark) 0.96f else 0.98f),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = if (isDark) 0.25f else 0.15f)),
+        tonalElevation = 3.dp,
+        shadowElevation = 8.dp
     ) {
         NavigationBar(
-            modifier = Modifier.windowInsetsPadding(WindowInsets.navigationBars),
+            modifier = Modifier.fillMaxWidth(),
+            windowInsets = WindowInsets.navigationBars,
             containerColor = Color.Transparent,
             tonalElevation = 0.dp
         ) {
@@ -653,16 +713,18 @@ fun DawahBottomNavigationBar(
                 selectedIconColor = Color.White,
                 selectedTextColor = MaterialTheme.colorScheme.primary,
                 indicatorColor = MaterialTheme.colorScheme.primary,
-                unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
-                unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                unselectedIconColor = if (isDark) Color(0xFFCBD5E1) else Color(0xFF475569),
+                unselectedTextColor = if (isDark) Color(0xFFE2E8F0) else Color(0xFF1E293B)
             )
 
             @Composable
             fun BottomTabItemLabel(text: String, isSelected: Boolean) {
                 Text(
-                    text = text.replace(" ", "\u00A0"),
+                    text = text,
                     style = MaterialTheme.typography.labelSmall.copy(
-                        fontSize = 11.sp
+                        fontSize = 10.sp,
+                        letterSpacing = (-0.3).sp,
+                        lineHeight = 13.5.sp
                     ),
                     fontFamily = LocalBanglaFontFamily.current,
                     maxLines = 1,
@@ -681,7 +743,8 @@ fun DawahBottomNavigationBar(
                 icon = {
                     Icon(
                         imageVector = if (currentTab == AppTab.HOME) Icons.Filled.Home else Icons.Outlined.Home,
-                        contentDescription = "হোম"
+                        contentDescription = "হোম",
+                        modifier = Modifier.size(22.dp)
                     )
                 },
                 label = {
@@ -690,7 +753,25 @@ fun DawahBottomNavigationBar(
                 colors = navItemColors
             )
 
-            // ২. ২৪ঘণ্টা আমল
+            // ২. হিসনুল মুসলিম (দো'আ ও যিকির)
+            NavigationBarItem(
+                selected = currentTab == AppTab.DUA,
+                onClick = { onTabSelected(AppTab.DUA) },
+                alwaysShowLabel = true,
+                icon = {
+                    Icon(
+                        imageVector = if (currentTab == AppTab.DUA) Icons.Filled.MenuBook else Icons.Outlined.MenuBook,
+                        contentDescription = "হিসনুল মুসলিম",
+                        modifier = Modifier.size(22.dp)
+                    )
+                },
+                label = {
+                    BottomTabItemLabel("হিসনুল মুসলিম", currentTab == AppTab.DUA)
+                },
+                colors = navItemColors
+            )
+
+            // ৩. ২৪ঘণ্টা আমল
             NavigationBarItem(
                 selected = currentTab == AppTab.ROUTINE,
                 onClick = { onTabSelected(AppTab.ROUTINE) },
@@ -698,16 +779,17 @@ fun DawahBottomNavigationBar(
                 icon = {
                     Icon(
                         imageVector = if (currentTab == AppTab.ROUTINE) Icons.Filled.AccessTime else Icons.Outlined.AccessTime,
-                        contentDescription = "২৪ঘণ্টা আমল"
+                        contentDescription = "২৪ঘণ্টা আমল",
+                        modifier = Modifier.size(22.dp)
                     )
                 },
                 label = {
-                    BottomTabItemLabel(AppTab.ROUTINE.titleBn, currentTab == AppTab.ROUTINE)
+                    BottomTabItemLabel("২৪ঘণ্টা আমল", currentTab == AppTab.ROUTINE)
                 },
                 colors = navItemColors
             )
 
-            // ৩. ফেভারিট (বুকমার্ক ও সংরক্ষিত আমল)
+            // ৪. ফেভারিট (বুকমার্ক ও সংরক্ষিত আমল)
             NavigationBarItem(
                 selected = currentTab == AppTab.FAVORITE,
                 onClick = { onTabSelected(AppTab.FAVORITE) },
@@ -715,16 +797,17 @@ fun DawahBottomNavigationBar(
                 icon = {
                     Icon(
                         imageVector = if (currentTab == AppTab.FAVORITE) Icons.Filled.Bookmark else Icons.Outlined.BookmarkBorder,
-                        contentDescription = "ফেভারিট"
+                        contentDescription = "ফেভারিট",
+                        modifier = Modifier.size(22.dp)
                     )
                 },
                 label = {
-                    BottomTabItemLabel(AppTab.FAVORITE.titleBn, currentTab == AppTab.FAVORITE)
+                    BottomTabItemLabel("ফেভারিট", currentTab == AppTab.FAVORITE)
                 },
                 colors = navItemColors
             )
 
-            // ৪. টুলস (নতুন ট্যাব)
+            // ৫. টুলস (নতুন ট্যাব)
             NavigationBarItem(
                 selected = currentTab == AppTab.TOOLS,
                 onClick = { onTabSelected(AppTab.TOOLS) },
@@ -732,11 +815,12 @@ fun DawahBottomNavigationBar(
                 icon = {
                     Icon(
                         imageVector = if (currentTab == AppTab.TOOLS) Icons.Filled.Build else Icons.Outlined.Build,
-                        contentDescription = "টুলস"
+                        contentDescription = "টুলস",
+                        modifier = Modifier.size(22.dp)
                     )
                 },
                 label = {
-                    BottomTabItemLabel(AppTab.TOOLS.titleBn, currentTab == AppTab.TOOLS)
+                    BottomTabItemLabel("টুলস", currentTab == AppTab.TOOLS)
                 },
                 colors = navItemColors
             )

@@ -18,7 +18,7 @@ data class BookmarkEntity(
     val type: String = "DUA", // DUA, ISLAMIC_LIFE, DUROOD, HEALTH_DUA, ALLAH_NAME, GENERAL
     val titleBn: String = "",
     val subtitleBn: String = "",
-    val categoryBn: String = "মাসনুন দোয়া",
+    val categoryBn: String = "হিসনুল মুসলিম",
     val arabicText: String = "",
     val pronunciationBn: String = "",
     val meaningBn: String = "",

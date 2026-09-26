@@ -613,7 +613,8 @@ fun HomeScreen(
                             LiveAmolTickerBar(
                                 viewModel = viewModel,
                                 calendarInfo = tripleCalendar,
-                                onOpenTripleCalendar = { showTripleCalendarDialog = true }
+                                onOpenTripleCalendar = { showTripleCalendarDialog = true },
+                                onOpenNofolSalat = { salat -> selectedNofolSalat = salat }
                             )
                         }
                     }

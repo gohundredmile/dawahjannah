@@ -116,7 +116,8 @@ enum class ToolsSubScreen(val titleBn: String) {
     HOLY_QURAN("আল-কুরআন (অনুবাদ, তাফসীর ও তিলাওয়াত)"),
     HADITH_COLLECTION("সহীহ হাদীস সম্ভার (HadithBD / IRD)"),
     ISLAMIC_CONTEXT_VERIFY("Islamic Context & Verify (ইসলামিক কনটেক্সট ও যাচাই)"),
-    QURAN_ACTION_ENGINE("Quran → Action Engine (কুরআন → আমল ইঞ্জিন)")
+    QURAN_ACTION_ENGINE("Quran → Action Engine (কুরআন → আমল ইঞ্জিন)"),
+    ZAKAT_CALCULATOR("স্মার্ট যাকাতুল মাল ক্যালকুলেটর (Zakat Calculator)")
 }
 
 sealed class AppNavDestination {
@@ -341,6 +342,12 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     fun openQuranActionEngine() {
         pushCurrentState()
         _toolsSubScreen.value = ToolsSubScreen.QURAN_ACTION_ENGINE
+        _currentTab.value = AppTab.TOOLS
+    }
+
+    fun openZakatCalculator() {
+        pushCurrentState()
+        _toolsSubScreen.value = ToolsSubScreen.ZAKAT_CALCULATOR
         _currentTab.value = AppTab.TOOLS
     }
 

@@ -79,6 +79,8 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.example.data.datasource.IslamicLifeData
 import com.example.data.model.LiveDateAmolItem
+import com.example.data.model.NofolSalatItem
+import com.example.data.model.NofolSalatRepository
 import com.example.ui.theme.ArabicFontFamily
 import com.example.ui.theme.IslamicGold
 import com.example.ui.theme.IslamicGoldLight
@@ -86,8 +88,10 @@ import com.example.ui.theme.IslamicGreen
 import com.example.ui.theme.LocalBanglaFontFamily
 import com.example.ui.viewmodel.AppTab
 import com.example.ui.viewmodel.MainViewModel
+import com.example.ui.viewmodel.MoreSubScreen
 import com.example.util.CalendarHelper
 import com.example.util.LiveTimeAndEventMatcher
+import com.example.util.PrayerCalculator
 
 /**
  * Top interactive horizontal scrolling bar for HomeScreen matching date & time based data:
@@ -103,7 +107,8 @@ fun LiveAmolTickerBar(
     viewModel: MainViewModel,
     calendarInfo: CalendarHelper.TripleCalendarInfo?,
     modifier: Modifier = Modifier,
-    onOpenTripleCalendar: () -> Unit = {}
+    onOpenTripleCalendar: () -> Unit = {},
+    onOpenNofolSalat: (NofolSalatItem) -> Unit = {}
 ) {
     val context = LocalContext.current
     val matchingItems = remember(calendarInfo) {
@@ -285,12 +290,13 @@ fun LiveAmolTickerBar(
         LiveAmolDetailDialog(
             item = item,
             onDismiss = { selectedItem = null },
-            onNavigate = { target ->
+            onNavigate = { targetItem ->
                 selectedItem = null
                 handleLiveAmolNavigation(
-                    target = target,
+                    item = targetItem,
                     viewModel = viewModel,
-                    onOpenTripleCalendar = onOpenTripleCalendar
+                    onOpenTripleCalendar = onOpenTripleCalendar,
+                    onOpenNofolSalat = onOpenNofolSalat
                 )
             }
         )
@@ -399,7 +405,7 @@ private fun LiveAmolTwoLinePill(
 fun LiveAmolDetailDialog(
     item: LiveDateAmolItem,
     onDismiss: () -> Unit,
-    onNavigate: (String?) -> Unit
+    onNavigate: (LiveDateAmolItem) -> Unit
 ) {
     val context = LocalContext.current
     val icon = getAmolIcon(item.iconKey)
@@ -623,6 +629,45 @@ fun LiveAmolDetailDialog(
                     }
                 }
 
+                // Full article or detailed context if available
+                item.fullArticleBn?.let { article ->
+                    Spacer(modifier = Modifier.height(14.dp))
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(14.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+                        )
+                    ) {
+                        Column(modifier = Modifier.padding(14.dp)) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(
+                                    imageVector = Icons.Default.MenuBook,
+                                    contentDescription = null,
+                                    tint = item.primaryColor,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    text = "বিস্তারিত তাৎপর্য ও আমল বিধান",
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 13.sp,
+                                    color = item.primaryColor,
+                                    fontFamily = LocalBanglaFontFamily.current
+                                )
+                            }
+                            Spacer(modifier = Modifier.height(6.dp))
+                            Text(
+                                text = article,
+                                fontSize = 13.sp,
+                                lineHeight = 20.sp,
+                                color = MaterialTheme.colorScheme.onSurface,
+                                fontFamily = LocalBanglaFontFamily.current
+                            )
+                        }
+                    }
+                }
+
                 Spacer(modifier = Modifier.height(18.dp))
                 HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
                 Spacer(modifier = Modifier.height(14.dp))
@@ -630,7 +675,8 @@ fun LiveAmolDetailDialog(
                 // Action Buttons
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
                     // Copy button (if text available)
                     if (item.arabicText != null || item.meaningBn != null) {
@@ -642,6 +688,7 @@ fun LiveAmolDetailDialog(
                                     item.arabicText?.let { append("$it\n\n") }
                                     item.pronunciationBn?.let { append("উচ্চারণ: $it\n\n") }
                                     item.meaningBn?.let { append("অর্থ: $it\n\n") }
+                                    item.virtuesBn?.let { append("ফজিলত: $it\n\n") }
                                     item.referenceBn?.let { append("সূত্র: $it") }
                                 }
                                 val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
@@ -666,36 +713,20 @@ fun LiveAmolDetailDialog(
                         }
                     }
 
-                    // Direct Action / Feature Navigation Button
-                    if (item.actionTarget != null) {
-                        Button(
-                            onClick = { onNavigate(item.actionTarget) },
-                            modifier = Modifier.weight(1.5f),
-                            shape = RoundedCornerShape(12.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = item.primaryColor)
-                        ) {
-                            Text(
-                                text = item.actionButtonTextBn ?: "আমল করুন ➔",
-                                fontFamily = LocalBanglaFontFamily.current,
-                                fontSize = 13.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = Color.White
-                            )
-                        }
-                    } else {
-                        Button(
-                            onClick = onDismiss,
-                            modifier = Modifier.weight(1f),
-                            shape = RoundedCornerShape(12.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = item.primaryColor)
-                        ) {
-                            Text(
-                                text = "ঠিক আছে",
-                                fontFamily = LocalBanglaFontFamily.current,
-                                fontSize = 13.sp,
-                                color = Color.White
-                            )
-                        }
+                    // Direct Action / Feature Navigation Button - Intelligently connected for EVERY event!
+                    Button(
+                        onClick = { onNavigate(item) },
+                        modifier = Modifier.weight(1.5f),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = item.primaryColor)
+                    ) {
+                        Text(
+                            text = item.actionButtonTextBn ?: "বিস্তারিত পড়ুন ও আমল করুন ➔",
+                            fontFamily = LocalBanglaFontFamily.current,
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White
+                        )
                     }
                 }
             }
@@ -719,80 +750,306 @@ private fun getAmolIcon(key: String): ImageVector {
 }
 
 private fun handleLiveAmolNavigation(
-    target: String?,
+    item: LiveDateAmolItem,
     viewModel: MainViewModel,
-    onOpenTripleCalendar: () -> Unit
+    onOpenTripleCalendar: () -> Unit,
+    onOpenNofolSalat: (NofolSalatItem) -> Unit
 ) {
-    if (target == null) return
-    when (target) {
-        "friday_mode" -> viewModel.openFridayMode()
-        "morning_evening" -> {
-            val sec = viewModel.getIslamicLifeSection("morning_evening_special")
-                ?: IslamicLifeData.sections.find { it.id == "morning_evening_special" }
-            if (sec != null) {
-                viewModel.openIslamicLifeSection(sec)
-            } else {
-                viewModel.selectTab(AppTab.MORE)
-            }
+    val prayerStatus = viewModel.prayerStatus.value
+    val allSalats = NofolSalatRepository.getAllNofolSalats(prayerStatus)
+
+    // 1. Explicit Nofol Salat Target
+    if (!item.nofolSalatIdTarget.isNullOrBlank()) {
+        val targetSalat = allSalats.find { it.id.equals(item.nofolSalatIdTarget, ignoreCase = true) }
+        if (targetSalat != null) {
+            onOpenNofolSalat(targetSalat)
+            return
         }
-        "sayyidul_istighfar" -> {
-            val sec = viewModel.getIslamicLifeSection("sayyidul_istighfar_special")
-                ?: IslamicLifeData.sections.find { it.id == "sayyidul_istighfar_special" }
-            if (sec != null) {
-                viewModel.openIslamicLifeSection(sec)
-            } else {
-                viewModel.selectTab(AppTab.MORE)
-            }
-        }
-        "dua_acceptance" -> {
-            val sec = viewModel.getIslamicLifeSection("dua_acceptance_times")
-                ?: IslamicLifeData.sections.find { it.id == "dua_acceptance_times" }
-            if (sec != null) {
-                viewModel.openIslamicLifeSection(sec)
-            } else {
-                viewModel.selectTab(AppTab.MORE)
-            }
-        }
-        "five_waqt" -> {
-            val sec = viewModel.getIslamicLifeSection("five_waqt_after_salat")
-                ?: IslamicLifeData.sections.find { it.id == "five_waqt_after_salat" }
-            if (sec != null) {
-                viewModel.openIslamicLifeSection(sec)
-            } else {
-                viewModel.selectTab(AppTab.MORE)
-            }
-        }
-        "isme_azam" -> {
-            val sec = viewModel.getIslamicLifeSection("isme_azam")
-                ?: IslamicLifeData.sections.find { it.id == "isme_azam" }
-            if (sec != null) {
-                viewModel.openIslamicLifeSection(sec)
-            } else {
-                viewModel.selectTab(AppTab.MORE)
-            }
-        }
-        "tawbah_last_two" -> {
-            val sec = viewModel.getIslamicLifeSection("tawbah_last_two")
-                ?: IslamicLifeData.sections.find { it.id == "tawbah_last_two" }
-            if (sec != null) {
-                viewModel.openIslamicLifeSection(sec)
-            } else {
-                viewModel.selectTab(AppTab.MORE)
-            }
-        }
-        "surah_baqarah" -> {
-            val sec = viewModel.getIslamicLifeSection("surah_baqarah_last_2")
-                ?: IslamicLifeData.sections.find { it.id == "surah_baqarah_last_2" }
-            if (sec != null) {
-                viewModel.openIslamicLifeSection(sec)
-            } else {
-                viewModel.selectTab(AppTab.MORE)
-            }
-        }
-        "triple_calendar" -> onOpenTripleCalendar()
-        "nofol_salat" -> viewModel.selectTab(AppTab.ROUTINE)
-        "islamic_habit" -> viewModel.openIslamicHabitSystem()
-        "ramadan_intelligence" -> viewModel.openRamadanIntelligence()
-        else -> viewModel.selectTab(AppTab.MORE)
     }
+
+    // 2. Explicit Surah Number Target
+    if (item.surahNumberTarget != null && item.surahNumberTarget > 0) {
+        viewModel.openHolyQuran(item.surahNumberTarget)
+        return
+    }
+
+    // 3. Explicit Islamic Life Section Target
+    if (!item.islamicLifeSectionIdTarget.isNullOrBlank()) {
+        val section = viewModel.getIslamicLifeSection(item.islamicLifeSectionIdTarget)
+            ?: IslamicLifeData.sections.find { it.id == item.islamicLifeSectionIdTarget }
+        if (section != null) {
+            viewModel.openIslamicLifeSection(section)
+            return
+        }
+    }
+
+    // 4. Action Target Mapping
+    when (item.actionTarget) {
+        "friday_mode" -> {
+            viewModel.openFridayMode()
+            return
+        }
+        "triple_calendar" -> {
+            onOpenTripleCalendar()
+            return
+        }
+        "islamic_habit" -> {
+            viewModel.openIslamicHabitSystem()
+            return
+        }
+        "ramadan_intelligence" -> {
+            viewModel.openRamadanIntelligence()
+            return
+        }
+        "holy_quran" -> {
+            viewModel.openHolyQuran()
+            return
+        }
+        "hadith_collection" -> {
+            viewModel.openHadithCollection()
+            return
+        }
+        else -> {
+            if (!item.actionTarget.isNullOrBlank()) {
+                // Check if target is a known IslamicLife section
+                val directSec = viewModel.getIslamicLifeSection(item.actionTarget)
+                    ?: IslamicLifeData.sections.find { it.id == item.actionTarget }
+                if (directSec != null) {
+                    viewModel.openIslamicLifeSection(directSec)
+                    return
+                }
+
+                // Check if target is a known Nofol Salat
+                val salatMatch = allSalats.find { it.id.equals(item.actionTarget, ignoreCase = true) }
+                if (salatMatch != null) {
+                    onOpenNofolSalat(salatMatch)
+                    return
+                }
+            }
+        }
+    }
+
+    // 5. Intelligent Multi-Tier Matching (Titles, IDs, and Content Keywords)
+    val textToAnalyze = "${item.id} ${item.titleBn} ${item.categoryBn} ${item.shortSubtitleBn}".lowercase()
+
+    // 5a. Voluntary / Sunnah Prayers
+    if (textToAnalyze.contains("তাহাজ্জুদ") || textToAnalyze.contains("tahajjud")) {
+        val sec = viewModel.getIslamicLifeSection("tahajjud_guide")
+            ?: IslamicLifeData.sections.find { it.id == "tahajjud_guide" }
+        if (sec != null) {
+            viewModel.openIslamicLifeSection(sec)
+            return
+        }
+        allSalats.find { it.id == "tahajjud" }?.let {
+            onOpenNofolSalat(it)
+            return
+        }
+    }
+
+    if (textToAnalyze.contains("চাশত") || textToAnalyze.contains("দুহা") || textToAnalyze.contains("duha")) {
+        allSalats.find { it.id == "duha" }?.let {
+            onOpenNofolSalat(it)
+            return
+        }
+    }
+
+    if (textToAnalyze.contains("ইশরাক") || textToAnalyze.contains("ishraq")) {
+        allSalats.find { it.id == "ishraq" }?.let {
+            onOpenNofolSalat(it)
+            return
+        }
+    }
+
+    if (textToAnalyze.contains("আওয়াবীন") || textToAnalyze.contains("আওয়াবীন") || textToAnalyze.contains("awwabin")) {
+        allSalats.find { it.id == "awwabin" }?.let {
+            onOpenNofolSalat(it)
+            return
+        }
+    }
+
+    // 5b. Friday Mode & Special Duas
+    if (textToAnalyze.contains("জুমা") || textToAnalyze.contains("জুমুআ") || textToAnalyze.contains("শুক্রবার") || textToAnalyze.contains("friday")) {
+        viewModel.openFridayMode()
+        return
+    }
+
+    // 5c. Morning / Evening Duas
+    if (textToAnalyze.contains("সকাল") || textToAnalyze.contains("সন্ধ্যা") || textToAnalyze.contains("morning") || textToAnalyze.contains("evening")) {
+        val sec = viewModel.getIslamicLifeSection("morning_evening_special")
+            ?: IslamicLifeData.sections.find { it.id == "morning_evening_special" }
+        if (sec != null) {
+            viewModel.openIslamicLifeSection(sec)
+            return
+        }
+    }
+
+    // 5d. Sayyidul Istighfar & Tawbah
+    if (textToAnalyze.contains("সাইয়্যেদ") || textToAnalyze.contains("সাইয়েদ") || textToAnalyze.contains("istighfar")) {
+        val sec = viewModel.getIslamicLifeSection("sayyidul_istighfar_special")
+            ?: IslamicLifeData.sections.find { it.id == "sayyidul_istighfar_special" }
+        if (sec != null) {
+            viewModel.openIslamicLifeSection(sec)
+            return
+        }
+    }
+
+    if (textToAnalyze.contains("তাওবা") || textToAnalyze.contains("তাওবাহ")) {
+        val sec = viewModel.getIslamicLifeSection("tawbah_last_two")
+            ?: IslamicLifeData.sections.find { it.id == "tawbah_last_two" }
+        if (sec != null) {
+            viewModel.openIslamicLifeSection(sec)
+            return
+        }
+    }
+
+    // 5e. Specific Quran Surahs
+    if (textToAnalyze.contains("সূরা বাকারা") || textToAnalyze.contains("বাকারার শেষ") || textToAnalyze.contains("baqarah")) {
+        val sec = viewModel.getIslamicLifeSection("surah_baqarah_last_2")
+            ?: IslamicLifeData.sections.find { it.id == "surah_baqarah_last_2" }
+        if (sec != null) {
+            viewModel.openIslamicLifeSection(sec)
+            return
+        }
+        viewModel.openHolyQuran(2)
+        return
+    }
+
+    if (textToAnalyze.contains("সূরা মূলক") || textToAnalyze.contains("সূরা মুলক") || textToAnalyze.contains("mulk")) {
+        viewModel.openHolyQuran(67)
+        return
+    }
+
+    if (textToAnalyze.contains("সূরা কাহাফ") || textToAnalyze.contains("কাহাফ") || textToAnalyze.contains("kahf")) {
+        viewModel.openHolyQuran(18)
+        return
+    }
+
+    if (textToAnalyze.contains("সূরা সাজদাহ") || textToAnalyze.contains("সাজদা") || textToAnalyze.contains("sajdah")) {
+        viewModel.openHolyQuran(32)
+        return
+    }
+
+    if (textToAnalyze.contains("সূরা ইয়াসীন") || textToAnalyze.contains("সূরা ইয়াসীন") || textToAnalyze.contains("yasin")) {
+        viewModel.openHolyQuran(36)
+        return
+    }
+
+    if (textToAnalyze.contains("সূরা ওয়াক্বিয়া") || textToAnalyze.contains("ওয়াকিয়া") || textToAnalyze.contains("waqiah")) {
+        viewModel.openHolyQuran(56)
+        return
+    }
+
+    if (textToAnalyze.contains("আল ইমরান") || textToAnalyze.contains("আলে ইমরান") || textToAnalyze.contains("imran")) {
+        val sec = viewModel.getIslamicLifeSection("ali_imran_rizq")
+            ?: IslamicLifeData.sections.find { it.id == "ali_imran_rizq" }
+        if (sec != null) {
+            viewModel.openIslamicLifeSection(sec)
+            return
+        }
+        viewModel.openHolyQuran(3)
+        return
+    }
+
+    // 5f. Night & Sleep Duas
+    if (textToAnalyze.contains("ঘুম") || textToAnalyze.contains("শয়ন") || textToAnalyze.contains("রাতের আমল") || textToAnalyze.contains("sleep")) {
+        val sec = viewModel.getIslamicLifeSection("sleep_duas")
+            ?: IslamicLifeData.sections.find { it.id == "sleep_duas" }
+        if (sec != null) {
+            viewModel.openIslamicLifeSection(sec)
+            return
+        }
+    }
+
+    // 5g. Prayer Post-Salah Duas
+    if (textToAnalyze.contains("৫ ওয়াক্ত") || textToAnalyze.contains("সালাত শেষে") || textToAnalyze.contains("নামাজের পর")) {
+        val sec = viewModel.getIslamicLifeSection("five_waqt_after_salat")
+            ?: IslamicLifeData.sections.find { it.id == "five_waqt_after_salat" }
+        if (sec != null) {
+            viewModel.openIslamicLifeSection(sec)
+            return
+        }
+    }
+
+    // 5h. Dua Acceptance Times
+    if (textToAnalyze.contains("দোয়া কবুল") || textToAnalyze.contains("দো'আ কবুল") || textToAnalyze.contains("মুহূর্ত")) {
+        val sec = viewModel.getIslamicLifeSection("dua_acceptance_times")
+            ?: IslamicLifeData.sections.find { it.id == "dua_acceptance_times" }
+        if (sec != null) {
+            viewModel.openIslamicLifeSection(sec)
+            return
+        }
+    }
+
+    // 5i. Isme Azam
+    if (textToAnalyze.contains("ইসমে আজম") || textToAnalyze.contains("ইসমে আযম") || textToAnalyze.contains("isme_azam")) {
+        val sec = viewModel.getIslamicLifeSection("isme_azam")
+            ?: IslamicLifeData.sections.find { it.id == "isme_azam" }
+        if (sec != null) {
+            viewModel.openIslamicLifeSection(sec)
+            return
+        }
+    }
+
+    // 5j. Asmaul Husna
+    if (textToAnalyze.contains("আসমাউল হুসনা") || textToAnalyze.contains("৯৯টি") || textToAnalyze.contains("আল্লাহর নাম")) {
+        val sec = viewModel.getIslamicLifeSection("asmaul_husna_special")
+            ?: IslamicLifeData.sections.find { it.id == "asmaul_husna_special" }
+        if (sec != null) {
+            viewModel.openIslamicLifeSection(sec)
+            return
+        }
+        viewModel.navigateToMoreSubScreen(MoreSubScreen.NAMES_OF_ALLAH)
+        return
+    }
+
+    // 5k. Ruqyah Shariah
+    if (textToAnalyze.contains("রুকিয়াহ") || textToAnalyze.contains("রুকইয়াহ") || textToAnalyze.contains("কুফরি") || textToAnalyze.contains("জাদু") || textToAnalyze.contains("হেফাজত")) {
+        val sec = viewModel.getIslamicLifeSection("ruqyah_shariah_special")
+            ?: IslamicLifeData.sections.find { it.id == "ruqyah_shariah_special" }
+        if (sec != null) {
+            viewModel.openIslamicLifeSection(sec)
+            return
+        }
+    }
+
+    // 5l. Ramadan & Fasting
+    if (textToAnalyze.contains("রমজান") || textToAnalyze.contains("রোজার") || textToAnalyze.contains("সেহরি") || textToAnalyze.contains("ইফতার")) {
+        viewModel.openRamadanIntelligence()
+        return
+    }
+
+    if (textToAnalyze.contains("আইয়ামে বিজ") || textToAnalyze.contains("আইয়ামুল বিজ") || textToAnalyze.contains("রোজা") || textToAnalyze.contains("আশুরা") || textToAnalyze.contains("সোমবার")) {
+        viewModel.openIslamicHabitSystem()
+        return
+    }
+
+    // 5m. Tasbih & Durood
+    if (textToAnalyze.contains("দরুদ") || textToAnalyze.contains("দরূদ")) {
+        viewModel.navigateToMoreSubScreen(MoreSubScreen.DUROOD_AMOL)
+        return
+    }
+
+    if (textToAnalyze.contains("তাসবিহ") || textToAnalyze.contains("তসবিহ") || textToAnalyze.contains("জিকির")) {
+        viewModel.navigateToMoreSubScreen(MoreSubScreen.TASBIH)
+        return
+    }
+
+    // 5n. Calendar Events
+    if (textToAnalyze.contains("ক্যালেন্ডার") || textToAnalyze.contains("হিজরি") || textToAnalyze.contains("তারিখ")) {
+        onOpenTripleCalendar()
+        return
+    }
+
+    // 6. Fuzzy Match against Islamic Life Sections
+    val fuzzySection = IslamicLifeData.sections.find { sec ->
+        val cleanTitle = sec.titleBn.replace("★", "").trim()
+        cleanTitle.isNotEmpty() && (item.titleBn.contains(cleanTitle) || cleanTitle.contains(item.titleBn))
+    }
+    if (fuzzySection != null) {
+        viewModel.openIslamicLifeSection(fuzzySection)
+        return
+    }
+
+    // 7. Graceful Fallback
+    viewModel.selectTab(AppTab.MORE)
 }

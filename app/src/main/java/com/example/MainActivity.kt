@@ -62,6 +62,7 @@ import com.example.ui.screens.tools.QuranEngineMode
 import com.example.ui.screens.tools.RamadanIntelligenceScreen
 import com.example.ui.screens.tools.SmartQuranSearchScreen
 import com.example.ui.screens.tools.ToolsScreen
+import com.example.ui.screens.tools.zakat.ZakatCalculatorScreen
 import com.example.ui.theme.DawahTheme
 import com.example.ui.viewmodel.AppTab
 import com.example.ui.viewmodel.MainViewModel
@@ -249,6 +250,7 @@ class MainActivity : ComponentActivity() {
                                             onOpenMosqueMode = { viewModel.openMosqueMode() },
                                             onOpenIslamicContextVerify = { viewModel.openIslamicContextVerify() },
                                             onOpenQuranActionEngine = { viewModel.openQuranActionEngine() },
+                                            onOpenZakatCalculator = { viewModel.openZakatCalculator() },
                                             onOpenIslamicLife = { viewModel.selectTab(AppTab.MORE) },
                                             contentPadding = innerPadding
                                         )
@@ -321,6 +323,9 @@ class MainActivity : ComponentActivity() {
                                             onNavigateBack = { viewModel.navigateBack() }
                                         )
                                         ToolsSubScreen.QURAN_ACTION_ENGINE -> QuranActionEngineScreen(
+                                            onNavigateBack = { viewModel.navigateBack() }
+                                        )
+                                        ToolsSubScreen.ZAKAT_CALCULATOR -> ZakatCalculatorScreen(
                                             onNavigateBack = { viewModel.navigateBack() }
                                         )
                                     }

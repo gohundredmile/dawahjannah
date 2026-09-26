@@ -46,8 +46,11 @@ object LiveTimeAndEventMatcher {
                         virtuesBn = "রাসূলুল্লাহ ﷺ বলেছেন: ‘আমাদের রব প্রতি রাতের শেষ তৃতীয়াংশে প্রথম আসমানে অবতরণ করেন এবং আহ্বান করেন: কে আছো যে আমাকে ডাকবে, আমি তার ডাকে সাড়া দেব! কে ক্ষমা চাইবে, আমি ক্ষমা করব!’ (সহীহ বুখারী ১১৪৫)",
                         referenceBn = "সহীহ আল-বুখারী: ১১৪৫, সহীহ মুসলিম: ৭৫৮",
                         timingContextBn = "মধ্যরাত থেকে ফজর পর্যন্ত সময় হলো মহান আল্লাহর সান্নিধ্য ও দোয়া কবুলের শ্রেষ্ঠতম মুহূর্ত।",
-                        actionTarget = "nofol_salat",
-                        actionButtonTextBn = "তাহাজ্জুদ ও নফল সালাত গাইড"
+                        actionTarget = "tahajjud_guide",
+                        actionButtonTextBn = "তাহাজ্জুদ পূর্ণাঙ্গ গাইড ও আমল ➔",
+                        islamicLifeSectionIdTarget = "tahajjud_guide",
+                        nofolSalatIdTarget = "tahajjud",
+                        fullArticleBn = "তাহাজ্জুদ সালাত হলো ফরজ সালাতের পর মুমিনের শ্রেষ্ঠতম নফল ইবাদত। রাতের শেষ তৃতীয়াংশে ওজু করে ধীরস্থিরভাবে ২, ৪, ৬ বা ৮ রাকাত সালাত আদায় করা সুন্নাত। দীর্ঘ ক্বেরাত, রুকু এবং বিশেষত সিজদায় আল্লাহর কাছে মনের সমস্ত আকুতি নিবেদন করুন।"
                     )
                 )
             }
@@ -69,7 +72,9 @@ object LiveTimeAndEventMatcher {
                         referenceBn = "সহীহ মুসলিম: ২৭২৩, সুনান আবু দাউদ: ৫০৬৮",
                         timingContextBn = "ফজর সালাতের পর থেকে সূর্যোদয় পর্যন্ত সময় যিকির ও দোয়ার জন্য অতি বরকতময়।",
                         actionTarget = "morning_evening",
-                        actionButtonTextBn = "সকাল-সন্ধ্যার দো'আ দেখুন"
+                        actionButtonTextBn = "সকালের পূর্ণাঙ্গ মাসনূন আযকার ➔",
+                        islamicLifeSectionIdTarget = "morning_evening_special",
+                        fullArticleBn = "সকাল-সন্ধ্যার দো'আ ও আযকার মুমিনের সারাদিনের আধ্যাত্মিক বর্ম। ফজরের পর আয়াতুল কুরসী, ৩ কুল (সূরা ইখলাস, ফালাক, নাস) ৩ বার, সাইয়্যেদুল ইস্তিগফার এবং সকালের বিশেষ সুরক্ষা দো'আ পাঠ করা নবীজী ﷺ-এর অটল সুন্নাত।"
                     )
                 )
             }
@@ -90,8 +95,11 @@ object LiveTimeAndEventMatcher {
                         virtuesBn = "রাসূলুল্লাহ ﷺ বলেছেন: ‘প্রতিটি মানবদেহে ৩৬০টি জোড়া রয়েছে; চাশতের দুই রাকাত সালাত এর প্রত্যেকটির পক্ষ থেকে সদকা হিসেবে যথেষ্ট হয়ে যায়।’ (সহীহ মুসলিম ৭২০)",
                         referenceBn = "সহীহ মুসলিম: ৭২০, সুনান আবু দাউদ: ৫২৪২",
                         timingContextBn = "সূর্য ওঠার ১৫-২০ মিনিট পর থেকে যোহরের পূর্ব পর্যন্ত সালাতুদ দুহার মোক্ষম সময়।",
-                        actionTarget = "nofol_salat",
-                        actionButtonTextBn = "চাশতের সালাত বিস্তারিত"
+                        actionTarget = "duha",
+                        actionButtonTextBn = "সালাতুদ দুহা (চাশত) সম্পূর্ণ গাইড ➔",
+                        nofolSalatIdTarget = "duha",
+                        islamicLifeSectionIdTarget = "fajr_between_and_after",
+                        fullArticleBn = "সালাতুদ দুহা (চাশতের সালাত) মানবদেহের প্রতিটি অস্থির শুকরিয়াস্বরূপ। এটি ২, ৪, ৮ বা ১২ রাকাত সাধারণ নফলের মতো ২ রাকাত করে আদায় করা যায়। এই সালাতের উসিলায় আল্লাহ পাক বান্দার দিনভর রিযিকের দায়ভার গ্রহণ করেন ও অন্তরে প্রশান্তি দান করেন।"
                     )
                 )
             }
@@ -113,7 +121,9 @@ object LiveTimeAndEventMatcher {
                         referenceBn = "জামে আত-তিরমিযী: ৪৭৮, সহীহ মুসলিম: হা/৯৪৮",
                         timingContextBn = "যোহরের ওয়াক্ত প্রবেশের সাথে সাথে জান্নাত ও রহমতের দরজাগুলো উন্মুক্ত করা হয়।",
                         actionTarget = "five_waqt",
-                        actionButtonTextBn = "৫ ওয়াক্ত সালাত পরবর্তী দো'আ"
+                        actionButtonTextBn = "৫ ওয়াক্ত সালাতের দো'আ ও আমল ➔",
+                        islamicLifeSectionIdTarget = "five_waqt_after_salat",
+                        fullArticleBn = "যোহরের ওয়াক্ত প্রবেশের প্রাক্কালে আসমানের দরজাসমূহ খুলে দেওয়া হয়। এ সময়ে সালাত ও তিলাওয়াতের বিশেষ গুরুত্ব রয়েছে। সালাতের পর মাসনূন তাহলীল, আয়াতুল কুরসী ও তাসবীহ-ই-ফাতিমী নিয়মিত পাঠ করুন।"
                     )
                 )
             }
@@ -135,7 +145,9 @@ object LiveTimeAndEventMatcher {
                         referenceBn = "সহীহ আল-বুখারী: ৬৩০৬",
                         timingContextBn = "আসর সালাত শেষ করে মাগরিবের পূর্ব পর্যন্ত সন্ধ্যার আযকার ও সুরক্ষার জন্য সর্বোত্তম সময়।",
                         actionTarget = "sayyidul_istighfar",
-                        actionButtonTextBn = "সাইয়্যেদুল ইস্তিগফার বিস্তারিত"
+                        actionButtonTextBn = "সাইয়্যেদুল ইস্তিগফার বিস্তারিত ➔",
+                        islamicLifeSectionIdTarget = "sayyidul_istighfar_special",
+                        fullArticleBn = "সাইয়্যেদুল ইস্তিগফার হলো ক্ষমার শ্রেষ্ঠতম প্রার্থনা। এতে তাওহীদের স্বীকৃতি, নিজের অক্ষমতা প্রকাশ ও আল্লাহর নিয়ামতের অকৃত্রিম শোকরিয়া রয়েছে। আসরের পর থেকে মাগরিবের পূর্বে অন্তত একবার আন্তরিকতার সাথে পাঠ করুন।"
                     )
                 )
             }
@@ -151,13 +163,15 @@ object LiveTimeAndEventMatcher {
                         iconKey = "MOON",
                         primaryColor = Color(0xFF0D9488),
                         arabicText = "اللَّهُمَّ إِنِّي أَسْأَلُكَ بِرَحْمَتِكَ الَّتِي وَسِعَتْ كُلَّ شَيْءٍ أَنْ تَغْفِرَ لِي",
-                        pronunciationBn = "আল্লাহুম্মা ইন্নী আস-আলুকা বিরাহমাতিকাল্লাতী ওয়াসী‘আত কুল্লা শাইয়িন আন তাগফিরা লী।",
+                        pronunciationBn = "আল্লাহুম্মা ইন্নী আস-আলুকা বিরাহমাতিকাল্লাতী ওয়اسى‘আত কুল্লা শাইয়িন আন তাগফিরা লী।",
                         meaningBn = "হে আল্লাহ! আমি আপনার সেই সর্বব্যাপী রহমতের উসিলায় প্রার্থনা করছি—আমাকে ক্ষমা করে দিন।",
                         virtuesBn = "নবীজী ﷺ ইরশাদ করেছেন: ‘সিয়াম পালনকারীর ইফতারের মুহূর্তের দো'আ কখনো ফিরিয়ে দেওয়া হয় না।’ (সুনান ইবনে মাজাহ ১৭৫৩)",
                         referenceBn = "সুনান ইবন মাজাহ: ১৭৫৩, জামে আত-তিরমিযী: ৩৫৯৮",
                         timingContextBn = "সূর্যাস্ত এবং মাগরিবের আযানের সময় রহমতের দুয়ার খুলে যায়।",
                         actionTarget = "dua_acceptance",
-                        actionButtonTextBn = "দোয়া কবুলের বিশেষ অধ্যায়"
+                        actionButtonTextBn = "দো'আ কবুলের মোক্ষম সময় ও আমল ➔",
+                        islamicLifeSectionIdTarget = "dua_acceptance_times",
+                        fullArticleBn = "মাগরিবের আযানের সময় এবং সূর্যাস্তের আগমুহূর্ত দোয়া কবুলিয়তের অনন্য মুহূর্ত। এ সময়ে দুনিয়া ও আখিরাতের কল্যাণ, পরিবার-পরিজনের নিরাপত্তা এবং জান্নাত লাভের আকুতি প্রকাশ করুন।"
                     )
                 )
             }
@@ -169,7 +183,7 @@ object LiveTimeAndEventMatcher {
                         categoryBn = "রাত্রিকালীন আমল • কবর সুরক্ষা",
                         titleBn = "সূরা মুলক ও সূরা বাকারার শেষ ২ আয়াত",
                         shortSubtitleBn = "কবরের আজাব থেকে মুক্তি ও সারারাত আল্লাহর বিশেষ নিরাপত্তা",
-                        badgeBn = "রাতের ফরজ আমল",
+                        badgeBn = "রাতের সুন্নাত আমল",
                         iconKey = "BOOK",
                         primaryColor = Color(0xFF4338CA),
                         arabicText = "آمَنَ الرَّسُولُ بِمَا أُنزِلَ إِلَيْهِ مِن رَّبِّهِ وَالْمُؤْمِنُونَ ۚ كُلٌّ آمَنَ بِاللَّهِ وَمَلَائِكَتِهِ وَكُتُبِهِ وَرُسُلِهِ",
@@ -179,7 +193,10 @@ object LiveTimeAndEventMatcher {
                         referenceBn = "সহীহ আল-বুখারী: ৪০০৮, জামে আত-তিরমিযী: ২৮৯১",
                         timingContextBn = "এশার পর ঘুমানোর পূর্বে এই সূরা দুটি পাঠ করা রাসূলুল্লাহ ﷺ-এর স্থায়ী সুন্নাত ছিল।",
                         actionTarget = "surah_baqarah",
-                        actionButtonTextBn = "সূরা বাকারার শেষ ২ আয়াত পড়ুন"
+                        actionButtonTextBn = "সূরা বাকারার শেষ ২ আয়াত ও রাতের আমল ➔",
+                        islamicLifeSectionIdTarget = "surah_baqarah_last_2",
+                        surahNumberTarget = 67,
+                        fullArticleBn = "রাসূলুল্লাহ ﷺ বলেছেন, রাতের বেলা সূরা আল বাকারার শেষ দুটি আয়াত (আমনার রাসূল...) তিলাওয়াত করলে তা রাতের যাবতীয় অনিষ্ট থেকে সুরক্ষার জন্য যথেষ্ট। পাশাপাশি প্রতি রাতে সূরা আল-মুলক তিলাওয়াত কবরের আযাব থেকে সুরক্ষাদাতা।"
                     )
                 )
             }
@@ -271,7 +288,8 @@ object LiveTimeAndEventMatcher {
                     referenceBn = "সহীহ মুসলিম: ১১৬২",
                     timingContextBn = "প্রতি সোমবারে রোযা রাখা ও বেশি বেশি কুরআন তিলাওয়াত করা নববী সুন্নাত।",
                     actionTarget = "islamic_habit",
-                    actionButtonTextBn = "ইসলামিক অভ্যাস ও ট্র্যাকার"
+                    actionButtonTextBn = "সোমবারের সুন্নাত ও আমল ট্র্যাকার ➔",
+                    fullArticleBn = "সোমবার ও বৃহস্পতিবার বান্দার আমল আল্লাহর দরবারে পেশ করা হয়। নবীজী ﷺ বলেছেন, 'আমি ভালোবাসি যে আমার আমল পেশ করার সময় আমি যেন সিয়ামরত থাকি।' (তিরমিযী ৭৪৭)।"
                 )
             )
         } else if (dayOfWeek == Calendar.WEDNESDAY) {
@@ -291,7 +309,9 @@ object LiveTimeAndEventMatcher {
                     referenceBn = "আল-আদাবুল মুফরাদ: ৭০৪, মুসনাদে আহমাদ: ১৪৬০০",
                     timingContextBn = "বুধবার যোহরের পর থেকে আসর পর্যন্ত সময় দু'আ কবুলিয়তের ঐতিহাসিক মুহূর্ত।",
                     actionTarget = "dua_acceptance",
-                    actionButtonTextBn = "দোয়া কবুল হওয়ার অধ্যায়"
+                    actionButtonTextBn = "দো'আ কবুল অধ্যায় ও মাসনূন দো'আ ➔",
+                    islamicLifeSectionIdTarget = "dua_acceptance_times",
+                    fullArticleBn = "হযরত জাবের (রা.) বর্ণিত এই সময়ে নবীজী ﷺ আহযাব বা খন্দকের যুদ্ধে মুশরিকদের বিরুদ্ধে আল্লাহর সাহায্য চেয়ে দো'আ করেছিলেন এবং আল্লাহ তায়ালা তা কবুল করে বিজয় দান করেছিলেন।"
                 )
             )
         }
@@ -303,7 +323,7 @@ object LiveTimeAndEventMatcher {
             list.add(
                 LiveDateAmolItem(
                     id = "live_ayyam_al_bidh",
-                    categoryBn = "আইয়ামে বীজের সুন্নাত • চাঁদের ১৪/১৫",
+                    categoryBn = "আইয়ামে বীজের সুন্নাত • চাঁদের ১৩/১৪/১৫",
                     titleBn = "আইয়ামে বীজের নফল সিয়াম ($hijriDay $hijriMonthNameBn)",
                     shortSubtitleBn = "প্রতি চান্দ্রমাসের ১৩, ১৪ ও ১৫ তারিখ রোযা রাখা সারা বছর রোযার সমান",
                     badgeBn = "সুন্নাত সিয়াম",
@@ -312,11 +332,12 @@ object LiveTimeAndEventMatcher {
                     arabicText = "اللَّهُمَّ إِنِّي نَوَيْتُ أَنْ أَصُومَ تَطَوُّعًا لِلَّهِ تَعَالَى",
                     pronunciationBn = "আল্লাহুম্মা ইন্নী নাওয়াইতু আন আসূমা তাত্বাওউ‘আন লিল্লাহি তা‘আলা।",
                     meaningBn = "হে আল্লাহ! আমি আপনার সন্তুষ্টির উদ্দেশ্যে নফল রোযা রাখার সংকল্প করছি।",
-                    virtuesBn = "রাসূলুল্লাহ ﷺ বলেছেন: ‘প্রতি চান্দ্রমাসের ১৩, ১৪ ও ১৫ তারিখ রোযা রাখা সারা বছর রোযা রাখার সমান।’ (সহীহ বুখারী ১৯৮১)",
+                    virtuesBn = "রাসূলুল্লাহ ﷺ বলেছেন: ‘প্রতি চান্দ্রমাসের ১৩, ১৪ ও ১৫ তারিখ রোযা রাখা সারা বছর রোযার সমান।’ (সহীহ বুখারী ১৯৮১)",
                     referenceBn = "সহীহ আল-বুখারী: ১৯৮১, সহীহ মুসলিম: ১১৫৯",
                     timingContextBn = "পূর্ণিমার আলোকিত দিনগুলোতে রোযা রাখা আত্মিক ও শারীরিক স্বাস্থ্যের জন্য অত্যন্ত উপকারী।",
                     actionTarget = "triple_calendar",
-                    actionButtonTextBn = "ইসলামিক ক্যালেন্ডার দেখুন"
+                    actionButtonTextBn = "আইয়ামে বীজের ফযিলত ও ক্যালেন্ডার ➔",
+                    fullArticleBn = "আইয়ামে বীজ হলো চান্দ্রমাসের উজ্জ্বলতম ৩ দিন (১৩, ১৪ ও ১৫ তারিখ)। নবীজী ﷺ সফরে বা স্বদেশে কখনই এই ৩ দিনের সিয়াম ছাড়তেন না। চিকিৎসাবিজ্ঞান অনুযায়ী পূর্ণিমার সময়ে চাঁদের আকর্ষণে মানবদেহের তরল ভারসাম্য বজায় রাখতে এই সিয়াম অতুলনীয়।"
                 )
             )
         }
@@ -339,7 +360,8 @@ object LiveTimeAndEventMatcher {
                     referenceBn = "সহীহ আল-বুখারী: ৩৮, সহীহ মুসলিম: ৭৬০",
                     timingContextBn = "রমাদানের প্রতি মুহূর্তই রহমত ও জাহান্নাম থেকে মুক্তির সুবর্ণ সুযোগ।",
                     actionTarget = "ramadan_intelligence",
-                    actionButtonTextBn = "রমাদান ইন্টেলিজেন্স"
+                    actionButtonTextBn = "রমাদান ইন্টেলিজেন্স ও সিয়াম গাইড ➔",
+                    fullArticleBn = "পবিত্র মাহে রমাদানে সিয়াম পালন ফরজ এবং রাতের কিয়াম (তারাবীহ) ক্ষমা লাভের সুবর্ণ পথ। শেষ দশকের প্রতিটি বেজোড় রাতে লাইলাতুল ক্বদরের সন্ধান করুন এবং অধিক পরিমাণে ইস্তিগফার ও কুরআন তিলাওয়াত করুন।"
                 )
             )
         }
@@ -367,7 +389,9 @@ object LiveTimeAndEventMatcher {
                     referenceBn = "সহীহ মুসলিম: ১১৬২, সহীহ আল-বুখারী: ৯৬৯",
                     timingContextBn = "যিলহজ্জের প্রথম দশ দিন আল্লাহর নিকট বছরের সকল দিন অপেক্ষা অধিক সম্মানিত।",
                     actionTarget = "dua_acceptance",
-                    actionButtonTextBn = "আরাফাহ ও যিলহজ্জ দো'আ"
+                    actionButtonTextBn = if (isArafah) "আরাফাহ দিবসের বিশেষ দো'আ ও আমল ➔" else "যিলহজ্জের ১০ দিনের ফযিলত ও আমল ➔",
+                    islamicLifeSectionIdTarget = "dua_acceptance_times",
+                    fullArticleBn = "যিলহজ্জের প্রথম ১০ দিন দুনিয়ার শ্রেষ্ঠতম দিনসমূহ। এতে রোযা রাখা, বেশি বেশি 'আল্লাহু আকবার, লা ইলাহা ইল্লাল্লাহ, আলহামদুলিল্লাহ' তাকবীর ও তাহলীল পাঠ এবং ৯ যিলহজ্জ আরাফাহর রোযা রাখা অতি মর্যাদাপূর্ণ।"
                 )
             )
         }
@@ -390,7 +414,8 @@ object LiveTimeAndEventMatcher {
                     referenceBn = "সহীহ মুসলিম: ১১৬২",
                     timingContextBn = "আশুরার রোযা মুহাররমের ৯ এবং ১০ তারিখে পালন করা উত্তম সুন্নাত।",
                     actionTarget = "triple_calendar",
-                    actionButtonTextBn = "ইসলামিক ক্যালেন্ডার"
+                    actionButtonTextBn = "আশুরার পূর্ণাঙ্গ ইতিহাস ও আমল ➔",
+                    fullArticleBn = "পবিত্র আশুরা (১০ই মুহাররম) আল্লাহর কুদরতের মহা নিদর্শন। এই দিনে মুসা (আ.) ও বনী ইসরাঈলকে ফেরাউনের কবল থেকে মুক্তি দেওয়া হয়েছিল। ইহুদিদের বিপরীত করতে নবীজী ﷺ ৯ ও ১০ মুহাররম দুই দিন রোযা রাখার তাগিদ দিয়েছেন।"
                 )
             )
         }
@@ -415,7 +440,8 @@ object LiveTimeAndEventMatcher {
                         referenceBn = event.primarySourceBn,
                         timingContextBn = "আজকের হিজরি তারিখে সংঘটিত ঐতিহাসিক তাৎপর্যপূর্ণ ঘটনা।",
                         actionTarget = "triple_calendar",
-                        actionButtonTextBn = "ক্যালেন্ডার ও ইতিহাস দেখুন"
+                        actionButtonTextBn = "ঐতিহাসিক ঘটনার বিবরণ ও ক্যালেন্ডার ➔",
+                        fullArticleBn = "${event.descriptionBn}\n\n• প্রামাণ্য পর্যালোচনা ও শিক্ষা:\n${event.scholarlyNoteBn ?: "ইসলামের ইতিহাস থেকে শিক্ষা গ্রহণ করে নিজেদের জীবনকে সুন্নাহসম্মত করা প্রত্যেক মুমিনের দায়িত্ব।"}\n\nসূত্র: ${event.primarySourceBn}"
                     )
                 )
             }
@@ -442,7 +468,9 @@ object LiveTimeAndEventMatcher {
                 referenceBn = "সুনান আবু দাঊদ: ১৪৯৩, জামে আত-তিরমিযী: ৩৪৭৫",
                 timingContextBn = "সালাতের ভিতরে, সালামের পূর্বে ও যেকোনো নেক ইচ্ছা পূরণে দো'আর শুরুতে পাঠ্য।",
                 actionTarget = "isme_azam",
-                actionButtonTextBn = "ইসমে আযম পূর্ণাঙ্গ সংকলন"
+                actionButtonTextBn = "ইসমে আযম পূর্ণাঙ্গ সংকলন ➔",
+                islamicLifeSectionIdTarget = "isme_azam",
+                fullArticleBn = "রাসূলুল্লাহ ﷺ এক ব্যক্তিকে এই দো'আ করতে শুনে বললেন: 'সে আল্লাহর সেই ইসমে আজমের মাধ্যমে প্রার্থনা করেছে, যা দিয়ে চাইলে তিনি দান করেন এবং দো'আ করলে তিনি কবুল করেন।' এটি দো'আর শুরুতে এবং সিজদায় পাঠ করা অতীব ফলদায়ক।"
             )
         )
 
@@ -463,7 +491,9 @@ object LiveTimeAndEventMatcher {
                 referenceBn = "সূরা আত-তাওবাহ্: ১২৯, সুনান আবু দাউদ: ৫০৮১",
                 timingContextBn = "প্রতিদিন সকাল ও সন্ধ্যায় এবং ফরজ সালাতের পর পাঠ অত্যন্ত বরকতময়।",
                 actionTarget = "tawbah_last_two",
-                actionButtonTextBn = "সূরা তাওবার শেষ ২ আয়াত দেখুন"
+                actionButtonTextBn = "সূরা তাওবার শেষ ২ আয়াত ও ফজিলত ➔",
+                islamicLifeSectionIdTarget = "tawbah_last_two",
+                fullArticleBn = "হযরত আবু দারদা (রা.) থেকে বর্ণিত: যে ব্যক্তি সকালে ও সন্ধ্যায় সাত বার 'হাসবিয়াল্লাহু লা ইলাহা ইল্লা হুয়া...' পাঠ করবে, তার দুনিয়া ও আখিরাতের সকল দুশ্চিন্তার জন্য আল্লাহ একাই যথেষ্ট হয়ে যাবেন।"
             )
         )
 

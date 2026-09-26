@@ -123,6 +123,7 @@ fun ToolsScreen(
     onOpenMosqueMode: () -> Unit = {},
     onOpenIslamicContextVerify: () -> Unit = {},
     onOpenQuranActionEngine: () -> Unit = {},
+    onOpenZakatCalculator: () -> Unit = {},
     onOpenIslamicLife: () -> Unit = {},
     contentPadding: PaddingValues = PaddingValues(0.dp)
 ) {
@@ -281,20 +282,6 @@ fun ToolsScreen(
                 onClick = onOpenIslamicHabitSystem
             ),
             ToolFeatureItem(
-                id = "tool_ask_before_you_act",
-                nameBn = "পদক্ষেপের আগে",
-                fullNameBn = "Ask Before You Act (সিদ্ধান্ত-সহায়িকা ও চুক্তি স্ক্যানার)",
-                subtitleBn = "পদক্ষেপ ও চুক্তির পূর্বে কাঠামোগত অনুসন্ধান ও ধারা বিশ্লেষণ",
-                descriptionBn = "আর্থিক সিদ্ধান্ত, ঋণ, চাকরি, শেয়ার বাজার বা চুক্তির পূর্বে বাইনারি ফতোয়া ছাড়াই কাঠামোগত অনুসন্ধান, নথির ধারা পরীক্ষা এবং কুরআন-সুন্নাহর আলোকে সিদ্ধান্ত-সহায়িকা।",
-                icon = Icons.Default.Psychology,
-                emoji = "⚖️",
-                badgeBn = "নতুন ফিচার",
-                primaryColor = Color(0xFF059669),
-                softContainerColor = Color(0xFFECFDF5),
-                highlights = listOf("সিদ্ধান্ত-সহায়িকা", "চুক্তি স্ক্যানার", "৮টি জীবনক্ষেত্র", "কুরআন-সুন্নাহ দলিল", "হালাল বিকল্প"),
-                onClick = onOpenAskBeforeYouAct
-            ),
-            ToolFeatureItem(
                 id = "tool_camera_lens",
                 nameBn = "আয়াত ক্যামেরা",
                 fullNameBn = "ক্যামেরায় আয়াত বিশ্লেষণ (Ayah Camera Lens)",
@@ -353,16 +340,16 @@ fun ToolsScreen(
             ToolFeatureItem(
                 id = "tool_zakat",
                 nameBn = "যাকাত ক্যালকুলেটর",
-                fullNameBn = "যাকাত ও নিসাব ক্যালকুলেটর",
-                subtitleBn = "স্বর্ণ, রূপা, নগদ অর্থ ও পণ্যের শরীয়াহ সম্মত ২.৫% হিসাব",
-                descriptionBn = "সোনা, রূপা, নগদ টাকা, ব্যাংক ব্যালেন্স ও বাণিজ্যিক পণ্যের মূল্য থেকে ঋণ বাদ দিয়ে উদ্বৃত্ত মালের ওপর নিসাব অনুযায়ী ২.৫% প্রদেয় যাকাত নিখুঁতভাবে গণনা করুন।",
+                fullNameBn = "স্মার্ট যাকাতুল মাল ক্যালকুলেটর (Zakat Calculator)",
+                subtitleBn = "স্বর্ণ, রূপা, নগদ অর্থ, ব্যবসা ও ঋণের পূর্ণাঙ্গ শরীয়াহ হিসাব",
+                descriptionBn = "হানাফী, শাফেয়ী, মালেকী ও হাম্বলী ফিকহ সমন্বয়ে স্বর্ণ-রৌপ্যের খাঁটি নিসাব, হাওল, নগদ, অলংকার, শেয়ার, বাণিজ্যিক পণ্য ও বাদযোগ্য ঋণের আইটেমাইজড প্রামাণ্য হিসাব।",
                 icon = Icons.Default.Calculate,
-                emoji = "💰",
-                badgeBn = "ক্যালকুলেটর",
-                primaryColor = Color(0xFFD97706),
-                softContainerColor = Color(0xFFFFFBEB),
-                highlights = listOf("নিসাব যাচাই", "স্বর্ণ-রৌপ্য মূল্য", "ঋণ সমন্বয়", "তাৎক্ষণিক ফলাফল"),
-                onClick = { showZakatDialog = true }
+                emoji = "⚖️",
+                badgeBn = "হিসাব ও ফিকহ",
+                primaryColor = Color(0xFF0F766E),
+                softContainerColor = Color(0xFFE0F2F1),
+                highlights = listOf("স্বর্ণ-রৌপ্য নিসাব", "৪ মাযহাবের বিধি", "শেয়ার ও অলংকার", "ঋণ সমন্বয়", "কুরআন-সুন্নাহর দলিল"),
+                onClick = onOpenZakatCalculator
             ),
             ToolFeatureItem(
                 id = "tool_allah_names",
@@ -856,12 +843,10 @@ fun ToolsScreen(
             }
         }
 
-        // Interactive Zakat Calculator Dialog
+        // Interactive Zakat Calculator Forwarder
         if (showZakatDialog) {
-            ZakatCalculatorDialog(
-                onDismiss = { showZakatDialog = false },
-                banglaFont = banglaFont
-            )
+            onOpenZakatCalculator()
+            showZakatDialog = false
         }
     }
 }
@@ -939,153 +924,4 @@ private fun ToolGridCard(
             )
         }
     }
-}
-
-/**
- * Interactive Zakat Calculator Dialog with Shariah Nisab calculation
- */
-@Composable
-private fun ZakatCalculatorDialog(
-    onDismiss: () -> Unit,
-    banglaFont: androidx.compose.ui.text.font.FontFamily?
-) {
-    var goldAmountStr by remember { mutableStateOf("") }
-    var silverAmountStr by remember { mutableStateOf("") }
-    var cashAmountStr by remember { mutableStateOf("") }
-    var businessGoodsStr by remember { mutableStateOf("") }
-    var debtStr by remember { mutableStateOf("") }
-
-    val goldVal = goldAmountStr.toDoubleOrNull() ?: 0.0
-    val silverVal = silverAmountStr.toDoubleOrNull() ?: 0.0
-    val cashVal = cashAmountStr.toDoubleOrNull() ?: 0.0
-    val businessVal = businessGoodsStr.toDoubleOrNull() ?: 0.0
-    val debtVal = debtStr.toDoubleOrNull() ?: 0.0
-
-    val totalAssets = (goldVal + silverVal + cashVal + businessVal) - debtVal
-    val zakatPayable = if (totalAssets > 0) totalAssets * 0.025 else 0.0
-
-    val formatter = remember { NumberFormat.getNumberInstance(Locale.getDefault()) }
-
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text(
-                    text = "যাকাতুল মাল ক্যালকুলেটর",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    fontFamily = banglaFont
-                )
-                IconButton(onClick = onDismiss) {
-                    Icon(Icons.Default.Close, contentDescription = "বন্ধ করুন")
-                }
-            }
-        },
-        text = {
-            Column(
-                modifier = Modifier.fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(10.dp)
-            ) {
-                Text(
-                    text = "এক বছর সঞ্চিত উদ্বৃত্ত সম্পদের ওপর শরীয়াহ অনুযায়ী ২.৫% যাকাত প্রযোজ্য।",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    fontFamily = banglaFont
-                )
-
-                OutlinedTextField(
-                    value = cashAmountStr,
-                    onValueChange = { cashAmountStr = it },
-                    label = { Text("নগদ অর্থ ও ব্যাংক ব্যালেন্স (টাকা)", fontFamily = banglaFont) },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth()
-                )
-
-                OutlinedTextField(
-                    value = goldAmountStr,
-                    onValueChange = { goldAmountStr = it },
-                    label = { Text("স্বর্ণের বর্তমান মূল্য (টাকা)", fontFamily = banglaFont) },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth()
-                )
-
-                OutlinedTextField(
-                    value = businessGoodsStr,
-                    onValueChange = { businessGoodsStr = it },
-                    label = { Text("ব্যবসায়িক পণ্যের মূল্য (টাকা)", fontFamily = banglaFont) },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth()
-                )
-
-                OutlinedTextField(
-                    value = debtStr,
-                    onValueChange = { debtStr = it },
-                    label = { Text("তাত্ক্ষণিক পরিশোধযোগ্য ঋণ (টাকা)", fontFamily = banglaFont) },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth()
-                )
-
-                HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
-
-                // Calculated Results Card
-                Card(
-                    shape = RoundedCornerShape(14.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.35f)
-                    ),
-                    border = BorderStroke(1.dp, IslamicGold),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Column(modifier = Modifier.padding(12.dp)) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Text(
-                                text = "মোট যাকাতযোগ্য সম্পদ:",
-                                style = MaterialTheme.typography.bodySmall,
-                                fontFamily = banglaFont
-                            )
-                            Text(
-                                text = "৳ ${formatter.format(totalAssets.coerceAtLeast(0.0))}",
-                                style = MaterialTheme.typography.bodySmall,
-                                fontWeight = FontWeight.Bold
-                            )
-                        }
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Text(
-                                text = "প্রদেয় যাকাত (২.৫%):",
-                                style = MaterialTheme.typography.titleSmall,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.primary,
-                                fontFamily = banglaFont
-                            )
-                            Text(
-                                text = "৳ ${formatter.format(zakatPayable)}",
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold,
-                                color = IslamicGold
-                            )
-                        }
-                    }
-                }
-            }
-        },
-        confirmButton = {
-            Button(
-                onClick = onDismiss,
-                colors = ButtonDefaults.buttonColors(containerColor = IslamicGold)
-            ) {
-                Text("সম্পন্ন", color = Color.Black, fontWeight = FontWeight.Bold, fontFamily = banglaFont)
-            }
-        }
-    )
 }

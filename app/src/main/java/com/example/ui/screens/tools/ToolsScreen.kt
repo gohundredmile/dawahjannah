@@ -123,6 +123,7 @@ fun ToolsScreen(
     onOpenMosqueMode: () -> Unit = {},
     onOpenIslamicContextVerify: () -> Unit = {},
     onOpenQuranActionEngine: () -> Unit = {},
+    onOpenIslamicLife: () -> Unit = {},
     contentPadding: PaddingValues = PaddingValues(0.dp)
 ) {
     val banglaFont = LocalBanglaFontFamily.current
@@ -208,6 +209,20 @@ fun ToolsScreen(
                 softContainerColor = Color(0xFFEEF2FF),
                 highlights = listOf("সিহাহ্ সিত্তাহ", "বুলুগুল মারাম", "রিয়াযুস স্বা-লিহীন", "৪০ হাদীস", "অধ্যায়ভিত্তিক সার্চ"),
                 onClick = onOpenHadithCollection
+            ),
+            ToolFeatureItem(
+                id = "tool_islamic_life",
+                nameBn = "ইসলামী জীবন",
+                fullNameBn = "ইসলামী জীবন (সুন্নাহসম্মত বিধিবিধান ও আমল)",
+                subtitleBn = "ইসমে আজম, রুকিয়াহ, সালাত ও দো'আ, বিশেষ আয়াত ও জীবনবিধান",
+                descriptionBn = "কুরআন ও সহীহ সুন্নাহর আলোকে ইসমে আজম, সহীহ রুকিয়াহ, সালাত ও দো'আ, সূরা আল ইমরান ২৬-২৭, সকাল-সন্ধ্যার আমল, সাইয়েদুল ইস্তেগফার, আসমাউল হুসনা, জুমার বিশেষ আমল, ৫ ওয়াক্ত সালাত শেষের দো'আ এবং জীবনঘনিষ্ঠ মাসনূন নির্দেশিকাসমূহ।",
+                icon = Icons.Default.MenuBook,
+                emoji = "📖",
+                badgeBn = "জীবনবিধান ও আমল",
+                primaryColor = Color(0xFFEA580C),
+                softContainerColor = Color(0xFFFFF7ED),
+                highlights = listOf("ইসমে আজম", "রুকিয়াহ", "সকাল-সন্ধ্যা", "সাইয়েদুল ইস্তেগফার", "বিশেষ অধ্যায়সমূহ"),
+                onClick = onOpenIslamicLife
             ),
             ToolFeatureItem(
                 id = "tool_mosque_mode",

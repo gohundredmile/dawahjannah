@@ -123,11 +123,29 @@ fun MoreScreen(
         }
     } else {
         val dynamicSections by viewModel.islamicLifeSections.collectAsState()
+        val featuredSectionIds = remember {
+            setOf(
+                "isme_azam",
+                "hadith_isme_azam",
+                "ruqyah_shariah_special",
+                "salat_and_dua_special",
+                "ali_imran_rizq_honor",
+                "morning_evening_special",
+                "sayyidul_istighfar_special",
+                "asmaul_husna_special",
+                "friday_special_duas",
+                "salam_before",
+                "five_waqt_after_salat",
+                "farz_after",
+                "night_awaken",
+                "dua_acceptance_times",
+                "fajr_between_and_after"
+            )
+        }
         val visibleSections = remember(dynamicSections) {
-            val nonExcluded = dynamicSections.filterNot { ExcludedIslamicLifeTopics.isExcluded(it.titleBn) }
-            val ismeAzamSections = nonExcluded.filter { it.id == "isme_azam" || it.id == "hadith_isme_azam" }
-            val otherSections = nonExcluded.filterNot { it.id == "isme_azam" || it.id == "hadith_isme_azam" }
-            ismeAzamSections + otherSections
+            dynamicSections.filterNot { 
+                ExcludedIslamicLifeTopics.isExcluded(it.titleBn) || featuredSectionIds.contains(it.id)
+            }
         }
         val salamSec = viewModel.getIslamicLifeSection("salam_before")
         val farzSec = viewModel.getIslamicLifeSection("farz_after")
@@ -325,6 +343,25 @@ fun MoreScreen(
                 Spacer(modifier = Modifier.height(10.dp))
             }
 
+            // Featured: Friday Special Duas & Amols (★★★শুক্রবার বিশেষ দোয়া ও আমল★★★)
+            val fridaySec = viewModel.getIslamicLifeSection("friday_special_duas")
+            item {
+                val countBn = CalendarHelper.toBanglaNumber(fridaySec?.items?.size ?: 45)
+                MoreFeatureItem(
+                    title = "★★★শুক্রবার বিশেষ দোয়া ও আমল★★★",
+                    subtitle = "জুমার দিনের মর্যাদা, প্রধান ৫ সুন্নত, অকল্পনীয় সওয়াব, সূরা কাহাফ, সা'আতুল ইজাবাহ ও বিশেষ সহীহ দো'আ",
+                    icon = Icons.Default.Mosque,
+                    iconTint = Color(0xFF0D9488),
+                    badge = "${countBn}টি আমল • নতুন",
+                    onClick = {
+                        (viewModel.getIslamicLifeSection("friday_special_duas") ?: IslamicLifeData.sections.find { it.id == "friday_special_duas" })?.let {
+                            viewModel.openIslamicLifeSection(it)
+                        }
+                    }
+                )
+                Spacer(modifier = Modifier.height(10.dp))
+            }
+
             // Featured: Salam Before Duas (New - 56 Duas with Live Aurora & Tabs)
             item {
                 val countBn = CalendarHelper.toBanglaNumber(salamSec?.items?.size ?: 56)
@@ -431,19 +468,6 @@ fun MoreScreen(
                 Spacer(modifier = Modifier.height(10.dp))
             }
 
-            // Featured: Qibla Direction Finder (Compass)
-            item {
-                MoreFeatureItem(
-                    title = "ক্বিবলা কম্পাস (Qibla Direction)",
-                    subtitle = "ম্যাগনেটোমিটার ও এক্সিলারোমিটার সেন্সর চালিত নির্ভুল কাবা দিক ও দূরত্ব নির্দেশক",
-                    icon = Icons.Default.Explore,
-                    iconTint = Color(0xFF059669),
-                    badge = "সেন্সর কম্পাস • নতুন",
-                    onClick = { viewModel.openQibla() }
-                )
-                Spacer(modifier = Modifier.height(10.dp))
-            }
-
             // Featured: Durood Sharif Amol with Live Aurora
             item {
                 MoreFeatureItem(
@@ -492,6 +516,19 @@ fun MoreScreen(
                     iconTint = Color(0xFF7C3AED),
                     badge = "ব্যক্তিগত নোট",
                     onClick = { viewModel.navigateToMoreSubScreen(MoreSubScreen.SCRATCHPAD) }
+                )
+                Spacer(modifier = Modifier.height(10.dp))
+            }
+
+            // Featured: Qibla Direction Finder (Compass)
+            item {
+                MoreFeatureItem(
+                    title = "ক্বিবলা কম্পাস (Qibla Direction)",
+                    subtitle = "ম্যাগনেটোমিটার ও এক্সিলারোমিটার সেন্সর চালিত নির্ভুল কাবা দিক ও দূরত্ব নির্দেশক",
+                    icon = Icons.Default.Explore,
+                    iconTint = Color(0xFF059669),
+                    badge = "সেন্সর কম্পাস • নতুন",
+                    onClick = { viewModel.openQibla() }
                 )
                 Spacer(modifier = Modifier.height(20.dp))
             }

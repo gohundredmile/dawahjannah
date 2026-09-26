@@ -313,18 +313,18 @@ fun HomeScreen(
                 isTopEight = true,
                 onClickAction = { showDetailedSehriIftar = true }
             ),
-            // ৯. ইসলামিক টুলস ও ল্যাব
+            // ৯. ইসলামী জীবন
             HomeFeatureItem(
-                id = "tools",
+                id = "islamic_life",
                 serialNumberBn = "০৯",
-                titleBn = "৯. ইসলামিক টুলস ও ল্যাব",
-                shortTitleBn = "টুলস",
-                subtitleBn = "Explain This Ayah ক্যামেরা, শুদ্ধিকরণ ল্যাব ও ক্বিবলা কম্পাস",
-                categoryBn = "স্মার্ট টুলস",
-                icon = Icons.Default.Build,
-                iconColor = Color(0xFF0D9488),
+                titleBn = "৯. ইসলামী জীবন",
+                shortTitleBn = "ইসলামী জীবন",
+                subtitleBn = "সুন্নাহসম্মত ইবাদত, বিধিবিধান, প্রবন্ধ ও বিশেষ আমলসমূহ",
+                categoryBn = "জীবন ও বিধান",
+                icon = Icons.Default.MenuBook,
+                iconColor = Color(0xFFEA580C),
                 isTopEight = true,
-                onClickAction = { viewModel.selectTab(AppTab.TOOLS) }
+                onClickAction = { viewModel.selectTab(AppTab.MORE) }
             ),
             // ১০. সালাতের সময়সূচী
             HomeFeatureItem(
@@ -522,6 +522,20 @@ fun HomeScreen(
                 onClickAction = {
                     viewModel.openQibla()
                 }
+            ),
+            // ২৩. ইসলামিক টুলস ও ল্যাব
+            HomeFeatureItem(
+                id = "tools",
+                serialNumberBn = "২৩",
+                titleBn = "২৩. ইসলামিক টুলস ও ল্যাব",
+                shortTitleBn = "টুলস ও ল্যাব",
+                subtitleBn = "Explain This Ayah ক্যামেরা, শুদ্ধিকরণ ল্যাব ও ক্বিবলা কম্পাস",
+                categoryBn = "স্মার্ট টুলস",
+                icon = Icons.Default.Build,
+                iconColor = Color(0xFF0D9488),
+                onClickAction = {
+                    viewModel.selectTab(AppTab.TOOLS)
+                }
             )
         )
     }
@@ -531,7 +545,7 @@ fun HomeScreen(
             allAppFeatures
         } else {
             val orderMap = exploreFeatureOrder.split(",").mapIndexed { index, id -> id to index }.toMap()
-            allAppFeatures.sortedBy { orderMap[it.id] ?: 999 }
+            allAppFeatures.sortedBy { orderMap[it.id] ?: allAppFeatures.indexOf(it) }
         }
         sortedList.renumberedFeatures()
     }

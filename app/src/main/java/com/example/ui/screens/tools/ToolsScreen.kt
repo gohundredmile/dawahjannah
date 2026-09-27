@@ -128,6 +128,7 @@ fun ToolsScreen(
     onOpenQuranAudioGenerator: () -> Unit = {},
     onOpenSalahGuide: () -> Unit = {},
     onOpenQuranTopics: () -> Unit = {},
+    onOpenHadithTopics: () -> Unit = {},
     onOpenIslamicLife: () -> Unit = {},
     contentPadding: PaddingValues = PaddingValues(0.dp)
 ) {
@@ -158,6 +159,20 @@ fun ToolsScreen(
                 softContainerColor = Color(0xFFE8F5E9),
                 highlights = listOf("১৬টি ক্যাটাগরি", "১০০+ বিষয়", "অনুসন্ধান ও ফিল্টার", "প্রসঙ্গসহ দেখুন", "বুকমার্ক", "অফলাইন সম্পূর্ণ"),
                 onClick = onOpenQuranTopics
+            ),
+            ToolFeatureItem(
+                id = "tool_hadith_topics",
+                nameBn = "বিষয় ভিত্তিক সহীহ হাদিস",
+                fullNameBn = "বিষয় ভিত্তিক সহীহ হাদিস (Hadith Topics)",
+                subtitleBn = "সিহাহ সিত্তাহ ও প্রামাণ্য হাদিস সূচীপত্র • সরাসরি হাদিস • সনদ ও শিক্ষা",
+                descriptionBn = "সহীহ বুখারী, সহীহ মুসলিম, রিয়াযুস স্বা-লিহীন ও ইমাম নববীর ৪০ হাদিস থেকে ঈমান, সালাত, চরিত্র, পিতামাতা, ভ্রাতৃত্ব, তাকওয়া ও সমাজ সহ জীবনঘনিষ্ঠ প্রতিটি বিষয়ে সহীহ হাদিসের প্রামাণ্য সংকলন। বিশুদ্ধ আরবি, বাংলা অনুবাদ, ইংরেজি, রাবী ও প্রেক্ষাপটসহ অফলাইন ব্রাউজিং।",
+                icon = Icons.Default.CollectionsBookmark,
+                emoji = "📚",
+                badgeBn = "নতুন প্রামাণ্য",
+                primaryColor = Color(0xFF4338CA),
+                softContainerColor = Color(0xFFEEF2FF),
+                highlights = listOf("সিহাহ সিত্তাহ", "সহীহ ও হাসান মান", "জীবনঘনিষ্ঠ প্রশ্ন", "বুকমার্ক", "শেয়ার", "অফলাইন"),
+                onClick = onOpenHadithTopics
             ),
             ToolFeatureItem(
                 id = "tool_salah_guide",

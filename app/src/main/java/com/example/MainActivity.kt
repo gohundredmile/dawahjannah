@@ -65,6 +65,7 @@ import com.example.ui.screens.tools.ToolsScreen
 import com.example.ui.screens.tools.QuranAudioGeneratorScreen
 import com.example.ui.screens.salah.SalahGuideMainScreen
 import com.example.ui.screens.tools.qurantopics.QuranTopicsScreen
+import com.example.ui.screens.tools.hadithtopics.HadithTopicsScreen
 import com.example.ui.screens.tools.zakat.ZakatCalculatorScreen
 import com.example.ui.theme.DawahTheme
 import com.example.ui.viewmodel.AppTab
@@ -266,6 +267,7 @@ class MainActivity : ComponentActivity() {
                                             onOpenQuranAudioGenerator = { viewModel.openQuranAudioGenerator() },
                                             onOpenSalahGuide = { viewModel.openSalahGuide() },
                                             onOpenQuranTopics = { viewModel.openQuranTopics() },
+                                            onOpenHadithTopics = { viewModel.openHadithTopics() },
                                             onOpenIslamicLife = { viewModel.selectTab(AppTab.MORE) },
                                             contentPadding = innerPadding
                                         )
@@ -355,6 +357,12 @@ class MainActivity : ComponentActivity() {
                                         ToolsSubScreen.QURAN_TOPICS -> QuranTopicsScreen(
                                             onNavigateBack = { viewModel.navigateBack() },
                                             onOpenInQuran = { surahNumber -> viewModel.openHolyQuran(surahNumber) },
+                                            contentPadding = innerPadding
+                                        )
+                                        ToolsSubScreen.HADITH_TOPICS -> HadithTopicsScreen(
+                                            onNavigateBack = { viewModel.navigateBack() },
+                                            onOpenInHadithCollection = { bookSlug -> viewModel.openHadithCollection(bookSlug) },
+                                            onOpenQuranSurah = { surahNumber -> viewModel.openHolyQuran(surahNumber) },
                                             contentPadding = innerPadding
                                         )
                                     }

@@ -14,7 +14,12 @@ object QuranTopicCatalog {
         get() = QuranTopicCategories.needBasedEntries
 
     val allTopics: List<QuranTopic> by lazy {
-        QuranTopicsPart1.topics + QuranTopicsPart2.topics + QuranTopicsPart3.topics
+        QuranTopicsPart1.topics +
+        QuranTopicsPart2.topics +
+        QuranTopicsPart3.topics +
+        QuranTopicsPart4.topics +
+        QuranTopicsPart5.topics +
+        QuranTopicsPart6.topics
     }
 
     val totalTopicCount: Int

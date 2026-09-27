@@ -15,7 +15,15 @@ object HadithTopicCatalog {
         get() = HadithTopicCategories.needBasedEntries
 
     val allTopics: List<HadithTopic> by lazy {
-        HadithTopicDataPart1.topics + HadithTopicDataPart2.topics
+        HadithTopicDataPart1.topics +
+        HadithTopicDataPart2.topics +
+        HadithTopicDataPart3.topics +
+        HadithTopicDataPart4.topics +
+        HadithTopicDataPart5.topics +
+        HadithTopicDataPart6.topics +
+        HadithTopicDataPart7.topics +
+        HadithTopicDataPart8.topics +
+        HadithTopicDataPart9.topics
     }
 
     val totalTopicCount: Int

@@ -172,6 +172,174 @@ object HadithTopicCategories {
             subtitleBn = "উত্তম চরিত্র, কুরআন শিক্ষা ও নেক আমলের হাদিস",
             targetTopicId = "topic_jannah_deeds",
             iconEmoji = "🌸"
+        ),
+        NeedBasedHadithEntry(
+            id = "need_sawm",
+            questionBn = "রমাদান ও সিয়ামের ফযীলত কী?",
+            subtitleBn = "অতীতের গুনাহ মাফ ও জাহান্নাম থেকে আত্মরক্ষার ঢাল",
+            targetTopicId = "topic_sawm_ramadan_hadith",
+            iconEmoji = "🌙"
+        ),
+        NeedBasedHadithEntry(
+            id = "need_zakat",
+            questionBn = "দান-সাদাকাহর বরকত ও ফজিলত কী?",
+            subtitleBn = "সম্পদ বৃদ্ধি, বালা-মুসিবত দূর ও হাসিমুখে সদকা",
+            targetTopicId = "topic_zakat_sadaqah_hadith",
+            iconEmoji = "🤝"
+        ),
+        NeedBasedHadithEntry(
+            id = "need_neighbor",
+            questionBn = "প্রতিবেশীর হক ও অধিকার কী কী?",
+            subtitleBn = "কষ্ট না দেওয়া, সমাদর ও জিবরীলের তাগিদের হাদিস",
+            targetTopicId = "topic_neighbor_rights",
+            iconEmoji = "🏡"
+        ),
+        NeedBasedHadithEntry(
+            id = "need_kinship",
+            questionBn = "আত্মীয়তার সম্পর্ক বজায় রাখার সুসংবাদ কী?",
+            subtitleBn = "রিজিকে প্রাচুর্য, দীর্ঘায়ু ও সম্পর্ক না ভাঙার হাদিস",
+            targetTopicId = "topic_kinship_silat_rahim",
+            iconEmoji = "👨‍👩‍👧‍👦"
+        ),
+        NeedBasedHadithEntry(
+            id = "need_marriage",
+            questionBn = "স্ত্রীর সাথে কেমন আচরণ করব ও বিবাহ?",
+            subtitleBn = "স্ত্রীর কাছে সর্বোত্তম হওয়া ও যুবসমাজের প্রতি নসীহত",
+            targetTopicId = "topic_marriage_family_hadith",
+            iconEmoji = "💍"
+        ),
+        NeedBasedHadithEntry(
+            id = "need_sick",
+            questionBn = "অসুস্থ হলে ও রোগমুক্তি (শিফা) লাভের সুন্নাত কী?",
+            subtitleBn = "রোগীর সেবা, কালোজিরা ও সুন্নাহ চিকিৎসার হাদিস",
+            targetTopicId = "topic_visiting_sick_sunnah_cure",
+            iconEmoji = "🌿"
+        ),
+        NeedBasedHadithEntry(
+            id = "need_death",
+            questionBn = "মৃত্যুর স্মরণ ও কবরের প্রশ্নোত্তর প্রস্তুতি",
+            subtitleBn = "মুনকার-নাকীর ও স্বাদ বিনষ্টকারী মউতের স্মরণ",
+            targetTopicId = "topic_death_remembrance",
+            iconEmoji = "⏳"
+        ),
+        NeedBasedHadithEntry(
+            id = "need_hell",
+            questionBn = "জাহান্নামের আগুন থেকে বাঁচার সহজ উপায় কী?",
+            subtitleBn = "খেজুরের টুকরো বা ভালো কথার বিনিময়ে আত্মরক্ষা",
+            targetTopicId = "topic_hell_torments",
+            iconEmoji = "🔥"
+        ),
+        NeedBasedHadithEntry(
+            id = "need_durood",
+            questionBn = "দরূদ শরীফ পাঠ ও নবীজির প্রতি ভালোবাসা",
+            subtitleBn = "দশটি রহমত নাযিল ও ঈমানের শ্রেষ্ঠ মাপকাঠি",
+            targetTopicId = "topic_durood_love_prophet",
+            iconEmoji = "💚"
+        ),
+        NeedBasedHadithEntry(
+            id = "need_humility",
+            questionBn = "বিনয় ও অহংকারমুক্ত জীবন যাপন করার উপায় কী?",
+            subtitleBn = "মর্যাদা বৃদ্ধি, কোমল আচরণ ও অহংকারের কঠিন পরিণতি",
+            targetTopicId = "topic_humility_tawadu",
+            iconEmoji = "🌱"
+        ),
+        NeedBasedHadithEntry(
+            id = "need_bidah",
+            questionBn = "বিদ‘আত ও দ্বীনে নতুন আবিষ্কার থেকে বাঁচার উপায়?",
+            subtitleBn = "সুন্নাতকে দাঁত দিয়ে আঁকড়ে ধরা ও প্রত্যাখ্যাত আমল",
+            targetTopicId = "topic_bidah_rejection",
+            iconEmoji = "🚫"
+        ),
+        NeedBasedHadithEntry(
+            id = "need_tongue",
+            questionBn = "জিহ্বা সংযত রাখা ও গীবতের ভয়াবহতা কী?",
+            subtitleBn = "ভালো কথা বা নীরবতা এবং জান্নাতের জামিন লাভের হাদিস",
+            targetTopicId = "topic_guarding_tongue_gheebat",
+            iconEmoji = "🤐"
+        ),
+        NeedBasedHadithEntry(
+            id = "need_tahajjud",
+            questionBn = "তাহাজ্জুদ ও রাতের নিস্তব্ধতায় রবের সান্নিধ্য",
+            subtitleBn = "ফরজের পর শ্রেষ্ঠ সালাত ও শেষ রাতে দোয়া কবুল",
+            targetTopicId = "topic_tahajjud_qiyam",
+            iconEmoji = "🌌"
+        ),
+        NeedBasedHadithEntry(
+            id = "need_jumuah",
+            questionBn = "জুমার দিনের মর্যাদা ও খুতবার সুন্নাত আদব",
+            subtitleBn = "দিনের শ্রেষ্ঠত্ব, গোসল, সুবাস ও দোয়া কবুলের মুহূর্ত",
+            targetTopicId = "topic_jumuah_virtues_adab",
+            iconEmoji = "🕌"
+        ),
+        NeedBasedHadithEntry(
+            id = "need_orphans",
+            questionBn = "এতিম ও অসহায় বিধবাদের সাহায্য করার সওয়াব",
+            subtitleBn = "জান্নাতে নবীজির সাথে থাকার দুর্লভ সুসংবাদ",
+            targetTopicId = "topic_orphans_widows_rights",
+            iconEmoji = "🤲"
+        ),
+        NeedBasedHadithEntry(
+            id = "need_daughters",
+            questionBn = "কন্যা সন্তান প্রতিপালন ও জান্নাতের সান্নিধ্য",
+            subtitleBn = "স্নেহ-যত্নে বড় করার জান্নাতী পুরস্কার ও সুশিক্ষা",
+            targetTopicId = "topic_raising_daughters_children",
+            iconEmoji = "👧"
+        ),
+        NeedBasedHadithEntry(
+            id = "need_youth",
+            questionBn = "যুবসমাজের চারিত্রিক পবিত্রতা ও যৌবনের ইবাদত",
+            subtitleBn = "আরশের ছায়াতলে আশ্রয় ও পাঁচটি মহামূল্যবান সুযোগ",
+            targetTopicId = "topic_youth_chastity",
+            iconEmoji = "⚡"
+        ),
+        NeedBasedHadithEntry(
+            id = "need_riba",
+            questionBn = "সুদের ভয়াবহ গুনাহ ও হারাম থেকে সুরক্ষার উপায়",
+            subtitleBn = "সুদের বিরুদ্ধে লানত ও হালাল খাদ্যের অপরিহার্যতা",
+            targetTopicId = "topic_riba_interest_severity",
+            iconEmoji = "⚠️"
+        ),
+        NeedBasedHadithEntry(
+            id = "need_tawakkul",
+            questionBn = "আল্লাহর ওপর ভরসা (তাওয়াক্কুল) ও তাকদীরে সন্তুষ্টি",
+            subtitleBn = "পাখির মতো রিযিক ও ভাগ্যের ফয়সালায় শান্তি খোঁজা",
+            targetTopicId = "topic_tawakkul_qadar",
+            iconEmoji = "🕊️"
+        ),
+        NeedBasedHadithEntry(
+            id = "need_hasad",
+            questionBn = "হিংসা-বিদ্বেষ থেকে অন্তরকে পবিত্র রাখার আমল",
+            subtitleBn = "নেক আমল ভস্ম হওয়া থেকে রক্ষা ও ক্ষমা লাভের শর্ত",
+            targetTopicId = "topic_hasad_kibr",
+            iconEmoji = "🔥"
+        ),
+        NeedBasedHadithEntry(
+            id = "need_janazah",
+            questionBn = "জানাযার নামাজ ও কবর জিয়ারতের সওয়াব কত?",
+            subtitleBn = "উহুদ পাহাড়সম দুই কিরাত নেকি ও আখিরাতের স্মরণ",
+            targetTopicId = "topic_janazah_cemetery_rights",
+            iconEmoji = "⚰️"
+        ),
+        NeedBasedHadithEntry(
+            id = "need_shafaat",
+            questionBn = "রাসুলুল্লাহ (ﷺ)-এর শাফায়াত ও কাউসারের সুসংবাদ",
+            subtitleBn = "কিয়ামতের উত্তাপে স্নিগ্ধ সুধা পান ও সুপারিশের সুসংবাদ",
+            targetTopicId = "topic_shafaat_kawthar",
+            iconEmoji = "⛲"
+        ),
+        NeedBasedHadithEntry(
+            id = "need_sleep",
+            questionBn = "সুন্নাত অনুযায়ী ঘুমানো ও সত্য স্বপ্নের পথনির্দেশ",
+            subtitleBn = "ঘুমানোর মাসনূন দোয়া ও দুঃস্বপ্ন দেখলে করণীয়",
+            targetTopicId = "topic_sleeping_dream_sunnah",
+            iconEmoji = "🛌"
+        ),
+        NeedBasedHadithEntry(
+            id = "need_fitnah",
+            questionBn = "দাজ্জাল ও শেষ যামানার ফিতনা থেকে মুক্তির আমল",
+            subtitleBn = "সূরা কাহাফের প্রথম দশ আয়াত ও তাশাহহুদের চার আশ্রয়",
+            targetTopicId = "topic_protection_fitnah_dajjal",
+            iconEmoji = "🛡️"
         )
     )
 }

@@ -222,6 +222,62 @@ object QuranTopicCategories {
             targetTopicId = "topic_marriage",
             subtitleBn = "স্নেহ, মায়া ও পারস্পরিক শ্রদ্ধা",
             iconEmoji = "💍"
+        ),
+        NeedBasedTopicEntry(
+            id = "need_shifa",
+            emotionOrNeedBn = "আমি অসুস্থ ও কুরআনে আরোগ্য (শিফা) চাই",
+            targetTopicId = "topic_shifa_healing",
+            subtitleBn = "আল্লাহর কালামে শারীরিক ও মানসিক রোগের শিফা",
+            iconEmoji = "🌿"
+        ),
+        NeedBasedTopicEntry(
+            id = "need_mercy",
+            emotionOrNeedBn = "আমি চরম পাপে অনুতপ্ত ও নিরাশ হতে চাই না",
+            targetTopicId = "topic_mercy_no_despair",
+            subtitleBn = "আল্লাহর অসীম রহমত ও সকল পাপ ক্ষমার আশ্বাস",
+            iconEmoji = "✨"
+        ),
+        NeedBasedTopicEntry(
+            id = "need_gratitude",
+            emotionOrNeedBn = "আমি আল্লাহর নিয়ামতের শুকরিয়া আদায় করতে চাই",
+            targetTopicId = "topic_gratitude_shukr",
+            subtitleBn = "কৃতজ্ঞতা আদায় ও নিয়ামত বৃদ্ধির ঐশী প্রতিশ্রুতি",
+            iconEmoji = "💎"
+        ),
+        NeedBasedTopicEntry(
+            id = "need_anger",
+            emotionOrNeedBn = "আমি রাগ, ক্ষোভ ও অহংকার দমন করতে চাই",
+            targetTopicId = "topic_forgiveness_anger",
+            subtitleBn = "ক্রোধ সংবরণ ও ক্ষমার মহৎ সওয়াব",
+            iconEmoji = "🕊️"
+        ),
+        NeedBasedTopicEntry(
+            id = "need_death",
+            emotionOrNeedBn = "মৃত্যুর স্মরণ ও পরকালের প্রস্তুতি নিতে চাই",
+            targetTopicId = "topic_death_barzakh",
+            subtitleBn = "মৃত্যু, বারযাখ ও প্রকৃত সফলতার রূপরেখা",
+            iconEmoji = "⏳"
+        ),
+        NeedBasedTopicEntry(
+            id = "need_knowledge",
+            emotionOrNeedBn = "আমি জ্ঞান ও প্রজ্ঞা বৃদ্ধি করতে চাই",
+            targetTopicId = "topic_knowledge_wisdom",
+            subtitleBn = "ইলমের মর্যাদা ও চিন্তাশীলতার তাগিদ",
+            iconEmoji = "💡"
+        ),
+        NeedBasedTopicEntry(
+            id = "need_taqwa",
+            emotionOrNeedBn = "আমি তাকওয়া ও খোদাভীতি অর্জন করতে চাই",
+            targetTopicId = "topic_taqwa",
+            subtitleBn = "মুত্তাকীদের সম্মান ও সংকট মুক্তির প্রতিশ্রুতি",
+            iconEmoji = "🛡️"
+        ),
+        NeedBasedTopicEntry(
+            id = "need_charity",
+            emotionOrNeedBn = "আমি দান-সাদাকাহ ও যাকাত আদায় করতে চাই",
+            targetTopicId = "topic_zakat_sadaqah",
+            subtitleBn = "সাতশত গুণ সওয়াব ও পবিত্রতার বিধান",
+            iconEmoji = "🤝"
         )
     )
 }

@@ -157,7 +157,7 @@ fun ToolsScreen(
                 badgeBn = "নতুন ফ্ল্যাগশিপ",
                 primaryColor = Color(0xFF047857),
                 softContainerColor = Color(0xFFE8F5E9),
-                highlights = listOf("১৬টি ক্যাটাগরি", "১০০+ বিষয়", "অনুসন্ধান ও ফিল্টার", "প্রসঙ্গসহ দেখুন", "বুকমার্ক", "অফলাইন সম্পূর্ণ"),
+                highlights = listOf("১৬টি ক্যাটাগরি", "৫০+ পূর্ণাঙ্গ বিষয়", "অনুসন্ধান ও ফিল্টার", "প্রসঙ্গসহ দেখুন", "বুকমার্ক", "অফলাইন সম্পূর্ণ"),
                 onClick = onOpenQuranTopics
             ),
             ToolFeatureItem(

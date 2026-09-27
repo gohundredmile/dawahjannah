@@ -64,6 +64,7 @@ import com.example.ui.screens.tools.SmartQuranSearchScreen
 import com.example.ui.screens.tools.ToolsScreen
 import com.example.ui.screens.tools.QuranAudioGeneratorScreen
 import com.example.ui.screens.salah.SalahGuideMainScreen
+import com.example.ui.screens.tools.qurantopics.QuranTopicsScreen
 import com.example.ui.screens.tools.zakat.ZakatCalculatorScreen
 import com.example.ui.theme.DawahTheme
 import com.example.ui.viewmodel.AppTab
@@ -162,7 +163,8 @@ class MainActivity : ComponentActivity() {
                                 currentToolsSub == ToolsSubScreen.FRIDAY_MODE ||
                                 currentToolsSub == ToolsSubScreen.ISLAMIC_CONTEXT_VERIFY ||
                                 currentToolsSub == ToolsSubScreen.QURAN_AUDIO_GENERATOR ||
-                                currentToolsSub == ToolsSubScreen.SALAH_GUIDE
+                                currentToolsSub == ToolsSubScreen.SALAH_GUIDE ||
+                                currentToolsSub == ToolsSubScreen.QURAN_TOPICS
                             )) {
                                 // Dedicated full-width top app bars with custom actions
                             } else if (!(currentTab == AppTab.MORE && currentMoreSub != MoreSubScreen.MAIN)) {
@@ -263,6 +265,7 @@ class MainActivity : ComponentActivity() {
                                             onOpenZakatCalculator = { viewModel.openZakatCalculator() },
                                             onOpenQuranAudioGenerator = { viewModel.openQuranAudioGenerator() },
                                             onOpenSalahGuide = { viewModel.openSalahGuide() },
+                                            onOpenQuranTopics = { viewModel.openQuranTopics() },
                                             onOpenIslamicLife = { viewModel.selectTab(AppTab.MORE) },
                                             contentPadding = innerPadding
                                         )
@@ -347,6 +350,11 @@ class MainActivity : ComponentActivity() {
                                         )
                                         ToolsSubScreen.SALAH_GUIDE -> SalahGuideMainScreen(
                                             onNavigateBack = { viewModel.navigateBack() },
+                                            contentPadding = innerPadding
+                                        )
+                                        ToolsSubScreen.QURAN_TOPICS -> QuranTopicsScreen(
+                                            onNavigateBack = { viewModel.navigateBack() },
+                                            onOpenInQuran = { surahNumber -> viewModel.openHolyQuran(surahNumber) },
                                             contentPadding = innerPadding
                                         )
                                     }

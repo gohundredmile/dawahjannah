@@ -127,6 +127,7 @@ fun ToolsScreen(
     onOpenZakatCalculator: () -> Unit = {},
     onOpenQuranAudioGenerator: () -> Unit = {},
     onOpenSalahGuide: () -> Unit = {},
+    onOpenQuranTopics: () -> Unit = {},
     onOpenIslamicLife: () -> Unit = {},
     contentPadding: PaddingValues = PaddingValues(0.dp)
 ) {
@@ -144,6 +145,20 @@ fun ToolsScreen(
     // All features list
     val allFeatures = remember {
         listOf(
+            ToolFeatureItem(
+                id = "tool_quran_topics",
+                nameBn = "বিষয় ভিত্তিক কোরআনের আয়াত",
+                fullNameBn = "বিষয় ভিত্তিক কোরআনের আয়াত (Quran Topics)",
+                subtitleBn = "কুরআনের পূর্ণাঙ্গ বিষয়ভিত্তিক ইনডেক্স • সরাসরি আয়াত • অর্থ ও অনুসন্ধান",
+                descriptionBn = "কুরআনুল কারীমের প্রতিটি জীবনঘনিষ্ঠ বিষয়—তাওহীদ, আম্বিয়া, সালাত, চরিত্র, পরিবার, সম্পদ, হালাল-হারাম, মানসিক শান্তি, জান্নাত, জাহান্নাম ও প্রাণীজগত সহ ১৬টি প্রধান ক্যাটাগরি ও ১০০+ বিষয়ে সাজানো প্রামাণ্য অফলাইন আয়াত সংকলন। যেকোনো বিষয়ের সংশ্লিষ্ট আয়াত আরবি, বাংলা অনুবাদ, ইংরেজি এবং প্রেক্ষাপট সহ অনায়াসে পড়ুন ও শেয়ার করুন।",
+                icon = Icons.Default.MenuBook,
+                emoji = "📖",
+                badgeBn = "নতুন ফ্ল্যাগশিপ",
+                primaryColor = Color(0xFF047857),
+                softContainerColor = Color(0xFFE8F5E9),
+                highlights = listOf("১৬টি ক্যাটাগরি", "১০০+ বিষয়", "অনুসন্ধান ও ফিল্টার", "প্রসঙ্গসহ দেখুন", "বুকমার্ক", "অফলাইন সম্পূর্ণ"),
+                onClick = onOpenQuranTopics
+            ),
             ToolFeatureItem(
                 id = "tool_salah_guide",
                 nameBn = "নামাজের পূর্ণাঙ্গ গাইড",

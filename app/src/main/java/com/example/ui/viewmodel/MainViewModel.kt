@@ -120,7 +120,8 @@ enum class ToolsSubScreen(val titleBn: String) {
     QURAN_ACTION_ENGINE("Quran → Action Engine (কুরআন → আমল ইঞ্জিন)"),
     ZAKAT_CALCULATOR("স্মার্ট যাকাতুল মাল ক্যালকুলেটর (Zakat Calculator)"),
     QURAN_AUDIO_GENERATOR("কুরআন অডিও তিলাওয়াত জেনারেটর"),
-    SALAH_GUIDE("নামাজের পূর্ণাঙ্গ গাইড")
+    SALAH_GUIDE("নামাজের পূর্ণাঙ্গ গাইড"),
+    QURAN_TOPICS("বিষয় ভিত্তিক কোরআনের আয়াত (Quran Topics)")
 }
 
 sealed class AppNavDestination {
@@ -364,6 +365,12 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     fun openSalahGuide() {
         pushCurrentState()
         _toolsSubScreen.value = ToolsSubScreen.SALAH_GUIDE
+        _currentTab.value = AppTab.TOOLS
+    }
+
+    fun openQuranTopics() {
+        pushCurrentState()
+        _toolsSubScreen.value = ToolsSubScreen.QURAN_TOPICS
         _currentTab.value = AppTab.TOOLS
     }
 

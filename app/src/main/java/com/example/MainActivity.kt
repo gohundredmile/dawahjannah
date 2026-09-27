@@ -154,7 +154,14 @@ class MainActivity : ComponentActivity() {
                                     onOpenAppSettings = { viewModel.openSettings(AppTab.HOME) },
                                     onOpenRearrangeCards = { viewModel.openRearrangeHomeScreenCards() }
                                 )
-                            } else if (currentTab == AppTab.TOOLS && (currentToolsSub == ToolsSubScreen.EXPLAIN_AYAH_CAMERA || currentToolsSub == ToolsSubScreen.HOLY_QURAN || currentToolsSub == ToolsSubScreen.HADITH_COLLECTION || currentToolsSub == ToolsSubScreen.FRIDAY_MODE || currentToolsSub == ToolsSubScreen.ISLAMIC_CONTEXT_VERIFY)) {
+                            } else if (currentTab == AppTab.TOOLS && (
+                                currentToolsSub == ToolsSubScreen.EXPLAIN_AYAH_CAMERA ||
+                                currentToolsSub == ToolsSubScreen.HOLY_QURAN ||
+                                currentToolsSub == ToolsSubScreen.HADITH_COLLECTION ||
+                                currentToolsSub == ToolsSubScreen.FRIDAY_MODE ||
+                                currentToolsSub == ToolsSubScreen.ISLAMIC_CONTEXT_VERIFY ||
+                                currentToolsSub == ToolsSubScreen.QURAN_AUDIO_GENERATOR
+                            )) {
                                 // Dedicated full-width top app bars with custom actions
                             } else if (!(currentTab == AppTab.MORE && currentMoreSub != MoreSubScreen.MAIN)) {
                                 val showTopBarBack = currentTab == AppTab.TASBIH || currentTab == AppTab.DUA || (currentTab == AppTab.TOOLS && currentToolsSub != ToolsSubScreen.MAIN) || (currentTab == AppTab.MORE && viewModel.canNavigateBack())
@@ -332,7 +339,8 @@ class MainActivity : ComponentActivity() {
                                         )
                                         ToolsSubScreen.QURAN_AUDIO_GENERATOR -> QuranAudioGeneratorScreen(
                                             onNavigateBack = { viewModel.navigateBack() },
-                                            generatorEngine = viewModel.quranAudioGeneratorEngine
+                                            generatorEngine = viewModel.quranAudioGeneratorEngine,
+                                            contentPadding = innerPadding
                                         )
                                     }
                                 }

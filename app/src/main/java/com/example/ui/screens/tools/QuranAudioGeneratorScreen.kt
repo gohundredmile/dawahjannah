@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -120,7 +121,8 @@ import com.example.util.QuranAudioGeneratorEngine
 @Composable
 fun QuranAudioGeneratorScreen(
     onNavigateBack: () -> Unit,
-    generatorEngine: QuranAudioGeneratorEngine
+    generatorEngine: QuranAudioGeneratorEngine,
+    contentPadding: PaddingValues = PaddingValues()
 ) {
     val banglaFont = LocalBanglaFontFamily.current
 
@@ -147,6 +149,10 @@ fun QuranAudioGeneratorScreen(
     }
 
     Scaffold(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(top = contentPadding.calculateTopPadding()),
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
         topBar = {
             TopAppBar(
                 title = {
@@ -207,7 +213,8 @@ fun QuranAudioGeneratorScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(paddingValues)
+                .padding(top = paddingValues.calculateTopPadding())
+                .padding(bottom = contentPadding.calculateBottomPadding())
         ) {
             // Tab Row
             TabRow(
@@ -483,7 +490,7 @@ private fun GeneratorSetupTab(
         modifier = Modifier
             .fillMaxSize()
             .padding(horizontal = 16.dp),
-        contentPadding = PaddingValues(top = 16.dp, bottom = 40.dp),
+        contentPadding = PaddingValues(top = 16.dp, bottom = 48.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         // Smart Presets Carousel
@@ -1066,17 +1073,20 @@ private fun GeneratorSetupTab(
 
         // Action Buttons: Start Session & Save Preset
         item {
+            Spacer(modifier = Modifier.height(4.dp))
             Row(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 16.dp),
                 horizontalArrangement = Arrangement.spacedBy(10.dp)
             ) {
                 OutlinedButton(
                     onClick = onOpenSaveDialog,
                     shape = RoundedCornerShape(14.dp),
-                    border = BorderStroke(1.dp, Color(0xFF047857)),
+                    border = BorderStroke(1.5.dp, Color(0xFF047857)),
                     modifier = Modifier
                         .weight(1f)
-                        .height(52.dp)
+                        .height(54.dp)
                         .testTag("save_session_button")
                 ) {
                     Icon(
@@ -1097,9 +1107,10 @@ private fun GeneratorSetupTab(
                     onClick = onStartSession,
                     shape = RoundedCornerShape(14.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF047857)),
+                    elevation = ButtonDefaults.buttonElevation(defaultElevation = 2.dp),
                     modifier = Modifier
                         .weight(1.5f)
-                        .height(52.dp)
+                        .height(54.dp)
                         .testTag("start_tilawat_session_button")
                 ) {
                     Icon(
@@ -1583,7 +1594,7 @@ private fun SavedSessionsTab(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(horizontal = 16.dp),
-            contentPadding = PaddingValues(vertical = 16.dp),
+            contentPadding = PaddingValues(top = 16.dp, bottom = 48.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
             items(savedSessions, key = { it.id }) { session ->

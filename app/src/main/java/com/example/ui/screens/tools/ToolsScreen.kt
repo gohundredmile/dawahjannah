@@ -124,6 +124,7 @@ fun ToolsScreen(
     onOpenIslamicContextVerify: () -> Unit = {},
     onOpenQuranActionEngine: () -> Unit = {},
     onOpenZakatCalculator: () -> Unit = {},
+    onOpenQuranAudioGenerator: () -> Unit = {},
     onOpenIslamicLife: () -> Unit = {},
     contentPadding: PaddingValues = PaddingValues(0.dp)
 ) {
@@ -394,19 +395,19 @@ fun ToolsScreen(
                 onClick = onOpenIslamicContextVerify
             ),
             ToolFeatureItem(
-                id = "up_audio_gen",
+                id = "tool_quran_audio_generator",
                 nameBn = "কুরআন অডিও",
-                fullNameBn = "কুরআন অডিও তিলাওয়াত জেনারেটর",
-                subtitleBn = "পছন্দের ক্বারী, গতি ও পুনরাবৃত্তি নির্ধারণ করে নিজস্ব অফলাইন অডিও",
-                descriptionBn = "বিশ্ববিখ্যাত ক্বারীদের কণ্ঠ একত্র করে নির্দিষ্ট আয়াতের জন্য অডিও ক্লিপ তৈরি, পুনরাবৃত্তি লুপ ও অফলাইনে শোনার সুবিধা যুক্ত হচ্ছে।",
+                fullNameBn = "কুরআন অডিও তিলাওয়াত জেনারেটর (Audio Generator)",
+                subtitleBn = "হিফজ, মুরাজা'আ ও কাস্টম রিপিট-লুপ সহ নিজস্ব অডিও সেশন",
+                descriptionBn = "পছন্দের বিশ্ববিখ্যাত ক্বারী নির্বাচন করে নির্দিষ্ট সূরা ও আয়াত সীমার জন্য কাস্টম তিলাওয়াত অডিও তৈরি করুন। প্রতি আয়াতের পুনরাবৃত্তি, বিরতি সময়, গতি নিয়ন্ত্রণ ও অফলাইন ক্যাশিং সুবিধা।",
                 icon = Icons.Default.Tune,
                 emoji = "🎙️",
-                badgeBn = "শীঘ্রই আসছে",
-                primaryColor = Color(0xFF0284C7),
-                softContainerColor = Color(0xFFF0F9FF),
-                highlights = listOf("বিখ্যাত ক্বারী", "রিপিট লুপ", "অফলাইন প্লে", "আসন্ন ফিচার"),
-                isAvailable = false,
-                onClick = {}
+                badgeBn = "সিগনেচার টুল",
+                primaryColor = Color(0xFF047857),
+                softContainerColor = Color(0xFFE8F5E9),
+                highlights = listOf("হিফজ প্রিসেট", "মুরাজা'আ মোড", "আয়াত বিরতি", "লুপ রিপিট", "অফলাইন ক্যাশ"),
+                isAvailable = true,
+                onClick = onOpenQuranAudioGenerator
             ),
             ToolFeatureItem(
                 id = "up_inheritance",

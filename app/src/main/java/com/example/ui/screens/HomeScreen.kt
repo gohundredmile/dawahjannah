@@ -822,10 +822,10 @@ fun HomeScreen(
                         }
                     }
                     HomeScreenCardId.TOP_FEATURES -> {
-                        // 2.5 টপ ফিচার (Top Features Section - 8 items in 2x4 grid as per specimen + 'আরও / More')
+                        // 2.5 টপ ফিচার (Top Features Section - 12 items in 3x4 grid + 'আরও / More')
                         item(key = "card_top_features") {
                             TopFeaturesSection(
-                                topFeatures = orderedAppFeatures.filter { it.id != "articles" }.take(8),
+                                topFeatures = orderedAppFeatures.filter { it.id != "articles" }.take(12),
                                 onOpenAllFeatures = { showAllFeaturesDialog = true }
                             )
                         }

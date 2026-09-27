@@ -62,6 +62,7 @@ import com.example.ui.screens.tools.QuranEngineMode
 import com.example.ui.screens.tools.RamadanIntelligenceScreen
 import com.example.ui.screens.tools.SmartQuranSearchScreen
 import com.example.ui.screens.tools.ToolsScreen
+import com.example.ui.screens.tools.QuranAudioGeneratorScreen
 import com.example.ui.screens.tools.zakat.ZakatCalculatorScreen
 import com.example.ui.theme.DawahTheme
 import com.example.ui.viewmodel.AppTab
@@ -251,6 +252,7 @@ class MainActivity : ComponentActivity() {
                                             onOpenIslamicContextVerify = { viewModel.openIslamicContextVerify() },
                                             onOpenQuranActionEngine = { viewModel.openQuranActionEngine() },
                                             onOpenZakatCalculator = { viewModel.openZakatCalculator() },
+                                            onOpenQuranAudioGenerator = { viewModel.openQuranAudioGenerator() },
                                             onOpenIslamicLife = { viewModel.selectTab(AppTab.MORE) },
                                             contentPadding = innerPadding
                                         )
@@ -327,6 +329,10 @@ class MainActivity : ComponentActivity() {
                                         )
                                         ToolsSubScreen.ZAKAT_CALCULATOR -> ZakatCalculatorScreen(
                                             onNavigateBack = { viewModel.navigateBack() }
+                                        )
+                                        ToolsSubScreen.QURAN_AUDIO_GENERATOR -> QuranAudioGeneratorScreen(
+                                            onNavigateBack = { viewModel.navigateBack() },
+                                            generatorEngine = viewModel.quranAudioGeneratorEngine
                                         )
                                     }
                                 }

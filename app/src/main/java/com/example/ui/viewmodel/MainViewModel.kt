@@ -62,6 +62,7 @@ import com.example.data.repository.QuranRepository
 import com.example.ui.components.ModalSectionTab
 import com.example.util.CalendarHelper
 import com.example.util.QuranAudioManager
+import com.example.util.QuranAudioGeneratorEngine
 import com.example.util.ExcludedIslamicLifeTopics
 import com.example.util.PrayerCalculator
 import com.example.util.VibrationHelper
@@ -117,7 +118,8 @@ enum class ToolsSubScreen(val titleBn: String) {
     HADITH_COLLECTION("সহীহ হাদীস সম্ভার (HadithBD / IRD)"),
     ISLAMIC_CONTEXT_VERIFY("Islamic Context & Verify (ইসলামিক কনটেক্সট ও যাচাই)"),
     QURAN_ACTION_ENGINE("Quran → Action Engine (কুরআন → আমল ইঞ্জিন)"),
-    ZAKAT_CALCULATOR("স্মার্ট যাকাতুল মাল ক্যালকুলেটর (Zakat Calculator)")
+    ZAKAT_CALCULATOR("স্মার্ট যাকাতুল মাল ক্যালকুলেটর (Zakat Calculator)"),
+    QURAN_AUDIO_GENERATOR("কুরআন অডিও তিলাওয়াত জেনারেটর")
 }
 
 sealed class AppNavDestination {
@@ -163,6 +165,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     val gitHubUpdateManager = GitHubUpdateManager(application)
     val quranRepository = QuranRepository(application)
     val quranAudioManager = QuranAudioManager(application)
+    val quranAudioGeneratorEngine = QuranAudioGeneratorEngine(application, quranRepository)
     val hadithRepository = HadithRepository(application)
 
     // NAVIGATION
@@ -348,6 +351,12 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     fun openZakatCalculator() {
         pushCurrentState()
         _toolsSubScreen.value = ToolsSubScreen.ZAKAT_CALCULATOR
+        _currentTab.value = AppTab.TOOLS
+    }
+
+    fun openQuranAudioGenerator() {
+        pushCurrentState()
+        _toolsSubScreen.value = ToolsSubScreen.QURAN_AUDIO_GENERATOR
         _currentTab.value = AppTab.TOOLS
     }
 

@@ -63,6 +63,7 @@ import com.example.ui.screens.tools.RamadanIntelligenceScreen
 import com.example.ui.screens.tools.SmartQuranSearchScreen
 import com.example.ui.screens.tools.ToolsScreen
 import com.example.ui.screens.tools.QuranAudioGeneratorScreen
+import com.example.ui.screens.salah.SalahGuideMainScreen
 import com.example.ui.screens.tools.zakat.ZakatCalculatorScreen
 import com.example.ui.theme.DawahTheme
 import com.example.ui.viewmodel.AppTab
@@ -160,7 +161,8 @@ class MainActivity : ComponentActivity() {
                                 currentToolsSub == ToolsSubScreen.HADITH_COLLECTION ||
                                 currentToolsSub == ToolsSubScreen.FRIDAY_MODE ||
                                 currentToolsSub == ToolsSubScreen.ISLAMIC_CONTEXT_VERIFY ||
-                                currentToolsSub == ToolsSubScreen.QURAN_AUDIO_GENERATOR
+                                currentToolsSub == ToolsSubScreen.QURAN_AUDIO_GENERATOR ||
+                                currentToolsSub == ToolsSubScreen.SALAH_GUIDE
                             )) {
                                 // Dedicated full-width top app bars with custom actions
                             } else if (!(currentTab == AppTab.MORE && currentMoreSub != MoreSubScreen.MAIN)) {
@@ -260,6 +262,7 @@ class MainActivity : ComponentActivity() {
                                             onOpenQuranActionEngine = { viewModel.openQuranActionEngine() },
                                             onOpenZakatCalculator = { viewModel.openZakatCalculator() },
                                             onOpenQuranAudioGenerator = { viewModel.openQuranAudioGenerator() },
+                                            onOpenSalahGuide = { viewModel.openSalahGuide() },
                                             onOpenIslamicLife = { viewModel.selectTab(AppTab.MORE) },
                                             contentPadding = innerPadding
                                         )
@@ -340,6 +343,10 @@ class MainActivity : ComponentActivity() {
                                         ToolsSubScreen.QURAN_AUDIO_GENERATOR -> QuranAudioGeneratorScreen(
                                             onNavigateBack = { viewModel.navigateBack() },
                                             generatorEngine = viewModel.quranAudioGeneratorEngine,
+                                            contentPadding = innerPadding
+                                        )
+                                        ToolsSubScreen.SALAH_GUIDE -> SalahGuideMainScreen(
+                                            onNavigateBack = { viewModel.navigateBack() },
                                             contentPadding = innerPadding
                                         )
                                     }

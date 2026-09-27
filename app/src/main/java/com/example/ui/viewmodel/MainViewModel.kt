@@ -119,7 +119,8 @@ enum class ToolsSubScreen(val titleBn: String) {
     ISLAMIC_CONTEXT_VERIFY("Islamic Context & Verify (ইসলামিক কনটেক্সট ও যাচাই)"),
     QURAN_ACTION_ENGINE("Quran → Action Engine (কুরআন → আমল ইঞ্জিন)"),
     ZAKAT_CALCULATOR("স্মার্ট যাকাতুল মাল ক্যালকুলেটর (Zakat Calculator)"),
-    QURAN_AUDIO_GENERATOR("কুরআন অডিও তিলাওয়াত জেনারেটর")
+    QURAN_AUDIO_GENERATOR("কুরআন অডিও তিলাওয়াত জেনারেটর"),
+    SALAH_GUIDE("নামাজের পূর্ণাঙ্গ গাইড")
 }
 
 sealed class AppNavDestination {
@@ -357,6 +358,12 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     fun openQuranAudioGenerator() {
         pushCurrentState()
         _toolsSubScreen.value = ToolsSubScreen.QURAN_AUDIO_GENERATOR
+        _currentTab.value = AppTab.TOOLS
+    }
+
+    fun openSalahGuide() {
+        pushCurrentState()
+        _toolsSubScreen.value = ToolsSubScreen.SALAH_GUIDE
         _currentTab.value = AppTab.TOOLS
     }
 

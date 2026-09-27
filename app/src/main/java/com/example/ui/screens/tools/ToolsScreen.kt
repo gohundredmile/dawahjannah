@@ -40,6 +40,7 @@ import androidx.compose.material.icons.filled.Explore
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Fingerprint
 import androidx.compose.material.icons.filled.MenuBook
+import androidx.compose.material.icons.filled.Mosque
 import androidx.compose.material.icons.filled.Nightlight
 import androidx.compose.material.icons.filled.NotificationsOff
 import androidx.compose.material.icons.filled.Psychology
@@ -125,6 +126,7 @@ fun ToolsScreen(
     onOpenQuranActionEngine: () -> Unit = {},
     onOpenZakatCalculator: () -> Unit = {},
     onOpenQuranAudioGenerator: () -> Unit = {},
+    onOpenSalahGuide: () -> Unit = {},
     onOpenIslamicLife: () -> Unit = {},
     contentPadding: PaddingValues = PaddingValues(0.dp)
 ) {
@@ -142,6 +144,20 @@ fun ToolsScreen(
     // All features list
     val allFeatures = remember {
         listOf(
+            ToolFeatureItem(
+                id = "tool_salah_guide",
+                nameBn = "নামাজের পূর্ণাঙ্গ গাইড",
+                fullNameBn = "নামাজের পূর্ণাঙ্গ গাইড (Complete Salah Guide)",
+                subtitleBn = "সহীহ সালাত শিক্ষা, ধাপে ধাপে পদ্ধতি, রাকাত, অডিও তিলাওয়াত ও মাসআলা",
+                descriptionBn = "১০টি সমৃদ্ধ বিভাগে সাজানো প্রামাণ্য নামাজ শিক্ষা: গাইড হোম, ধাপে ধাপে অঙ্গভঙ্গি ও পদ্ধতি, ৫ ওয়াক্তের সঠিক রাকাত, অডিওসহ সকল পঠিতব্য সূরা ও দো'আ, পবিত্রতা ও ওযু, শর্ত ও ফরজ-ওয়াজিব, ভুল ও সাহু সিজদা, বিশেষ নামাজ, মাসআলা এবং ফিকহী প্রশ্নোত্তর।",
+                icon = Icons.Default.Mosque,
+                emoji = "🕌",
+                badgeBn = "নতুন সিগনেচার",
+                primaryColor = Color(0xFF047857),
+                softContainerColor = Color(0xFFE8F5E9),
+                highlights = listOf("ধাপে ধাপে পদ্ধতি", "১০টি বিভাগ", "অডিও টিউটর", "সাহু সিজদা", "ফিকহী সমাধান", "সার্চ ও বুকমার্ক"),
+                onClick = onOpenSalahGuide
+            ),
             ToolFeatureItem(
                 id = "tool_quran_action_engine",
                 nameBn = "কুরআন আমল ও ভাবার্থ ইঞ্জিন",

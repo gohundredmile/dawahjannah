@@ -114,9 +114,9 @@ fun SalatHubDialog(
         ),
         SalatHubOption(
             serialBn = "২",
-            titleBn = "নামাজ গাইড",
-            subtitleBn = "সহীহ সালাত শিক্ষা, ওয়াক্ত, সঠিক রাকাত ও ধারাবাহিক নিয়মাবলী",
-            categoryBadgeBn = "শিক্ষা ও নিয়মাবলী",
+            titleBn = "নামাজের পূর্ণাঙ্গ গাইড",
+            subtitleBn = "সহীহ সালাত শিক্ষা, ধাপে ধাপে পদ্ধতি, সঠিক রাকাত, তিলাওয়াত ও মাসআলা",
+            categoryBadgeBn = "পূর্ণাঙ্গ গাইড ও শিক্ষা",
             icon = Icons.Default.Mosque,
             themeColor = Color(0xFF059669),
             onClick = {

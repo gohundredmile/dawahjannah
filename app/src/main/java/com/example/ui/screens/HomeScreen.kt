@@ -265,13 +265,13 @@ fun HomeScreen(
                 isTopEight = true,
                 onClickAction = { showRamadanOptionsDialog = true }
             ),
-            // ৫. নামাজ গাইড
+            // ৫. নামাজের পূর্ণাঙ্গ গাইড
             HomeFeatureItem(
                 id = "namaz_guide",
                 serialNumberBn = "০৫",
-                titleBn = "৫. নামাজ গাইড",
-                shortTitleBn = "নামাজ গাইড",
-                subtitleBn = "সহীহ সালাত শিক্ষা, ওয়াক্ত, সঠিক রাকাত ও ধারাবাহিক নিয়মাবলী",
+                titleBn = "৫. নামাজের পূর্ণাঙ্গ গাইড",
+                shortTitleBn = "নামাজ পূর্ণাঙ্গ গাইড",
+                subtitleBn = "সহীহ সালাত শিক্ষা, ধাপে ধাপে পদ্ধতি, সঠিক রাকাত, তিলাওয়াত ও মাসআলা",
                 categoryBn = "সালাত ও সময়",
                 icon = Icons.Default.Mosque,
                 iconColor = Color(0xFF0284C7),

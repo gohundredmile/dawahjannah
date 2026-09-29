@@ -81,36 +81,21 @@ fun HealthDuaScreen(
     val listState = rememberLazyListState()
     val readingProgressFraction by remember {
         derivedStateOf {
-            val layoutInfo = listState.layoutInfo
-            val totalItems = layoutInfo.totalItemsCount
-            if (totalItems <= 1) {
-                0f
-            } else {
-                val visibleItems = layoutInfo.visibleItemsInfo
-                if (visibleItems.isEmpty()) {
-                    0f
-                } else {
-                    val lastItem = visibleItems.last()
-                    val firstItem = visibleItems.first()
-                    if (lastItem.index >= totalItems - 1) {
-                        val viewportHeight = layoutInfo.viewportEndOffset - layoutInfo.viewportStartOffset
-                        val bottomOffset = lastItem.offset + lastItem.size
-                        if (bottomOffset <= viewportHeight) 1f
-                        else (lastItem.index.toFloat() / (totalItems - 1).toFloat()).coerceIn(0f, 1f)
-                    } else {
-                        val itemFraction = if (firstItem.size > 0) (-firstItem.offset.toFloat() / firstItem.size.toFloat()).coerceIn(0f, 1f) else 0f
-                        ((firstItem.index.toFloat() + itemFraction) / (totalItems - 1).toFloat()).coerceIn(0f, 1f)
-                    }
-                }
-            }
+            com.example.util.ReadingProgressHelper.calculateReadingProgress(listState)
         }
     }
     val animatedProgress by animateFloatAsState(
         targetValue = readingProgressFraction,
-        animationSpec = spring(stiffness = Spring.StiffnessLow),
+        animationSpec = spring(stiffness = Spring.StiffnessMedium, dampingRatio = Spring.DampingRatioNoBouncy),
         label = "readingProgress"
     )
-    val progressPercent = (animatedProgress * 100).toInt().coerceIn(0, 100)
+    val progressPercent = if (readingProgressFraction >= 0.99f || !listState.canScrollForward) {
+        100
+    } else if (readingProgressFraction <= 0.01f && !listState.canScrollBackward) {
+        0
+    } else {
+        (animatedProgress * 100).toInt().coerceIn(1, 99)
+    }
     val progressPercentBn = com.example.util.CalendarHelper.toBanglaNumber(progressPercent)
 
     Column(modifier = Modifier.fillMaxSize()) {
@@ -165,12 +150,19 @@ fun HealthDuaScreen(
                                     fontWeight = FontWeight.Bold,
                                     color = Color(0xFF047857)
                                 )
-                            } else {
+                            } else if (progressPercent > 0) {
                                 Text(
                                     text = "$progressPercentBn% পঠিত",
                                     style = MaterialTheme.typography.labelSmall,
                                     fontWeight = FontWeight.Bold,
                                     color = MaterialTheme.colorScheme.primary
+                                )
+                            } else {
+                                Text(
+                                    text = "শুরু করুন (০%)",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
                         }

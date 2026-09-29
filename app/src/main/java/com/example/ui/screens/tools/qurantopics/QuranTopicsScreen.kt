@@ -260,12 +260,12 @@ fun QuranTopicsScreen(
                     Tab(
                         selected = selectedTab == 1,
                         onClick = { selectedTab = 1 },
-                        text = { Text("সকল বিষয়", fontSize = 13.sp, fontWeight = if (selectedTab == 1) FontWeight.Bold else FontWeight.Normal) }
+                        text = { Text("সকল বিষয় (${allTopics.size})", fontSize = 13.sp, fontWeight = if (selectedTab == 1) FontWeight.Bold else FontWeight.Normal) }
                     )
                     Tab(
                         selected = selectedTab == 2,
                         onClick = { selectedTab = 2 },
-                        text = { Text("প্রয়োজনে", fontSize = 13.sp, fontWeight = if (selectedTab == 2) FontWeight.Bold else FontWeight.Normal) }
+                        text = { Text("প্রয়োজনে (${needBasedEntries.size})", fontSize = 13.sp, fontWeight = if (selectedTab == 2) FontWeight.Bold else FontWeight.Normal) }
                     )
                     Tab(
                         selected = selectedTab == 3,
@@ -302,6 +302,7 @@ fun QuranTopicsScreen(
                         categories = categories,
                         bookmarkedTopics = bookmarkedTopics,
                         onOpenTopic = { selectedTopic = it },
+                        onOpenAllTopics = { selectedTab = 1 },
                         onSelectCategory = { catId ->
                             selectedCategoryFilter = catId
                             selectedTab = 1
@@ -341,6 +342,7 @@ private fun DashboardTab(
     categories: List<QuranTopicCategory>,
     bookmarkedTopics: Set<String>,
     onOpenTopic: (QuranTopic) -> Unit,
+    onOpenAllTopics: () -> Unit,
     onSelectCategory: (String) -> Unit
 ) {
     LazyColumn(
@@ -425,6 +427,73 @@ private fun DashboardTab(
                         Spacer(modifier = Modifier.width(4.dp))
                         Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = null, tint = IslamicGreen, modifier = Modifier.size(14.dp))
                     }
+                }
+            }
+        }
+
+        // All Topics Browse Banner (HadithBD / IRD Foundation - 54 Topics)
+        item {
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { onOpenAllTopics() },
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = IslamicGreen.copy(alpha = 0.12f)
+                ),
+                border = BorderStroke(1.2.dp, IslamicGreen.copy(alpha = 0.5f))
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(14.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Surface(
+                        shape = RoundedCornerShape(12.dp),
+                        color = IslamicGreen.copy(alpha = 0.2f),
+                        modifier = Modifier.size(46.dp)
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Icon(Icons.Default.MenuBook, contentDescription = null, tint = IslamicGreen, modifier = Modifier.size(24.dp))
+                        }
+                    }
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Column(modifier = Modifier.weight(1f)) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(
+                                text = "সকল বিষয় ব্রাউজ করুন",
+                                fontSize = 15.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Surface(
+                                shape = RoundedCornerShape(4.dp),
+                                color = IslamicGold
+                            ) {
+                                Text(
+                                    text = "৫৪টি বিষয়",
+                                    fontSize = 10.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color.Black,
+                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                )
+                            }
+                        }
+                        Spacer(modifier = Modifier.height(3.dp))
+                        Text(
+                            text = "HadithBD / IRD Foundation অফলাইন ডেটাবেজ ভিত্তিক ৫৪টি মৌলিক বিষয়ে পবিত্র কুরআনের প্রাসঙ্গিক আয়াতসমূহ",
+                            fontSize = 11.5.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                    Icon(
+                        Icons.AutoMirrored.Filled.ArrowForward,
+                        contentDescription = null,
+                        tint = IslamicGreen,
+                        modifier = Modifier.size(16.dp)
+                    )
                 }
             }
         }

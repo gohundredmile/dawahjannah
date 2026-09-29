@@ -19,7 +19,8 @@ object QuranTopicCatalog {
         QuranTopicsPart3.topics +
         QuranTopicsPart4.topics +
         QuranTopicsPart5.topics +
-        QuranTopicsPart6.topics
+        QuranTopicsPart6.topics +
+        QuranTopicsPart7.topics
     }
 
     val totalTopicCount: Int

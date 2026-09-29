@@ -38,6 +38,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material.icons.automirrored.filled.ArrowForwardIos
 import androidx.compose.material.icons.automirrored.filled.VolumeUp
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Bookmark
@@ -137,6 +138,7 @@ fun HolyQuranScreen(
     quranRepository: QuranRepository,
     audioManager: QuranAudioManager,
     initialSurahNumber: Int? = null,
+    onOpenQuranTopics: (() -> Unit)? = null,
     onNavigateBack: () -> Unit,
     contentPadding: PaddingValues = PaddingValues()
 ) {
@@ -180,6 +182,7 @@ fun HolyQuranScreen(
             onOpenReciterPicker = { showReciterDialog = true },
             onOpenSettings = { showSettingsDialog = true },
             onOpenAudioManager = { showAudioManagerDialog = true },
+            onOpenQuranTopics = onOpenQuranTopics,
             onNavigateBack = onNavigateBack,
             contentPadding = contentPadding
         )
@@ -254,6 +257,7 @@ fun HolyQuranIndexScreen(
     onOpenReciterPicker: () -> Unit,
     onOpenSettings: () -> Unit,
     onOpenAudioManager: () -> Unit,
+    onOpenQuranTopics: (() -> Unit)? = null,
     onNavigateBack: () -> Unit,
     contentPadding: PaddingValues
 ) {
@@ -381,6 +385,19 @@ fun HolyQuranIndexScreen(
                     )
                 }
 
+                if (onOpenQuranTopics != null) {
+                    IconButton(
+                        onClick = onOpenQuranTopics,
+                        modifier = Modifier.testTag("btn_quran_topics_topbar")
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.MenuBook,
+                            contentDescription = "বিষয় ভিত্তিক কোরআনের আয়াত",
+                            tint = IslamicGreen
+                        )
+                    }
+                }
+
                 IconButton(
                     onClick = onOpenSettings,
                     modifier = Modifier.testTag("btn_quran_settings")
@@ -389,6 +406,80 @@ fun HolyQuranIndexScreen(
                         imageVector = Icons.Default.Settings,
                         contentDescription = "কুরআন সেটিংস",
                         tint = MaterialTheme.colorScheme.onSurface
+                    )
+                }
+            }
+        }
+
+        // Card: বিষয় ভিত্তিক কোরআনের আয়াত (HadithBD / IRD Foundation)
+        if (onOpenQuranTopics != null) {
+            Surface(
+                onClick = onOpenQuranTopics,
+                shape = RoundedCornerShape(12.dp),
+                color = IslamicGreen.copy(alpha = 0.12f),
+                border = BorderStroke(1.2.dp, IslamicGreen.copy(alpha = 0.55f)),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 4.dp)
+                    .testTag("banner_card_quran_topics")
+            ) {
+                Row(
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 9.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(34.dp)
+                            .clip(CircleShape)
+                            .background(IslamicGreen.copy(alpha = 0.22f)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.MenuBook,
+                            contentDescription = "বিষয় ভিত্তিক কোরআনের আয়াত",
+                            tint = IslamicGreen,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(10.dp))
+                    Column(modifier = Modifier.weight(1f)) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(
+                                text = "বিষয় ভিত্তিক কোরআনের আয়াত",
+                                style = MaterialTheme.typography.labelMedium.copy(
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Surface(
+                                shape = RoundedCornerShape(4.dp),
+                                color = IslamicGold
+                            ) {
+                                Text(
+                                    text = "HadithBD • ৫৪টি বিষয়",
+                                    style = MaterialTheme.typography.labelSmall.copy(
+                                        fontSize = 9.5.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = Color.Black
+                                    ),
+                                    modifier = Modifier.padding(horizontal = 5.dp, vertical = 1.dp)
+                                )
+                            }
+                        }
+                        Text(
+                            text = "তাওহীদ, ইবাদত, মুআমালাত, আখলাক ও ফিকহ সহ পূর্ণাঙ্গ প্রামাণ্য আয়াত তালিকা",
+                            style = MaterialTheme.typography.bodySmall.copy(
+                                fontSize = 10.5.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        )
+                    }
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowForwardIos,
+                        contentDescription = "প্রবেশ করুন",
+                        tint = IslamicGreen,
+                        modifier = Modifier.size(15.dp)
                     )
                 }
             }
@@ -590,6 +681,30 @@ fun HolyQuranIndexScreen(
                 .padding(horizontal = 16.dp, vertical = 2.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
+            if (onOpenQuranTopics != null) {
+                FilterChip(
+                    selected = false,
+                    onClick = onOpenQuranTopics,
+                    label = {
+                        Text(
+                            text = "📖 বিষয়ভিত্তিক আয়াত (৫৪)",
+                            style = MaterialTheme.typography.labelSmall.copy(
+                                fontWeight = FontWeight.Bold,
+                                color = IslamicGreen
+                            )
+                        )
+                    },
+                    colors = FilterChipDefaults.filterChipColors(
+                        containerColor = IslamicGreen.copy(alpha = 0.14f)
+                    ),
+                    border = FilterChipDefaults.filterChipBorder(
+                        enabled = true,
+                        selected = false,
+                        borderColor = IslamicGreen
+                    ),
+                    shape = RoundedCornerShape(20.dp)
+                )
+            }
             QuranFilter.entries.forEach { filter ->
                 val selected = selectedFilter == filter
                 FilterChip(

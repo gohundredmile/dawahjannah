@@ -281,6 +281,7 @@ class MainActivity : ComponentActivity() {
                                                 quranRepository = viewModel.quranRepository,
                                                 audioManager = viewModel.quranAudioManager,
                                                 initialSurahNumber = initialSurah,
+                                                onOpenQuranTopics = { viewModel.openQuranTopics() },
                                                 onNavigateBack = { viewModel.navigateBack() },
                                                 contentPadding = innerPadding
                                             )
@@ -290,6 +291,7 @@ class MainActivity : ComponentActivity() {
                                             HadithMainScreen(
                                                 hadithRepository = viewModel.hadithRepository,
                                                 initialBookSlug = initialSlug,
+                                                onOpenHadithTopics = { viewModel.openHadithTopics() },
                                                 onNavigateBack = { viewModel.navigateBack() },
                                                 contentPadding = innerPadding
                                             )

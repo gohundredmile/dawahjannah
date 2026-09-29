@@ -33,10 +33,12 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material.icons.automirrored.filled.ArrowForwardIos
 import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.BookmarkBorder
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Clear
+import androidx.compose.material.icons.filled.CollectionsBookmark
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.FormatSize
 import androidx.compose.material.icons.filled.MenuBook
@@ -95,6 +97,7 @@ import kotlinx.coroutines.launch
 
 enum class HadithTabCategory(val titleBn: String) {
     SIHAH_SITTA("সিহাহ্ সিত্তাহ (৬ গ্রন্থ)"),
+    SUBJECT_WISE("বিষয়ভিত্তিক হাদিস (৫০টি বিষয়)"),
     PRIMARY_CORE("প্রাইমারি কোর হাদিস"),
     BOOKMARKS("বুকমার্ককৃত")
 }
@@ -103,6 +106,7 @@ enum class HadithTabCategory(val titleBn: String) {
 fun HadithMainScreen(
     hadithRepository: HadithRepository,
     initialBookSlug: String? = null,
+    onOpenHadithTopics: (() -> Unit)? = null,
     onNavigateBack: () -> Unit,
     contentPadding: PaddingValues = PaddingValues()
 ) {
@@ -214,6 +218,19 @@ fun HadithMainScreen(
                                     fontSize = 10.sp,
                                     color = IslamicGreen
                                 )
+                            )
+                        }
+                    }
+
+                    if (onOpenHadithTopics != null) {
+                        IconButton(
+                            onClick = onOpenHadithTopics,
+                            modifier = Modifier.testTag("btn_hadith_topics_topbar")
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.CollectionsBookmark,
+                                contentDescription = "বিষয় ভিত্তিক সহীহ হাদিস",
+                                tint = IslamicGold
                             )
                         }
                     }
@@ -345,6 +362,7 @@ fun HadithMainScreen(
                 primaryBooks = primaryBooks,
                 bookmarkedHadiths = bookmarkedHadiths,
                 onSelectBook = { slug -> selectedBookSlug = slug },
+                onOpenHadithTopics = onOpenHadithTopics,
                 hadithRepository = hadithRepository,
                 arabicFontSize = arabicFontSize,
                 banglaFontSize = banglaFontSize
@@ -361,6 +379,7 @@ private fun HadithCatalogView(
     primaryBooks: List<HadithBookEntity>,
     bookmarkedHadiths: List<HadithEntity>,
     onSelectBook: (String) -> Unit,
+    onOpenHadithTopics: (() -> Unit)? = null,
     hadithRepository: HadithRepository,
     arabicFontSize: Float,
     banglaFontSize: Float
@@ -394,6 +413,80 @@ private fun HadithCatalogView(
             }
         }
 
+        // বিষয় ভিত্তিক সহীহ হাদিস (HadithBD / MessageBD) প্রামাণ্য কার্ড
+        if (onOpenHadithTopics != null) {
+            item {
+                Surface(
+                    onClick = onOpenHadithTopics,
+                    shape = RoundedCornerShape(14.dp),
+                    color = IslamicGold.copy(alpha = 0.12f),
+                    border = BorderStroke(1.2.dp, IslamicGold.copy(alpha = 0.65f)),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag("banner_card_hadith_topics")
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Surface(
+                            shape = RoundedCornerShape(10.dp),
+                            color = IslamicGold.copy(alpha = 0.25f),
+                            modifier = Modifier.size(40.dp)
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                Icon(
+                                    imageVector = Icons.Default.CollectionsBookmark,
+                                    contentDescription = null,
+                                    tint = IslamicGold,
+                                    modifier = Modifier.size(22.dp)
+                                )
+                            }
+                        }
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Column(modifier = Modifier.weight(1f)) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text(
+                                    text = "বিষয় ভিত্তিক সহীহ হাদিস",
+                                    style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Surface(
+                                    shape = RoundedCornerShape(4.dp),
+                                    color = Color(0xFF059669)
+                                ) {
+                                    Text(
+                                        text = "HadithBD • ৫০টি বিষয়",
+                                        style = MaterialTheme.typography.labelSmall.copy(
+                                            fontSize = 9.5.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = Color.White
+                                        ),
+                                        modifier = Modifier.padding(horizontal = 5.dp, vertical = 1.dp)
+                                    )
+                                }
+                            }
+                            Spacer(modifier = Modifier.height(2.dp))
+                            Text(
+                                text = "ঈমান, আখলাক, সালাত, পিতামাতা, ব্যবসা, সমাজ ও ফিতনা সহ ৫০টি বিষয়ের সহীহ হাদিস",
+                                style = MaterialTheme.typography.bodySmall.copy(
+                                    fontSize = 11.sp,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            )
+                        }
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowForwardIos,
+                            contentDescription = "প্রবেশ করুন",
+                            tint = IslamicGold,
+                            modifier = Modifier.size(15.dp)
+                        )
+                    }
+                }
+            }
+        }
+
         // Category Pills (সিহাহ্ সিত্তাহ | প্রাইমারি কোর হাদিস | বুকমার্ক)
         item {
             Row(
@@ -406,11 +499,17 @@ private fun HadithCatalogView(
                     val isSelected = tab == selectedTab
                     FilterChip(
                         selected = isSelected,
-                        onClick = { onSelectTab(tab) },
+                        onClick = {
+                            if (tab == HadithTabCategory.SUBJECT_WISE) {
+                                onOpenHadithTopics?.invoke()
+                            }
+                            onSelectTab(tab)
+                        },
                         label = {
                             Text(
                                 text = when (tab) {
                                     HadithTabCategory.SIHAH_SITTA -> "সিহাহ্ সিত্তাহ (${BanglaNumberUtils.toBanglaDigits(sihahBooks.size)})"
+                                    HadithTabCategory.SUBJECT_WISE -> "বিষয়ভিত্তিক হাদিস (৫০)"
                                     HadithTabCategory.PRIMARY_CORE -> "প্রাইমারি কোর হাদিস (${BanglaNumberUtils.toBanglaDigits(primaryBooks.size)})"
                                     HadithTabCategory.BOOKMARKS -> "বুকমার্ক (${BanglaNumberUtils.toBanglaDigits(bookmarkedHadiths.size)})"
                                 },
@@ -432,6 +531,48 @@ private fun HadithCatalogView(
             HadithTabCategory.SIHAH_SITTA -> {
                 items(sihahBooks, key = { it.slug }) { book ->
                     HadithBookCard(book = book, onClick = { onSelectBook(book.slug) })
+                }
+            }
+            HadithTabCategory.SUBJECT_WISE -> {
+                item {
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 12.dp)
+                            .clickable { onOpenHadithTopics?.invoke() },
+                        shape = RoundedCornerShape(16.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = IslamicGold.copy(alpha = 0.15f)
+                        ),
+                        border = BorderStroke(1.2.dp, IslamicGold)
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(20.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Text("📚", fontSize = 38.sp)
+                            Spacer(modifier = Modifier.height(10.dp))
+                            Text(
+                                text = "বিষয় ভিত্তিক সহীহ হাদিস (৫০টি বিষয়)",
+                                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                            Spacer(modifier = Modifier.height(6.dp))
+                            Text(
+                                text = "হাদিসবিডি (HadithBD) ও MessageBD প্রামাণ্য তাহকীক—সিহাহ সিত্তাহ সহীহ হাদিস সম্ভার ও জীবনঘনিষ্ঠ ২০+ সমাধান ব্রাউজ করতে নিচের বাটনে চাপ দিন।",
+                                style = MaterialTheme.typography.bodySmall,
+                                textAlign = TextAlign.Center,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Spacer(modifier = Modifier.height(14.dp))
+                            Button(
+                                onClick = { onOpenHadithTopics?.invoke() },
+                                colors = ButtonDefaults.buttonColors(containerColor = IslamicGold)
+                            ) {
+                                Text("পূর্ণাঙ্গ বিষয়ভিত্তিক হাদিস ব্রাউজার খুলুন", color = Color.Black, fontWeight = FontWeight.Bold)
+                            }
+                        }
+                    }
                 }
             }
             HadithTabCategory.PRIMARY_CORE -> {

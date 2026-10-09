@@ -1208,7 +1208,7 @@ private fun HadithBookDetailView(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(horizontal = 14.dp),
-            contentPadding = PaddingValues(top = 10.dp, bottom = 40.dp),
+            contentPadding = PaddingValues(top = 10.dp, bottom = 140.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             itemsIndexed(activeHadiths, key = { _, it -> it.id }) { index, hadith ->
@@ -1399,7 +1399,7 @@ private fun HadithSearchResultsView(
         } else {
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(bottom = 40.dp),
+                contentPadding = PaddingValues(bottom = 140.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 items(results, key = { it.id }) { hadith ->

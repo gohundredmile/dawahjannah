@@ -29,6 +29,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.datasource.FridaySpecialDuaAmolData
@@ -64,7 +65,8 @@ data class KhutbahNote(
 @Composable
 fun FridayModeScreen(
     onNavigateBack: () -> Unit,
-    onOpenHolyQuranSurah18: () -> Unit
+    onOpenHolyQuranSurah18: () -> Unit,
+    contentPadding: PaddingValues = PaddingValues()
 ) {
     val context = LocalContext.current
     val banglaFont = LocalBanglaFontFamily.current
@@ -242,6 +244,7 @@ fun FridayModeScreen(
         },
         containerColor = MaterialTheme.colorScheme.background
     ) { padding ->
+        val bottomRaisePadding = contentPadding.calculateBottomPadding() + 140.dp
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -257,7 +260,8 @@ fun FridayModeScreen(
                     onSelectTab = { selectedTab = it },
                     onOpenHolyQuranSurah18 = onOpenHolyQuranSurah18,
                     banglaFont = banglaFont,
-                    arabicFont = arabicFont
+                    arabicFont = arabicFont,
+                    bottomPadding = bottomRaisePadding
                 )
                 FridayTab.SURAH_KAHF -> FridaySurahKahfContent(
                     isCompleted = surahKahfCompleted,
@@ -267,16 +271,19 @@ fun FridayModeScreen(
                     },
                     onOpenQuranReader = onOpenHolyQuranSurah18,
                     banglaFont = banglaFont,
-                    arabicFont = arabicFont
+                    arabicFont = arabicFont,
+                    bottomPadding = bottomRaisePadding
                 )
                 FridayTab.SUNNAHS -> FridaySunnahsContent(
                     banglaFont = banglaFont,
-                    arabicFont = arabicFont
+                    arabicFont = arabicFont,
+                    bottomPadding = bottomRaisePadding
                 )
                 FridayTab.CHECKLIST -> FridayChecklistContent(
                     checkedItems = checkedItems,
                     onToggleItem = ::toggleChecklistItem,
-                    banglaFont = banglaFont
+                    banglaFont = banglaFont,
+                    bottomPadding = bottomRaisePadding
                 )
                 FridayTab.KHUTBAH_NOTES -> FridayKhutbahNotesContent(
                     notes = notesList,
@@ -286,11 +293,13 @@ fun FridayModeScreen(
                     onDeleteNote = { id ->
                         saveNotes(notesList.filterNot { it.id == id })
                     },
-                    banglaFont = banglaFont
+                    banglaFont = banglaFont,
+                    bottomPadding = bottomRaisePadding
                 )
                 FridayTab.SAAT_IJABAH -> FridaySaatIjabahContent(
                     banglaFont = banglaFont,
-                    arabicFont = arabicFont
+                    arabicFont = arabicFont,
+                    bottomPadding = bottomRaisePadding
                 )
                 FridayTab.CHARITY -> FridayCharityContent(
                     charityGiven = charityGiven,
@@ -299,15 +308,18 @@ fun FridayModeScreen(
                         prefs.edit().putBoolean("charity_given_$todayKey", charityGiven).apply()
                     },
                     banglaFont = banglaFont,
-                    arabicFont = arabicFont
+                    arabicFont = arabicFont,
+                    bottomPadding = bottomRaisePadding
                 )
                 FridayTab.HADITHS -> FridayHadithsContent(
                     banglaFont = banglaFont,
-                    arabicFont = arabicFont
+                    arabicFont = arabicFont,
+                    bottomPadding = bottomRaisePadding
                 )
                 FridayTab.ALL_AMOLS -> FridayAllAmolsContent(
                     banglaFont = banglaFont,
-                    arabicFont = arabicFont
+                    arabicFont = arabicFont,
+                    bottomPadding = bottomRaisePadding
                 )
             }
         }
@@ -324,11 +336,12 @@ fun FridayOverviewContent(
     onSelectTab: (FridayTab) -> Unit,
     onOpenHolyQuranSurah18: () -> Unit,
     banglaFont: FontFamily,
-    arabicFont: FontFamily
+    arabicFont: FontFamily,
+    bottomPadding: Dp = 100.dp
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(16.dp),
+        contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 16.dp, bottom = bottomPadding),
         verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
         // Hero Card
@@ -645,13 +658,14 @@ fun FridaySurahKahfContent(
     onToggleComplete: () -> Unit,
     onOpenQuranReader: () -> Unit,
     banglaFont: FontFamily,
-    arabicFont: FontFamily
+    arabicFont: FontFamily,
+    bottomPadding: Dp = 100.dp
 ) {
     var selectedSection by remember { mutableStateOf(0) } // 0: ১ম ১০ আয়াত, 1: শেষ ১০ আয়াত, 2: ফজিলত ও তাৎপর্য
 
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(16.dp),
+        contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 16.dp, bottom = bottomPadding),
         verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
         // Tracker Header Card
@@ -922,7 +936,8 @@ data class FridaySunnahModel(
 @Composable
 fun FridaySunnahsContent(
     banglaFont: FontFamily,
-    arabicFont: FontFamily
+    arabicFont: FontFamily,
+    bottomPadding: Dp = 100.dp
 ) {
     val sunnahs = remember {
         listOf(
@@ -1001,7 +1016,7 @@ fun FridaySunnahsContent(
 
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(16.dp),
+        contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 16.dp, bottom = bottomPadding),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         item {
@@ -1077,7 +1092,8 @@ data class FridayChecklistItem(
 fun FridayChecklistContent(
     checkedItems: Set<String>,
     onToggleItem: (String) -> Unit,
-    banglaFont: FontFamily
+    banglaFont: FontFamily,
+    bottomPadding: Dp = 100.dp
 ) {
     val items = remember {
         listOf(
@@ -1098,7 +1114,7 @@ fun FridayChecklistContent(
 
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(16.dp),
+        contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 16.dp, bottom = bottomPadding),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         // Progress Card
@@ -1217,13 +1233,14 @@ fun FridayKhutbahNotesContent(
     notes: List<KhutbahNote>,
     onSaveNote: (KhutbahNote) -> Unit,
     onDeleteNote: (String) -> Unit,
-    banglaFont: FontFamily
+    banglaFont: FontFamily,
+    bottomPadding: Dp = 100.dp
 ) {
     var showAddDialog by remember { mutableStateOf(false) }
 
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(16.dp),
+        contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 16.dp, bottom = bottomPadding),
         verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
         // Add Note Action Button
@@ -1450,11 +1467,12 @@ fun FridayKhutbahNotesContent(
 @Composable
 fun FridaySaatIjabahContent(
     banglaFont: FontFamily,
-    arabicFont: FontFamily
+    arabicFont: FontFamily,
+    bottomPadding: Dp = 100.dp
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(16.dp),
+        contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 16.dp, bottom = bottomPadding),
         verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
         item {
@@ -1609,11 +1627,12 @@ fun FridayCharityContent(
     charityGiven: Boolean,
     onToggleCharity: () -> Unit,
     banglaFont: FontFamily,
-    arabicFont: FontFamily
+    arabicFont: FontFamily,
+    bottomPadding: Dp = 100.dp
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(16.dp),
+        contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 16.dp, bottom = bottomPadding),
         verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
         item {
@@ -1715,7 +1734,8 @@ fun FridayCharityContent(
 @Composable
 fun FridayHadithsContent(
     banglaFont: FontFamily,
-    arabicFont: FontFamily
+    arabicFont: FontFamily,
+    bottomPadding: Dp = 100.dp
 ) {
     val hadiths = remember {
         listOf(
@@ -1744,7 +1764,7 @@ fun FridayHadithsContent(
 
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(16.dp),
+        contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 16.dp, bottom = bottomPadding),
         verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
         items(hadiths) { (title, ar, bn) ->
@@ -1789,7 +1809,8 @@ fun FridayHadithsContent(
 @Composable
 fun FridayAllAmolsContent(
     banglaFont: FontFamily,
-    arabicFont: FontFamily
+    arabicFont: FontFamily,
+    bottomPadding: Dp = 100.dp
 ) {
     val allItems = remember { FridaySpecialDuaAmolData.section.items }
     var searchQuery by remember { mutableStateOf("") }
@@ -1805,7 +1826,7 @@ fun FridayAllAmolsContent(
 
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(16.dp),
+        contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 16.dp, bottom = bottomPadding),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         item {

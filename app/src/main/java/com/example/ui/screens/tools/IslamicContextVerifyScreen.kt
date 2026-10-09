@@ -123,7 +123,8 @@ import kotlinx.coroutines.launch
 @Composable
 fun IslamicContextVerifyScreen(
     onNavigateBack: () -> Unit,
-    initialClaim: String? = null
+    initialClaim: String? = null,
+    contentPadding: PaddingValues = PaddingValues()
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -537,7 +538,7 @@ fun IslamicContextVerifyScreen(
                 )
             }
 
-            Spacer(modifier = Modifier.height(40.dp))
+            Spacer(modifier = Modifier.height(contentPadding.calculateBottomPadding() + 140.dp))
         }
     }
 

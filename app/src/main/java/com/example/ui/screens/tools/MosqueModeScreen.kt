@@ -90,7 +90,8 @@ import kotlinx.coroutines.delay
 fun MosqueModeScreen(
     viewModel: MainViewModel,
     onNavigateBack: () -> Unit,
-    onOpenQibla: () -> Unit
+    onOpenQibla: () -> Unit,
+    contentPadding: PaddingValues = PaddingValues()
 ) {
     val context = LocalContext.current
     val banglaFont = LocalBanglaFontFamily.current
@@ -165,7 +166,7 @@ fun MosqueModeScreen(
     ) {
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 48.dp),
+            contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = contentPadding.calculateBottomPadding() + 140.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             // TOP BAR: Navigation & Atmosphere Controls

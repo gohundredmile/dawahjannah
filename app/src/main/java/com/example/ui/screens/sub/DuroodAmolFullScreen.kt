@@ -110,7 +110,8 @@ import kotlin.math.sin
 @Composable
 fun DuroodAmolFullScreen(
     viewModel: MainViewModel,
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    contentPadding: PaddingValues = PaddingValues()
 ) {
     val context = LocalContext.current
     val fontController = LocalFontScaleController.current
@@ -198,7 +199,7 @@ fun DuroodAmolFullScreen(
             LazyColumn(
                 state = listState,
                 modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 24.dp)
+                contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = contentPadding.calculateBottomPadding() + 140.dp)
             ) {
                 // User Friendly Quick Controls Banner (Mirroring Tawba Istighfar controls banner)
                 item {

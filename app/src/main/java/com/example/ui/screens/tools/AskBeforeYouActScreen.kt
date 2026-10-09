@@ -133,7 +133,8 @@ private enum class ScreenStage {
 @Composable
 fun AskBeforeYouActScreen(
     onNavigateBack: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    contentPadding: PaddingValues = PaddingValues()
 ) {
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
@@ -400,6 +401,7 @@ fun AskBeforeYouActScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
+                .padding(bottom = contentPadding.calculateBottomPadding() + 140.dp)
         ) {
             AnimatedContent(
                 targetState = currentStage,

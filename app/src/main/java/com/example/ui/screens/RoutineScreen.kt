@@ -747,7 +747,7 @@ fun RoutineScreen(
                     LazyColumn(
                         state = listState,
                         modifier = Modifier.fillMaxSize(),
-                        contentPadding = PaddingValues(top = 4.dp, bottom = 80.dp)
+                        contentPadding = PaddingValues(top = 4.dp, bottom = 140.dp)
                     ) {
                         items(routineList, key = { it.id }) { item ->
                             val isChecked = completedState[item.id] == true

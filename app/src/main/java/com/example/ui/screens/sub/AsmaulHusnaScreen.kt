@@ -83,7 +83,10 @@ import com.example.util.CalendarHelper
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun AsmaulHusnaScreen(viewModel: MainViewModel) {
+fun AsmaulHusnaScreen(
+    viewModel: MainViewModel,
+    contentPadding: PaddingValues = PaddingValues()
+) {
     val searchQuery by viewModel.asmaulHusnaSearch.collectAsState()
     val namesList by viewModel.filteredAsmaulHusna.collectAsState()
     val bookmarkedIds by viewModel.bookmarkedIds.collectAsState()
@@ -117,12 +120,13 @@ fun AsmaulHusnaScreen(viewModel: MainViewModel) {
             onSelectPrev = {
                 val prevIdx = if (currentSelected.number <= 1) AsmaulHusnaData.names.size - 1 else currentSelected.number - 2
                 selectedName = AsmaulHusnaData.names[prevIdx]
-            }
+            },
+            contentPadding = contentPadding
         )
     } else {
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(top = 8.dp, bottom = 24.dp)
+            contentPadding = PaddingValues(top = 8.dp, bottom = contentPadding.calculateBottomPadding() + 140.dp)
         ) {
             // Search field
             item {
@@ -396,7 +400,8 @@ fun AllahNameDetailView(
     onToggleBookmark: () -> Unit = {},
     onBack: () -> Unit,
     onSelectNext: () -> Unit,
-    onSelectPrev: () -> Unit
+    onSelectPrev: () -> Unit,
+    contentPadding: PaddingValues = PaddingValues()
 ) {
     val context = LocalContext.current
     val scrollState = rememberScrollState()
@@ -708,7 +713,7 @@ fun AllahNameDetailView(
                 }
             }
 
-            Spacer(modifier = Modifier.height(30.dp))
+            Spacer(modifier = Modifier.height(contentPadding.calculateBottomPadding() + 140.dp))
         }
     }
 }

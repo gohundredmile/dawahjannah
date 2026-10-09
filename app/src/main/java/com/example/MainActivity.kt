@@ -273,7 +273,8 @@ class MainActivity : ComponentActivity() {
                                         )
                                         ToolsSubScreen.FRIDAY_MODE -> FridayModeScreen(
                                             onNavigateBack = { viewModel.navigateBack() },
-                                            onOpenHolyQuranSurah18 = { viewModel.openHolyQuran(18) }
+                                            onOpenHolyQuranSurah18 = { viewModel.openHolyQuran(18) },
+                                            contentPadding = innerPadding
                                         )
                                         ToolsSubScreen.HOLY_QURAN -> {
                                             val initialSurah by viewModel.targetQuranSurahNumber.collectAsState()
@@ -299,16 +300,20 @@ class MainActivity : ComponentActivity() {
                                         ToolsSubScreen.MOSQUE_MODE -> MosqueModeScreen(
                                             viewModel = viewModel,
                                             onNavigateBack = { viewModel.navigateBack() },
-                                            onOpenQibla = { viewModel.navigateToToolsSubScreen(ToolsSubScreen.QIBLA) }
+                                            onOpenQibla = { viewModel.navigateToToolsSubScreen(ToolsSubScreen.QIBLA) },
+                                            contentPadding = innerPadding
                                         )
                                         ToolsSubScreen.DUA_BY_SITUATION -> DuaBySituationScreen(
-                                            onNavigateBack = { viewModel.navigateBack() }
+                                            onNavigateBack = { viewModel.navigateBack() },
+                                            contentPadding = innerPadding
                                         )
                                         ToolsSubScreen.PERSONAL_DUA_BUILDER -> PersonalDuaBuilderScreen(
-                                            onNavigateBack = { viewModel.navigateBack() }
+                                            onNavigateBack = { viewModel.navigateBack() },
+                                            contentPadding = innerPadding
                                         )
                                         ToolsSubScreen.ASK_BEFORE_YOU_ACT -> AskBeforeYouActScreen(
-                                            onNavigateBack = { viewModel.navigateBack() }
+                                            onNavigateBack = { viewModel.navigateBack() },
+                                            contentPadding = innerPadding
                                         )
                                         ToolsSubScreen.EXPLAIN_AYAH_CAMERA -> ExplainAyahCameraScreen(
                                             onNavigateBack = { viewModel.navigateBack() },
@@ -316,36 +321,45 @@ class MainActivity : ComponentActivity() {
                                         )
                                         ToolsSubScreen.SMART_QURAN_SEARCH -> QuranActionEngineScreen(
                                             onNavigateBack = { viewModel.navigateBack() },
-                                            initialMode = QuranEngineMode.SMART_SEARCH
+                                            initialMode = QuranEngineMode.SMART_SEARCH,
+                                            contentPadding = innerPadding
                                         )
                                         ToolsSubScreen.ISLAMIC_HABIT_SYSTEM -> IslamicHabitSystemScreen(
-                                            onNavigateBack = { viewModel.navigateBack() }
+                                            onNavigateBack = { viewModel.navigateBack() },
+                                            contentPadding = innerPadding
                                         )
                                         ToolsSubScreen.RAMADAN_INTELLIGENCE -> RamadanIntelligenceScreen(
-                                            onNavigateBack = { viewModel.navigateBack() }
+                                            onNavigateBack = { viewModel.navigateBack() },
+                                            contentPadding = innerPadding
                                         )
                                         ToolsSubScreen.AYAT_DETECTOR_SOLVER -> AyatDetectorAndSolverScreen(
-                                            viewModel = viewModel
+                                            viewModel = viewModel,
+                                            contentPadding = innerPadding
                                         )
                                         ToolsSubScreen.QIBLA -> QiblaCompassScreen(
                                             viewModel = viewModel,
-                                            onBack = { viewModel.navigateBack() }
+                                            onBack = { viewModel.navigateBack() },
+                                            contentPadding = innerPadding
                                         )
                                         ToolsSubScreen.TASBIH -> TasbihScreen(
                                             viewModel = viewModel,
                                             contentPadding = innerPadding
                                         )
                                         ToolsSubScreen.NAMES_OF_ALLAH -> AsmaulHusnaScreen(
-                                            viewModel = viewModel
+                                            viewModel = viewModel,
+                                            contentPadding = innerPadding
                                         )
                                         ToolsSubScreen.ISLAMIC_CONTEXT_VERIFY -> IslamicContextVerifyScreen(
-                                            onNavigateBack = { viewModel.navigateBack() }
+                                            onNavigateBack = { viewModel.navigateBack() },
+                                            contentPadding = innerPadding
                                         )
                                         ToolsSubScreen.QURAN_ACTION_ENGINE -> QuranActionEngineScreen(
-                                            onNavigateBack = { viewModel.navigateBack() }
+                                            onNavigateBack = { viewModel.navigateBack() },
+                                            contentPadding = innerPadding
                                         )
                                         ToolsSubScreen.ZAKAT_CALCULATOR -> ZakatCalculatorScreen(
-                                            onNavigateBack = { viewModel.navigateBack() }
+                                            onNavigateBack = { viewModel.navigateBack() },
+                                            contentPadding = innerPadding
                                         )
                                         ToolsSubScreen.QURAN_AUDIO_GENERATOR -> QuranAudioGeneratorScreen(
                                             onNavigateBack = { viewModel.navigateBack() },

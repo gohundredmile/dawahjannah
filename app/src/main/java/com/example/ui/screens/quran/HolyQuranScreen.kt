@@ -785,7 +785,7 @@ fun HolyQuranIndexScreen(
                 .weight(1f)
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp),
-            contentPadding = PaddingValues(bottom = 90.dp)
+            contentPadding = PaddingValues(bottom = 140.dp)
         ) {
             if (filteredSurahs.isEmpty()) {
                 item {
@@ -1266,7 +1266,7 @@ fun SurahDetailScreen(
                 .weight(1f)
                 .fillMaxWidth()
                 .padding(horizontal = 14.dp),
-            contentPadding = PaddingValues(top = 10.dp, bottom = 100.dp)
+            contentPadding = PaddingValues(top = 10.dp, bottom = 140.dp)
         ) {
             // Item 1: Revamped Beautiful Surah Header Card (Organized from blue marked area)
             item {

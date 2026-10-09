@@ -98,7 +98,8 @@ import com.example.util.CalendarHelper
 fun IslamicLifeSectionDetailScreen(
     section: IslamicLifeSection,
     onBack: () -> Unit,
-    viewModel: MainViewModel? = null
+    viewModel: MainViewModel? = null,
+    contentPadding: PaddingValues = PaddingValues()
 ) {
     BackHandler(onBack = onBack)
     val context = LocalContext.current
@@ -197,7 +198,7 @@ fun IslamicLifeSectionDetailScreen(
         label = "readingProgress"
     )
 
-    val progressPercent = if (readingProgressFraction >= 0.99f || !listState.canScrollForward) {
+    val progressPercent = if (readingProgressFraction >= 0.98f || !listState.canScrollForward) {
         100
     } else if (readingProgressFraction <= 0.01f && !listState.canScrollBackward) {
         0
@@ -661,7 +662,7 @@ fun IslamicLifeSectionDetailScreen(
         LazyColumn(
             state = listState,
             modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 0.dp, bottom = 24.dp),
+            contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 0.dp, bottom = contentPadding.calculateBottomPadding() + 140.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             // Header Overview Card
@@ -920,7 +921,7 @@ fun IslamicLifeSectionDetailScreen(
             }
 
             item {
-                Spacer(modifier = Modifier.height(24.dp))
+                Spacer(modifier = Modifier.height(64.dp))
             }
         }
     }

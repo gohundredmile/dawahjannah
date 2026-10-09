@@ -609,7 +609,7 @@ fun HomeScreen(
     ) {
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(bottom = 24.dp)
+            contentPadding = PaddingValues(bottom = 140.dp)
         ) {
             homeScreenCardOrder.forEach { cardId ->
                 when (cardId) {

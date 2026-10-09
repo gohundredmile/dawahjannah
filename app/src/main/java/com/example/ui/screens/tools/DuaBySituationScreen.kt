@@ -92,7 +92,8 @@ import com.example.ui.theme.LocalBanglaFontFamily
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun DuaBySituationScreen(
-    onNavigateBack: () -> Unit
+    onNavigateBack: () -> Unit,
+    contentPadding: PaddingValues = PaddingValues()
 ) {
     val context = LocalContext.current
     val banglaFont = LocalBanglaFontFamily.current
@@ -198,7 +199,7 @@ fun DuaBySituationScreen(
                 .fillMaxSize()
                 .background(MaterialTheme.colorScheme.background)
                 .padding(innerPadding),
-            contentPadding = PaddingValues(16.dp),
+            contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 16.dp, bottom = contentPadding.calculateBottomPadding() + 140.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             // ========================================================

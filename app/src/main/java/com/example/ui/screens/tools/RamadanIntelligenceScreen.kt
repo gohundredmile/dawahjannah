@@ -5,6 +5,7 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -56,7 +57,8 @@ import com.example.ui.viewmodel.RamadanIntelligenceViewModel
 fun RamadanIntelligenceScreen(
     onNavigateBack: () -> Unit,
     modifier: Modifier = Modifier,
-    viewModel: RamadanIntelligenceViewModel = viewModel()
+    viewModel: RamadanIntelligenceViewModel = viewModel(),
+    contentPadding: PaddingValues = PaddingValues()
 ) {
     val banglaFont = LocalBanglaFontFamily.current
 
@@ -155,9 +157,8 @@ fun RamadanIntelligenceScreen(
 
         // TAB CONTENT
         LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 14.dp, vertical = 12.dp)
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(start = 14.dp, end = 14.dp, top = 12.dp, bottom = contentPadding.calculateBottomPadding() + 140.dp)
         ) {
             item {
                 when (currentLoop) {

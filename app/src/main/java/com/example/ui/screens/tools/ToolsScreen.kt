@@ -498,7 +498,7 @@ fun ToolsScreen(
             modifier = Modifier.fillMaxSize(),
             contentPadding = PaddingValues(
                 top = contentPadding.calculateTopPadding() + 10.dp,
-                bottom = contentPadding.calculateBottomPadding() + 24.dp,
+                bottom = contentPadding.calculateBottomPadding() + 140.dp,
                 start = 12.dp,
                 end = 12.dp
             ),

@@ -144,7 +144,8 @@ enum class QuranEngineMode(val titleBn: String, val iconEmoji: String) {
 fun QuranActionEngineScreen(
     onNavigateBack: () -> Unit,
     initialMode: QuranEngineMode = QuranEngineMode.ACTION_ENGINE,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    contentPadding: PaddingValues = PaddingValues()
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -364,6 +365,7 @@ fun QuranActionEngineScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .weight(1f)
+                    .padding(bottom = contentPadding.calculateBottomPadding() + 100.dp)
             ) {
                 if (currentMode == QuranEngineMode.SMART_SEARCH) {
                     SmartQuranSearchContent(

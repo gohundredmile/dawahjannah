@@ -47,7 +47,8 @@ import com.example.ui.theme.LocalBanglaFontFamily
 @Composable
 fun ZakatCalculatorScreen(
     onNavigateBack: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    contentPadding: PaddingValues = PaddingValues()
 ) {
     BackHandler { onNavigateBack() }
     val context = LocalContext.current
@@ -160,6 +161,7 @@ fun ZakatCalculatorScreen(
             modifier = modifier
                 .fillMaxSize()
                 .padding(innerPadding)
+                .padding(bottom = contentPadding.calculateBottomPadding() + 140.dp)
         ) {
             // Top Scrollable Category Navigation Tabs
             ScrollableTabRow(

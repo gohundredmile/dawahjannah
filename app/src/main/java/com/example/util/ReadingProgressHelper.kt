@@ -39,38 +39,41 @@ object ReadingProgressHelper {
         val viewportHeight = (viewportEnd - viewportStart).toFloat()
         if (viewportHeight <= 0f) return 0f
 
-        // 3. Check if the final item is within the viewport
-        val lastVisibleItem = visibleItems.maxByOrNull { it.index }
-        if (lastVisibleItem != null && lastVisibleItem.index >= totalItems - 1) {
-            val lastItemBottom = lastVisibleItem.offset + lastVisibleItem.size
-            if (lastItemBottom <= viewportEnd + 48) { // within 48px of bottom or overscrolled
+        // 3. Final item reached check: If the last item or second to last (e.g. trailing spacer) is visible
+        val maxVisibleItem = visibleItems.maxByOrNull { it.index }
+        if (maxVisibleItem != null && maxVisibleItem.index >= totalItems - 2) {
+            if (!listState.canScrollForward) {
+                return 1f
+            }
+            // If the final item's bottom is in or near the viewport
+            val lastItemBottom = maxVisibleItem.offset + maxVisibleItem.size
+            if (lastItemBottom <= viewportEnd + 120) {
                 return 1f
             }
         }
 
-        // 4. Continuous pixel-level scroll progress:
-        // Calculate the average item height across currently visible items to determine scroll ratio
-        val averageItemHeight = visibleItems.map { it.size }.average().toFloat().coerceAtLeast(1f)
-        val totalEstimatedContentHeight = totalItems * averageItemHeight
-        val maxScrollOffset = (totalEstimatedContentHeight - viewportHeight).coerceAtLeast(1f)
-        val currentScrollOffset = (listState.firstVisibleItemIndex * averageItemHeight + listState.firstVisibleItemScrollOffset).coerceAtLeast(0f)
-        val continuousScrollProgress = (currentScrollOffset / maxScrollOffset).coerceIn(0f, 1f)
+        // 4. Continuous pixel-accurate scroll progress:
+        // Measure where the top of the viewport is relative to the scrollable range
+        val maxScrollableItems = (totalItems - 1).coerceAtLeast(1)
+        val firstItem = visibleItems.firstOrNull { it.index == listState.firstVisibleItemIndex }
+        val firstItemHeight = (firstItem?.size ?: visibleItems.firstOrNull()?.size ?: 1).coerceAtLeast(1)
+        val firstItemFraction = (listState.firstVisibleItemScrollOffset.toFloat() / firstItemHeight.toFloat()).coerceIn(0f, 1f)
+        val continuousScrolledItems = listState.firstVisibleItemIndex.toFloat() + firstItemFraction
+        val scrollProgress = (continuousScrolledItems / maxScrollableItems.toFloat()).coerceIn(0f, 1f)
 
-        // 5. Revealed cards advancement:
-        // By using maxByOrNull { it.index }, pinned sticky headers (which stay at top with low indices)
-        // never skew the calculation.
-        val itemProgress = if (lastVisibleItem != null) {
-            val itemTop = lastVisibleItem.offset
-            val itemSize = lastVisibleItem.size.coerceAtLeast(1)
+        // 5. Furthest item visible in viewport:
+        val furthestProgress = if (maxVisibleItem != null) {
+            val itemTop = maxVisibleItem.offset
+            val itemSize = maxVisibleItem.size.coerceAtLeast(1)
             val fractionInsideViewport = ((viewportEnd - itemTop).toFloat() / itemSize.toFloat()).coerceIn(0f, 1f)
-            val furthestReached = lastVisibleItem.index.toFloat() + fractionInsideViewport
-            (furthestReached / totalItems.toFloat()).coerceIn(0f, 1f)
+            val furthestIndex = maxVisibleItem.index.toFloat() + fractionInsideViewport
+            (furthestIndex / totalItems.toFloat()).coerceIn(0f, 1f)
         } else {
             0f
         }
 
-        // 6. Blend scroll progress and furthest revealed item for ultra-smooth responsiveness
-        val blended = maxOf(continuousScrollProgress, itemProgress * 0.95f)
+        // 6. Blend: Ensure immediate, smooth reactivity on every pixel scroll
+        val blended = maxOf(scrollProgress, furthestProgress * 0.96f)
         return blended.coerceIn(0f, 1f)
     }
 }

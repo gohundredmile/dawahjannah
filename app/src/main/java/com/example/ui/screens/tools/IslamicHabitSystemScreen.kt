@@ -109,7 +109,8 @@ import com.example.ui.viewmodel.SunnahHabitUiModel
 fun IslamicHabitSystemScreen(
     onNavigateBack: () -> Unit,
     modifier: Modifier = Modifier,
-    habitViewModel: IslamicHabitViewModel = viewModel()
+    habitViewModel: IslamicHabitViewModel = viewModel(),
+    contentPadding: PaddingValues = PaddingValues()
 ) {
     val context = LocalContext.current
     val banglaFont = LocalBanglaFontFamily.current
@@ -136,7 +137,7 @@ fun IslamicHabitSystemScreen(
     ) {
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(bottom = 50.dp)
+            contentPadding = PaddingValues(bottom = contentPadding.calculateBottomPadding() + 140.dp)
         ) {
             // Header Top Bar
             item {

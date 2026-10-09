@@ -80,12 +80,14 @@ fun MoreScreen(
         if (currentSubScreen == MoreSubScreen.DUROOD_AMOL) {
             DuroodAmolFullScreen(
                 viewModel = viewModel,
-                onBack = { viewModel.navigateBackToMore() }
+                onBack = { viewModel.navigateBackToMore() },
+                contentPadding = contentPadding
             )
         } else if (currentSubScreen == MoreSubScreen.QIBLA) {
             QiblaCompassScreen(
                 viewModel = viewModel,
-                onBack = { viewModel.navigateBackToMore() }
+                onBack = { viewModel.navigateBackToMore() },
+                contentPadding = contentPadding
             )
         } else if (currentSubScreen == MoreSubScreen.ISLAMIC_LIFE_SECTION_DETAIL) {
             val section by viewModel.selectedIslamicSection.collectAsState()
@@ -93,7 +95,8 @@ fun MoreScreen(
                 IslamicLifeSectionDetailScreen(
                     section = it,
                     onBack = { viewModel.navigateBackToMore() },
-                    viewModel = viewModel
+                    viewModel = viewModel,
+                    contentPadding = contentPadding
                 )
             }
         } else {
@@ -154,7 +157,7 @@ fun MoreScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(contentPadding),
-            contentPadding = PaddingValues(16.dp)
+            contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 140.dp)
         ) {
             item {
                 Row(

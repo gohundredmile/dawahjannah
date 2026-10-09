@@ -320,7 +320,7 @@ fun MasnunDuaScreen(
         } else {
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(top = 2.dp, bottom = 28.dp)
+                contentPadding = PaddingValues(top = 2.dp, bottom = 140.dp)
             ) {
                 items(duas, key = { it.id }) { dua ->
                     DuaCard(

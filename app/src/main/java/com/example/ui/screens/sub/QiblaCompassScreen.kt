@@ -120,7 +120,8 @@ import kotlin.math.sin
 @Composable
 fun QiblaCompassScreen(
     viewModel: MainViewModel,
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    contentPadding: PaddingValues = PaddingValues()
 ) {
     val context = LocalContext.current
     val salatConfig by viewModel.salatConfig.collectAsState()
@@ -348,7 +349,7 @@ fun QiblaCompassScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .weight(1f),
-                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+                contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = contentPadding.calculateBottomPadding() + 140.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 // 1. LIVE DIRECTION STATUS CARD

@@ -132,7 +132,8 @@ import java.util.Locale
 @Composable
 fun PersonalDuaBuilderScreen(
     onNavigateBack: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    contentPadding: PaddingValues = PaddingValues()
 ) {
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
@@ -400,7 +401,7 @@ fun PersonalDuaBuilderScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(horizontal = 14.dp),
-            contentPadding = PaddingValues(top = 10.dp, bottom = 54.dp),
+            contentPadding = PaddingValues(top = 10.dp, bottom = contentPadding.calculateBottomPadding() + 140.dp),
             verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
             // PROMPT INPUT & SEARCH CARD

@@ -829,6 +829,8 @@ fun HolyQuranIndexScreen(
                 onPlayPause = {
                     if (playerState.isPlaying) audioManager.pause() else audioManager.resume()
                 },
+                onPreviousAyah = { audioManager.playPreviousAyah() },
+                onNextAyah = { audioManager.playNextAyah() },
                 onStop = { audioManager.stop() }
             )
         }
@@ -1482,7 +1484,7 @@ fun SurahDetailScreen(
                             if (isPlayingThisAyah) {
                                 audioManager.pause()
                             } else {
-                                audioManager.playAyahAudio(ayah.surahNumber, ayah.ayahNumber, continuous = true)
+                                audioManager.playAyahAudio(ayah.surahNumber, ayah.ayahNumber, continuous = true, surahNameBn = surah.nameBn)
                             }
                         },
                         onShareAyah = {
@@ -1589,6 +1591,8 @@ fun SurahDetailScreen(
                 onPlayPause = {
                     if (playerState.isPlaying) audioManager.pause() else audioManager.resume()
                 },
+                onPreviousAyah = { audioManager.playPreviousAyah() },
+                onNextAyah = { audioManager.playNextAyah() },
                 onStop = { audioManager.stop() }
             )
         }
@@ -2595,6 +2599,8 @@ fun MiniQuranAudioPlayer(
     playerState: com.example.data.model.SurahAudioPlayerState,
     reciter: QuranReciter,
     onPlayPause: () -> Unit,
+    onPreviousAyah: () -> Unit = {},
+    onNextAyah: () -> Unit = {},
     onStop: () -> Unit
 ) {
     Surface(
@@ -2683,12 +2689,37 @@ fun MiniQuranAudioPlayer(
                     Spacer(modifier = Modifier.width(8.dp))
                 }
 
+                IconButton(
+                    onClick = onPreviousAyah,
+                    modifier = Modifier.size(32.dp),
+                    enabled = (playerState.activeAyahNumber ?: 1) > 1
+                ) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = "পূর্ববর্তী আয়াত",
+                        tint = if ((playerState.activeAyahNumber ?: 1) > 1) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.outline.copy(alpha = 0.3f),
+                        modifier = Modifier.size(18.dp)
+                    )
+                }
+
                 IconButton(onClick = onPlayPause) {
                     Icon(
                         imageVector = if (playerState.isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
                         contentDescription = "Play/Pause",
                         tint = IslamicGreen,
                         modifier = Modifier.size(28.dp)
+                    )
+                }
+
+                IconButton(
+                    onClick = onNextAyah,
+                    modifier = Modifier.size(32.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                        contentDescription = "পরবর্তী আয়াত",
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(18.dp)
                     )
                 }
 

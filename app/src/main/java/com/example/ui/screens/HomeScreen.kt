@@ -166,7 +166,7 @@ fun HomeScreen(
     val exploreFeatureOrder by viewModel.exploreFeatureOrder.collectAsState()
     val exploreSortMode by viewModel.exploreSortMode.collectAsState()
 
-    // Full 21 Features list with default order matching user's specimen
+    // Full 28 Features list with default order matching user's default features (12 top features + additional features after 12th position)
     val allAppFeatures = remember(prayerStatus, salatConfig, scorecardCompletedCount, scorecardStreak, showNamazModeDialog) {
         val isNamazModeActiveNow = NamazModeManager.isNamazModeActive(context)
         val namazMinutesLeft = NamazModeManager.getRemainingMinutes(context)
@@ -175,76 +175,11 @@ fun HomeScreen(
             prayerList = prayerStatus.prayerList
         )
         listOf(
-            // সালাত (নতুন সমন্বিত ফিচার হাব)
-            HomeFeatureItem(
-                id = "salat_hub",
-                serialNumberBn = "০১",
-                titleBn = "১. সালাত",
-                shortTitleBn = "সালাত",
-                subtitleBn = "সালাতের সময়সূচী, নামাজ গাইড, নফল ও ফরজ সালাতের দো‘আ ও আমল",
-                categoryBn = "সালাত ও সময়",
-                icon = Icons.Default.Mosque,
-                iconColor = Color(0xFF0284C7),
-                isTopEight = true,
-                onClickAction = { showSalatHubDialog = true }
-            ),
-            // পবিত্র কুরআন
-            HomeFeatureItem(
-                id = "holy_quran",
-                serialNumberBn = "০১",
-                titleBn = "১. পবিত্র কুরআন",
-                shortTitleBn = "আল-কুরআন",
-                subtitleBn = "১১৪ সূরার অনুবাদ, বাংলা উচ্চারণ, বিশদ তাফসীর ও ক্বারী তিলাওয়াত",
-                categoryBn = "কুরআন ও তাফসীর",
-                icon = Icons.Default.MenuBook,
-                iconColor = IslamicGreen,
-                isTopEight = true,
-                onClickAction = { viewModel.openHolyQuran() }
-            ),
-            // সহীহ হাদীস সম্ভার
-            HomeFeatureItem(
-                id = "hadith_collection",
-                serialNumberBn = "০২",
-                titleBn = "২. সহীহ হাদীস সম্ভার",
-                shortTitleBn = "সহীহ হাদীস",
-                subtitleBn = "সিহাহ্ সিত্তাহ (বুখারী, মুসলিম, তিরমিজি...) ও অফলাইন হাদীস ডেটাবেজ",
-                categoryBn = "হাদীস ও সুন্নাহ",
-                icon = Icons.Default.CollectionsBookmark,
-                iconColor = IslamicGold,
-                isTopEight = true,
-                onClickAction = { viewModel.openHadithCollection() }
-            ),
-            // বিষয় ভিত্তিক কোরআনের আয়াত
-            HomeFeatureItem(
-                id = "quran_topics",
-                serialNumberBn = "০৩",
-                titleBn = "৩. বিষয় ভিত্তিক কোরআনের আয়াত",
-                shortTitleBn = "কুরআনের আয়াত",
-                subtitleBn = "HadithBD / IRD Foundation অফলাইন ডেটাবেজ—৫৪টি মৌলিক বিষয়ে কোরআনের বিষয়ভিত্তিক আয়াত",
-                categoryBn = "কুরআন ও তাফসীর",
-                icon = Icons.Default.MenuBook,
-                iconColor = Color(0xFF047857),
-                isTopEight = true,
-                onClickAction = { viewModel.openQuranTopics() }
-            ),
-            // বিষয় ভিত্তিক সহীহ হাদিস
-            HomeFeatureItem(
-                id = "hadith_topics",
-                serialNumberBn = "০৪",
-                titleBn = "৪. বিষয় ভিত্তিক সহীহ হাদিস",
-                shortTitleBn = "বিষয়ভিত্তিক হাদিস",
-                subtitleBn = "HadithBD ও MessageBD প্রামাণ্য তাহকীক—৫০টি বিষয়ে সিহাহ সিত্তাহ সহীহ হাদিস সম্ভার",
-                categoryBn = "হাদীস ও সুন্নাহ",
-                icon = Icons.Default.CollectionsBookmark,
-                iconColor = Color(0xFF4338CA),
-                isTopEight = true,
-                onClickAction = { viewModel.openHadithTopics() }
-            ),
             // ১. তাসবিহ
             HomeFeatureItem(
                 id = "tasbih",
-                serialNumberBn = "০২",
-                titleBn = "২. তাসবিহ",
+                serialNumberBn = "০১",
+                titleBn = "১. তাসবিহ",
                 shortTitleBn = "তাসবিহ",
                 subtitleBn = "ডিজিটাল তাসবিহ কাউন্টার, তাসবিহ তালিকা ও জিকির",
                 categoryBn = "দো‘আ ও যিকির",
@@ -398,6 +333,58 @@ fun HomeScreen(
                 isTopEight = true,
                 onClickAction = { viewModel.selectTab(AppTab.DUA) }
             ),
+            // ১৩. পবিত্র কুরআন (নতুন ফিচার - ১২তম পজিশনের পর)
+            HomeFeatureItem(
+                id = "holy_quran",
+                serialNumberBn = "১৩",
+                titleBn = "১৩. পবিত্র কুরআন",
+                shortTitleBn = "আল-কুরআন",
+                subtitleBn = "১১৪ সূরার অনুবাদ, বাংলা উচ্চারণ, বিশদ তাফসীর ও ক্বারী তিলাওয়াত",
+                categoryBn = "কুরআন ও তাফসীর",
+                icon = Icons.Default.MenuBook,
+                iconColor = IslamicGreen,
+                isTopEight = false,
+                onClickAction = { viewModel.openHolyQuran() }
+            ),
+            // ১৪. সহীহ হাদীস সম্ভার (নতুন ফিচার - ১২তম পজিশনের পর)
+            HomeFeatureItem(
+                id = "hadith_collection",
+                serialNumberBn = "১৪",
+                titleBn = "১৪. সহীহ হাদীস সম্ভার",
+                shortTitleBn = "সহীহ হাদীস",
+                subtitleBn = "সিহাহ্ সিত্তাহ (বুখারী, মুসলিম, তিরমিজি...) ও অফলাইন হাদীস ডেটাবেজ",
+                categoryBn = "হাদীস ও সুন্নাহ",
+                icon = Icons.Default.CollectionsBookmark,
+                iconColor = IslamicGold,
+                isTopEight = false,
+                onClickAction = { viewModel.openHadithCollection() }
+            ),
+            // ১৫. বিষয় ভিত্তিক কোরআনের আয়াত (নতুন ফিচার - ১২তম পজিশনের পর)
+            HomeFeatureItem(
+                id = "quran_topics",
+                serialNumberBn = "১৫",
+                titleBn = "১৫. বিষয় ভিত্তিক কোরআনের আয়াত",
+                shortTitleBn = "কুরআনের আয়াত",
+                subtitleBn = "HadithBD / IRD Foundation অফলাইন ডেটাবেজ—৫৪টি মৌলিক বিষয়ে কোরআনের বিষয়ভিত্তিক আয়াত",
+                categoryBn = "কুরআন ও তাফসীর",
+                icon = Icons.Default.MenuBook,
+                iconColor = Color(0xFF047857),
+                isTopEight = false,
+                onClickAction = { viewModel.openQuranTopics() }
+            ),
+            // ১৬. বিষয় ভিত্তিক সহীহ হাদিস (নতুন ফিচার - ১২তম পজিশনের পর)
+            HomeFeatureItem(
+                id = "hadith_topics",
+                serialNumberBn = "১৬",
+                titleBn = "১৬. বিষয় ভিত্তিক সহীহ হাদিস",
+                shortTitleBn = "বিষয়ভিত্তিক হাদিস",
+                subtitleBn = "HadithBD ও MessageBD প্রামাণ্য তাহকীক—৫০টি বিষয়ে সিহাহ সিত্তাহ সহীহ হাদিস সম্ভার",
+                categoryBn = "হাদীস ও সুন্নাহ",
+                icon = Icons.Default.CollectionsBookmark,
+                iconColor = Color(0xFF4338CA),
+                isTopEight = false,
+                onClickAction = { viewModel.openHadithTopics() }
+            ),
             // ১৩. আল্লাহর ৯৯ নাম
             HomeFeatureItem(
                 id = "names_of_allah",
@@ -546,7 +533,7 @@ fun HomeScreen(
                     }
                 }
             ),
-            // ২২. ক্বিবলা কম্পাস
+            // ক্বিবলা কম্পাস
             HomeFeatureItem(
                 id = "qibla_compass",
                 serialNumberBn = "২২",
@@ -560,11 +547,24 @@ fun HomeScreen(
                     viewModel.openQibla()
                 }
             ),
-            // ২৩. ইসলামিক টুলস ও ল্যাব
+            // সালাত (নতুন সমন্বিত ফিচার হাব - ১২তম পজিশনের পর)
+            HomeFeatureItem(
+                id = "salat_hub",
+                serialNumberBn = "২৩",
+                titleBn = "২৩. সালাত হাব",
+                shortTitleBn = "সালাত হাব",
+                subtitleBn = "সালাতের সময়সূচী, নামাজ গাইড, নফল ও ফরজ সালাতের দো‘আ ও আমল",
+                categoryBn = "সালাত ও সময়",
+                icon = Icons.Default.Mosque,
+                iconColor = Color(0xFF0284C7),
+                isTopEight = false,
+                onClickAction = { showSalatHubDialog = true }
+            ),
+            // ইসলামিক টুলস ও ল্যাব
             HomeFeatureItem(
                 id = "tools",
-                serialNumberBn = "২৩",
-                titleBn = "২৩. ইসলামিক টুলস ও ল্যাব",
+                serialNumberBn = "২৪",
+                titleBn = "২৪. ইসলামিক টুলস ও ল্যাব",
                 shortTitleBn = "টুলস ও ল্যাব",
                 subtitleBn = "Explain This Ayah ক্যামেরা, শুদ্ধিকরণ ল্যাব ও ক্বিবলা কম্পাস",
                 categoryBn = "স্মার্ট টুলস",
@@ -582,7 +582,7 @@ fun HomeScreen(
             allAppFeatures
         } else {
             val orderMap = exploreFeatureOrder.split(",").mapIndexed { index, id -> id to index }.toMap()
-            allAppFeatures.sortedBy { orderMap[it.id] ?: allAppFeatures.indexOf(it) }
+            allAppFeatures.sortedBy { orderMap[it.id] ?: (1000 + allAppFeatures.indexOf(it)) }
         }
         sortedList.renumberedFeatures()
     }

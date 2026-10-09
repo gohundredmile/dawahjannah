@@ -729,69 +729,6 @@ fun ExplainAyahCameraScreen(
                     }
                 }
 
-                // Islamic OCR Target Capabilities Carousel
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 3.dp)
-                ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 4.dp, vertical = 2.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = "Islamic OCR স্ক্যান সক্ষমতা:",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = IslamicGold,
-                            fontWeight = FontWeight.Bold,
-                            fontFamily = banglaFont
-                        )
-                        Surface(
-                            shape = RoundedCornerShape(6.dp),
-                            color = Color(0xFF047857)
-                        ) {
-                            Text(
-                                text = "কুরআন • হাদীস • বাণী • উক্তি",
-                                style = MaterialTheme.typography.labelSmall,
-                                fontSize = 9.5.sp,
-                                color = Color.White,
-                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-                            )
-                        }
-                    }
-                    LazyRow(
-                        horizontalArrangement = Arrangement.spacedBy(6.dp),
-                        contentPadding = PaddingValues(horizontal = 2.dp, vertical = 2.dp)
-                    ) {
-                        val targetChips = listOf(
-                            "📚 ইসলামিক বই",
-                            "🖋️ আরবি টেক্সট",
-                            "🇵🇰 উর্দু বয়ান",
-                            "🇧🇩 বাংলা ইসলামিক বই",
-                            "🕌 মসজিদ পোস্টার",
-                            "📌 হাদিস পোস্টার"
-                        )
-                        items(targetChips) { chip ->
-                            Surface(
-                                shape = RoundedCornerShape(10.dp),
-                                color = Color.Black.copy(alpha = 0.6f),
-                                border = BorderStroke(0.6.dp, Color.White.copy(alpha = 0.25f))
-                            ) {
-                                Text(
-                                    text = chip,
-                                    style = MaterialTheme.typography.labelSmall,
-                                    fontSize = 10.sp,
-                                    color = Color.White.copy(alpha = 0.9f),
-                                    fontFamily = banglaFont,
-                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
-                                )
-                            }
-                        }
-                    }
-                }
 
                 // Quick Ayah & Surah Shortcuts Carousel (এক ট্যাপে পড়ার সুবিধা)
                 Column(

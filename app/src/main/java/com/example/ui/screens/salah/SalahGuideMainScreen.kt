@@ -424,7 +424,7 @@ private fun SalahOverviewTab(
         modifier = Modifier
             .fillMaxSize()
             .padding(horizontal = 16.dp),
-        contentPadding = PaddingValues(top = 14.dp, bottom = 140.dp),
+        contentPadding = PaddingValues(top = 14.dp, bottom = 20.dp),
         verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
         // Hero Card
@@ -861,7 +861,7 @@ private fun SalahStepByStepTab(
         modifier = Modifier
             .fillMaxSize()
             .padding(horizontal = 16.dp),
-        contentPadding = PaddingValues(top = 14.dp, bottom = 140.dp),
+        contentPadding = PaddingValues(top = 14.dp, bottom = 20.dp),
         verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
         // Prayer Type Selector
@@ -1278,7 +1278,7 @@ private fun SalahDailyPrayersTab(
         modifier = Modifier
             .fillMaxSize()
             .padding(horizontal = 16.dp),
-        contentPadding = PaddingValues(top = 14.dp, bottom = 140.dp),
+        contentPadding = PaddingValues(top = 14.dp, bottom = 20.dp),
         verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
         item {
@@ -1452,7 +1452,7 @@ private fun SalahRecitationsTab(
         modifier = Modifier
             .fillMaxSize()
             .padding(horizontal = 16.dp),
-        contentPadding = PaddingValues(top = 14.dp, bottom = 140.dp),
+        contentPadding = PaddingValues(top = 14.dp, bottom = 20.dp),
         verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
         // Mode Switcher
@@ -1808,7 +1808,7 @@ private fun SalahPreparationTab(
         modifier = Modifier
             .fillMaxSize()
             .padding(horizontal = 16.dp),
-        contentPadding = PaddingValues(top = 14.dp, bottom = 140.dp),
+        contentPadding = PaddingValues(top = 14.dp, bottom = 20.dp),
         verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
         item {
@@ -1971,7 +1971,7 @@ private fun SalahConditionsTab(
         modifier = Modifier
             .fillMaxSize()
             .padding(horizontal = 16.dp),
-        contentPadding = PaddingValues(top = 14.dp, bottom = 140.dp),
+        contentPadding = PaddingValues(top = 14.dp, bottom = 20.dp),
         verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
         item {
@@ -2089,7 +2089,7 @@ private fun SalahMistakesTab(
         modifier = Modifier
             .fillMaxSize()
             .padding(horizontal = 16.dp),
-        contentPadding = PaddingValues(top = 14.dp, bottom = 140.dp),
+        contentPadding = PaddingValues(top = 14.dp, bottom = 20.dp),
         verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
         item {
@@ -2315,7 +2315,7 @@ private fun SalahSpecialPrayersTab(
         modifier = Modifier
             .fillMaxSize()
             .padding(horizontal = 16.dp),
-        contentPadding = PaddingValues(top = 14.dp, bottom = 140.dp),
+        contentPadding = PaddingValues(top = 14.dp, bottom = 20.dp),
         verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
         items(specialPrayers) { prayer ->
@@ -2489,7 +2489,7 @@ private fun SalahRulingsTab(
         modifier = Modifier
             .fillMaxSize()
             .padding(horizontal = 16.dp),
-        contentPadding = PaddingValues(top = 14.dp, bottom = 140.dp),
+        contentPadding = PaddingValues(top = 14.dp, bottom = 20.dp),
         verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
         items(rulings) { ruling ->
@@ -2611,7 +2611,7 @@ private fun SalahFAQTab(
         modifier = Modifier
             .fillMaxSize()
             .padding(horizontal = 16.dp),
-        contentPadding = PaddingValues(top = 14.dp, bottom = 140.dp),
+        contentPadding = PaddingValues(top = 14.dp, bottom = 20.dp),
         verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
         item {

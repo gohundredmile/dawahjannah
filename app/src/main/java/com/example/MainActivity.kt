@@ -157,26 +157,17 @@ class MainActivity : ComponentActivity() {
                                     onOpenAppSettings = { viewModel.openSettings(AppTab.HOME) },
                                     onOpenRearrangeCards = { viewModel.openRearrangeHomeScreenCards() }
                                 )
-                            } else if (currentTab == AppTab.TOOLS && (
-                                currentToolsSub == ToolsSubScreen.EXPLAIN_AYAH_CAMERA ||
-                                currentToolsSub == ToolsSubScreen.HOLY_QURAN ||
-                                currentToolsSub == ToolsSubScreen.HADITH_COLLECTION ||
-                                currentToolsSub == ToolsSubScreen.FRIDAY_MODE ||
-                                currentToolsSub == ToolsSubScreen.ISLAMIC_CONTEXT_VERIFY ||
-                                currentToolsSub == ToolsSubScreen.QURAN_AUDIO_GENERATOR ||
-                                currentToolsSub == ToolsSubScreen.SALAH_GUIDE ||
-                                currentToolsSub == ToolsSubScreen.QURAN_TOPICS
-                            )) {
-                                // Dedicated full-width top app bars with custom actions
+                            } else if (currentTab == AppTab.TOOLS && currentToolsSub != ToolsSubScreen.MAIN) {
+                                // Dedicated full-width top app bars with custom actions for all sub-screens
                             } else if (!(currentTab == AppTab.MORE && currentMoreSub != MoreSubScreen.MAIN)) {
-                                val showTopBarBack = currentTab == AppTab.TASBIH || currentTab == AppTab.DUA || (currentTab == AppTab.TOOLS && currentToolsSub != ToolsSubScreen.MAIN) || (currentTab == AppTab.MORE && viewModel.canNavigateBack())
+                                val showTopBarBack = currentTab == AppTab.TASBIH || currentTab == AppTab.DUA || (currentTab == AppTab.MORE && viewModel.canNavigateBack())
                                 DawahTopAppBar(
                                     title = when (currentTab) {
                                         AppTab.DUA -> "হিসনুল মুসলিম"
                                         AppTab.ROUTINE -> "২৪ ঘণ্টার সুন্নাত আমল"
                                         AppTab.TASBIH -> "ডিজিটাল তাসবিহ ও জিকির"
                                         AppTab.FAVORITE -> "ফেভারিট (বুকমার্ক)"
-                                        AppTab.TOOLS -> if (currentToolsSub == ToolsSubScreen.MAIN) "ইসলামিক টুলস ও ল্যাব" else currentToolsSub.titleBn
+                                        AppTab.TOOLS -> "ইসলামিক টুলস ও ল্যাব"
                                         AppTab.MORE -> "ইসলামী জীবন"
                                         else -> "দা'ওয়াহ টু জান্নাহ্"
                                     },

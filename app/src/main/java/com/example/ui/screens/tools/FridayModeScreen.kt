@@ -244,7 +244,7 @@ fun FridayModeScreen(
         },
         containerColor = MaterialTheme.colorScheme.background
     ) { padding ->
-        val bottomRaisePadding = contentPadding.calculateBottomPadding() + 140.dp
+        val bottomRaisePadding = contentPadding.calculateBottomPadding() + 16.dp
         Box(
             modifier = Modifier
                 .fillMaxSize()

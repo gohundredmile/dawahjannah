@@ -137,7 +137,7 @@ fun IslamicHabitSystemScreen(
     ) {
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(bottom = contentPadding.calculateBottomPadding() + 140.dp)
+            contentPadding = PaddingValues(bottom = contentPadding.calculateBottomPadding() + 16.dp)
         ) {
             // Header Top Bar
             item {

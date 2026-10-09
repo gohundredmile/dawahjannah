@@ -161,7 +161,6 @@ fun ZakatCalculatorScreen(
             modifier = modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .padding(bottom = contentPadding.calculateBottomPadding() + 140.dp)
         ) {
             // Top Scrollable Category Navigation Tabs
             ScrollableTabRow(

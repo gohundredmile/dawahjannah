@@ -158,7 +158,7 @@ fun RamadanIntelligenceScreen(
         // TAB CONTENT
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(start = 14.dp, end = 14.dp, top = 12.dp, bottom = contentPadding.calculateBottomPadding() + 140.dp)
+            contentPadding = PaddingValues(start = 14.dp, end = 14.dp, top = 12.dp, bottom = contentPadding.calculateBottomPadding() + 16.dp)
         ) {
             item {
                 when (currentLoop) {

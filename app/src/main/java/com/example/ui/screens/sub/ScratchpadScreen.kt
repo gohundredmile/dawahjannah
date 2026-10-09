@@ -134,7 +134,7 @@ fun ScratchpadScreen(viewModel: MainViewModel) {
             } else {
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 140.dp)
+                    contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 20.dp)
                 ) {
                     items(notes, key = { it.id }) { note ->
                         NoteCard(

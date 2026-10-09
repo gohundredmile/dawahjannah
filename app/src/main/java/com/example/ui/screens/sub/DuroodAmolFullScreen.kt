@@ -199,7 +199,7 @@ fun DuroodAmolFullScreen(
             LazyColumn(
                 state = listState,
                 modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = contentPadding.calculateBottomPadding() + 140.dp)
+                contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = contentPadding.calculateBottomPadding() + 16.dp)
             ) {
                 // User Friendly Quick Controls Banner (Mirroring Tawba Istighfar controls banner)
                 item {

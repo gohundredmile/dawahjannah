@@ -349,7 +349,7 @@ fun QiblaCompassScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .weight(1f),
-                contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = contentPadding.calculateBottomPadding() + 140.dp),
+                contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = contentPadding.calculateBottomPadding() + 16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 // 1. LIVE DIRECTION STATUS CARD

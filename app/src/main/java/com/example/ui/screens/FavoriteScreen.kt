@@ -127,7 +127,7 @@ fun FavoriteScreen(
         modifier = Modifier
             .fillMaxSize()
             .padding(contentPadding),
-        contentPadding = PaddingValues(bottom = 140.dp, start = 16.dp, end = 16.dp, top = 8.dp),
+        contentPadding = PaddingValues(bottom = 20.dp, start = 16.dp, end = 16.dp, top = 8.dp),
         verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
         // Hero Header Card

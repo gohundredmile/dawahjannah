@@ -490,7 +490,7 @@ private fun GeneratorSetupTab(
         modifier = Modifier
             .fillMaxSize()
             .padding(horizontal = 16.dp),
-        contentPadding = PaddingValues(top = 16.dp, bottom = 140.dp),
+        contentPadding = PaddingValues(top = 16.dp, bottom = 20.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         // Smart Presets Carousel
@@ -1594,7 +1594,7 @@ private fun SavedSessionsTab(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(horizontal = 16.dp),
-            contentPadding = PaddingValues(top = 16.dp, bottom = 140.dp),
+            contentPadding = PaddingValues(top = 16.dp, bottom = 20.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
             items(savedSessions, key = { it.id }) { session ->

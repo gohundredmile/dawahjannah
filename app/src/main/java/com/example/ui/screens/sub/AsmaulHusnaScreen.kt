@@ -126,7 +126,7 @@ fun AsmaulHusnaScreen(
     } else {
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(top = 8.dp, bottom = contentPadding.calculateBottomPadding() + 140.dp)
+            contentPadding = PaddingValues(top = 8.dp, bottom = contentPadding.calculateBottomPadding() + 16.dp)
         ) {
             // Search field
             item {
@@ -713,7 +713,7 @@ fun AllahNameDetailView(
                 }
             }
 
-            Spacer(modifier = Modifier.height(contentPadding.calculateBottomPadding() + 140.dp))
+            Spacer(modifier = Modifier.height(contentPadding.calculateBottomPadding() + 16.dp))
         }
     }
 }

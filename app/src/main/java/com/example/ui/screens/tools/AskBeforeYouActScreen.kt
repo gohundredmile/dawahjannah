@@ -401,7 +401,6 @@ fun AskBeforeYouActScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .padding(bottom = contentPadding.calculateBottomPadding() + 140.dp)
         ) {
             AnimatedContent(
                 targetState = currentStage,

@@ -538,7 +538,7 @@ fun IslamicContextVerifyScreen(
                 )
             }
 
-            Spacer(modifier = Modifier.height(contentPadding.calculateBottomPadding() + 140.dp))
+            Spacer(modifier = Modifier.height(contentPadding.calculateBottomPadding() + 16.dp))
         }
     }
 

@@ -401,7 +401,7 @@ fun PersonalDuaBuilderScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(horizontal = 14.dp),
-            contentPadding = PaddingValues(top = 10.dp, bottom = contentPadding.calculateBottomPadding() + 140.dp),
+            contentPadding = PaddingValues(top = 10.dp, bottom = contentPadding.calculateBottomPadding() + 16.dp),
             verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
             // PROMPT INPUT & SEARCH CARD

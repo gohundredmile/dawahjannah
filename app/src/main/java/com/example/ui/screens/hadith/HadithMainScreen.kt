@@ -1515,22 +1515,14 @@ private fun HadithItemCard(
             // Narrator
             if (hadith.narratorBn.isNotBlank()) {
                 Spacer(modifier = Modifier.height(8.dp))
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                        text = "🎙️ বর্ণনাকারী: ",
-                        style = MaterialTheme.typography.labelSmall.copy(
-                            fontWeight = FontWeight.Bold,
-                            color = IslamicGreen
-                        )
-                    )
-                    Text(
-                        text = hadith.narratorBn,
-                        style = MaterialTheme.typography.labelSmall.copy(
-                            fontWeight = FontWeight.Medium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    )
-                }
+                Text(
+                    text = "🎙️ বর্ণনাকারী: ${hadith.narratorBn}",
+                    style = MaterialTheme.typography.labelSmall.copy(
+                        fontWeight = FontWeight.Medium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    ),
+                    modifier = Modifier.fillMaxWidth()
+                )
             }
 
             Spacer(modifier = Modifier.height(10.dp))

@@ -601,7 +601,7 @@ fun HolyQuranIndexScreen(
                 .weight(1f)
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp),
-            contentPadding = PaddingValues(top = 4.dp, bottom = 24.dp)
+            contentPadding = PaddingValues(top = 4.dp, bottom = 80.dp)
         ) {
             if (filteredSurahs.isEmpty()) {
                 item {
@@ -671,28 +671,22 @@ fun SurahListItemRow(
             .padding(vertical = 10.dp, horizontal = 6.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // Left Column: Serial. NameBn | NameEn | NameAr
-        // Subtitle: MeaningBn | MeaningEn
+        // Left Column: Serial + Surah Name (Line 1)
+        // Subtitle: English Name & Meaning (Line 2 below)
         Column(modifier = Modifier.weight(1f)) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(4.dp)
             ) {
                 Text(
-                    text = "$serialBn.",
+                    text = "$serialBn. সূরা ${surah.nameBn}",
                     style = MaterialTheme.typography.titleMedium.copy(
                         fontWeight = FontWeight.Bold,
-                        color = IslamicGreen
-                    )
-                )
-                Text(
-                    text = "${surah.nameBn} | ${surah.nameEn} | ${surah.nameAr}",
-                    style = MaterialTheme.typography.titleMedium.copy(
-                        fontWeight = FontWeight.SemiBold,
                         fontSize = 15.sp,
                         color = if (isCurrentlyPlaying) IslamicGreen else MaterialTheme.colorScheme.onSurface
                     ),
                     maxLines = 1,
+                    softWrap = false,
                     overflow = TextOverflow.Ellipsis
                 )
                 if (isBookmarked) {
@@ -716,12 +710,13 @@ fun SurahListItemRow(
             Spacer(modifier = Modifier.height(2.dp))
 
             Text(
-                text = "${surah.meaningBn} | ${surah.meaningEn}",
+                text = "${surah.nameEn} (${surah.nameAr}) • অর্থ: ${surah.meaningBn}",
                 style = MaterialTheme.typography.bodySmall.copy(
-                    fontSize = 12.sp,
+                    fontSize = 11.5.sp,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 ),
                 maxLines = 1,
+                softWrap = false,
                 overflow = TextOverflow.Ellipsis
             )
         }
@@ -1013,7 +1008,7 @@ fun SurahDetailScreen(
                 .weight(1f)
                 .fillMaxWidth()
                 .padding(horizontal = 14.dp),
-            contentPadding = PaddingValues(top = 10.dp, bottom = 28.dp)
+            contentPadding = PaddingValues(top = 10.dp, bottom = 80.dp)
         ) {
             // Item 1: Revamped Beautiful Surah Header Card (Organized from blue marked area)
             item {
@@ -1286,45 +1281,48 @@ fun SurahDetailScreen(
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
-                            Spacer(modifier = Modifier.height(12.dp))
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.spacedBy(8.dp)
-                            ) {
-                                if (surah.number > 1) {
-                                    val prevSurah = QuranSurahCatalog.all114Surahs.find { it.number == surah.number - 1 }
-                                    OutlinedButton(
-                                        onClick = { onSelectSurahNumber(surah.number - 1) },
-                                        shape = RoundedCornerShape(12.dp),
-                                        modifier = Modifier.weight(1f)
-                                    ) {
-                                        Text(
-                                            text = "⏮ ${prevSurah?.nameBn ?: "পূর্ববর্তী"}",
-                                            fontSize = 11.5.sp,
-                                            maxLines = 1
-                                        )
-                                    }
+                            Spacer(modifier = Modifier.height(14.dp))
+
+                            // Navigation Buttons placed vertically with full width for seamless horizontal text flow
+                            if (surah.number < 114) {
+                                val nextSurah = QuranSurahCatalog.all114Surahs.find { it.number == surah.number + 1 }
+                                Button(
+                                    onClick = { onSelectSurahNumber(surah.number + 1) },
+                                    colors = ButtonDefaults.buttonColors(containerColor = IslamicGreen),
+                                    shape = RoundedCornerShape(12.dp),
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    Text(
+                                        text = "পরবর্তী সূরা: ${BanglaNumberUtils.toBanglaDigits(nextSurah?.number ?: (surah.number + 1))}. ${nextSurah?.nameBn ?: ""} ⏭",
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 13.sp,
+                                        maxLines = 1,
+                                        softWrap = false
+                                    )
                                 }
+                            }
+                            if (surah.number > 1) {
+                                val prevSurah = QuranSurahCatalog.all114Surahs.find { it.number == surah.number - 1 }
                                 if (surah.number < 114) {
-                                    val nextSurah = QuranSurahCatalog.all114Surahs.find { it.number == surah.number + 1 }
-                                    Button(
-                                        onClick = { onSelectSurahNumber(surah.number + 1) },
-                                        colors = ButtonDefaults.buttonColors(containerColor = IslamicGreen),
-                                        shape = RoundedCornerShape(12.dp),
-                                        modifier = Modifier.weight(1f)
-                                    ) {
-                                        Text(
-                                            text = "পরবর্তী: ${nextSurah?.nameBn ?: ""} ⏭",
-                                            fontWeight = FontWeight.Bold,
-                                            fontSize = 11.5.sp,
-                                            maxLines = 1
-                                        )
-                                    }
+                                    Spacer(modifier = Modifier.height(8.dp))
+                                }
+                                OutlinedButton(
+                                    onClick = { onSelectSurahNumber(surah.number - 1) },
+                                    shape = RoundedCornerShape(12.dp),
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    Text(
+                                        text = "⏮ পূর্ববর্তী সূরা: ${BanglaNumberUtils.toBanglaDigits(prevSurah?.number ?: (surah.number - 1))}. ${prevSurah?.nameBn ?: "পূর্ববর্তী"}",
+                                        fontSize = 12.5.sp,
+                                        maxLines = 1,
+                                        softWrap = false
+                                    )
                                 }
                             }
                         }
                     }
-                    Spacer(modifier = Modifier.height(20.dp))
+                    // Ample bottom space ensuring full clearance above bottom navigation bar and mini player
+                    Spacer(modifier = Modifier.height(60.dp))
                 }
             }
         }
@@ -1915,130 +1913,121 @@ fun AyahCardItem(
                 .fillMaxWidth()
                 .padding(14.dp)
         ) {
-            // Action Pills Bar: [📖 তাফসীর] [শেয়ার] (আয়াত নম্বর) [বুকমার্ক] [অডিও]
+            // Action Bar: Left (Ayah Number) | Right (Tafsir, Audio, Bookmark, Share) with uncompromised horizontal flow
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                // Tafsir Pill
-                Surface(
-                    color = if (isTafsirExpanded) IslamicGold.copy(alpha = 0.2f) else MaterialTheme.colorScheme.surfaceVariant,
-                    shape = RoundedCornerShape(14.dp),
-                    border = BorderStroke(
-                        0.8.dp,
-                        if (isTafsirExpanded) IslamicGold else Color.Transparent
-                    ),
-                    modifier = Modifier.clickable(onClick = onToggleTafsir)
+                // Left: Ayah Number Badge + Label
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
-                    Row(
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    Box(
+                        modifier = Modifier
+                            .size(30.dp)
+                            .clip(CircleShape)
+                            .background(IslamicGreen.copy(alpha = 0.15f))
+                            .border(1.dp, IslamicGreen.copy(alpha = 0.35f), CircleShape),
+                        contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            text = "📖 তাফসীর",
-                            style = MaterialTheme.typography.labelSmall.copy(
-                                fontWeight = FontWeight.SemiBold,
-                                color = if (isTafsirExpanded) IslamicGold else MaterialTheme.colorScheme.onSurfaceVariant
+                            text = ayahNumberBn,
+                            style = MaterialTheme.typography.labelMedium.copy(
+                                fontWeight = FontWeight.Bold,
+                                color = IslamicGreen
                             )
                         )
                     }
-                }
-
-                // Share Pill
-                Surface(
-                    color = MaterialTheme.colorScheme.surfaceVariant,
-                    shape = RoundedCornerShape(14.dp),
-                    modifier = Modifier.clickable(onClick = onShareAyah)
-                ) {
-                    Row(
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(4.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Share,
-                            contentDescription = "শেয়ার",
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.size(13.dp)
-                        )
-                        Text(
-                            text = "শেয়ার",
-                            style = MaterialTheme.typography.labelSmall.copy(
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        )
-                    }
-                }
-
-                // Ayah Number Center Badge
-                Box(
-                    modifier = Modifier
-                        .size(28.dp)
-                        .clip(CircleShape)
-                        .background(IslamicGreen.copy(alpha = 0.15f))
-                        .border(1.dp, IslamicGreen.copy(alpha = 0.35f), CircleShape),
-                    contentAlignment = Alignment.Center
-                ) {
                     Text(
-                        text = ayahNumberBn,
-                        style = MaterialTheme.typography.labelMedium.copy(
+                        text = "আয়াত $ayahNumberBn",
+                        style = MaterialTheme.typography.labelSmall.copy(
                             fontWeight = FontWeight.Bold,
                             color = IslamicGreen
                         )
                     )
                 }
 
-                // Bookmark Pill
-                Surface(
-                    color = if (isBookmarked) IslamicGold.copy(alpha = 0.2f) else MaterialTheme.colorScheme.surfaceVariant,
-                    shape = RoundedCornerShape(14.dp),
-                    modifier = Modifier.clickable(onClick = onToggleBookmark)
+                // Right: Action Pills & Buttons (Guaranteed single-line horizontal text flow)
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
-                    Row(
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    // Tafsir Pill
+                    Surface(
+                        color = if (isTafsirExpanded) IslamicGold.copy(alpha = 0.2f) else MaterialTheme.colorScheme.surfaceVariant,
+                        shape = RoundedCornerShape(12.dp),
+                        border = BorderStroke(
+                            0.8.dp,
+                            if (isTafsirExpanded) IslamicGold else Color.Transparent
+                        ),
+                        modifier = Modifier.clickable(onClick = onToggleTafsir)
+                    ) {
+                        Text(
+                            text = "📖 তাফসীর",
+                            style = MaterialTheme.typography.labelSmall.copy(
+                                fontWeight = FontWeight.SemiBold,
+                                color = if (isTafsirExpanded) IslamicGold else MaterialTheme.colorScheme.onSurfaceVariant
+                            ),
+                            maxLines = 1,
+                            softWrap = false,
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 5.dp)
+                        )
+                    }
+
+                    // Ayah Audio Pill
+                    Surface(
+                        color = if (isPlayingThisAyah) IslamicGreen else MaterialTheme.colorScheme.surfaceVariant,
+                        shape = RoundedCornerShape(12.dp),
+                        modifier = Modifier.clickable(onClick = onPlayAyahAudio)
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 5.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(3.dp)
+                        ) {
+                            Icon(
+                                imageVector = if (isPlayingThisAyah) Icons.Default.Pause else Icons.Default.PlayArrow,
+                                contentDescription = "অডিও",
+                                tint = if (isPlayingThisAyah) Color.White else MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.size(13.dp)
+                            )
+                            Text(
+                                text = if (isPlayingThisAyah) "থামান" else "তিলাওয়াত",
+                                style = MaterialTheme.typography.labelSmall.copy(
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = if (isPlayingThisAyah) Color.White else MaterialTheme.colorScheme.onSurfaceVariant
+                                ),
+                                maxLines = 1,
+                                softWrap = false
+                            )
+                        }
+                    }
+
+                    // Bookmark Button
+                    IconButton(
+                        onClick = onToggleBookmark,
+                        modifier = Modifier.size(30.dp)
                     ) {
                         Icon(
                             imageVector = if (isBookmarked) Icons.Default.Bookmark else Icons.Default.BookmarkBorder,
                             contentDescription = "বুকমার্ক",
                             tint = if (isBookmarked) IslamicGold else MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.size(13.dp)
-                        )
-                        Text(
-                            text = "বুকমার্ক",
-                            style = MaterialTheme.typography.labelSmall.copy(
-                                color = if (isBookmarked) IslamicGold else MaterialTheme.colorScheme.onSurfaceVariant
-                            )
+                            modifier = Modifier.size(18.dp)
                         )
                     }
-                }
 
-                // Ayah Audio Pill
-                Surface(
-                    color = if (isPlayingThisAyah) IslamicGreen else MaterialTheme.colorScheme.surfaceVariant,
-                    shape = RoundedCornerShape(14.dp),
-                    modifier = Modifier.clickable(onClick = onPlayAyahAudio)
-                ) {
-                    Row(
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    // Share Button
+                    IconButton(
+                        onClick = onShareAyah,
+                        modifier = Modifier.size(30.dp)
                     ) {
                         Icon(
-                            imageVector = if (isPlayingThisAyah) Icons.Default.Pause else Icons.Default.PlayArrow,
-                            contentDescription = "অডিও",
-                            tint = if (isPlayingThisAyah) Color.White else MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.size(13.dp)
-                        )
-                        Text(
-                            text = "অডিও",
-                            style = MaterialTheme.typography.labelSmall.copy(
-                                fontWeight = FontWeight.SemiBold,
-                                color = if (isPlayingThisAyah) Color.White else MaterialTheme.colorScheme.onSurfaceVariant
-                            )
+                            imageVector = Icons.Default.Share,
+                            contentDescription = "শেয়ার",
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(16.dp)
                         )
                     }
                 }

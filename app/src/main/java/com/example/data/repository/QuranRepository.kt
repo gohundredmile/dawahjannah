@@ -53,12 +53,15 @@ class QuranRepository(private val context: Context) {
         }
 
         // Automatically repair or seed full offline Ayahs for surahs if missing or incomplete
-        val expectedSurah2Count = 286
-        val surah2Entities = quranDao.getAyahsForSurahSync(2)
-        if (surah2Entities.size < expectedSurah2Count) {
-            val offlineBaqarah = loadSurahFromAssets(2)
-            if (offlineBaqarah.isNotEmpty()) {
-                quranDao.insertAyahs(offlineBaqarah.map { it.toEntity() })
+        val initialCheckSurahs = listOf(1, 2, 3, 18, 36, 55, 56, 67, 112, 113, 114)
+        initialCheckSurahs.forEach { sNum ->
+            val expected = QuranSurahCatalog.all114Surahs.find { it.number == sNum }?.totalAyat ?: 0
+            val currentCount = quranDao.getAyahsForSurahSync(sNum).size
+            if (currentCount < expected) {
+                val offline = loadSurahFromAssets(sNum)
+                if (offline.isNotEmpty()) {
+                    quranDao.insertAyahs(offline.map { it.toEntity() })
+                }
             }
         }
 

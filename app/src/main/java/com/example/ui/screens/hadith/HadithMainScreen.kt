@@ -141,6 +141,7 @@ fun HadithMainScreen(
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
             .windowInsetsPadding(WindowInsets.statusBars)
+            .padding(bottom = contentPadding.calculateBottomPadding())
     ) {
         // Top App Bar
         Surface(

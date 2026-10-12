@@ -301,6 +301,7 @@ fun HolyQuranIndexScreen(
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
             .windowInsetsPadding(WindowInsets.statusBars)
+            .padding(bottom = contentPadding.calculateBottomPadding())
     ) {
         // Top Action Bar
         Surface(
@@ -600,7 +601,7 @@ fun HolyQuranIndexScreen(
                 .weight(1f)
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp),
-            contentPadding = PaddingValues(bottom = 20.dp)
+            contentPadding = PaddingValues(top = 4.dp, bottom = 24.dp)
         ) {
             if (filteredSurahs.isEmpty()) {
                 item {
@@ -849,6 +850,7 @@ fun SurahDetailScreen(
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
             .windowInsetsPadding(WindowInsets.statusBars)
+            .padding(bottom = contentPadding.calculateBottomPadding())
     ) {
         // Clean, Compact Surah Top Bar & Switcher
         Surface(
@@ -1011,7 +1013,7 @@ fun SurahDetailScreen(
                 .weight(1f)
                 .fillMaxWidth()
                 .padding(horizontal = 14.dp),
-            contentPadding = PaddingValues(top = 10.dp, bottom = 20.dp)
+            contentPadding = PaddingValues(top = 10.dp, bottom = 28.dp)
         ) {
             // Item 1: Revamped Beautiful Surah Header Card (Organized from blue marked area)
             item {
@@ -1322,6 +1324,7 @@ fun SurahDetailScreen(
                             }
                         }
                     }
+                    Spacer(modifier = Modifier.height(20.dp))
                 }
             }
         }

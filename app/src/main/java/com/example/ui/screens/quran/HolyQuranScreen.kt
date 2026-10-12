@@ -572,15 +572,17 @@ fun HolyQuranIndexScreen(
                     ),
                     modifier = Modifier.weight(1f)
                 )
+                Spacer(modifier = Modifier.width(6.dp))
                 Text(
                     text = "ধরন",
                     style = MaterialTheme.typography.labelMedium.copy(
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     ),
-                    modifier = Modifier.width(64.dp),
+                    modifier = Modifier.width(68.dp),
                     textAlign = TextAlign.Center
                 )
+                Spacer(modifier = Modifier.width(6.dp))
                 Text(
                     text = "আয়াত",
                     style = MaterialTheme.typography.labelMedium.copy(
@@ -601,7 +603,7 @@ fun HolyQuranIndexScreen(
                 .weight(1f)
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp),
-            contentPadding = PaddingValues(top = 4.dp, bottom = 80.dp)
+            contentPadding = PaddingValues(top = 4.dp, bottom = 24.dp)
         ) {
             if (filteredSurahs.isEmpty()) {
                 item {
@@ -668,7 +670,7 @@ fun SurahListItemRow(
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onSurahClick)
-            .padding(vertical = 10.dp, horizontal = 6.dp),
+            .padding(vertical = 10.dp, horizontal = 12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         // Left Column: Serial + Surah Name (Line 1)
@@ -710,7 +712,7 @@ fun SurahListItemRow(
             Spacer(modifier = Modifier.height(2.dp))
 
             Text(
-                text = "${surah.nameEn} (${surah.nameAr}) • অর্থ: ${surah.meaningBn}",
+                text = "${surah.nameEn} (${surah.nameAr}) • ${surah.meaningBn}",
                 style = MaterialTheme.typography.bodySmall.copy(
                     fontSize = 11.5.sp,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -721,7 +723,7 @@ fun SurahListItemRow(
             )
         }
 
-        Spacer(modifier = Modifier.width(8.dp))
+        Spacer(modifier = Modifier.width(6.dp))
 
         // Middle Column: Revelation Type Badge (মাক্কী / মাদানী)
         Box(
@@ -734,7 +736,7 @@ fun SurahListItemRow(
                     else
                         MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f)
                 )
-                .padding(horizontal = 6.dp, vertical = 4.dp),
+                .padding(horizontal = 4.dp, vertical = 4.dp),
             contentAlignment = Alignment.Center
         ) {
             Text(
@@ -747,7 +749,7 @@ fun SurahListItemRow(
             )
         }
 
-        Spacer(modifier = Modifier.width(8.dp))
+        Spacer(modifier = Modifier.width(6.dp))
 
         // Right Column: Total Ayats in Bengali digits
         Text(
@@ -757,7 +759,7 @@ fun SurahListItemRow(
                 fontSize = 14.sp,
                 color = MaterialTheme.colorScheme.onSurface
             ),
-            modifier = Modifier.width(42.dp),
+            modifier = Modifier.width(48.dp),
             textAlign = TextAlign.End
         )
     }
@@ -977,6 +979,21 @@ fun SurahDetailScreen(
                         )
                     }
 
+                    // Quran Settings Button in Top Bar
+                    IconButton(
+                        onClick = onOpenSettings,
+                        modifier = Modifier
+                            .size(34.dp)
+                            .testTag("btn_top_bar_quran_settings")
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Settings,
+                            contentDescription = "কুরআন সেটিংস",
+                            tint = MaterialTheme.colorScheme.onSurface,
+                            modifier = Modifier.size(19.dp)
+                        )
+                    }
+
                     // Bookmark Button for Surah Itself in Top Bar
                     IconButton(
                         onClick = {
@@ -987,28 +1004,28 @@ fun SurahDetailScreen(
                             }
                         },
                         modifier = Modifier
-                            .size(36.dp)
+                            .size(34.dp)
                             .testTag("btn_top_bar_surah_bookmark")
                     ) {
                         Icon(
                             imageVector = if (isSurahBookmarked) Icons.Default.Bookmark else Icons.Default.BookmarkBorder,
                             contentDescription = if (isSurahBookmarked) "সূরা বুকমার্ক থেকে সরান" else "সূরা বুকমার্ক করুন",
                             tint = if (isSurahBookmarked) IslamicGold else MaterialTheme.colorScheme.onSurface,
-                            modifier = Modifier.size(22.dp)
+                            modifier = Modifier.size(20.dp)
                         )
                     }
                 }
             }
         }
 
-        // Ayah List with Surah Header Card, Quick Settings, and Bismillah Card
+        // Ayah List with Surah Header Card and Bismillah Card
         LazyColumn(
             state = listState,
             modifier = Modifier
                 .weight(1f)
                 .fillMaxWidth()
                 .padding(horizontal = 14.dp),
-            contentPadding = PaddingValues(top = 10.dp, bottom = 80.dp)
+            contentPadding = PaddingValues(top = 10.dp, bottom = 24.dp)
         ) {
             // Item 1: Revamped Beautiful Surah Header Card (Organized from blue marked area)
             item {
@@ -1048,106 +1065,7 @@ fun SurahDetailScreen(
                 Spacer(modifier = Modifier.height(10.dp))
             }
 
-            // Item 2: Single Beautiful Quick Settings Bar (Only ONE with beautiful visual)
-            item {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .horizontalScroll(rememberScrollState()),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    // Settings Pill
-                    Surface(
-                        onClick = onOpenSettings,
-                        shape = RoundedCornerShape(12.dp),
-                        color = IslamicGold.copy(alpha = 0.12f),
-                        border = BorderStroke(1.dp, IslamicGold.copy(alpha = 0.45f)),
-                        modifier = Modifier.testTag("pill_quran_settings")
-                    ) {
-                        Row(
-                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(5.dp)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Settings,
-                                contentDescription = "কুরআন সেটিংস",
-                                tint = IslamicGold,
-                                modifier = Modifier.size(15.dp)
-                            )
-                            Text(
-                                text = "কুরআন সেটিংস",
-                                style = MaterialTheme.typography.labelSmall.copy(
-                                    fontWeight = FontWeight.Bold,
-                                    color = IslamicGold
-                                )
-                            )
-                        }
-                    }
-
-                    // Audio Manager Pill
-                    Surface(
-                        onClick = onOpenAudioManager,
-                        shape = RoundedCornerShape(12.dp),
-                        color = IslamicGreen.copy(alpha = 0.12f),
-                        border = BorderStroke(1.dp, IslamicGreen.copy(alpha = 0.45f)),
-                        modifier = Modifier.testTag("pill_audio_manager")
-                    ) {
-                        Row(
-                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(5.dp)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.CloudDownload,
-                                contentDescription = "অডিও ডাউনলোড ম্যানেজার",
-                                tint = IslamicGreen,
-                                modifier = Modifier.size(15.dp)
-                            )
-                            Text(
-                                text = "১-ক্লিক অডিও ম্যানেজার",
-                                style = MaterialTheme.typography.labelSmall.copy(
-                                    fontWeight = FontWeight.Bold,
-                                    color = IslamicGreen
-                                )
-                            )
-                        }
-                    }
-
-                    // Reciter Picker Pill
-                    Surface(
-                        onClick = onOpenReciterPicker,
-                        shape = RoundedCornerShape(12.dp),
-                        color = MaterialTheme.colorScheme.surfaceVariant,
-                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.35f)),
-                        modifier = Modifier.testTag("pill_reciter_picker")
-                    ) {
-                        Row(
-                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(5.dp)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Tune,
-                                contentDescription = "ক্বারী নির্বাচন",
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier.size(15.dp)
-                            )
-                            Text(
-                                text = "ক্বারী নির্বাচন",
-                                style = MaterialTheme.typography.labelSmall.copy(
-                                    fontWeight = FontWeight.SemiBold,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            )
-                        }
-                    }
-                }
-                Spacer(modifier = Modifier.height(12.dp))
-            }
-
-            // Item 3: শানে নযুল ও পরিচিতি (Shan-e-Nuzul Card for every Surah)
+            // Item 2: শানে নযুল ও পরিচিতি (Shan-e-Nuzul Card for every Surah)
             item {
                 val shaneNuzul = remember(surah.number) {
                     SurahShaneNuzulCatalog.getShaneNuzul(context, surah.number)
@@ -1292,13 +1210,24 @@ fun SurahDetailScreen(
                                     shape = RoundedCornerShape(12.dp),
                                     modifier = Modifier.fillMaxWidth()
                                 ) {
-                                    Text(
-                                        text = "পরবর্তী সূরা: ${BanglaNumberUtils.toBanglaDigits(nextSurah?.number ?: (surah.number + 1))}. ${nextSurah?.nameBn ?: ""} ⏭",
-                                        fontWeight = FontWeight.Bold,
-                                        fontSize = 13.sp,
-                                        maxLines = 1,
-                                        softWrap = false
-                                    )
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.Center
+                                    ) {
+                                        Text(
+                                            text = "পরবর্তী সূরা: ${BanglaNumberUtils.toBanglaDigits(nextSurah?.number ?: (surah.number + 1))}. ${nextSurah?.nameBn ?: ""}",
+                                            fontWeight = FontWeight.Bold,
+                                            fontSize = 13.sp,
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis
+                                        )
+                                        Spacer(modifier = Modifier.width(6.dp))
+                                        Icon(
+                                            imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                                            contentDescription = null,
+                                            modifier = Modifier.size(16.dp)
+                                        )
+                                    }
                                 }
                             }
                             if (surah.number > 1) {
@@ -1311,18 +1240,27 @@ fun SurahDetailScreen(
                                     shape = RoundedCornerShape(12.dp),
                                     modifier = Modifier.fillMaxWidth()
                                 ) {
-                                    Text(
-                                        text = "⏮ পূর্ববর্তী সূরা: ${BanglaNumberUtils.toBanglaDigits(prevSurah?.number ?: (surah.number - 1))}. ${prevSurah?.nameBn ?: "পূর্ববর্তী"}",
-                                        fontSize = 12.5.sp,
-                                        maxLines = 1,
-                                        softWrap = false
-                                    )
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.Center
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                            contentDescription = null,
+                                            modifier = Modifier.size(16.dp)
+                                        )
+                                        Spacer(modifier = Modifier.width(6.dp))
+                                        Text(
+                                            text = "পূর্ববর্তী সূরা: ${BanglaNumberUtils.toBanglaDigits(prevSurah?.number ?: (surah.number - 1))}. ${prevSurah?.nameBn ?: "পূর্ববর্তী"}",
+                                            fontSize = 12.5.sp,
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis
+                                        )
+                                    }
                                 }
                             }
                         }
                     }
-                    // Ample bottom space ensuring full clearance above bottom navigation bar and mini player
-                    Spacer(modifier = Modifier.height(60.dp))
                 }
             }
         }
@@ -1661,12 +1599,12 @@ fun SurahHeaderCard(
 
                 Spacer(modifier = Modifier.height(14.dp))
 
-                // Bottom Actions Row: Audio & Offline buttons
+                // Bottom Actions Row: Full Surah Audio & Offline buttons
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 4.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp, Alignment.CenterHorizontally),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     // Full Surah Audio Button
@@ -1677,21 +1615,21 @@ fun SurahHeaderCard(
                         modifier = Modifier.clickable(onClick = onPlayFullSurah)
                     ) {
                         Row(
-                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 7.dp),
+                            modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp),
                             verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(5.dp)
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
                         ) {
                             Icon(
                                 imageVector = if (isFullSurahPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
                                 contentDescription = "সূরা তিলাওয়াত",
                                 tint = if (isFullSurahPlaying) Color.White else Color(0xFF0D4B37),
-                                modifier = Modifier.size(16.dp)
+                                modifier = Modifier.size(17.dp)
                             )
                             Text(
                                 text = if (isFullSurahPlaying) "থামান" else "সূরা তিলাওয়াত",
                                 style = MaterialTheme.typography.labelMedium.copy(
                                     fontWeight = FontWeight.Bold,
-                                    fontSize = 12.sp,
+                                    fontSize = 12.5.sp,
                                     color = if (isFullSurahPlaying) Color.White else Color(0xFF0D4B37)
                                 )
                             )
@@ -1707,21 +1645,22 @@ fun SurahHeaderCard(
                             modifier = Modifier.clickable(onClick = onOfflineInfo)
                         ) {
                             Row(
-                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 7.dp),
+                                modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp),
                                 verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(5.dp)
+                                horizontalArrangement = Arrangement.spacedBy(6.dp)
                             ) {
                                 Icon(
                                     imageVector = Icons.Outlined.CheckCircle,
                                     contentDescription = "অফলাইন সংরক্ষিত",
                                     tint = Color(0xFF86EFAC),
-                                    modifier = Modifier.size(15.dp)
+                                    modifier = Modifier.size(16.dp)
                                 )
                                 Text(
-                                    text = "অফলাইন",
+                                    text = "অফলাইন সংরক্ষিত",
                                     style = MaterialTheme.typography.labelMedium.copy(
                                         color = Color.White,
-                                        fontWeight = FontWeight.Bold
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 12.sp
                                     )
                                 )
                             }
@@ -1732,20 +1671,21 @@ fun SurahHeaderCard(
                             shape = RoundedCornerShape(20.dp)
                         ) {
                             Row(
-                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 7.dp),
+                                modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp),
                                 verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(5.dp)
+                                horizontalArrangement = Arrangement.spacedBy(6.dp)
                             ) {
                                 CircularProgressIndicator(
-                                    modifier = Modifier.size(14.dp),
+                                    modifier = Modifier.size(15.dp),
                                     strokeWidth = 2.dp,
                                     color = Color.White
                                 )
                                 Text(
-                                    text = "${currentDownload.progressPercent}%",
+                                    text = "${currentDownload.progressPercent}% ডাউনলোড হচ্ছে",
                                     style = MaterialTheme.typography.labelMedium.copy(
                                         color = Color.White,
-                                        fontWeight = FontWeight.Bold
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 12.sp
                                     )
                                 )
                             }
@@ -1758,56 +1698,25 @@ fun SurahHeaderCard(
                             modifier = Modifier.clickable(onClick = onDownloadSurah)
                         ) {
                             Row(
-                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 7.dp),
+                                modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp),
                                 verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(5.dp)
+                                horizontalArrangement = Arrangement.spacedBy(6.dp)
                             ) {
                                 Icon(
                                     imageVector = Icons.Outlined.FileDownload,
                                     contentDescription = "ডাউনলোড",
                                     tint = Color.White,
-                                    modifier = Modifier.size(15.dp)
+                                    modifier = Modifier.size(16.dp)
                                 )
                                 Text(
-                                    text = "ডাউনলোড",
+                                    text = "অডিও ডাউনলোড",
                                     style = MaterialTheme.typography.labelMedium.copy(
                                         fontWeight = FontWeight.SemiBold,
-                                        color = Color.White
+                                        color = Color.White,
+                                        fontSize = 12.sp
                                     )
                                 )
                             }
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.width(10.dp))
-
-                    // Surah Bookmark Button
-                    Surface(
-                        color = if (isSurahBookmarked) IslamicGold else Color.White.copy(alpha = 0.18f),
-                        shape = RoundedCornerShape(20.dp),
-                        border = BorderStroke(1.dp, if (isSurahBookmarked) IslamicGold else Color.White.copy(alpha = 0.35f)),
-                        modifier = Modifier
-                            .testTag("btn_header_surah_bookmark")
-                            .clickable(onClick = onToggleSurahBookmark)
-                    ) {
-                        Row(
-                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 7.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(5.dp)
-                        ) {
-                            Icon(
-                                imageVector = if (isSurahBookmarked) Icons.Default.Bookmark else Icons.Default.BookmarkBorder,
-                                contentDescription = if (isSurahBookmarked) "সূরা বুকমার্ক থেকে সরান" else "সূরা বুকমার্ক করুন",
-                                tint = if (isSurahBookmarked) Color(0xFF0D4B37) else Color.White,
-                                modifier = Modifier.size(15.dp)
-                            )
-                            Text(
-                                text = if (isSurahBookmarked) "বুকমার্কড" else "বুকমার্ক",
-                                style = MaterialTheme.typography.labelMedium.copy(
-                                    fontWeight = FontWeight.Bold,
-                                    color = if (isSurahBookmarked) Color(0xFF0D4B37) else Color.White
-                                )
-                            )
                         }
                     }
                 }
@@ -1913,38 +1822,27 @@ fun AyahCardItem(
                 .fillMaxWidth()
                 .padding(14.dp)
         ) {
-            // Action Bar: Left (Ayah Number) | Right (Tafsir, Audio, Bookmark, Share) with uncompromised horizontal flow
+            // Action Bar: Left (Ayah Number Badge) | Right (Tafsir, Audio, Bookmark, Share) with uncompromised horizontal flow
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                // Left: Ayah Number Badge + Label
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                // Left: Ayah Number Badge
+                Box(
+                    modifier = Modifier
+                        .size(32.dp)
+                        .clip(CircleShape)
+                        .background(IslamicGreen.copy(alpha = 0.14f))
+                        .border(1.dp, IslamicGreen.copy(alpha = 0.4f), CircleShape),
+                    contentAlignment = Alignment.Center
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .size(30.dp)
-                            .clip(CircleShape)
-                            .background(IslamicGreen.copy(alpha = 0.15f))
-                            .border(1.dp, IslamicGreen.copy(alpha = 0.35f), CircleShape),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = ayahNumberBn,
-                            style = MaterialTheme.typography.labelMedium.copy(
-                                fontWeight = FontWeight.Bold,
-                                color = IslamicGreen
-                            )
-                        )
-                    }
                     Text(
-                        text = "আয়াত $ayahNumberBn",
-                        style = MaterialTheme.typography.labelSmall.copy(
+                        text = ayahNumberBn,
+                        style = MaterialTheme.typography.labelMedium.copy(
                             fontWeight = FontWeight.Bold,
-                            color = IslamicGreen
+                            color = IslamicGreen,
+                            fontSize = 13.sp
                         )
                     )
                 }
@@ -2037,15 +1935,10 @@ fun AyahCardItem(
 
             // Part 1: Arabic Ayat Card (Very Lite Mint / Sage Green Tint)
             if (settings.showArabic) {
-                Card(
-                    shape = RoundedCornerShape(12.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = if (isDark) Color(0xFF13231A) else Color(0xFFF1F8F5)
-                    ),
-                    border = BorderStroke(
-                        1.dp,
-                        if (isDark) Color(0xFF223E2E) else Color(0xFFCBE5D7)
-                    ),
+                Surface(
+                    shape = RoundedCornerShape(10.dp),
+                    color = if (isDark) Color(0xFF13231A) else Color(0xFFF1F8F5),
+                    border = BorderStroke(0.8.dp, if (isDark) Color(0xFF223E2E) else Color(0xFFD4EAE0)),
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Column(
@@ -2053,38 +1946,6 @@ fun AyahCardItem(
                             .fillMaxWidth()
                             .padding(horizontal = 14.dp, vertical = 10.dp)
                     ) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Surface(
-                                shape = RoundedCornerShape(6.dp),
-                                color = IslamicGreen.copy(alpha = 0.12f)
-                            ) {
-                                Text(
-                                    text = "আরবি আয়াত",
-                                    style = MaterialTheme.typography.labelSmall.copy(
-                                        fontWeight = FontWeight.Bold,
-                                        color = IslamicGreen,
-                                        fontSize = 11.sp
-                                    ),
-                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
-                                )
-                            }
-                            Text(
-                                text = "আয়াত $ayahNumberBn",
-                                style = MaterialTheme.typography.labelSmall.copy(
-                                    color = IslamicGreen,
-                                    fontWeight = FontWeight.SemiBold,
-                                    fontSize = 11.sp
-                                )
-                            )
-                        }
-
-                        Spacer(modifier = Modifier.height(8.dp))
-
-                        // Arabic Verse Text (Right aligned, authentic Uthmani script calligraphy)
                         Text(
                             text = "${ayah.arabicText} ۝$ayahNumberBn",
                             style = MaterialTheme.typography.headlineSmall.copy(
@@ -2103,38 +1964,33 @@ fun AyahCardItem(
 
             // Part 2: Bangla Pronunciation Card (Very Lite Warm Honey/Sand Cream Tint)
             if (settings.showPronunciation && displayPronunciation.isNotBlank()) {
-                Card(
-                    shape = RoundedCornerShape(12.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = if (isDark) Color(0xFF272113) else Color(0xFFFFFBEA)
-                    ),
-                    border = BorderStroke(
-                        1.dp,
-                        if (isDark) Color(0xFF453A20) else Color(0xFFF5E3B3)
-                    ),
+                Surface(
+                    shape = RoundedCornerShape(10.dp),
+                    color = if (isDark) Color(0xFF272113) else Color(0xFFFFFBEA),
+                    border = BorderStroke(0.8.dp, if (isDark) Color(0xFF453A20) else Color(0xFFF5E3B3)),
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 14.dp, vertical = 10.dp)
+                            .padding(horizontal = 12.dp, vertical = 8.dp)
                     ) {
                         Surface(
-                            shape = RoundedCornerShape(6.dp),
-                            color = Color(0xFFB57C1E).copy(alpha = 0.14f)
+                            shape = RoundedCornerShape(4.dp),
+                            color = Color(0xFFB57C1E).copy(alpha = 0.12f)
                         ) {
                             Text(
-                                text = "বাংলা উচ্চারণ",
+                                text = "উচ্চারণ",
                                 style = MaterialTheme.typography.labelSmall.copy(
                                     fontWeight = FontWeight.Bold,
                                     color = if (isDark) Color(0xFFE5B25D) else Color(0xFF9E6814),
-                                    fontSize = 11.sp
+                                    fontSize = 10.5.sp
                                 ),
-                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
+                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 1.5.dp)
                             )
                         }
 
-                        Spacer(modifier = Modifier.height(6.dp))
+                        Spacer(modifier = Modifier.height(4.dp))
 
                         Text(
                             text = displayPronunciation,
@@ -2164,38 +2020,33 @@ fun AyahCardItem(
                     )
                 }
 
-                Card(
-                    shape = RoundedCornerShape(12.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = if (isDark) Color(0xFF14202E) else Color(0xFFF2F6FC)
-                    ),
-                    border = BorderStroke(
-                        1.dp,
-                        if (isDark) Color(0xFF20354C) else Color(0xFFD0DFEF)
-                    ),
+                Surface(
+                    shape = RoundedCornerShape(10.dp),
+                    color = if (isDark) Color(0xFF14202E) else Color(0xFFF2F6FC),
+                    border = BorderStroke(0.8.dp, if (isDark) Color(0xFF20354C) else Color(0xFFD4E2F2)),
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 14.dp, vertical = 10.dp)
+                            .padding(horizontal = 12.dp, vertical = 8.dp)
                     ) {
                         Surface(
-                            shape = RoundedCornerShape(6.dp),
+                            shape = RoundedCornerShape(4.dp),
                             color = Color(0xFF1976D2).copy(alpha = 0.12f)
                         ) {
                             Text(
-                                text = "বাংলা অর্থ ($translatorName)",
+                                text = "অর্থ ($translatorName)",
                                 style = MaterialTheme.typography.labelSmall.copy(
                                     fontWeight = FontWeight.Bold,
                                     color = if (isDark) Color(0xFF64B5F6) else Color(0xFF1565C0),
-                                    fontSize = 11.sp
+                                    fontSize = 10.5.sp
                                 ),
-                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
+                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 1.5.dp)
                             )
                         }
 
-                        Spacer(modifier = Modifier.height(6.dp))
+                        Spacer(modifier = Modifier.height(4.dp))
 
                         Text(
                             text = activeTranslation,
@@ -2227,7 +2078,7 @@ fun AyahCardItem(
                                         fontWeight = FontWeight.SemiBold,
                                         color = MaterialTheme.colorScheme.onSecondaryContainer
                                     ),
-                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 1.5.dp)
                                 )
                             }
                             Spacer(modifier = Modifier.height(4.dp))

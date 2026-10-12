@@ -232,7 +232,7 @@ fun HomeScreen(
                 id = "namaz_guide",
                 serialNumberBn = "০৫",
                 titleBn = "৫. নামাজের পূর্ণাঙ্গ গাইড",
-                shortTitleBn = "নামাজ পূর্ণাঙ্গ গাইড",
+                shortTitleBn = "নামাজ গাইড",
                 subtitleBn = "সহীহ সালাত শিক্ষা, ধাপে ধাপে পদ্ধতি, সঠিক রাকাত, তিলাওয়াত ও মাসআলা",
                 categoryBn = "সালাত ও সময়",
                 icon = Icons.Default.Mosque,

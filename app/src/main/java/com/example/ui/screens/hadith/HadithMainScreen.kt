@@ -173,7 +173,7 @@ fun HadithMainScreen(
 
                     Box(
                         modifier = Modifier
-                            .size(36.dp)
+                            .size(32.dp)
                             .clip(CircleShape)
                             .background(
                                 Brush.linearGradient(listOf(IslamicGreen, IslamicGold))
@@ -184,13 +184,17 @@ fun HadithMainScreen(
                             imageVector = Icons.Default.MenuBook,
                             contentDescription = null,
                             tint = Color.White,
-                            modifier = Modifier.size(20.dp)
+                            modifier = Modifier.size(18.dp)
                         )
                     }
 
-                    Spacer(modifier = Modifier.width(10.dp))
+                    Spacer(modifier = Modifier.width(8.dp))
 
-                    Column(modifier = Modifier.weight(1f)) {
+                    Column(
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(end = 4.dp)
+                    ) {
                         Text(
                             text = if (selectedBookSlug != null) {
                                 allBooks.find { it.slug == selectedBookSlug }?.nameBn ?: "হাদীস বিস্তারিত"
@@ -202,6 +206,7 @@ fun HadithMainScreen(
                                 color = MaterialTheme.colorScheme.onSurface
                             ),
                             maxLines = 1,
+                            softWrap = false,
                             overflow = TextOverflow.Ellipsis
                         )
                         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -209,52 +214,68 @@ fun HadithMainScreen(
                                 imageVector = Icons.Default.Verified,
                                 contentDescription = null,
                                 tint = IslamicGreen,
-                                modifier = Modifier.size(12.dp)
+                                modifier = Modifier.size(11.dp)
                             )
-                            Spacer(modifier = Modifier.width(4.dp))
+                            Spacer(modifier = Modifier.width(3.dp))
                             Text(
-                                text = "হাদিসবিডি (HadithBD) / IRD ফাউন্ডেশন",
+                                text = "হাদিসবিডি (HadithBD)",
                                 style = MaterialTheme.typography.labelSmall.copy(
                                     fontSize = 10.sp,
                                     color = IslamicGreen
-                                )
+                                ),
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
                             )
                         }
                     }
 
-                    if (onOpenHadithTopics != null) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(2.dp)
+                    ) {
+                        if (onOpenHadithTopics != null) {
+                            IconButton(
+                                onClick = onOpenHadithTopics,
+                                modifier = Modifier
+                                    .size(38.dp)
+                                    .testTag("btn_hadith_topics_topbar")
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.CollectionsBookmark,
+                                    contentDescription = "বিষয় ভিত্তিক সহীহ হাদিস",
+                                    tint = IslamicGold,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                            }
+                        }
+
                         IconButton(
-                            onClick = onOpenHadithTopics,
-                            modifier = Modifier.testTag("btn_hadith_topics_topbar")
+                            onClick = { isSearchExpanded = !isSearchExpanded },
+                            modifier = Modifier
+                                .size(38.dp)
+                                .testTag("btn_hadith_search")
                         ) {
                             Icon(
-                                imageVector = Icons.Default.CollectionsBookmark,
-                                contentDescription = "বিষয় ভিত্তিক সহীহ হাদিস",
-                                tint = IslamicGold
+                                imageVector = Icons.Default.Search,
+                                contentDescription = "অনুসন্ধান",
+                                tint = if (isSearchExpanded || searchQuery.isNotBlank()) IslamicGold else MaterialTheme.colorScheme.onSurface,
+                                modifier = Modifier.size(20.dp)
                             )
                         }
-                    }
 
-                    IconButton(
-                        onClick = { isSearchExpanded = !isSearchExpanded },
-                        modifier = Modifier.testTag("btn_hadith_search")
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Search,
-                            contentDescription = "অনুসন্ধান",
-                            tint = if (isSearchExpanded || searchQuery.isNotBlank()) IslamicGold else MaterialTheme.colorScheme.onSurface
-                        )
-                    }
-
-                    IconButton(
-                        onClick = { showFontSizeDialog = true },
-                        modifier = Modifier.testTag("btn_hadith_font_size")
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.FormatSize,
-                            contentDescription = "ফন্ট সাইজ",
-                            tint = MaterialTheme.colorScheme.onSurface
-                        )
+                        IconButton(
+                            onClick = { showFontSizeDialog = true },
+                            modifier = Modifier
+                                .size(38.dp)
+                                .testTag("btn_hadith_font_size")
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.FormatSize,
+                                contentDescription = "ফন্ট সাইজ",
+                                tint = MaterialTheme.colorScheme.onSurface,
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
                     }
                 }
 

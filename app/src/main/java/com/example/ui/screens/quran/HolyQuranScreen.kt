@@ -314,7 +314,10 @@ fun HolyQuranIndexScreen(
                     .padding(horizontal = 8.dp, vertical = 6.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                IconButton(onClick = onNavigateBack) {
+                IconButton(
+                    onClick = onNavigateBack,
+                    modifier = Modifier.size(42.dp)
+                ) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                         contentDescription = "ফিরে যান",
@@ -322,38 +325,25 @@ fun HolyQuranIndexScreen(
                     )
                 }
 
-                // Quran Book Icon
-                Box(
+                Spacer(modifier = Modifier.width(6.dp))
+
+                Column(
                     modifier = Modifier
-                        .size(38.dp)
-                        .clip(CircleShape)
-                        .background(
-                            Brush.linearGradient(
-                                listOf(IslamicGreen, IslamicGreen.copy(alpha = 0.8f))
-                            )
-                        ),
-                    contentAlignment = Alignment.Center
+                        .weight(1f)
+                        .padding(end = 4.dp)
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.MenuBook,
-                        contentDescription = "আল-কুরআন",
-                        tint = Color.White,
-                        modifier = Modifier.size(22.dp)
-                    )
-                }
-
-                Spacer(modifier = Modifier.width(10.dp))
-
-                Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = "আল-কুরআন",
-                        style = MaterialTheme.typography.titleLarge.copy(
+                        style = MaterialTheme.typography.titleMedium.copy(
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSurface
-                        )
+                        ),
+                        maxLines = 1,
+                        softWrap = false,
+                        overflow = TextOverflow.Ellipsis
                     )
                     Text(
-                        text = "অনুবাদ, তাফসীর ও তিলাওয়াত — সূরার নামে চাপলে খুলবে।",
+                        text = "অনুবাদ, তাফসীর ও তিলাওয়াত",
                         style = MaterialTheme.typography.bodySmall.copy(
                             fontSize = 11.sp,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -363,226 +353,50 @@ fun HolyQuranIndexScreen(
                     )
                 }
 
-                IconButton(
-                    onClick = onOpenAudioManager,
-                    modifier = Modifier.testTag("btn_audio_manager")
+                // Compact action buttons with ample breathing room
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(2.dp)
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.CloudDownload,
-                        contentDescription = "কুরআন অডিও ডাউনলোড ম্যানেজার",
-                        tint = IslamicGreen
-                    )
-                }
-
-                IconButton(
-                    onClick = onOpenReciterPicker,
-                    modifier = Modifier.testTag("btn_reciter_picker")
-                ) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.VolumeUp,
-                        contentDescription = "ক্বারী নির্বাচন",
-                        tint = IslamicGold
-                    )
-                }
-
-                if (onOpenQuranTopics != null) {
                     IconButton(
-                        onClick = onOpenQuranTopics,
-                        modifier = Modifier.testTag("btn_quran_topics_topbar")
+                        onClick = onOpenReciterPicker,
+                        modifier = Modifier
+                            .size(38.dp)
+                            .testTag("btn_reciter_picker")
                     ) {
                         Icon(
-                            imageVector = Icons.Default.MenuBook,
-                            contentDescription = "বিষয় ভিত্তিক কোরআনের আয়াত",
-                            tint = IslamicGreen
+                            imageVector = Icons.AutoMirrored.Filled.VolumeUp,
+                            contentDescription = "ক্বারী নির্বাচন",
+                            tint = IslamicGold,
+                            modifier = Modifier.size(20.dp)
                         )
                     }
-                }
 
-                IconButton(
-                    onClick = onOpenSettings,
-                    modifier = Modifier.testTag("btn_quran_settings")
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Settings,
-                        contentDescription = "কুরআন সেটিংস",
-                        tint = MaterialTheme.colorScheme.onSurface
-                    )
-                }
-            }
-        }
-
-        // Card: বিষয় ভিত্তিক কোরআনের আয়াত (HadithBD / IRD Foundation)
-        if (onOpenQuranTopics != null) {
-            Surface(
-                onClick = onOpenQuranTopics,
-                shape = RoundedCornerShape(12.dp),
-                color = IslamicGreen.copy(alpha = 0.12f),
-                border = BorderStroke(1.2.dp, IslamicGreen.copy(alpha = 0.55f)),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 4.dp)
-                    .testTag("banner_card_quran_topics")
-            ) {
-                Row(
-                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 9.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Box(
+                    IconButton(
+                        onClick = onOpenAudioManager,
                         modifier = Modifier
-                            .size(34.dp)
-                            .clip(CircleShape)
-                            .background(IslamicGreen.copy(alpha = 0.22f)),
-                        contentAlignment = Alignment.Center
+                            .size(38.dp)
+                            .testTag("btn_audio_manager")
                     ) {
                         Icon(
-                            imageVector = Icons.Default.MenuBook,
-                            contentDescription = "বিষয় ভিত্তিক কোরআনের আয়াত",
+                            imageVector = Icons.Default.CloudDownload,
+                            contentDescription = "কুরআন অডিও ডাউনলোড ম্যানেজার",
                             tint = IslamicGreen,
                             modifier = Modifier.size(20.dp)
                         )
                     }
-                    Spacer(modifier = Modifier.width(10.dp))
-                    Column(modifier = Modifier.weight(1f)) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text(
-                                text = "বিষয় ভিত্তিক কোরআনের আয়াত",
-                                style = MaterialTheme.typography.labelMedium.copy(
-                                    fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.onSurface
-                                )
-                            )
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Surface(
-                                shape = RoundedCornerShape(4.dp),
-                                color = IslamicGold
-                            ) {
-                                Text(
-                                    text = "HadithBD • ৫৪টি বিষয়",
-                                    style = MaterialTheme.typography.labelSmall.copy(
-                                        fontSize = 9.5.sp,
-                                        fontWeight = FontWeight.Bold,
-                                        color = Color.Black
-                                    ),
-                                    modifier = Modifier.padding(horizontal = 5.dp, vertical = 1.dp)
-                                )
-                            }
-                        }
-                        Text(
-                            text = "তাওহীদ, ইবাদত, মুআমালাত, আখলাক ও ফিকহ সহ পূর্ণাঙ্গ প্রামাণ্য আয়াত তালিকা",
-                            style = MaterialTheme.typography.bodySmall.copy(
-                                fontSize = 10.5.sp,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        )
-                    }
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowForwardIos,
-                        contentDescription = "প্রবেশ করুন",
-                        tint = IslamicGreen,
-                        modifier = Modifier.size(15.dp)
-                    )
-                }
-            }
-        }
 
-        // Prominent 2-Card Quick Access Banner for Quran Settings & 1-Click Audio Manager
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 6.dp),
-            horizontalArrangement = Arrangement.spacedBy(10.dp)
-        ) {
-            // Card 1: কুরআন সেটিংস (Quran Settings)
-            Surface(
-                onClick = onOpenSettings,
-                shape = RoundedCornerShape(12.dp),
-                color = IslamicGold.copy(alpha = 0.12f),
-                border = BorderStroke(1.dp, IslamicGold.copy(alpha = 0.45f)),
-                modifier = Modifier
-                    .weight(1f)
-                    .testTag("banner_card_quran_settings")
-            ) {
-                Row(
-                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 8.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Box(
+                    IconButton(
+                        onClick = onOpenSettings,
                         modifier = Modifier
-                            .size(32.dp)
-                            .clip(CircleShape)
-                            .background(IslamicGold.copy(alpha = 0.22f)),
-                        contentAlignment = Alignment.Center
+                            .size(38.dp)
+                            .testTag("btn_quran_settings")
                     ) {
                         Icon(
                             imageVector = Icons.Default.Settings,
                             contentDescription = "কুরআন সেটিংস",
-                            tint = IslamicGold,
-                            modifier = Modifier.size(18.dp)
-                        )
-                    }
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Column {
-                        Text(
-                            text = "কুরআন সেটিংস",
-                            style = MaterialTheme.typography.labelMedium.copy(
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onSurface
-                            )
-                        )
-                        Text(
-                            text = "ফন্ট ও অনুবাদক",
-                            style = MaterialTheme.typography.bodySmall.copy(
-                                fontSize = 10.sp,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        )
-                    }
-                }
-            }
-
-            // Card 2: ১-ক্লিক অডিও ডাউনলোড ম্যানেজার (Audio Manager)
-            Surface(
-                onClick = onOpenAudioManager,
-                shape = RoundedCornerShape(12.dp),
-                color = IslamicGreen.copy(alpha = 0.12f),
-                border = BorderStroke(1.dp, IslamicGreen.copy(alpha = 0.45f)),
-                modifier = Modifier
-                    .weight(1f)
-                    .testTag("banner_card_audio_manager")
-            ) {
-                Row(
-                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 8.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .size(32.dp)
-                            .clip(CircleShape)
-                            .background(IslamicGreen.copy(alpha = 0.22f)),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.CloudDownload,
-                            contentDescription = "অডিও ডাউনলোড",
-                            tint = IslamicGreen,
-                            modifier = Modifier.size(18.dp)
-                        )
-                    }
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Column {
-                        Text(
-                            text = "অডিও ম্যানেজার",
-                            style = MaterialTheme.typography.labelMedium.copy(
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onSurface
-                            )
-                        )
-                        Text(
-                            text = "১১৪ সূরার অফলাইন অডিও",
-                            style = MaterialTheme.typography.bodySmall.copy(
-                                fontSize = 10.sp,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
+                            tint = MaterialTheme.colorScheme.onSurface,
+                            modifier = Modifier.size(20.dp)
                         )
                     }
                 }
@@ -629,8 +443,8 @@ fun HolyQuranIndexScreen(
             }
         }
 
-        // Search Bar
-        PaddingValues(horizontal = 16.dp, vertical = 8.dp).let {
+        // Search Bar (Immediately below Top Bar without redundant extra spacing)
+        PaddingValues(horizontal = 16.dp, vertical = 6.dp).let {
             Box(modifier = Modifier.padding(it)) {
                 OutlinedTextField(
                     value = searchQuery,
@@ -674,10 +488,11 @@ fun HolyQuranIndexScreen(
             }
         }
 
-        // Quick Filter Chips (সকল, মাক্কী, মাদানী, বুকমার্ক, অফলাইন)
+        // Quick Filter Chips (Scrollable horizontally for 100% responsiveness on all screen sizes)
         Row(
             modifier = Modifier
                 .fillMaxWidth()
+                .horizontalScroll(rememberScrollState())
                 .padding(horizontal = 16.dp, vertical = 2.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
@@ -1042,20 +857,25 @@ fun SurahDetailScreen(
             modifier = Modifier.fillMaxWidth()
         ) {
             Column(modifier = Modifier.fillMaxWidth()) {
-                // Top App Bar: Back Button, Surah Name, and Surah Counter Badge
+                // Top App Bar: Back Button, Surah Name Dropdown, Prev/Next, and Bookmark
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 8.dp, vertical = 6.dp),
+                        .padding(horizontal = 6.dp, vertical = 6.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    IconButton(onClick = onBackToIndex) {
+                    IconButton(
+                        onClick = onBackToIndex,
+                        modifier = Modifier.size(38.dp)
+                    ) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "সূচিপত্রে ফিরে যান",
                             tint = MaterialTheme.colorScheme.onSurface
                         )
                     }
+
+                    Spacer(modifier = Modifier.width(4.dp))
 
                     // Quick Surah Dropdown Selector in Top Bar
                     Surface(
@@ -1084,16 +904,16 @@ fun SurahDetailScreen(
                                         maxLines = 1,
                                         overflow = TextOverflow.Ellipsis
                                     )
-                                    Spacer(modifier = Modifier.width(4.dp))
+                                    Spacer(modifier = Modifier.width(3.dp))
                                     Icon(
                                         imageVector = Icons.Default.ArrowDropDown,
                                         contentDescription = "সূরা পরিবর্তন ড্রপডাউন",
                                         tint = IslamicGreen,
-                                        modifier = Modifier.size(22.dp)
+                                        modifier = Modifier.size(20.dp)
                                     )
                                 }
                                 Text(
-                                    text = "${surah.revelationType} • আয়াত: ${BanglaNumberUtils.toBanglaDigits(surah.totalAyat)} • দ্রুত পরিবর্তন ▾",
+                                    text = "${surah.revelationType} • আয়াত: ${BanglaNumberUtils.toBanglaDigits(surah.totalAyat)}",
                                     style = MaterialTheme.typography.bodySmall.copy(
                                         fontSize = 11.sp,
                                         fontWeight = FontWeight.Medium,
@@ -1107,33 +927,58 @@ fun SurahDetailScreen(
                             Surface(
                                 color = IslamicGreen,
                                 shape = RoundedCornerShape(8.dp),
-                                modifier = Modifier.padding(start = 6.dp)
+                                modifier = Modifier.padding(start = 4.dp)
                             ) {
-                                Row(
-                                    modifier = Modifier.padding(horizontal = 7.dp, vertical = 4.dp),
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(2.dp)
-                                ) {
-                                    Text(
-                                        text = "${BanglaNumberUtils.toBanglaDigits(surah.number)}/১১৪",
-                                        style = MaterialTheme.typography.labelSmall.copy(
-                                            fontWeight = FontWeight.Bold,
-                                            color = Color.White,
-                                            fontSize = 11.sp
-                                        )
-                                    )
-                                    Icon(
-                                        imageVector = Icons.Default.ArrowDropDown,
-                                        contentDescription = null,
-                                        tint = Color.White,
-                                        modifier = Modifier.size(14.dp)
-                                    )
-                                }
+                                Text(
+                                    text = "${BanglaNumberUtils.toBanglaDigits(surah.number)}/১১৪",
+                                    style = MaterialTheme.typography.labelSmall.copy(
+                                        fontWeight = FontWeight.Bold,
+                                        color = Color.White,
+                                        fontSize = 11.sp
+                                    ),
+                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 4.dp)
+                                )
                             }
                         }
                     }
 
-                    Spacer(modifier = Modifier.width(4.dp))
+                    Spacer(modifier = Modifier.width(2.dp))
+
+                    // Previous Surah Button
+                    IconButton(
+                        onClick = {
+                            if (surah.number > 1) {
+                                onSelectSurahNumber(surah.number - 1)
+                            }
+                        },
+                        enabled = surah.number > 1,
+                        modifier = Modifier.size(34.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "পূর্ববর্তী সূরা",
+                            tint = if (surah.number > 1) IslamicGreen else MaterialTheme.colorScheme.outline.copy(alpha = 0.35f),
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
+
+                    // Next Surah Button
+                    IconButton(
+                        onClick = {
+                            if (surah.number < 114) {
+                                onSelectSurahNumber(surah.number + 1)
+                            }
+                        },
+                        enabled = surah.number < 114,
+                        modifier = Modifier.size(34.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                            contentDescription = "পরবর্তী সূরা",
+                            tint = if (surah.number < 114) IslamicGreen else MaterialTheme.colorScheme.outline.copy(alpha = 0.35f),
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
 
                     // Bookmark Button for Surah Itself in Top Bar
                     IconButton(
@@ -1144,118 +989,16 @@ fun SurahDetailScreen(
                                 Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
                             }
                         },
-                        modifier = Modifier.testTag("btn_top_bar_surah_bookmark")
+                        modifier = Modifier
+                            .size(36.dp)
+                            .testTag("btn_top_bar_surah_bookmark")
                     ) {
                         Icon(
                             imageVector = if (isSurahBookmarked) Icons.Default.Bookmark else Icons.Default.BookmarkBorder,
                             contentDescription = if (isSurahBookmarked) "সূরা বুকমার্ক থেকে সরান" else "সূরা বুকমার্ক করুন",
                             tint = if (isSurahBookmarked) IslamicGold else MaterialTheme.colorScheme.onSurface,
-                            modifier = Modifier.size(24.dp)
+                            modifier = Modifier.size(22.dp)
                         )
-                    }
-                }
-
-                HorizontalDivider(
-                    color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.25f),
-                    thickness = 0.8.dp
-                )
-
-                // Quick Surah Switcher Navigation Strip (Pinned so it's always accessible)
-                Surface(
-                    color = IslamicGreen.copy(alpha = 0.08f),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 8.dp, vertical = 4.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        // Previous Surah Button
-                        TextButton(
-                            onClick = {
-                                if (surah.number > 1) {
-                                    onSelectSurahNumber(surah.number - 1)
-                                }
-                            },
-                            enabled = surah.number > 1,
-                            contentPadding = PaddingValues(horizontal = 6.dp, vertical = 2.dp)
-                        ) {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                contentDescription = "পূর্ববর্তী সূরা",
-                                modifier = Modifier.size(16.dp),
-                                tint = if (surah.number > 1) IslamicGreen else MaterialTheme.colorScheme.outline.copy(alpha = 0.35f)
-                            )
-                            Spacer(modifier = Modifier.width(3.dp))
-                            Text(
-                                text = if (surah.number > 1) {
-                                    val prevSurah = QuranSurahCatalog.all114Surahs.find { it.number == surah.number - 1 }
-                                    "পূর্ববর্তী: ${prevSurah?.nameBn ?: ""}"
-                                } else "শুরু",
-                                fontSize = 11.5.sp,
-                                fontWeight = FontWeight.SemiBold,
-                                color = if (surah.number > 1) IslamicGreen else MaterialTheme.colorScheme.outline.copy(alpha = 0.35f)
-                            )
-                        }
-
-                        // Central Current Surah Switcher Dialog trigger (Shows Current Surah Name as requested)
-                        Surface(
-                            onClick = { showSurahQuickSwitchDialog = true },
-                            shape = RoundedCornerShape(10.dp),
-                            color = IslamicGreen,
-                            shadowElevation = 1.dp
-                        ) {
-                            Row(
-                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(4.dp)
-                            ) {
-                                Text(
-                                    text = "সূরা ${surah.nameBn}",
-                                    color = Color.White,
-                                    fontSize = 12.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis
-                                )
-                                Icon(
-                                    imageVector = Icons.Default.ArrowDropDown,
-                                    contentDescription = "সূরা নির্বাচন",
-                                    tint = Color.White,
-                                    modifier = Modifier.size(16.dp)
-                                )
-                            }
-                        }
-
-                        // Next Surah Button
-                        TextButton(
-                            onClick = {
-                                if (surah.number < 114) {
-                                    onSelectSurahNumber(surah.number + 1)
-                                }
-                            },
-                            enabled = surah.number < 114,
-                            contentPadding = PaddingValues(horizontal = 6.dp, vertical = 2.dp)
-                        ) {
-                            Text(
-                                text = if (surah.number < 114) {
-                                    val nextSurah = QuranSurahCatalog.all114Surahs.find { it.number == surah.number + 1 }
-                                    "পরবর্তী: ${nextSurah?.nameBn ?: ""}"
-                                } else "শেষ",
-                                fontSize = 11.5.sp,
-                                fontWeight = FontWeight.SemiBold,
-                                color = if (surah.number < 114) IslamicGreen else MaterialTheme.colorScheme.outline.copy(alpha = 0.35f)
-                            )
-                            Spacer(modifier = Modifier.width(3.dp))
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Filled.ArrowForward,
-                                contentDescription = "পরবর্তী সূরা",
-                                modifier = Modifier.size(16.dp),
-                                tint = if (surah.number < 114) IslamicGreen else MaterialTheme.colorScheme.outline.copy(alpha = 0.35f)
-                            )
-                        }
                     }
                 }
             }
@@ -1919,8 +1662,10 @@ fun SurahHeaderCard(
 
                 // Bottom Actions Row: Audio & Offline buttons
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.Center,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 4.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     // Full Surah Audio Button
@@ -1931,9 +1676,9 @@ fun SurahHeaderCard(
                         modifier = Modifier.clickable(onClick = onPlayFullSurah)
                     ) {
                         Row(
-                            modifier = Modifier.padding(horizontal = 14.dp, vertical = 7.dp),
+                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 7.dp),
                             verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                            horizontalArrangement = Arrangement.spacedBy(5.dp)
                         ) {
                             Icon(
                                 imageVector = if (isFullSurahPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
@@ -1942,16 +1687,15 @@ fun SurahHeaderCard(
                                 modifier = Modifier.size(16.dp)
                             )
                             Text(
-                                text = if (isFullSurahPlaying) "তিলাওয়াত থামান" else "সম্পূর্ণ সূরা তিলাওয়াত",
+                                text = if (isFullSurahPlaying) "থামান" else "সূরা তিলাওয়াত",
                                 style = MaterialTheme.typography.labelMedium.copy(
                                     fontWeight = FontWeight.Bold,
+                                    fontSize = 12.sp,
                                     color = if (isFullSurahPlaying) Color.White else Color(0xFF0D4B37)
                                 )
                             )
                         }
                     }
-
-                    Spacer(modifier = Modifier.width(10.dp))
 
                     // Offline Download Button
                     if (isDownloaded) {

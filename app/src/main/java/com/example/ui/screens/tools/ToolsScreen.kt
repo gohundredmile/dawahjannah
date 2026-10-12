@@ -921,7 +921,7 @@ private fun ToolGridCard(
         elevation = CardDefaults.cardElevation(defaultElevation = 1.5.dp),
         modifier = modifier
             .fillMaxWidth()
-            .aspectRatio(0.92f) // Beautiful proportion for 3-in-a-row
+            .aspectRatio(0.86f) // Optimized proportion for 3-in-a-row on all smartphones
             .clickable { onClick() }
     ) {
         Column(

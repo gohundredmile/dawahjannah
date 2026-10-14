@@ -33,6 +33,8 @@ import androidx.compose.material.icons.automirrored.filled.ArrowForwardIos
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CloudDownload
+import androidx.compose.material.icons.filled.CloudOff
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.material.icons.filled.ColorLens
 import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.Download
@@ -83,6 +85,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
+import com.example.ui.theme.IslamicGreen
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
@@ -155,6 +159,7 @@ fun SettingsScreen(viewModel: MainViewModel) {
     val homeScreenCardOrder by viewModel.homeScreenCardOrder.collectAsState()
 
     val salatConfig by viewModel.salatConfig.collectAsState()
+    val isOfflineMode by viewModel.isOfflineMode.collectAsState()
 
     val themeNameBn = when (currentThemeStyle) {
         ThemeStyle.EMERALD_JANNAH -> "এমেরাল্ড জান্নাহ"
@@ -176,6 +181,162 @@ fun SettingsScreen(viewModel: MainViewModel) {
         modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 20.dp)
     ) {
+        // 0. GLOBAL OFFLINE MODE (গ্লোবাল অফলাইন মোড)
+        item {
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag("card_global_offline_mode_setting"),
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = if (isOfflineMode) {
+                        MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.28f)
+                    } else {
+                        MaterialTheme.colorScheme.surface
+                    }
+                ),
+                border = BorderStroke(
+                    1.2.dp,
+                    if (isOfflineMode) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline.copy(alpha = 0.18f)
+                )
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(14.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Surface(
+                                shape = CircleShape,
+                                color = if (isOfflineMode) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
+                                modifier = Modifier.size(38.dp)
+                            ) {
+                                Box(contentAlignment = Alignment.Center) {
+                                    Icon(
+                                        imageVector = if (isOfflineMode) Icons.Default.CloudOff else Icons.Default.CloudDownload,
+                                        contentDescription = "অফলাইন মোড",
+                                        tint = if (isOfflineMode) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                }
+                            }
+                            Spacer(modifier = Modifier.width(10.dp))
+                            Column {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Text(
+                                        text = "গ্লোবাল অফলাইন মোড",
+                                        style = MaterialTheme.typography.titleMedium,
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 15.sp,
+                                        color = if (isOfflineMode) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
+                                    )
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Surface(
+                                        color = if (isOfflineMode) IslamicGreen else MaterialTheme.colorScheme.surfaceVariant,
+                                        shape = RoundedCornerShape(4.dp)
+                                    ) {
+                                        Text(
+                                            text = if (isOfflineMode) "সক্রিয়" else "অনলাইন",
+                                            color = if (isOfflineMode) Color.White else MaterialTheme.colorScheme.onSurfaceVariant,
+                                            fontSize = 9.5.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                        )
+                                    }
+                                }
+                                Text(
+                                    text = if (isOfflineMode) "নেটওয়ার্ক রিকোয়েস্ট সীমিত ও লোকাল ডেটা অগ্রাধিকার" else "স্বাভাবিক অনলাইন ও রিমোট সিঙ্ক মোড",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    fontSize = 11.5.sp,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
+
+                        Switch(
+                            checked = isOfflineMode,
+                            onCheckedChange = { enabled -> viewModel.setOfflineMode(enabled) },
+                            colors = SwitchDefaults.colors(
+                                checkedThumbColor = Color.White,
+                                checkedTrackColor = MaterialTheme.colorScheme.primary
+                            ),
+                            modifier = Modifier.testTag("switch_global_offline_mode")
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    Text(
+                        text = "অফলাইন মোড সক্রিয় থাকলে সকল বহিরাগত নেটওয়ার্ক রিকোয়েস্ট বন্ধ থাকবে। কুরআন (১১৪ সূরা), সিহাহ সিত্তাহ হাদীস, হিসনুল মুসলিম দো‘আ, নামাজ ক্যালকুলেটর ও সকল ফিচারের স্থানীয় ক্যাশড ডেটাবেজকে অগ্রাধিকার দেওয়া হবে।",
+                        style = MaterialTheme.typography.bodySmall,
+                        fontSize = 11.sp,
+                        lineHeight = 16.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        Surface(
+                            shape = RoundedCornerShape(6.dp),
+                            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Text(
+                                text = "✓ ১১৪ সূরা অফলাইন",
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier.padding(vertical = 4.dp, horizontal = 2.dp)
+                            )
+                        }
+                        Surface(
+                            shape = RoundedCornerShape(6.dp),
+                            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Text(
+                                text = "✓ স্থানীয় হাদিস ডেটা",
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier.padding(vertical = 4.dp, horizontal = 2.dp)
+                            )
+                        }
+                        Surface(
+                            shape = RoundedCornerShape(6.dp),
+                            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Text(
+                                text = "✓ জিরো ডেটা খরচ",
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier.padding(vertical = 4.dp, horizontal = 2.dp)
+                            )
+                        }
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(14.dp))
+        }
+
         // 1. CONSOLIDATED THEME & COLOR STYLES + DISPLAY MODE (COLLAPSIBLE)
         item {
             CollapsibleSettingHeader(

@@ -53,11 +53,17 @@ class SmartQuranSearchAiService(private val context: Context) {
             ""
         }
 
-        // If no API key or placeholder, return high-precision local semantic results
-        if (apiKey.isBlank() || apiKey == "your_api_key_here") {
+        val isOffline = try {
+            com.example.data.repository.AppRepository(context).isOfflineMode()
+        } catch (_: Exception) {
+            false
+        }
+
+        // If offline mode is active, or no API key, return high-precision local semantic results
+        if (isOffline || apiKey.isBlank() || apiKey == "your_api_key_here") {
             return@withContext SmartQuranSearchResult(
                 query = query,
-                interpretedIntentBn = interpretedIntent,
+                interpretedIntentBn = if (isOffline) "অফলাইন মোড সক্রিয় • স্থানীয় ডেটাবেজ থেকে ফলাফল" else interpretedIntent,
                 ayahs = if (localMatches.isNotEmpty()) localMatches else SmartQuranCatalog.catalog.take(3),
                 isAiEnhanced = false
             )

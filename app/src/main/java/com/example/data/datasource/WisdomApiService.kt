@@ -8,7 +8,9 @@ import com.example.data.model.DailyWisdomState
 import com.example.data.model.HadithWisdomItem
 import com.example.data.model.QuoteWisdomItem
 import com.example.data.model.QuranWisdomItem
+import com.example.data.repository.AppRepository
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -313,8 +315,9 @@ class WisdomApiService(private val context: Context) {
         )
     }
 
-    suspend fun fetchWisdomBundle(shuffle: Boolean = false): DailyWisdomState = withContext(Dispatchers.IO) {
-        val hasNet = isNetworkAvailable()
+    suspend fun fetchWisdomBundle(shuffle: Boolean = false, forceOffline: Boolean = false): DailyWisdomState = withContext(Dispatchers.IO) {
+        val isOffline = forceOffline || AppRepository(context).isOfflineMode()
+        val hasNet = !isOffline && isNetworkAvailable()
         val seed = Math.abs(getTodaySeed())
 
         var quranItem: QuranWisdomItem? = null

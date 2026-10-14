@@ -5,6 +5,7 @@ import androidx.compose.material.icons.filled.AccessTime
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Dashboard
 import androidx.compose.material.icons.filled.LocalFireDepartment
+import androidx.compose.material.icons.filled.MenuBook
 import androidx.compose.material.icons.filled.Mosque
 import androidx.compose.material.icons.filled.NightsStay
 import androidx.compose.material.icons.filled.PhotoCamera
@@ -41,13 +42,21 @@ enum class HomeScreenCardId(
         iconColor = Color(0xFF059669),
         defaultIndex = 1
     ),
+    CONTINUE_READING(
+        id = "continue_reading",
+        titleBn = "পড়া চালিয়ে যান (Continue Reading)",
+        subtitleBn = "সর্বশেষ পঠিত সূরা ও আয়াতের স্বয়ংক্রিয় বুকমার্ক ও সরাসরি তিলাওয়াত",
+        icon = Icons.Default.MenuBook,
+        iconColor = Color(0xFF0D9488),
+        defaultIndex = 2
+    ),
     FRIDAY_BANNER(
         id = "friday_banner",
         titleBn = "জুমার বিশেষ আমল ব্যানার",
         subtitleBn = "বৃহস্পতিবার মাগরিব থেকে শুক্রবার মাগরিব পর্যন্ত সক্রিয় বিশেষ ব্যানার",
         icon = Icons.Default.Star,
         iconColor = Color(0xFFD97706),
-        defaultIndex = 2
+        defaultIndex = 3
     ),
     QUICK_ACTION(
         id = "quick_action",
@@ -55,7 +64,7 @@ enum class HomeScreenCardId(
         subtitleBn = "ধারাবাহিকতা দিন স্ট্রিক, আজকের আমল ট্র্যাকার ও তাসবীহ শর্টকাট",
         icon = Icons.Default.LocalFireDepartment,
         iconColor = Color(0xFFEA580C),
-        defaultIndex = 3
+        defaultIndex = 4
     ),
     CAMERA_AI(
         id = "camera_ai",
@@ -63,7 +72,7 @@ enum class HomeScreenCardId(
         subtitleBn = "স্মার্ট ক্যামেরা দিয়ে কুরআনের আয়াত স্ক্যান, তফসির ও অডিও",
         icon = Icons.Default.PhotoCamera,
         iconColor = Color(0xFF10B981),
-        defaultIndex = 4
+        defaultIndex = 5
     ),
     TOP_FEATURES(
         id = "top_features",
@@ -71,7 +80,7 @@ enum class HomeScreenCardId(
         subtitleBn = "সালাত, কুরআন, হাদিস, হিসনুল মুসলিমসহ শীর্ষ ৮টি ফিচারের গ্রিড ও 'আরও' বাটন",
         icon = Icons.Default.Dashboard,
         iconColor = Color(0xFF8B5CF6),
-        defaultIndex = 5
+        defaultIndex = 6
     ),
     SEHRI_IFTAR(
         id = "sehri_iftar",
@@ -79,7 +88,7 @@ enum class HomeScreenCardId(
         subtitleBn = "দৈনিক সেহরি-ইফতার কাউন্টডাউন ও পূর্ণাঙ্গ রমজান সময়সূচী",
         icon = Icons.Default.NightsStay,
         iconColor = Color(0xFFE11D48),
-        defaultIndex = 6
+        defaultIndex = 7
     ),
     SALAT_TIMINGS(
         id = "salat_timings",
@@ -87,7 +96,7 @@ enum class HomeScreenCardId(
         subtitleBn = "সালাতের সঠিক ওয়াক্ত, নিষিদ্ধ সময়, জিপিএস ও স্থান সমন্বয়",
         icon = Icons.Default.Mosque,
         iconColor = Color(0xFF0284C7),
-        defaultIndex = 7
+        defaultIndex = 8
     ),
     NOFOL_SALAT(
         id = "nofol_salat",
@@ -95,7 +104,7 @@ enum class HomeScreenCardId(
         subtitleBn = "তাহাজ্জুদ, ইশরাক, চাশত, আওয়াবীনসহ ৮টি নফল সালাতের সময় ও ফযিলত",
         icon = Icons.Default.SelfImprovement,
         iconColor = Color(0xFF6366F1),
-        defaultIndex = 8
+        defaultIndex = 9
     ),
     DAILY_WISDOM(
         id = "daily_wisdom",
@@ -103,7 +112,7 @@ enum class HomeScreenCardId(
         subtitleBn = "প্রতিদিনের পবিত্র কুরআন আয়াত, সহীহ হাদিস ও ইসলামিক বাণী",
         icon = Icons.Default.AutoAwesome,
         iconColor = Color(0xFFF59E0B),
-        defaultIndex = 9
+        defaultIndex = 10
     );
 
     companion object {

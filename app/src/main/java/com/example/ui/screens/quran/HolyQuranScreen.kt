@@ -149,6 +149,8 @@ fun HolyQuranScreen(
     quranRepository: QuranRepository,
     audioManager: QuranAudioManager,
     initialSurahNumber: Int? = null,
+    initialAyahNumber: Int? = null,
+    onRecordReadingProgress: ((QuranSurah, QuranAyah) -> Unit)? = null,
     onOpenQuranTopics: (() -> Unit)? = null,
     onNavigateBack: () -> Unit,
     contentPadding: PaddingValues = PaddingValues()
@@ -210,6 +212,8 @@ fun HolyQuranScreen(
             audioManager = audioManager,
             settingsManager = settingsManager,
             selectedTranslator = selectedTranslator,
+            initialAyahNumber = initialAyahNumber,
+            onRecordReadingProgress = onRecordReadingProgress,
             onSelectTranslator = { settingsManager.updatePreferredTranslator(it.id) },
             onOpenReciterPicker = { showReciterDialog = true },
             onOpenSettings = { showSettingsDialog = true },
@@ -810,6 +814,8 @@ fun SurahDetailScreen(
     audioManager: QuranAudioManager,
     settingsManager: QuranSettingsManager,
     selectedTranslator: QuranTranslator,
+    initialAyahNumber: Int? = null,
+    onRecordReadingProgress: ((QuranSurah, QuranAyah) -> Unit)? = null,
     onSelectTranslator: (QuranTranslator) -> Unit,
     onOpenReciterPicker: () -> Unit,
     onOpenSettings: () -> Unit,
@@ -850,6 +856,37 @@ fun SurahDetailScreen(
     val isFullSurahPlaying = playerState.isPlaying && playerState.surahNumber == surah.number
 
     val listState = rememberLazyListState()
+
+    // 1. Initial Ayah jump from "Continue Reading"
+    var hasScrolledToInitialAyah by remember(surah.number, initialAyahNumber) { mutableStateOf(false) }
+    LaunchedEffect(ayahsState.size, initialAyahNumber) {
+        if (!hasScrolledToInitialAyah && initialAyahNumber != null && initialAyahNumber > 0 && ayahsState.isNotEmpty()) {
+            val baseOffset = if (surah.number != 1) 2 else 1
+            val targetIdx = (baseOffset + initialAyahNumber).coerceIn(0, (ayahsState.size + baseOffset).coerceAtLeast(0))
+            try {
+                listState.scrollToItem(index = targetIdx, scrollOffset = -20)
+            } catch (_: Exception) {}
+            hasScrolledToInitialAyah = true
+        }
+    }
+
+    // 2. Automatic Reading Tracker & Bookmark: saves the current visible Ayah as user reads/scrolls
+    LaunchedEffect(listState, ayahsState.size, surah.number) {
+        androidx.compose.runtime.snapshotFlow {
+            listState.firstVisibleItemIndex
+        }.collect { firstIndex ->
+            if (ayahsState.isNotEmpty()) {
+                val baseOffset = if (surah.number != 1) 2 else 1
+                val estimatedAyahIdx = (firstIndex - baseOffset).coerceIn(0, ayahsState.size - 1)
+                val currentVisibleAyah = ayahsState.getOrNull(estimatedAyahIdx) ?: ayahsState.firstOrNull()
+                if (currentVisibleAyah != null) {
+                    kotlinx.coroutines.delay(350)
+                    onRecordReadingProgress?.invoke(surah, currentVisibleAyah)
+                }
+            }
+        }
+    }
+
     LaunchedEffect(playerState.activeAyahNumber, playerState.isPlaying, playerState.surahNumber, surah.number, ayahsState.size, settings.autoScrollWithAudio) {
         val activeAyah = playerState.activeAyahNumber
         if (playerState.surahNumber == surah.number && activeAyah != null && settings.autoScrollWithAudio) {

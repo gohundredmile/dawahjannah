@@ -9,7 +9,9 @@ import android.os.Environment
 import android.provider.Settings
 import androidx.core.content.FileProvider
 import com.squareup.moshi.JsonClass
+import com.example.data.repository.AppRepository
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -277,6 +279,11 @@ class GitHubUpdateManager(private val context: Context) {
         owner: String = repoOwner,
         repo: String = repoName
     ): Result<GitHubReleaseInfo> = withContext(Dispatchers.IO) {
+        val isOffline = AppRepository(context).isOfflineMode()
+        if (isOffline) {
+            return@withContext Result.failure(Exception("গ্লোবাল অফলাইন মোড সক্রিয় — নেটওয়ার্ক রিকোয়েস্ট স্থগিত রয়েছে।"))
+        }
+
         var gitHubReleaseInfo: GitHubReleaseInfo? = null
         var otaUpdateInfo: GitHubReleaseInfo? = null
 

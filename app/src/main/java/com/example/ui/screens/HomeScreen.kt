@@ -27,7 +27,9 @@ import androidx.compose.material.icons.filled.Brightness2
 import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.CloudOff
 import androidx.compose.material.icons.filled.CollectionsBookmark
+import com.example.ui.components.ContinueReadingCard
 import androidx.compose.material.icons.filled.Explore
 import androidx.compose.material.icons.filled.FindReplace
 import androidx.compose.material.icons.filled.Healing
@@ -63,6 +65,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -127,6 +130,8 @@ fun HomeScreen(
     val scorecardTotal = viewModel.scorecardTotalCount
     val isRefreshing by viewModel.isRefreshingHome.collectAsState()
     val homeScreenCardOrder by viewModel.homeScreenCardOrder.collectAsState()
+    val lastReadPosition by viewModel.lastReadPosition.collectAsState()
+    val isOfflineMode by viewModel.isOfflineMode.collectAsState()
 
     var showSehriIftarFullScreen by remember { mutableStateOf(false) }
     var showDetailedSehriIftar by remember { mutableStateOf(false) }
@@ -611,6 +616,45 @@ fun HomeScreen(
             modifier = Modifier.fillMaxSize(),
             contentPadding = PaddingValues(bottom = 20.dp)
         ) {
+            if (isOfflineMode) {
+                item(key = "banner_global_offline_active") {
+                    Surface(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 6.dp)
+                            .clickable { viewModel.openSettings(AppTab.HOME) }
+                            .testTag("banner_offline_mode_active"),
+                        shape = RoundedCornerShape(12.dp),
+                        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 12.dp, vertical = 8.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.CloudOff,
+                                contentDescription = "গ্লোবাল অফলাইন মোড",
+                                tint = IslamicGreen,
+                                modifier = Modifier.size(18.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "গ্লোবাল অফলাইন মোড সক্রিয় • শতভাগ স্থানীয় ক্যাশড ডেটা ব্যবহৃত হচ্ছে",
+                                style = MaterialTheme.typography.bodySmall.copy(
+                                    fontSize = 11.5.sp,
+                                    fontWeight = FontWeight.Medium,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                ),
+                                modifier = Modifier.weight(1f)
+                            )
+                        }
+                    }
+                }
+            }
+
             homeScreenCardOrder.forEach { cardId ->
                 when (cardId) {
                     HomeScreenCardId.HEADER_COVER -> {
@@ -642,6 +686,23 @@ fun HomeScreen(
                                 calendarInfo = tripleCalendar,
                                 onOpenTripleCalendar = { showTripleCalendarDialog = true },
                                 onOpenNofolSalat = { salat -> selectedNofolSalat = salat }
+                            )
+                        }
+                    }
+                    HomeScreenCardId.CONTINUE_READING -> {
+                        // 1.08. Continue Reading: Automatically Bookmarks & Displays Last Read Surah & Ayah
+                        item(key = "card_continue_reading") {
+                            ContinueReadingCard(
+                                lastRead = lastReadPosition,
+                                onContinueReading = { surahNumber, ayahNumber ->
+                                    viewModel.openHolyQuran(surahNumber = surahNumber, ayahNumber = ayahNumber)
+                                },
+                                onStartFromBeginning = { surahNumber ->
+                                    viewModel.openHolyQuran(surahNumber = surahNumber, ayahNumber = 1)
+                                },
+                                onOpenSurahList = {
+                                    viewModel.openHolyQuran(surahNumber = null)
+                                }
                             )
                         }
                     }

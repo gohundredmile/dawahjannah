@@ -32,6 +32,13 @@ class AskBeforeYouActAiService(private val context: Context) {
     }
 
     fun getEffectiveApiKey(): String {
+        val isOffline = try {
+            com.example.data.repository.AppRepository(context).isOfflineMode()
+        } catch (_: Exception) {
+            false
+        }
+        if (isOffline) return ""
+
         val userKey = prefs.getString("custom_gemini_api_key", null)?.trim()
         if (!userKey.isNullOrBlank() && !userKey.contains("your_api_key_here")) {
             return userKey

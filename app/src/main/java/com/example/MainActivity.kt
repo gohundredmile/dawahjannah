@@ -269,10 +269,15 @@ class MainActivity : ComponentActivity() {
                                         )
                                         ToolsSubScreen.HOLY_QURAN -> {
                                             val initialSurah by viewModel.targetQuranSurahNumber.collectAsState()
+                                            val initialAyah by viewModel.targetQuranAyahNumber.collectAsState()
                                             HolyQuranScreen(
                                                 quranRepository = viewModel.quranRepository,
                                                 audioManager = viewModel.quranAudioManager,
                                                 initialSurahNumber = initialSurah,
+                                                initialAyahNumber = initialAyah,
+                                                onRecordReadingProgress = { surah, ayah ->
+                                                    viewModel.saveLastReadAyah(surah, ayah)
+                                                },
                                                 onOpenQuranTopics = { viewModel.openQuranTopics() },
                                                 onNavigateBack = { viewModel.navigateBack() },
                                                 contentPadding = innerPadding

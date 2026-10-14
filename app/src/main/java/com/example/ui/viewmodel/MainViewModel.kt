@@ -53,6 +53,9 @@ import com.example.data.model.RoutineItem
 import com.example.data.model.SalatConfiguration
 import com.example.data.model.SalatPlaceInfo
 import com.example.data.model.ScreenEffectMode
+import com.example.data.model.QuranAyah
+import com.example.data.model.QuranLastReadPosition
+import com.example.data.model.QuranSurah
 import com.example.data.model.TasbihDhikrItem
 import com.example.data.model.ThemeMode
 import com.example.data.model.ThemeStyle
@@ -130,6 +133,7 @@ sealed class AppNavDestination {
     data class ToolsSub(
         val sub: ToolsSubScreen,
         val targetSurah: Int? = null,
+        val targetAyah: Int? = null,
         val targetHadithBook: String? = null
     ) : AppNavDestination()
     data class MoreSub(
@@ -178,6 +182,9 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val _targetQuranSurahNumber = MutableStateFlow<Int?>(null)
     val targetQuranSurahNumber: StateFlow<Int?> = _targetQuranSurahNumber.asStateFlow()
 
+    private val _targetQuranAyahNumber = MutableStateFlow<Int?>(null)
+    val targetQuranAyahNumber: StateFlow<Int?> = _targetQuranAyahNumber.asStateFlow()
+
     private val _targetHadithBookSlug = MutableStateFlow<String?>(null)
     val targetHadithBookSlug: StateFlow<String?> = _targetHadithBookSlug.asStateFlow()
 
@@ -199,6 +206,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 AppNavDestination.ToolsSub(
                     _toolsSubScreen.value,
                     _targetQuranSurahNumber.value,
+                    _targetQuranAyahNumber.value,
                     _targetHadithBookSlug.value
                 )
             }
@@ -228,6 +236,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             when (prev) {
                 is AppNavDestination.ToolsSub -> {
                     _targetQuranSurahNumber.value = prev.targetSurah
+                    _targetQuranAyahNumber.value = prev.targetAyah
                     _targetHadithBookSlug.value = prev.targetHadithBook
                     _toolsSubScreen.value = prev.sub
                     _currentTab.value = AppTab.TOOLS
@@ -325,11 +334,48 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         _currentTab.value = AppTab.TOOLS
     }
 
-    fun openHolyQuran(surahNumber: Int? = null) {
+    fun openHolyQuran(surahNumber: Int? = null, ayahNumber: Int? = null) {
         pushCurrentState()
         _targetQuranSurahNumber.value = surahNumber
+        _targetQuranAyahNumber.value = ayahNumber
         _toolsSubScreen.value = ToolsSubScreen.HOLY_QURAN
         _currentTab.value = AppTab.TOOLS
+    }
+
+    fun clearTargetQuranAyahNumber() {
+        _targetQuranAyahNumber.value = null
+    }
+
+    // CONTINUE READING & OFFLINE MODE
+    val lastReadPosition: StateFlow<QuranLastReadPosition> = repository.lastReadPositionFlow
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), QuranLastReadPosition())
+
+    val isOfflineMode: StateFlow<Boolean> = repository.isOfflineModeFlow
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
+
+    fun setOfflineMode(enabled: Boolean) {
+        viewModelScope.launch {
+            repository.setOfflineMode(enabled)
+            refreshHomeScreen()
+        }
+    }
+
+    fun saveLastReadAyah(surah: QuranSurah, ayah: QuranAyah) {
+        viewModelScope.launch {
+            val pos = QuranLastReadPosition(
+                surahNumber = surah.number,
+                surahNameBn = surah.nameBn,
+                surahNameAr = surah.nameAr,
+                surahNameEn = surah.nameEn,
+                ayahNumber = ayah.ayahNumber,
+                totalAyat = surah.totalAyat,
+                revelationTypeBn = surah.revelationType,
+                ayahTextAr = ayah.arabicText,
+                ayahTranslationBn = ayah.translationBn,
+                timestamp = System.currentTimeMillis()
+            )
+            quranRepository.saveLastReadPosition(pos)
+        }
     }
 
     fun openHadithCollection(bookSlug: String? = null) {

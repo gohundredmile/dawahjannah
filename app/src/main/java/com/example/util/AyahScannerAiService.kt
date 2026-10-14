@@ -42,6 +42,13 @@ class AyahScannerAiService(private val context: Context) {
     }
 
     fun hasValidApiKey(): Boolean {
+        val isOffline = try {
+            com.example.data.repository.AppRepository(context).isOfflineMode()
+        } catch (_: Exception) {
+            false
+        }
+        if (isOffline) return false
+
         val key = getEffectiveApiKey()
         return key.isNotBlank() && key != "your_api_key_here"
     }

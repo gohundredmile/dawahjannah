@@ -5,9 +5,11 @@ import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import android.util.Log
 import com.example.data.model.SalatConfiguration
+import com.example.data.repository.AppRepository
 import com.example.util.CalendarHelper
 import com.example.util.PrayerCalculator
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -275,6 +277,16 @@ class MoonSightingApiService(private val context: Context) {
      * Fetches live moon sighting status from Aladhan API or official astronomical endpoint.
      */
     suspend fun fetchLiveMoonSightingStatus(): MoonSightingLiveState = withContext(Dispatchers.IO) {
+        val isOffline = AppRepository(context).isOfflineMode()
+        if (isOffline) {
+            return@withContext MoonSightingLiveState(
+                isLiveConnected = false,
+                lastCheckedTimeBn = "গ্লোবাল অফলাইন মোড সক্রিয়",
+                headlineBn = "গ্লোবাল অফলাইন মোড সক্রিয়: সম্পূর্ণ স্থানীয় নির্ভুল জ্যোতির্বৈজ্ঞানিক ও জাতীয় চাঁদ দেখা কমিটির ক্যালেন্ডার ডাটা প্রদর্শিত হচ্ছে।",
+                errorMessage = null
+            )
+        }
+
         if (!isNetworkAvailable()) {
             return@withContext MoonSightingLiveState(
                 isLiveConnected = false,

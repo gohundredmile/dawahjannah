@@ -5,12 +5,14 @@ import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.floatPreferencesKey
 import androidx.datastore.preferences.core.intPreferencesKey
+import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.example.data.local.AppDatabase
 import com.example.data.local.entity.BookmarkEntity
 import com.example.data.local.entity.ChecklistRecord
 import com.example.data.local.entity.ScratchpadNote
+import com.example.data.model.QuranLastReadPosition
 import com.example.data.model.BanglaFont
 import com.example.data.model.AsrJuristicMethod
 import com.example.data.model.AuroraWallpaperConfig
@@ -75,6 +77,19 @@ class AppRepository(private val context: Context) {
         val KEY_EXPLORE_FEATURE_ORDER = stringPreferencesKey("explore_feature_order")
         val KEY_EXPLORE_SORT_MODE = stringPreferencesKey("explore_sort_mode")
         val KEY_HOMESCREEN_CARD_ORDER = stringPreferencesKey("homescreen_card_order")
+        val KEY_GLOBAL_OFFLINE_MODE = booleanPreferencesKey("global_offline_mode")
+
+        // Last Read Quran Position keys
+        val KEY_LAST_READ_SURAH_NUM = intPreferencesKey("last_read_surah_num")
+        val KEY_LAST_READ_SURAH_NAME_BN = stringPreferencesKey("last_read_surah_name_bn")
+        val KEY_LAST_READ_SURAH_NAME_AR = stringPreferencesKey("last_read_surah_name_ar")
+        val KEY_LAST_READ_SURAH_NAME_EN = stringPreferencesKey("last_read_surah_name_en")
+        val KEY_LAST_READ_AYAH_NUM = intPreferencesKey("last_read_ayah_num")
+        val KEY_LAST_READ_TOTAL_AYAH = intPreferencesKey("last_read_total_ayah")
+        val KEY_LAST_READ_REVELATION_TYPE = stringPreferencesKey("last_read_revelation_type")
+        val KEY_LAST_READ_AYAH_AR = stringPreferencesKey("last_read_ayah_ar")
+        val KEY_LAST_READ_AYAH_BN = stringPreferencesKey("last_read_ayah_bn")
+        val KEY_LAST_READ_TIMESTAMP = longPreferencesKey("last_read_timestamp")
     }
 
     fun getTodayDateString(): String {
@@ -557,6 +572,76 @@ class AppRepository(private val context: Context) {
     suspend fun resetHomeScreenCardOrder() {
         context.dataStore.edit { prefs ->
             prefs.remove(KEY_HOMESCREEN_CARD_ORDER)
+        }
+    }
+
+    // GLOBAL OFFLINE MODE
+    fun isOfflineMode(): Boolean {
+        return try {
+            context.getSharedPreferences("app_settings_prefs", Context.MODE_PRIVATE)
+                .getBoolean("global_offline_mode", false)
+        } catch (_: Exception) {
+            false
+        }
+    }
+
+    val isOfflineModeFlow: Flow<Boolean> = context.dataStore.data.map { prefs ->
+        prefs[KEY_GLOBAL_OFFLINE_MODE] ?: isOfflineMode()
+    }
+
+    suspend fun setOfflineMode(enabled: Boolean) {
+        try {
+            context.getSharedPreferences("app_settings_prefs", Context.MODE_PRIVATE)
+                .edit()
+                .putBoolean("global_offline_mode", enabled)
+                .apply()
+        } catch (_: Exception) {
+            // Ignore
+        }
+        context.dataStore.edit { prefs ->
+            prefs[KEY_GLOBAL_OFFLINE_MODE] = enabled
+        }
+    }
+
+    // LAST READ QURAN POSITION (CONTINUE READING)
+    val lastReadPositionFlow: Flow<QuranLastReadPosition> = context.dataStore.data.map { prefs ->
+        val surahNum = prefs[KEY_LAST_READ_SURAH_NUM] ?: 1
+        val surahNameBn = prefs[KEY_LAST_READ_SURAH_NAME_BN] ?: "আল-ফাতিহা"
+        val surahNameAr = prefs[KEY_LAST_READ_SURAH_NAME_AR] ?: "الفاتحة"
+        val surahNameEn = prefs[KEY_LAST_READ_SURAH_NAME_EN] ?: "Al-Fatihah"
+        val ayahNum = prefs[KEY_LAST_READ_AYAH_NUM] ?: 1
+        val totalAyah = prefs[KEY_LAST_READ_TOTAL_AYAH] ?: 7
+        val revelationType = prefs[KEY_LAST_READ_REVELATION_TYPE] ?: "মাক্কী"
+        val ayahAr = prefs[KEY_LAST_READ_AYAH_AR] ?: "بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ"
+        val ayahBn = prefs[KEY_LAST_READ_AYAH_BN] ?: "পরম করুণাময় ও অসীম দয়ালু আল্লাহর নামে শুরু করছি।"
+        val timestamp = prefs[KEY_LAST_READ_TIMESTAMP] ?: System.currentTimeMillis()
+
+        QuranLastReadPosition(
+            surahNumber = surahNum,
+            surahNameBn = surahNameBn,
+            surahNameAr = surahNameAr,
+            surahNameEn = surahNameEn,
+            ayahNumber = ayahNum,
+            totalAyat = totalAyah,
+            revelationTypeBn = revelationType,
+            ayahTextAr = ayahAr,
+            ayahTranslationBn = ayahBn,
+            timestamp = timestamp
+        )
+    }
+
+    suspend fun saveLastReadPosition(position: QuranLastReadPosition) {
+        context.dataStore.edit { prefs ->
+            prefs[KEY_LAST_READ_SURAH_NUM] = position.surahNumber
+            prefs[KEY_LAST_READ_SURAH_NAME_BN] = position.surahNameBn
+            prefs[KEY_LAST_READ_SURAH_NAME_AR] = position.surahNameAr
+            prefs[KEY_LAST_READ_SURAH_NAME_EN] = position.surahNameEn
+            prefs[KEY_LAST_READ_AYAH_NUM] = position.ayahNumber
+            prefs[KEY_LAST_READ_TOTAL_AYAH] = position.totalAyat
+            prefs[KEY_LAST_READ_REVELATION_TYPE] = position.revelationTypeBn
+            prefs[KEY_LAST_READ_AYAH_AR] = position.ayahTextAr
+            prefs[KEY_LAST_READ_AYAH_BN] = position.ayahTranslationBn
+            prefs[KEY_LAST_READ_TIMESTAMP] = position.timestamp
         }
     }
 }

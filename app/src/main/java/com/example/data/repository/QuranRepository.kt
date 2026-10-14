@@ -7,6 +7,7 @@ import com.example.data.local.entity.QuranAyahEntity
 import com.example.data.local.entity.QuranBookmarkEntity
 import com.example.data.local.entity.QuranSurahEntity
 import com.example.data.model.QuranAyah
+import com.example.data.model.QuranLastReadPosition
 import com.example.data.model.QuranSurah
 import com.example.util.QuranBengaliPhoneticTransliteration
 import kotlinx.coroutines.Dispatchers
@@ -26,6 +27,27 @@ class QuranRepository(private val context: Context) {
 
     private val db = AppDatabase.getDatabase(context)
     private val quranDao = db.quranDao()
+    private val appRepo = AppRepository(context)
+
+    val lastReadPositionFlow: Flow<QuranLastReadPosition> = appRepo.lastReadPositionFlow
+
+    suspend fun saveLastReadPosition(position: QuranLastReadPosition) = withContext(Dispatchers.IO) {
+        appRepo.saveLastReadPosition(position)
+        // Automatically bookmark the exact Surah and Ayah in the Quran bookmarks table
+        val key = "${position.surahNumber}:${position.ayahNumber}"
+        quranDao.insertBookmark(
+            QuranBookmarkEntity(
+                id = key,
+                surahNumber = position.surahNumber,
+                ayahNumber = position.ayahNumber,
+                surahNameBn = position.surahNameBn,
+                arabicText = position.ayahTextAr,
+                pronunciationBn = "${position.surahNameEn} (${position.revelationTypeBn})",
+                translationBn = position.ayahTranslationBn,
+                timestamp = position.timestamp
+            )
+        )
+    }
 
     private val httpClient = OkHttpClient.Builder()
         .connectTimeout(15, TimeUnit.SECONDS)
@@ -239,6 +261,10 @@ class QuranRepository(private val context: Context) {
 
     private suspend fun fetchSurahFromApi(surahNumber: Int): List<QuranAyah> = withContext(Dispatchers.IO) {
         try {
+            val isOffline = appRepo.isOfflineMode()
+            if (isOffline) {
+                return@withContext emptyList()
+            }
             // King Fahd Quran Printing Complex / QuranEnc Bengali Zakaria endpoint
             val zakariaUrl = "https://quranenc.com/api/v1/translation/sura/bengali_zakaria/$surahNumber"
             val request = Request.Builder()

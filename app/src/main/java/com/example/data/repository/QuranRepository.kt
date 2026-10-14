@@ -269,7 +269,7 @@ class QuranRepository(private val context: Context) {
             val zakariaUrl = "https://quranenc.com/api/v1/translation/sura/bengali_zakaria/$surahNumber"
             val request = Request.Builder()
                 .url(zakariaUrl)
-                .header("User-Agent", "Mozilla/5.0 (Linux; Android 14; DawahToJannah/2.9)")
+                .header("User-Agent", "Mozilla/5.0 (Linux; Android 14; DawahToJannah/${com.example.BuildConfig.VERSION_NAME})")
                 .build()
             val response = httpClient.newCall(request).execute()
             if (!response.isSuccessful) return@withContext emptyList()

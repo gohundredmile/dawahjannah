@@ -274,28 +274,10 @@ object QuranBengaliPhoneticTransliteration {
         ayahNumber: Int,
         arabicText: String
     ): String {
-        val needsRegeneration = currentPronunciation.isBlank() ||
-            currentPronunciation == "—" ||
-            currentPronunciation.contains("সহীহ মাখরাজ") ||
-            currentPronunciation.contains("󰀀") ||
-            currentPronunciation.contains("’া") ||
-            currentPronunciation.contains("'া") ||
-            currentPronunciation.contains("’ু") ||
-            currentPronunciation.contains("’ি") ||
-            currentPronunciation.contains("‘া") ||
-            currentPronunciation.contains("ক্বালুওয়া") ||
-            currentPronunciation.contains("হিননাহুম") ||
-            currentPronunciation.contains("সসুফাহা") ||
-            currentPronunciation.contains("ননাসু") ||
-            currentPronunciation.contains("মিনুওয়া") ||
-            currentPronunciation.contains("\uFFFD") ||
-            currentPronunciation.contains("\u25CC")
-
-        if (needsRegeneration) {
-            return getPronunciation(surahNumber, ayahNumber, arabicText)
+        if (currentPronunciation.isNotBlank() && currentPronunciation != "—") {
+            return cleanPronunciationText(currentPronunciation)
         }
-
-        return cleanPronunciationText(currentPronunciation)
+        return getPronunciation(surahNumber, ayahNumber, arabicText)
     }
 
     /**

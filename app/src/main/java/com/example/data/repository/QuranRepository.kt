@@ -116,52 +116,42 @@ class QuranRepository(private val context: Context) {
     fun getAyahsForSurah(surahNumber: Int): Flow<List<QuranAyah>> = flow {
         val expectedAyat = QuranSurahCatalog.all114Surahs.find { it.number == surahNumber }?.totalAyat ?: 0
         val localEntities = quranDao.getAyahsForSurahSync(surahNumber)
+        val offline = loadSurahFromAssets(surahNumber)
 
-        // 1. If local entities exist AND are complete (e.g. not truncated like old 5-ayah Baqarah)
-        if (localEntities.isNotEmpty() && (expectedAyat == 0 || localEntities.size >= expectedAyat)) {
-            var hasOutdatedPronunciation = false
-            val healedEntities = localEntities.map { entity ->
-                val currentPronunciation = entity.pronunciationBn
-                val healedPronunciation = QuranBengaliPhoneticTransliteration.sanitizeAndHeal(
-                    currentPronunciation = currentPronunciation,
-                    surahNumber = entity.surahNumber,
-                    ayahNumber = entity.ayahNumber,
-                    arabicText = entity.arabicText
-                )
-                if (healedPronunciation != currentPronunciation) {
-                    hasOutdatedPronunciation = true
-                    entity.copy(pronunciationBn = healedPronunciation)
-                } else {
-                    entity
+        if (offline.isNotEmpty()) {
+            val localMap = localEntities.associateBy { it.ayahNumber }
+            var needsDbUpdate = localEntities.size < offline.size
+
+            val merged = offline.map { offAyah ->
+                val localEntity = localMap[offAyah.ayahNumber]
+                val isBookmarked = localEntity?.isBookmarked ?: false
+                if (localEntity != null && localEntity.pronunciationBn != offAyah.pronunciationBn) {
+                    needsDbUpdate = true
                 }
+                offAyah.copy(isBookmarked = isBookmarked)
             }
-            if (hasOutdatedPronunciation) {
-                // Permanently persist the healed authentic Bengali pronunciation in Room DB
-                quranDao.insertAyahs(healedEntities)
+
+            if (needsDbUpdate || localEntities.isEmpty()) {
+                quranDao.insertAyahs(merged.map { it.toEntity() })
             }
-            emit(healedEntities.map { it.toModel() })
+            emit(merged)
+        } else if (localEntities.isNotEmpty() && (expectedAyat == 0 || localEntities.size >= expectedAyat)) {
+            emit(localEntities.map { it.toModel() })
         } else {
-            // 2. High priority: Load 100% complete offline Surah from pre-bundled assets (all 114 Surahs available offline)
-            val offline = loadSurahFromAssets(surahNumber)
-            if (offline.isNotEmpty()) {
-                quranDao.insertAyahs(offline.map { it.toEntity() })
-                emit(offline)
+            // Fallback to pre-bundled catalog in memory
+            val bundled = QuranSurahCatalog.preBundledAyahs[surahNumber]
+            if (!bundled.isNullOrEmpty()) {
+                val entities = bundled.map { it.toEntity() }
+                quranDao.insertAyahs(entities)
+                emit(bundled)
             } else {
-                // 3. Fallback to pre-bundled catalog in memory
-                val bundled = QuranSurahCatalog.preBundledAyahs[surahNumber]
-                if (!bundled.isNullOrEmpty()) {
-                    val entities = bundled.map { it.toEntity() }
-                    quranDao.insertAyahs(entities)
-                    emit(bundled)
+                // Fallback: Online API fetch
+                val fetched = fetchSurahFromApi(surahNumber)
+                if (fetched.isNotEmpty()) {
+                    quranDao.insertAyahs(fetched.map { it.toEntity() })
+                    emit(fetched)
                 } else {
-                    // 4. Fallback: Online API fetch
-                    val fetched = fetchSurahFromApi(surahNumber)
-                    if (fetched.isNotEmpty()) {
-                        quranDao.insertAyahs(fetched.map { it.toEntity() })
-                        emit(fetched)
-                    } else {
-                        emit(emptyList())
-                    }
+                    emit(emptyList())
                 }
             }
         }
@@ -170,33 +160,31 @@ class QuranRepository(private val context: Context) {
     suspend fun ensureSurahAyahsLoaded(surahNumber: Int): List<QuranAyah> = withContext(Dispatchers.IO) {
         val expectedAyat = QuranSurahCatalog.all114Surahs.find { it.number == surahNumber }?.totalAyat ?: 0
         val local = quranDao.getAyahsForSurahSync(surahNumber)
-        if (local.isNotEmpty() && (expectedAyat == 0 || local.size >= expectedAyat)) {
-            var hasOutdatedPronunciation = false
-            val healedEntities = local.map { entity ->
-                val currentPronunciation = entity.pronunciationBn
-                val healedPronunciation = QuranBengaliPhoneticTransliteration.sanitizeAndHeal(
-                    currentPronunciation = currentPronunciation,
-                    surahNumber = entity.surahNumber,
-                    ayahNumber = entity.ayahNumber,
-                    arabicText = entity.arabicText
-                )
-                if (healedPronunciation != currentPronunciation) {
-                    hasOutdatedPronunciation = true
-                    entity.copy(pronunciationBn = healedPronunciation)
-                } else {
-                    entity
-                }
-            }
-            if (hasOutdatedPronunciation) {
-                quranDao.insertAyahs(healedEntities)
-            }
-            return@withContext healedEntities.map { it.toModel() }
-        }
         val offline = loadSurahFromAssets(surahNumber)
+
         if (offline.isNotEmpty()) {
-            quranDao.insertAyahs(offline.map { it.toEntity() })
-            return@withContext offline
+            val localMap = local.associateBy { it.ayahNumber }
+            var needsDbUpdate = local.size < offline.size
+
+            val merged = offline.map { offAyah ->
+                val localEntity = localMap[offAyah.ayahNumber]
+                val isBookmarked = localEntity?.isBookmarked ?: false
+                if (localEntity != null && localEntity.pronunciationBn != offAyah.pronunciationBn) {
+                    needsDbUpdate = true
+                }
+                offAyah.copy(isBookmarked = isBookmarked)
+            }
+
+            if (needsDbUpdate || local.isEmpty()) {
+                quranDao.insertAyahs(merged.map { it.toEntity() })
+            }
+            return@withContext merged
         }
+
+        if (local.isNotEmpty() && (expectedAyat == 0 || local.size >= expectedAyat)) {
+            return@withContext local.map { it.toModel() }
+        }
+
         val bundled = QuranSurahCatalog.preBundledAyahs[surahNumber]
         if (!bundled.isNullOrEmpty()) {
             quranDao.insertAyahs(bundled.map { it.toEntity() })
@@ -211,8 +199,8 @@ class QuranRepository(private val context: Context) {
     }
 
     /**
-     * Loads 100% offline verified Surah with authentic Uthmani script and Dr. Abu Bakr Zakaria translation
-     * directly from packaged assets/quran/surah_{surahNumber}.json
+     * Loads 100% offline verified Surah with authentic Uthmani script, Dr. Abu Bakr Zakaria translation,
+     * and authentic curated Bengali pronunciation directly from packaged assets/quran/surah_{surahNumber}.json
      */
     fun loadSurahFromAssets(surahNumber: Int): List<QuranAyah> {
         return try {
@@ -226,6 +214,7 @@ class QuranRepository(private val context: Context) {
                 val arabic = item.optString("ar", "")
                 val translation = item.optString("bn", "")
                 val footnotes = item.optString("tf", "")
+                val pronFromAsset = item.optString("pr", "")
 
                 val tafsirContent = if (footnotes.isNotBlank()) {
                     "তাফসীর ও ব্যাখ্যা (ড. আবু বকর যাকারিয়া):\n$footnotes"
@@ -233,11 +222,15 @@ class QuranRepository(private val context: Context) {
                     "তাফসীর: সূরাটির এই আয়াতে মহান আল্লাহর অপার মহিমা ও বান্দার প্রতি হেদায়েতের সুস্পষ্ট বার্তা দেওয়া হয়েছে।"
                 }
 
-                val pronunciation = QuranBengaliPhoneticTransliteration.getPronunciation(
-                    surahNumber = surahNumber,
-                    ayahNumber = ayaNum,
-                    arabicText = arabic
-                )
+                val pronunciation = if (pronFromAsset.isNotBlank()) {
+                    QuranBengaliPhoneticTransliteration.cleanPronunciationText(pronFromAsset)
+                } else {
+                    QuranBengaliPhoneticTransliteration.getPronunciation(
+                        surahNumber = surahNumber,
+                        ayahNumber = ayaNum,
+                        arabicText = arabic
+                    )
+                }
 
                 list.add(
                     QuranAyah(
@@ -292,11 +285,16 @@ class QuranRepository(private val context: Context) {
                     "তাফসীর: সূরাটির এই আয়াতে মহান আল্লাহর অপার মহিমা ও বান্দার প্রতি হেদায়েতের সুস্পষ্ট বার্তা দেওয়া হয়েছে।"
                 }
 
-                val pronunciation = QuranBengaliPhoneticTransliteration.getPronunciation(
-                    surahNumber = surahNumber,
-                    ayahNumber = ayaNum,
-                    arabicText = arabic
-                )
+                val offlinePron = loadSurahFromAssets(surahNumber).find { it.ayahNumber == ayaNum }?.pronunciationBn
+                val pronunciation = if (!offlinePron.isNullOrBlank()) {
+                    offlinePron
+                } else {
+                    QuranBengaliPhoneticTransliteration.getPronunciation(
+                        surahNumber = surahNumber,
+                        ayahNumber = ayaNum,
+                        arabicText = arabic
+                    )
+                }
 
                 list.add(
                     QuranAyah(

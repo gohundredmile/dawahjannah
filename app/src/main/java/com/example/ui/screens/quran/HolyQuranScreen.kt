@@ -29,6 +29,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -77,9 +79,12 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.HorizontalDivider
+import com.example.data.local.entity.QuranBookmarkEntity
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
@@ -1393,6 +1398,7 @@ fun SurahDetailScreen(
         if (showSurahQuickSwitchDialog) {
             SurahQuickSwitchDialog(
                 currentSurahNumber = surah.number,
+                bookmarks = bookmarks,
                 onSelectSurahNumber = onSelectSurahNumber,
                 onDismiss = { showSurahQuickSwitchDialog = false }
             )
@@ -1406,10 +1412,19 @@ fun SurahDetailScreen(
 @Composable
 fun SurahQuickSwitchDialog(
     currentSurahNumber: Int,
+    bookmarks: List<QuranBookmarkEntity> = emptyList(),
     onSelectSurahNumber: (Int) -> Unit,
     onDismiss: () -> Unit
 ) {
     var searchQuery by remember { mutableStateOf("") }
+    val bookmarkedSurahNumbers = remember(bookmarks) {
+        bookmarks.map { it.surahNumber }.toSet()
+    }
+    val bookmarkedSurahs = remember(bookmarkedSurahNumbers) {
+        QuranSurahCatalog.all114Surahs.filter { it.number in bookmarkedSurahNumbers }
+    }
+    var showBookmarkDropdown by remember { mutableStateOf(false) }
+
     val filteredSurahs = remember(searchQuery) {
         if (searchQuery.isBlank()) {
             QuranSurahCatalog.all114Surahs
@@ -1439,6 +1454,184 @@ fun SurahQuickSwitchDialog(
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold
                 )
+
+                // Bookmarked Surah Dropdown in the red box marked area
+                Box {
+                    Surface(
+                        onClick = { showBookmarkDropdown = !showBookmarkDropdown },
+                        shape = RoundedCornerShape(8.dp),
+                        color = if (bookmarkedSurahs.isNotEmpty()) IslamicGold.copy(alpha = 0.15f) else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f),
+                        border = BorderStroke(
+                            1.dp,
+                            if (bookmarkedSurahs.isNotEmpty()) IslamicGold.copy(alpha = 0.5f) else MaterialTheme.colorScheme.outline.copy(alpha = 0.25f)
+                        ),
+                        modifier = Modifier.testTag("btn_bookmarked_surahs_dropdown")
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.padding(horizontal = 7.dp, vertical = 4.dp)
+                        ) {
+                            Icon(
+                                imageVector = if (bookmarkedSurahs.isNotEmpty()) Icons.Default.Bookmark else Icons.Default.BookmarkBorder,
+                                contentDescription = "বুকমার্ককৃত সূরা",
+                                tint = if (bookmarkedSurahs.isNotEmpty()) IslamicGold else MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.size(13.dp)
+                            )
+                            Spacer(modifier = Modifier.width(3.dp))
+                            Text(
+                                text = if (bookmarkedSurahs.isNotEmpty()) {
+                                    "বুকমার্ক (${BanglaNumberUtils.toBanglaDigits(bookmarkedSurahs.size)})"
+                                } else {
+                                    "বুকমার্ক"
+                                },
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = if (bookmarkedSurahs.isNotEmpty()) {
+                                    MaterialTheme.colorScheme.onSurface
+                                } else {
+                                    MaterialTheme.colorScheme.onSurfaceVariant
+                                }
+                            )
+                            Spacer(modifier = Modifier.width(1.dp))
+                            Icon(
+                                imageVector = Icons.Default.ArrowDropDown,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.size(16.dp)
+                            )
+                        }
+                    }
+
+                    DropdownMenu(
+                        expanded = showBookmarkDropdown,
+                        onDismissRequest = { showBookmarkDropdown = false },
+                        modifier = Modifier
+                            .widthIn(min = 230.dp, max = 300.dp)
+                            .heightIn(max = 380.dp)
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 12.dp, vertical = 6.dp)
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(
+                                        imageVector = Icons.Default.Bookmark,
+                                        contentDescription = null,
+                                        tint = IslamicGold,
+                                        modifier = Modifier.size(15.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Text(
+                                        text = "বুকমার্ককৃত সূরা",
+                                        fontWeight = FontWeight.Bold,
+                                        style = MaterialTheme.typography.titleSmall,
+                                        color = MaterialTheme.colorScheme.primary
+                                    )
+                                }
+                                if (bookmarkedSurahs.isNotEmpty()) {
+                                    Text(
+                                        text = "${BanglaNumberUtils.toBanglaDigits(bookmarkedSurahs.size)} টি",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        fontWeight = FontWeight.Bold,
+                                        color = IslamicGold
+                                    )
+                                }
+                            }
+                            HorizontalDivider(
+                                modifier = Modifier.padding(top = 6.dp),
+                                thickness = 0.8.dp,
+                                color = MaterialTheme.colorScheme.outlineVariant
+                            )
+                        }
+
+                        if (bookmarkedSurahs.isEmpty()) {
+                            DropdownMenuItem(
+                                text = {
+                                    Column(modifier = Modifier.padding(vertical = 4.dp)) {
+                                        Text(
+                                            text = "কোনো সূরা বুকমার্ক করা নেই",
+                                            style = MaterialTheme.typography.bodySmall,
+                                            fontWeight = FontWeight.SemiBold,
+                                            color = MaterialTheme.colorScheme.onSurface
+                                        )
+                                        Spacer(modifier = Modifier.height(2.dp))
+                                        Text(
+                                            text = "সূরা পড়ার সময় ওপরের 🔖 আইকনে চাপ দিলে এখানে সরাসরি যুক্ত হবে।",
+                                            fontSize = 11.sp,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                            lineHeight = 14.sp
+                                        )
+                                    }
+                                },
+                                onClick = { showBookmarkDropdown = false },
+                                leadingIcon = {
+                                    Icon(
+                                        imageVector = Icons.Default.BookmarkBorder,
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                }
+                            )
+                        } else {
+                            bookmarkedSurahs.forEach { bSurah ->
+                                val isCurrent = bSurah.number == currentSurahNumber
+                                DropdownMenuItem(
+                                    text = {
+                                        Row(
+                                            verticalAlignment = Alignment.CenterVertically,
+                                            horizontalArrangement = Arrangement.SpaceBetween,
+                                            modifier = Modifier.fillMaxWidth()
+                                        ) {
+                                            Column(modifier = Modifier.weight(1f)) {
+                                                Text(
+                                                    text = "${BanglaNumberUtils.toBanglaDigits(bSurah.number)}. ${bSurah.nameBn}",
+                                                    style = MaterialTheme.typography.bodyMedium,
+                                                    fontWeight = if (isCurrent) FontWeight.Bold else FontWeight.SemiBold,
+                                                    color = if (isCurrent) IslamicGreen else MaterialTheme.colorScheme.onSurface
+                                                )
+                                                Text(
+                                                    text = "${bSurah.revelationType} • ${BanglaNumberUtils.toBanglaDigits(bSurah.totalAyat)} আয়াত",
+                                                    style = MaterialTheme.typography.labelSmall,
+                                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                                )
+                                            }
+                                            Spacer(modifier = Modifier.width(6.dp))
+                                            Text(
+                                                text = bSurah.nameAr,
+                                                style = MaterialTheme.typography.bodyMedium,
+                                                fontWeight = FontWeight.Bold,
+                                                color = if (isCurrent) IslamicGreen else MaterialTheme.colorScheme.primary,
+                                                fontSize = 14.sp
+                                            )
+                                        }
+                                    },
+                                    leadingIcon = {
+                                        Icon(
+                                            imageVector = Icons.Default.Bookmark,
+                                            contentDescription = null,
+                                            tint = if (isCurrent) IslamicGreen else IslamicGold,
+                                            modifier = Modifier.size(18.dp)
+                                        )
+                                    },
+                                    onClick = {
+                                        showBookmarkDropdown = false
+                                        onSelectSurahNumber(bSurah.number)
+                                        onDismiss()
+                                    },
+                                    modifier = Modifier.testTag("dropdown_item_surah_${bSurah.number}")
+                                )
+                            }
+                        }
+                    }
+                }
+
                 Text(
                     text = "বর্তমান: ${BanglaNumberUtils.toBanglaDigits(currentSurahNumber)}",
                     style = MaterialTheme.typography.labelSmall,

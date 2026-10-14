@@ -6,6 +6,7 @@ import android.media.MediaPlayer
 import com.example.data.datasource.QuranSurahCatalog
 import com.example.data.model.BatchDownloadState
 import com.example.data.model.DownloadProgressState
+import com.example.data.model.QuranAudioLoopMode
 import com.example.data.model.QuranReciter
 import com.example.data.model.SurahAudioPlayerState
 import kotlinx.coroutines.CoroutineScope
@@ -77,29 +78,50 @@ class QuranAudioManager(private val context: Context) {
      * As the reciter finishes each verse, playback smoothly advances to the next verse,
      * highlighting and auto-scrolling to the exact verse on the screen.
      */
-    fun playSurah(surahNumber: Int, surahNameBn: String, totalAyat: Int = 0, startAyah: Int = 1) {
+    /**
+     * Plays the whole Surah starting with "بِسْمِ ٱللَّٰهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ" (Bismillah).
+     * For Surah 1 (Al-Fatihah), Ayah 1 is Bismillah.
+     * For Surahs 2-114, recitation begins with Ayah 0 (Bismillah) with 100% screen synchronization,
+     * highlighting the Bismillah header with audio progress, and then automatically transitions to Ayah 1, 2, ...
+     * When [restartFromStart] is true, it always restarts from the beginning (Bismillah).
+     */
+    fun playSurah(
+        surahNumber: Int,
+        surahNameBn: String,
+        totalAyat: Int = 0,
+        startAyah: Int? = null,
+        restartFromStart: Boolean = false
+    ) {
         val current = _playerState.value
         val total = if (totalAyat > 0) totalAyat else {
             QuranSurahCatalog.all114Surahs.find { it.number == surahNumber }?.totalAyat ?: 7
         }
         currentSurahTotalAyat = total
 
-        // If currently paused on this surah with an active ayah, resume playback seamlessly
-        if (current.surahNumber == surahNumber && mediaPlayer != null && !current.isPlaying && current.activeAyahNumber != null) {
-            resume()
-            return
-        }
-
-        // If already playing this surah, toggle pause
-        if (current.surahNumber == surahNumber && current.isPlaying) {
+        // If already playing this surah and not forcing restart, toggle pause
+        if (!restartFromStart && current.surahNumber == surahNumber && current.isPlaying) {
             pause()
             return
         }
 
-        // Start continuous verse-by-verse recitation starting from startAyah
+        // Determine starting verse: every Surah start begins with Bismillah!
+        // In Surah 1 (Al-Fatihah), Ayah 1 IS Bismillah ("بِسْمِ ٱللَّٰهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ")
+        // In all other Surahs (2-114), Ayah 0 represents Bismillah ("بِسْمِ ٱللَّٰهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ")
+        val targetStartAyah = when {
+            startAyah != null -> startAyah
+            surahNumber == 1 -> 1
+            else -> 0
+        }
+
+        // If currently paused on this surah with an active ayah, and not forcing restart, resume playback seamlessly
+        if (!restartFromStart && current.surahNumber == surahNumber && mediaPlayer != null && !current.isPlaying && current.activeAyahNumber != null) {
+            resume()
+            return
+        }
+
         playAyahAudio(
             surahNumber = surahNumber,
-            ayahNumber = startAyah,
+            ayahNumber = targetStartAyah,
             continuous = true,
             surahNameBn = surahNameBn
         )
@@ -107,6 +129,7 @@ class QuranAudioManager(private val context: Context) {
 
     /**
      * Plays a specific Ayah audio with 100% precision.
+     * When [ayahNumber] == 0, it plays the authentic Bismillah recitation from the selected Qari.
      * When [continuous] is true, it automatically moves to the next Ayah upon completion,
      * maintaining flawless synchronization between audio recitation and screen visual highlighting.
      */
@@ -127,18 +150,25 @@ class QuranAudioManager(private val context: Context) {
         currentSurahTotalAyat = totalAyat
 
         val reciter = _selectedReciter.value
-        val url = reciter.getAyahAudioUrl(surahNumber, ayahNumber)
-        val cachedFile = getAyahCacheFile(surahNumber, ayahNumber, reciter.id)
+
+        // When ayahNumber == 0, fetch standard Bismillah (Surah 1, Ayah 1: 001001.mp3)
+        val sourceSurah = if (ayahNumber == 0) 1 else surahNumber
+        val sourceAyah = if (ayahNumber == 0) 1 else ayahNumber
+
+        val url = reciter.getAyahAudioUrl(sourceSurah, sourceAyah)
+        val cachedFile = getAyahCacheFile(sourceSurah, sourceAyah, reciter.id)
         val isCached = cachedFile.exists() && cachedFile.length() > 500
         val audioSource = if (isCached) cachedFile.absolutePath else url
 
-        _playerState.value = SurahAudioPlayerState(
+        _playerState.value = _playerState.value.copy(
             surahNumber = surahNumber,
             surahNameBn = resolvedSurahName,
             activeAyahNumber = ayahNumber,
             reciter = reciter,
             isPlaying = false,
             isBuffering = true,
+            currentPositionMs = 0,
+            durationMs = 0,
             isOfflineFile = isCached
         )
 
@@ -158,28 +188,77 @@ class QuranAudioManager(private val context: Context) {
                         durationMs = mp.duration,
                         activeAyahNumber = ayahNumber
                     )
+                    try {
+                        if (_playerState.value.playbackSpeed != 1.0f) {
+                            mp.playbackParams = mp.playbackParams.setSpeed(_playerState.value.playbackSpeed)
+                        }
+                    } catch (_: Exception) {}
                     mp.start()
                     startProgressTracking()
 
                     // Pre-cache next Ayahs in background for smooth, zero-latency transitions
-                    if (isContinuousAyahPlayback && ayahNumber < currentSurahTotalAyat) {
+                    val nextTargetAyah = if (ayahNumber == 0) 1 else ayahNumber + 1
+                    if (isContinuousAyahPlayback && nextTargetAyah <= currentSurahTotalAyat) {
                         scope.launch(Dispatchers.IO) {
-                            ensureAyahCached(surahNumber, ayahNumber + 1, reciter)
-                            if (ayahNumber + 1 < currentSurahTotalAyat) {
-                                ensureAyahCached(surahNumber, ayahNumber + 2, reciter)
+                            ensureAyahCached(surahNumber, nextTargetAyah, reciter)
+                            if (nextTargetAyah + 1 <= currentSurahTotalAyat) {
+                                ensureAyahCached(surahNumber, nextTargetAyah + 1, reciter)
                             }
                         }
                     }
                 }
                 setOnCompletionListener {
-                    if (isContinuousAyahPlayback && ayahNumber < currentSurahTotalAyat) {
-                        // Flawlessly advance to next verse with exact audio synchronization
+                    val currentLoop = _playerState.value.loopMode
+                    if (currentLoop == QuranAudioLoopMode.REPEAT_AYAH) {
+                        // Repeat the same Ayah (or Bismillah) for memorization
+                        playAyahAudio(
+                            surahNumber = surahNumber,
+                            ayahNumber = ayahNumber,
+                            continuous = true,
+                            surahNameBn = resolvedSurahName
+                        )
+                    } else if (ayahNumber == 0) {
+                        // Bismillah finished! Advance smoothly to Ayah 1 with synchronized screen highlight
+                        if (isContinuousAyahPlayback) {
+                            playAyahAudio(
+                                surahNumber = surahNumber,
+                                ayahNumber = 1,
+                                continuous = true,
+                                surahNameBn = resolvedSurahName
+                            )
+                        } else {
+                            _playerState.value = _playerState.value.copy(
+                                isPlaying = false,
+                                currentPositionMs = 0
+                            )
+                            stopProgressTracking()
+                        }
+                    } else if (isContinuousAyahPlayback && ayahNumber < currentSurahTotalAyat) {
+                        // Advance to the next verse
                         playAyahAudio(
                             surahNumber = surahNumber,
                             ayahNumber = ayahNumber + 1,
                             continuous = true,
                             surahNameBn = resolvedSurahName
                         )
+                    } else if (isContinuousAyahPlayback && ayahNumber >= currentSurahTotalAyat) {
+                        // Completed the entire Surah!
+                        if (currentLoop == QuranAudioLoopMode.REPEAT_SURAH) {
+                            val restartAyah = if (surahNumber == 1) 1 else 0
+                            playAyahAudio(
+                                surahNumber = surahNumber,
+                                ayahNumber = restartAyah,
+                                continuous = true,
+                                surahNameBn = resolvedSurahName
+                            )
+                        } else {
+                            _playerState.value = _playerState.value.copy(
+                                isPlaying = false,
+                                activeAyahNumber = null,
+                                currentPositionMs = 0
+                            )
+                            stopProgressTracking()
+                        }
                     } else {
                         _playerState.value = _playerState.value.copy(
                             isPlaying = false,
@@ -205,7 +284,7 @@ class QuranAudioManager(private val context: Context) {
             // If not cached yet, save this ayah to cache in background for instant replay
             if (!isCached) {
                 scope.launch(Dispatchers.IO) {
-                    ensureAyahCached(surahNumber, ayahNumber, reciter)
+                    ensureAyahCached(sourceSurah, sourceAyah, reciter)
                 }
             }
         } catch (_: Exception) {
@@ -213,10 +292,45 @@ class QuranAudioManager(private val context: Context) {
         }
     }
 
+    /**
+     * Restarts the current Surah from the very beginning (starting with Bismillah).
+     */
+    fun restartFromBeginning() {
+        val sNum = _playerState.value.surahNumber ?: return
+        val startAyah = if (sNum == 1) 1 else 0
+        playAyahAudio(
+            surahNumber = sNum,
+            ayahNumber = startAyah,
+            continuous = true,
+            surahNameBn = _playerState.value.surahNameBn
+        )
+    }
+
+    /**
+     * Restarts the current active verse from 0:00.
+     */
+    fun restartCurrentAyah() {
+        val sNum = _playerState.value.surahNumber ?: return
+        val aNum = _playerState.value.activeAyahNumber ?: (if (sNum == 1) 1 else 0)
+        playAyahAudio(
+            surahNumber = sNum,
+            ayahNumber = aNum,
+            continuous = isContinuousAyahPlayback,
+            surahNameBn = _playerState.value.surahNameBn
+        )
+    }
+
     fun playNextAyah() {
         val sNum = _playerState.value.surahNumber ?: return
-        val aNum = _playerState.value.activeAyahNumber ?: 1
-        if (aNum < currentSurahTotalAyat) {
+        val aNum = _playerState.value.activeAyahNumber ?: 0
+        if (aNum == 0) {
+            playAyahAudio(
+                surahNumber = sNum,
+                ayahNumber = 1,
+                continuous = isContinuousAyahPlayback,
+                surahNameBn = _playerState.value.surahNameBn
+            )
+        } else if (aNum < currentSurahTotalAyat) {
             playAyahAudio(
                 surahNumber = sNum,
                 ayahNumber = aNum + 1,
@@ -236,6 +350,49 @@ class QuranAudioManager(private val context: Context) {
                 continuous = isContinuousAyahPlayback,
                 surahNameBn = _playerState.value.surahNameBn
             )
+        } else if (aNum == 1) {
+            if (sNum > 1) {
+                // Return to Bismillah
+                playAyahAudio(
+                    surahNumber = sNum,
+                    ayahNumber = 0,
+                    continuous = isContinuousAyahPlayback,
+                    surahNameBn = _playerState.value.surahNameBn
+                )
+            } else {
+                seekTo(0)
+            }
+        } else if (aNum == 0) {
+            seekTo(0)
+        }
+    }
+
+    /**
+     * Cycles through loop modes: OFF -> REPEAT_AYAH -> REPEAT_SURAH -> OFF
+     */
+    fun toggleLoopMode(): QuranAudioLoopMode {
+        val nextMode = when (_playerState.value.loopMode) {
+            QuranAudioLoopMode.OFF -> QuranAudioLoopMode.REPEAT_AYAH
+            QuranAudioLoopMode.REPEAT_AYAH -> QuranAudioLoopMode.REPEAT_SURAH
+            QuranAudioLoopMode.REPEAT_SURAH -> QuranAudioLoopMode.OFF
+        }
+        _playerState.value = _playerState.value.copy(loopMode = nextMode)
+        return nextMode
+    }
+
+    fun setLoopMode(mode: QuranAudioLoopMode) {
+        _playerState.value = _playerState.value.copy(loopMode = mode)
+    }
+
+    /**
+     * Adjusts playback speed (0.75x, 1.0x, 1.25x, 1.5x)
+     */
+    fun setPlaybackSpeed(speed: Float) {
+        _playerState.value = _playerState.value.copy(playbackSpeed = speed)
+        mediaPlayer?.let { player ->
+            try {
+                player.playbackParams = player.playbackParams.setSpeed(speed)
+            } catch (_: Exception) {}
         }
     }
 
@@ -251,12 +408,17 @@ class QuranAudioManager(private val context: Context) {
 
     fun resume() {
         mediaPlayer?.let {
+            try {
+                if (_playerState.value.playbackSpeed != 1.0f) {
+                    it.playbackParams = it.playbackParams.setSpeed(_playerState.value.playbackSpeed)
+                }
+            } catch (_: Exception) {}
             it.start()
             _playerState.value = _playerState.value.copy(isPlaying = true)
             startProgressTracking()
         } ?: run {
             val sNum = _playerState.value.surahNumber
-            val aNum = _playerState.value.activeAyahNumber ?: 1
+            val aNum = _playerState.value.activeAyahNumber ?: (if (sNum == 1) 1 else 0)
             if (sNum != null) {
                 playAyahAudio(sNum, aNum, continuous = true, surahNameBn = _playerState.value.surahNameBn)
             }
@@ -273,7 +435,8 @@ class QuranAudioManager(private val context: Context) {
         _playerState.value = _playerState.value.copy(
             isPlaying = false,
             isBuffering = false,
-            activeAyahNumber = null
+            activeAyahNumber = null,
+            currentPositionMs = 0
         )
     }
 
@@ -321,7 +484,7 @@ class QuranAudioManager(private val context: Context) {
                         )
                     }
                 }
-                delay(250)
+                delay(120)
             }
         }
     }
@@ -334,19 +497,23 @@ class QuranAudioManager(private val context: Context) {
     private fun getAyahCacheFile(surahNumber: Int, ayahNumber: Int, reciterId: String): File {
         val dir = File(context.cacheDir, "ayah_audio")
         if (!dir.exists()) dir.mkdirs()
-        val surahPadded = surahNumber.toString().padStart(3, '0')
-        val ayahPadded = ayahNumber.toString().padStart(3, '0')
+        val sNum = if (ayahNumber == 0) 1 else surahNumber
+        val aNum = if (ayahNumber == 0) 1 else ayahNumber
+        val surahPadded = sNum.toString().padStart(3, '0')
+        val ayahPadded = aNum.toString().padStart(3, '0')
         return File(dir, "ayah_${surahPadded}_${ayahPadded}_$reciterId.mp3")
     }
 
     private suspend fun ensureAyahCached(surahNumber: Int, ayahNumber: Int, reciter: QuranReciter): File? {
-        val file = getAyahCacheFile(surahNumber, ayahNumber, reciter.id)
+        val sNum = if (ayahNumber == 0) 1 else surahNumber
+        val aNum = if (ayahNumber == 0) 1 else ayahNumber
+        val file = getAyahCacheFile(sNum, aNum, reciter.id)
         if (file.exists() && file.length() > 500) {
             return file
         }
         return withContext(Dispatchers.IO) {
             try {
-                val url = reciter.getAyahAudioUrl(surahNumber, ayahNumber)
+                val url = reciter.getAyahAudioUrl(sNum, aNum)
                 val request = Request.Builder().url(url).build()
                 val response = httpClient.newCall(request).execute()
                 if (response.isSuccessful) {

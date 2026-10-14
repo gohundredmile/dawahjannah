@@ -164,6 +164,12 @@ enum class QuranTafsirSource(
     }
 }
 
+enum class QuranAudioLoopMode(val id: String, val titleBn: String, val shortLabel: String) {
+    OFF("off", "ধারাবাহিক তিলাওয়াত", "লুপ বন্ধ"),
+    REPEAT_AYAH("ayah", "একই আয়াত বারবার (হিফজ)", "আয়াত লুপ"),
+    REPEAT_SURAH("surah", "পুরো সূরা বারবার", "সূরা লুপ")
+}
+
 data class SurahAudioPlayerState(
     val surahNumber: Int? = null,
     val surahNameBn: String = "",
@@ -173,7 +179,9 @@ data class SurahAudioPlayerState(
     val currentPositionMs: Int = 0,
     val durationMs: Int = 0,
     val isOfflineFile: Boolean = false,
-    val activeAyahNumber: Int? = null
+    val activeAyahNumber: Int? = null,
+    val loopMode: QuranAudioLoopMode = QuranAudioLoopMode.OFF,
+    val playbackSpeed: Float = 1.0f
 )
 
 data class DownloadProgressState(

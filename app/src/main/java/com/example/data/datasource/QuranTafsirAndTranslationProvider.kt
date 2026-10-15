@@ -271,13 +271,30 @@ object QuranTafsirAndTranslationProvider {
                     ?: ayah.translationBn
             }
             QuranTranslator.TAISIRUL_QURAN -> {
-                ayah.translationTaisirul?.takeIf { it.isNotBlank() }
-                    ?: ("(তাইসীরুল কুরআন) " + ayah.translationBn)
+                val text = ayah.translationTaisirul?.takeIf { it.isNotBlank() }
+                    ?: ayah.translationBn
+                cleanTaisirulText(text)
             }
             QuranTranslator.MUHIBBUR_RAHMAN -> {
                 ayah.translationBn
             }
         }
+    }
+
+    private fun cleanTaisirulText(text: String): String {
+        return text
+            .replace("(তাইসীরুল কুরআন)", "")
+            .replace("（তাইসীরুল কুরআন）", "")
+            .replace("[তাইসীরুল কুরআন]", "")
+            .replace("【তাইসীরুল কুরআন】", "")
+            .replace("(তাওহীদ পাবলিকেশন্স)", "")
+            .replace("(তাওহীদ পাবলিকেশন্স - তাইসীরুল কুরআন)", "")
+            .replace("তাইসীরুল কুরআন:", "")
+            .replace("তাইসীরুল কুরআন -", "")
+            .trim()
+            .removePrefix(":")
+            .removePrefix("-")
+            .trim()
     }
 
     /**

@@ -46,10 +46,12 @@ import androidx.compose.material.icons.automirrored.filled.VolumeUp
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.BookmarkBorder
+import androidx.compose.material.icons.filled.BookmarkRemove
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.CloudDownload
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.DeleteOutline
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.Forward10
@@ -294,6 +296,7 @@ fun HolyQuranIndexScreen(
     contentPadding: PaddingValues
 ) {
     val context = LocalContext.current
+    val scope = rememberCoroutineScope()
     val surahs by quranRepository.getAllSurahs().collectAsState(initial = QuranSurahCatalog.all114Surahs)
     val bookmarks by quranRepository.getBookmarkedAyahs().collectAsState(initial = emptyList())
     val playerState by audioManager.playerState.collectAsState()
@@ -302,6 +305,7 @@ fun HolyQuranIndexScreen(
 
     var searchQuery by remember { mutableStateOf("") }
     var selectedFilter by remember { mutableStateOf(QuranFilter.ALL) }
+    var showClearAllBookmarksDialog by remember { mutableStateOf(false) }
 
     val filteredSurahs = remember(surahs, searchQuery, selectedFilter, bookmarks) {
         surahs.filter { surah ->
@@ -582,7 +586,7 @@ fun HolyQuranIndexScreen(
 
         Spacer(modifier = Modifier.height(4.dp))
 
-        // Table Header: সূরার নাম (Left) | ধরন (Middle) | আয়াত (Right)
+        // Table Header: সূরার নাম (Left) | ধরন (Middle) | আয়াত (Right) | বুকমার্ক/অপসারণ (Far Right)
         Surface(
             color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f),
             modifier = Modifier
@@ -611,7 +615,7 @@ fun HolyQuranIndexScreen(
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     ),
-                    modifier = Modifier.width(68.dp),
+                    modifier = Modifier.width(62.dp),
                     textAlign = TextAlign.Center
                 )
                 Spacer(modifier = Modifier.width(6.dp))
@@ -621,8 +625,18 @@ fun HolyQuranIndexScreen(
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     ),
-                    modifier = Modifier.width(48.dp),
+                    modifier = Modifier.width(34.dp),
                     textAlign = TextAlign.End
+                )
+                Spacer(modifier = Modifier.width(4.dp))
+                Text(
+                    text = if (selectedFilter == QuranFilter.BOOKMARKS) "অপসারণ" else "বুকমার্ক",
+                    style = MaterialTheme.typography.labelMedium.copy(
+                        fontWeight = FontWeight.Bold,
+                        color = if (selectedFilter == QuranFilter.BOOKMARKS) Color(0xFFDC2626) else MaterialTheme.colorScheme.onSurfaceVariant
+                    ),
+                    modifier = Modifier.width(42.dp),
+                    textAlign = TextAlign.Center
                 )
             }
         }
@@ -637,20 +651,105 @@ fun HolyQuranIndexScreen(
                 .padding(horizontal = 16.dp),
             contentPadding = PaddingValues(top = 4.dp, bottom = 24.dp)
         ) {
+            if (selectedFilter == QuranFilter.BOOKMARKS && filteredSurahs.isNotEmpty()) {
+                item(key = "bookmarks_summary_header") {
+                    Surface(
+                        color = IslamicGold.copy(alpha = 0.12f),
+                        shape = RoundedCornerShape(12.dp),
+                        border = BorderStroke(1.dp, IslamicGold.copy(alpha = 0.35f)),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 4.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 12.dp, vertical = 8.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(
+                                    imageVector = Icons.Default.Bookmark,
+                                    contentDescription = null,
+                                    tint = IslamicGold,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text(
+                                    text = "বুকমার্ককৃত সূরা: ${BanglaNumberUtils.toBanglaDigits(filteredSurahs.size)} টি",
+                                    style = MaterialTheme.typography.labelMedium.copy(
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.onSurface
+                                    )
+                                )
+                            }
+                            TextButton(
+                                onClick = { showClearAllBookmarksDialog = true },
+                                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.DeleteOutline,
+                                    contentDescription = "সকল বুকমার্ক মুছুন",
+                                    tint = Color(0xFFDC2626),
+                                    modifier = Modifier.size(16.dp)
+                                )
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text(
+                                    text = "সব মুছুন",
+                                    style = MaterialTheme.typography.labelSmall.copy(
+                                        fontWeight = FontWeight.Bold,
+                                        color = Color(0xFFDC2626)
+                                    )
+                                )
+                            }
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(4.dp))
+                }
+            }
+
             if (filteredSurahs.isEmpty()) {
                 item {
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(top = 40.dp),
+                            .padding(top = 40.dp, bottom = 40.dp),
                         contentAlignment = Alignment.Center
                     ) {
-                        Text(
-                            text = "কোনো সূরা পাওয়া যায়নি",
-                            style = MaterialTheme.typography.bodyMedium.copy(
-                                color = MaterialTheme.colorScheme.outline
+                        if (selectedFilter == QuranFilter.BOOKMARKS) {
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Icon(
+                                    imageVector = Icons.Default.BookmarkBorder,
+                                    contentDescription = null,
+                                    tint = IslamicGold.copy(alpha = 0.6f),
+                                    modifier = Modifier.size(48.dp)
+                                )
+                                Spacer(modifier = Modifier.height(12.dp))
+                                Text(
+                                    text = "কোনো সূরা বুকমার্ক করা নেই",
+                                    style = MaterialTheme.typography.titleMedium.copy(
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.onSurface
+                                    )
+                                )
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Text(
+                                    text = "যেকোনো সূরার পাশে বুকমার্ক আইকনে চাপ দিলে এখানে সংরক্ষিত থাকবে।",
+                                    style = MaterialTheme.typography.bodySmall.copy(
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    ),
+                                    textAlign = TextAlign.Center
+                                )
+                            }
+                        } else {
+                            Text(
+                                text = "কোনো সূরা পাওয়া যায়নি",
+                                style = MaterialTheme.typography.bodyMedium.copy(
+                                    color = MaterialTheme.colorScheme.outline
+                                )
                             )
-                        )
+                        }
                     }
                 }
             } else {
@@ -661,6 +760,21 @@ fun HolyQuranIndexScreen(
                         isDownloaded = audioManager.isSurahDownloaded(surah.number),
                         isCurrentlyPlaying = playerState.isPlaying && playerState.surahNumber == surah.number,
                         isBookmarked = isSurahBookmarked,
+                        showBookmarkAction = true,
+                        isBookmarkFilterActive = selectedFilter == QuranFilter.BOOKMARKS,
+                        onRemoveBookmark = {
+                            scope.launch {
+                                quranRepository.removeSurahBookmark(surah.number)
+                                Toast.makeText(context, "সূরা ${surah.nameBn} বুকমার্ক থেকে সরানো হয়েছে", Toast.LENGTH_SHORT).show()
+                            }
+                        },
+                        onToggleBookmark = {
+                            scope.launch {
+                                quranRepository.toggleSurahBookmark(surah)
+                                val msg = if (isSurahBookmarked) "সূরা ${surah.nameBn} বুকমার্ক থেকে সরানো হয়েছে" else "সূরা ${surah.nameBn} বুকমার্কে যুক্ত করা হয়েছে"
+                                Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
+                            }
+                        },
                         onSurahClick = { onSurahSelected(surah) }
                     )
                     HorizontalDivider(
@@ -669,6 +783,51 @@ fun HolyQuranIndexScreen(
                     )
                 }
             }
+        }
+
+        if (showClearAllBookmarksDialog) {
+            AlertDialog(
+                onDismissRequest = { showClearAllBookmarksDialog = false },
+                icon = {
+                    Icon(
+                        imageVector = Icons.Default.BookmarkRemove,
+                        contentDescription = null,
+                        tint = Color(0xFFDC2626),
+                        modifier = Modifier.size(28.dp)
+                    )
+                },
+                title = {
+                    Text(
+                        text = "সকল সূরা বুকমার্ক মুছবেন?",
+                        fontWeight = FontWeight.Bold
+                    )
+                },
+                text = {
+                    Text(
+                        text = "আপনার বুকমার্ক তালিকা থেকে সকল সংরক্ষিত সূরা অপসারণ করা হবে। আপনি কি নিশ্চিত?",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                },
+                confirmButton = {
+                    Button(
+                        onClick = {
+                            showClearAllBookmarksDialog = false
+                            scope.launch {
+                                quranRepository.clearAllBookmarks()
+                                Toast.makeText(context, "সকল সূরা বুকমার্ক মুছে ফেলা হয়েছে", Toast.LENGTH_SHORT).show()
+                            }
+                        },
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFDC2626))
+                    ) {
+                        Text("সব মুছুন")
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showClearAllBookmarksDialog = false }) {
+                        Text("বাতিল")
+                    }
+                }
+            )
         }
 
         // Persistent Revamped Audio Player if playing or paused with active surah
@@ -703,6 +862,10 @@ fun SurahListItemRow(
     isDownloaded: Boolean,
     isCurrentlyPlaying: Boolean,
     isBookmarked: Boolean = false,
+    showBookmarkAction: Boolean = false,
+    isBookmarkFilterActive: Boolean = false,
+    onRemoveBookmark: (() -> Unit)? = null,
+    onToggleBookmark: (() -> Unit)? = null,
     onSurahClick: () -> Unit
 ) {
     val serialBn = BanglaNumberUtils.toBanglaDigits(surah.number)
@@ -733,7 +896,7 @@ fun SurahListItemRow(
                     softWrap = false,
                     overflow = TextOverflow.Ellipsis
                 )
-                if (isBookmarked) {
+                if (isBookmarked && !showBookmarkAction) {
                     Icon(
                         imageVector = Icons.Default.Bookmark,
                         contentDescription = "বুকমার্ক করা",
@@ -801,9 +964,42 @@ fun SurahListItemRow(
                 fontSize = 14.sp,
                 color = MaterialTheme.colorScheme.onSurface
             ),
-            modifier = Modifier.width(48.dp),
+            modifier = Modifier.width(42.dp),
             textAlign = TextAlign.End
         )
+
+        if (showBookmarkAction) {
+            Spacer(modifier = Modifier.width(4.dp))
+            if (isBookmarkFilterActive && onRemoveBookmark != null) {
+                IconButton(
+                    onClick = onRemoveBookmark,
+                    modifier = Modifier
+                        .size(32.dp)
+                        .testTag("btn_remove_surah_bookmark_${surah.number}")
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.DeleteOutline,
+                        contentDescription = "বুকমার্ক থেকে সরান",
+                        tint = Color(0xFFDC2626),
+                        modifier = Modifier.size(18.dp)
+                    )
+                }
+            } else if (onToggleBookmark != null) {
+                IconButton(
+                    onClick = onToggleBookmark,
+                    modifier = Modifier
+                        .size(32.dp)
+                        .testTag("btn_toggle_surah_bookmark_${surah.number}")
+                ) {
+                    Icon(
+                        imageVector = if (isBookmarked) Icons.Default.Bookmark else Icons.Default.BookmarkBorder,
+                        contentDescription = if (isBookmarked) "বুকমার্ক থেকে সরান" else "বুকমার্ক করুন",
+                        tint = if (isBookmarked) IslamicGold else MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(18.dp)
+                    )
+                }
+            }
+        }
     }
 }
 
@@ -1428,6 +1624,20 @@ fun SurahDetailScreen(
                         } catch (_: Exception) {}
                     }
                 },
+                onRemoveBookmark = { targetNum ->
+                    scope.launch {
+                        val targetSurah = QuranSurahCatalog.all114Surahs.find { it.number == targetNum }
+                        val name = targetSurah?.nameBn ?: BanglaNumberUtils.toBanglaDigits(targetNum)
+                        quranRepository.removeSurahBookmark(targetNum)
+                        Toast.makeText(context, "সূরা $name বুকমার্ক থেকে সরানো হয়েছে", Toast.LENGTH_SHORT).show()
+                    }
+                },
+                onClearAllBookmarks = {
+                    scope.launch {
+                        quranRepository.clearAllBookmarks()
+                        Toast.makeText(context, "সকল বুকমার্ক মুছে ফেলা হয়েছে", Toast.LENGTH_SHORT).show()
+                    }
+                },
                 onDismiss = { showSurahQuickSwitchDialog = false }
             )
         }
@@ -1442,6 +1652,8 @@ fun SurahQuickSwitchDialog(
     currentSurahNumber: Int,
     bookmarks: List<QuranBookmarkEntity> = emptyList(),
     onSelectSurahNumber: (Int) -> Unit,
+    onRemoveBookmark: (Int) -> Unit = {},
+    onClearAllBookmarks: () -> Unit = {},
     onDismiss: () -> Unit
 ) {
     var searchQuery by remember { mutableStateOf("") }
@@ -1563,12 +1775,29 @@ fun SurahQuickSwitchDialog(
                                     )
                                 }
                                 if (bookmarkedSurahs.isNotEmpty()) {
-                                    Text(
-                                        text = "${BanglaNumberUtils.toBanglaDigits(bookmarkedSurahs.size)} টি",
-                                        style = MaterialTheme.typography.labelSmall,
-                                        fontWeight = FontWeight.Bold,
-                                        color = IslamicGold
-                                    )
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Text(
+                                            text = "${BanglaNumberUtils.toBanglaDigits(bookmarkedSurahs.size)} টি",
+                                            style = MaterialTheme.typography.labelSmall,
+                                            fontWeight = FontWeight.Bold,
+                                            color = IslamicGold
+                                        )
+                                        Spacer(modifier = Modifier.width(6.dp))
+                                        Surface(
+                                            onClick = { onClearAllBookmarks() },
+                                            shape = RoundedCornerShape(4.dp),
+                                            color = Color(0xFFDC2626).copy(alpha = 0.12f),
+                                            modifier = Modifier.testTag("btn_clear_all_bookmarks_dropdown")
+                                        ) {
+                                            Text(
+                                                text = "সব মুছুন",
+                                                fontSize = 10.sp,
+                                                fontWeight = FontWeight.Bold,
+                                                color = Color(0xFFDC2626),
+                                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                            )
+                                        }
+                                    }
                                 }
                             }
                             HorizontalDivider(
@@ -1647,6 +1876,23 @@ fun SurahQuickSwitchDialog(
                                             tint = if (isCurrent) IslamicGreen else IslamicGold,
                                             modifier = Modifier.size(18.dp)
                                         )
+                                    },
+                                    trailingIcon = {
+                                        IconButton(
+                                            onClick = {
+                                                onRemoveBookmark(bSurah.number)
+                                            },
+                                            modifier = Modifier
+                                                .size(28.dp)
+                                                .testTag("btn_remove_surah_bookmark_${bSurah.number}")
+                                        ) {
+                                            Icon(
+                                                imageVector = Icons.Default.DeleteOutline,
+                                                contentDescription = "বুকমার্ক থেকে সরান",
+                                                tint = Color(0xFFDC2626),
+                                                modifier = Modifier.size(17.dp)
+                                            )
+                                        }
                                     },
                                     onClick = {
                                         showBookmarkDropdown = false
@@ -2049,6 +2295,40 @@ fun SurahHeaderCard(
                                     )
                                 )
                             }
+                        }
+                    }
+
+                    // Surah Bookmark / Remove Button
+                    Surface(
+                        color = if (isSurahBookmarked) Color(0xFFDC2626).copy(alpha = 0.25f) else Color.White.copy(alpha = 0.18f),
+                        shape = RoundedCornerShape(20.dp),
+                        border = BorderStroke(
+                            1.dp,
+                            if (isSurahBookmarked) Color(0xFFF87171) else Color.White.copy(alpha = 0.35f)
+                        ),
+                        modifier = Modifier
+                            .clickable(onClick = onToggleSurahBookmark)
+                            .testTag("btn_header_surah_bookmark")
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(5.dp)
+                        ) {
+                            Icon(
+                                imageVector = if (isSurahBookmarked) Icons.Default.BookmarkRemove else Icons.Default.BookmarkBorder,
+                                contentDescription = if (isSurahBookmarked) "সূরা বুকমার্ক থেকে সরান" else "সূরা বুকমার্ক করুন",
+                                tint = if (isSurahBookmarked) Color(0xFFFFD1D1) else Color.White,
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Text(
+                                text = if (isSurahBookmarked) "বুকমার্ক সরান" else "বুকমার্ক",
+                                style = MaterialTheme.typography.labelMedium.copy(
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color.White,
+                                    fontSize = 12.sp
+                                )
+                            )
                         }
                     }
                 }

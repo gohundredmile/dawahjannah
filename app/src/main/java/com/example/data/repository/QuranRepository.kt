@@ -330,7 +330,7 @@ class QuranRepository(private val context: Context) {
         val key = "surah:${surah.number}"
         val isCurrentlyBookmarked = quranDao.isBookmarked(key).firstOrNull() ?: false
         if (isCurrentlyBookmarked) {
-            quranDao.deleteBookmark(key)
+            quranDao.deleteBookmarksForSurah(surah.number)
         } else {
             quranDao.insertBookmark(
                 QuranBookmarkEntity(
@@ -344,6 +344,14 @@ class QuranRepository(private val context: Context) {
                 )
             )
         }
+    }
+
+    suspend fun removeSurahBookmark(surahNumber: Int) = withContext(Dispatchers.IO) {
+        quranDao.deleteBookmarksForSurah(surahNumber)
+    }
+
+    suspend fun clearAllBookmarks() = withContext(Dispatchers.IO) {
+        quranDao.deleteAllBookmarks()
     }
 
     fun isSurahBookmarked(surahNumber: Int): Flow<Boolean> {

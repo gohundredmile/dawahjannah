@@ -52,6 +52,12 @@ interface QuranDao {
     @Query("DELETE FROM quran_bookmarks WHERE id = :id")
     suspend fun deleteBookmark(id: String)
 
+    @Query("DELETE FROM quran_bookmarks WHERE surahNumber = :surahNumber")
+    suspend fun deleteBookmarksForSurah(surahNumber: Int)
+
+    @Query("DELETE FROM quran_bookmarks")
+    suspend fun deleteAllBookmarks()
+
     @Query("SELECT EXISTS(SELECT 1 FROM quran_bookmarks WHERE id = :id)")
     fun isBookmarked(id: String): Flow<Boolean>
 

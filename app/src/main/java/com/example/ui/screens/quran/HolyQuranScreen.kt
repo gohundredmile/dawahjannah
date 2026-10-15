@@ -49,6 +49,8 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.CloudDownload
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.ExpandLess
+import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.Forward10
 import androidx.compose.material.icons.filled.MenuBook
 import androidx.compose.material.icons.filled.Pause
@@ -166,6 +168,7 @@ fun HolyQuranScreen(
     val settings by settingsManager.settings.collectAsState()
 
     var activeSurahNumber by remember { mutableStateOf(initialSurahNumber) }
+    var currentInitialAyahNumber by remember { mutableStateOf(initialAyahNumber) }
     val selectedTranslator = remember(settings.preferredTranslator) {
         QuranTranslator.entries.find { it.id == settings.preferredTranslator } ?: QuranTranslator.DR_ZAKARIA
     }
@@ -195,6 +198,7 @@ fun HolyQuranScreen(
             quranRepository = quranRepository,
             audioManager = audioManager,
             onSurahSelected = { surah ->
+                currentInitialAyahNumber = null
                 activeSurahNumber = surah.number
             },
             onOpenReciterPicker = { showReciterDialog = true },
@@ -217,14 +221,17 @@ fun HolyQuranScreen(
             audioManager = audioManager,
             settingsManager = settingsManager,
             selectedTranslator = selectedTranslator,
-            initialAyahNumber = initialAyahNumber,
+            initialAyahNumber = currentInitialAyahNumber,
             onRecordReadingProgress = onRecordReadingProgress,
             onSelectTranslator = { settingsManager.updatePreferredTranslator(it.id) },
             onOpenReciterPicker = { showReciterDialog = true },
             onOpenSettings = { showSettingsDialog = true },
             onOpenAudioManager = { showAudioManagerDialog = true },
             onBackToIndex = { activeSurahNumber = null },
-            onSelectSurahNumber = { activeSurahNumber = it },
+            onSelectSurahNumber = {
+                currentInitialAyahNumber = null
+                activeSurahNumber = it
+            },
             contentPadding = contentPadding
         )
     }
@@ -862,7 +869,16 @@ fun SurahDetailScreen(
 
     val listState = rememberLazyListState()
 
-    // 1. Initial Ayah jump from "Continue Reading"
+    // 1. Instant jump to beginning of Surah when Surah changes (unless continuing to a specific Ayah)
+    LaunchedEffect(surah.number, initialAyahNumber) {
+        if (initialAyahNumber == null || initialAyahNumber <= 0) {
+            try {
+                listState.scrollToItem(0)
+            } catch (_: Exception) {}
+        }
+    }
+
+    // 2. Initial Ayah jump from "Continue Reading"
     var hasScrolledToInitialAyah by remember(surah.number, initialAyahNumber) { mutableStateOf(false) }
     LaunchedEffect(ayahsState.size, initialAyahNumber) {
         if (!hasScrolledToInitialAyah && initialAyahNumber != null && initialAyahNumber > 0 && ayahsState.isNotEmpty()) {
@@ -1399,7 +1415,14 @@ fun SurahDetailScreen(
             SurahQuickSwitchDialog(
                 currentSurahNumber = surah.number,
                 bookmarks = bookmarks,
-                onSelectSurahNumber = onSelectSurahNumber,
+                onSelectSurahNumber = { targetNum ->
+                    onSelectSurahNumber(targetNum)
+                    scope.launch {
+                        try {
+                            listState.scrollToItem(0)
+                        } catch (_: Exception) {}
+                    }
+                },
                 onDismiss = { showSurahQuickSwitchDialog = false }
             )
         }
@@ -2765,13 +2788,14 @@ fun MiniQuranAudioPlayer(
     val isDark = isSystemInDarkTheme()
     var isUserScrubbing by remember { mutableStateOf(false) }
     var scrubPositionMs by remember { mutableStateOf(0f) }
+    var showMoreControls by remember { mutableStateOf(false) }
 
     Surface(
         color = MaterialTheme.colorScheme.surface,
-        tonalElevation = 8.dp,
-        shadowElevation = 14.dp,
-        shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
-        border = BorderStroke(1.dp, IslamicGreen.copy(alpha = 0.3f)),
+        tonalElevation = 6.dp,
+        shadowElevation = 10.dp,
+        shape = RoundedCornerShape(topStart = 18.dp, topEnd = 18.dp),
+        border = BorderStroke(1.dp, IslamicGreen.copy(alpha = 0.25f)),
         modifier = Modifier
             .fillMaxWidth()
             .testTag("revamped_quran_audio_player")
@@ -2779,130 +2803,136 @@ fun MiniQuranAudioPlayer(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 14.dp, vertical = 10.dp)
+                .padding(horizontal = 10.dp, vertical = 4.dp)
         ) {
-            // Section 1: Interactive Scrubber / Seek Bar with Time Stamps
+            // 1. Ultra-Compact Scrubber / Progress Bar at top
             if (playerState.durationMs > 0) {
                 val currentMs = if (isUserScrubbing) scrubPositionMs.toInt() else playerState.currentPositionMs
                 val durationMs = playerState.durationMs
 
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 4.dp),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
                         text = formatAudioTime(currentMs),
                         style = MaterialTheme.typography.labelSmall.copy(
-                            fontSize = 11.5.sp,
+                            fontSize = 10.sp,
                             fontWeight = FontWeight.Bold,
                             color = IslamicGreen
                         )
                     )
+                    Slider(
+                        value = currentMs.toFloat().coerceIn(0f, durationMs.toFloat()),
+                        onValueChange = { newVal ->
+                            isUserScrubbing = true
+                            scrubPositionMs = newVal
+                        },
+                        onValueChangeFinished = {
+                            isUserScrubbing = false
+                            onSeekTo(scrubPositionMs.toInt())
+                        },
+                        valueRange = 0f..durationMs.toFloat(),
+                        colors = SliderDefaults.colors(
+                            thumbColor = IslamicGreen,
+                            activeTrackColor = IslamicGreen,
+                            inactiveTrackColor = IslamicGreen.copy(alpha = 0.2f)
+                        ),
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(14.dp)
+                            .padding(horizontal = 4.dp)
+                    )
                     Text(
                         text = formatAudioTime(durationMs),
                         style = MaterialTheme.typography.labelSmall.copy(
-                            fontSize = 11.5.sp,
-                            fontWeight = FontWeight.SemiBold,
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.Medium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     )
                 }
-
-                Slider(
-                    value = currentMs.toFloat().coerceIn(0f, durationMs.toFloat()),
-                    onValueChange = { newVal ->
-                        isUserScrubbing = true
-                        scrubPositionMs = newVal
-                    },
-                    onValueChangeFinished = {
-                        isUserScrubbing = false
-                        onSeekTo(scrubPositionMs.toInt())
-                    },
-                    valueRange = 0f..durationMs.toFloat(),
-                    colors = SliderDefaults.colors(
-                        thumbColor = IslamicGreen,
-                        activeTrackColor = IslamicGreen,
-                        inactiveTrackColor = IslamicGreen.copy(alpha = 0.2f)
-                    ),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(24.dp)
-                )
             } else {
                 LinearProgressIndicator(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(3.dp)
-                        .clip(RoundedCornerShape(1.5.dp)),
+                        .height(2.5.dp)
+                        .clip(RoundedCornerShape(1.dp)),
                     color = IslamicGreen,
-                    trackColor = IslamicGreen.copy(alpha = 0.2f)
+                    trackColor = IslamicGreen.copy(alpha = 0.15f)
                 )
-                Spacer(modifier = Modifier.height(4.dp))
+                Spacer(modifier = Modifier.height(2.dp))
             }
 
-            // Section 2: Reciting Verse Meta Information
+            // 2. Primary Compact Bar: Play/Pause | Surah & Ayah Info | Prev | Next | More Options | Close
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(vertical = 4.dp),
+                    .padding(vertical = 2.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Animated Equalizer / Book Medallion
-                Box(
+                // Play / Pause Circle Button
+                Surface(
+                    shape = CircleShape,
+                    color = IslamicGreen,
+                    shadowElevation = 3.dp,
                     modifier = Modifier
-                        .size(40.dp)
-                        .clip(CircleShape)
-                        .background(
-                            Brush.linearGradient(
-                                listOf(IslamicGreen, Color(0xFF147A57))
-                            )
-                        ),
-                    contentAlignment = Alignment.Center
+                        .size(38.dp)
+                        .clickable(onClick = onPlayPause)
                 ) {
-                    if (playerState.isPlaying) {
-                        AudioEqualizerBars(isPlaying = true, barColor = Color.White)
-                    } else {
-                        Icon(
-                            imageVector = Icons.Default.MenuBook,
-                            contentDescription = "কুরআন অডিও",
-                            tint = Color.White,
-                            modifier = Modifier.size(20.dp)
-                        )
+                    Box(contentAlignment = Alignment.Center) {
+                        if (playerState.isBuffering) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(20.dp),
+                                strokeWidth = 2.dp,
+                                color = Color.White
+                            )
+                        } else {
+                            Icon(
+                                imageVector = if (playerState.isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
+                                contentDescription = if (playerState.isPlaying) "বিরতি" else "চালান",
+                                tint = Color.White,
+                                modifier = Modifier.size(22.dp)
+                            )
+                        }
                     }
                 }
 
-                Spacer(modifier = Modifier.width(10.dp))
+                Spacer(modifier = Modifier.width(8.dp))
 
-                Column(modifier = Modifier.weight(1f)) {
-                    val titleText = when {
-                        playerState.activeAyahNumber == 0 -> "بِسْمِ ٱللَّٰهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ"
-                        playerState.activeAyahNumber != null -> {
-                            val surahName = playerState.surahNameBn.ifBlank {
-                                playerState.surahNumber?.let { BanglaNumberUtils.toBanglaDigits(it) } ?: ""
-                            }
-                            val totalText = if (totalAyat > 0) " / ${BanglaNumberUtils.toBanglaDigits(totalAyat)}" else ""
-                            "সূরা $surahName • আয়াত ${BanglaNumberUtils.toBanglaDigits(playerState.activeAyahNumber)}$totalText"
+                // Title & Subtitle Info (Weight 1f)
+                val titleText = when {
+                    playerState.activeAyahNumber == 0 -> "بِسْمِ ٱللَّٰهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ"
+                    playerState.activeAyahNumber != null -> {
+                        val surahName = playerState.surahNameBn.ifBlank {
+                            playerState.surahNumber?.let { BanglaNumberUtils.toBanglaDigits(it) } ?: ""
                         }
-                        playerState.surahNumber != null -> "সূরা ${playerState.surahNameBn}"
-                        else -> "পবিত্র কুরআন তিলাওয়াত"
+                        val totalText = if (totalAyat > 0) " / ${BanglaNumberUtils.toBanglaDigits(totalAyat)}" else ""
+                        "সূরা $surahName • আয়াত ${BanglaNumberUtils.toBanglaDigits(playerState.activeAyahNumber)}$totalText"
                     }
+                    playerState.surahNumber != null -> "সূরা ${playerState.surahNameBn}"
+                    else -> "পবিত্র কুরআন তিলাওয়াত"
+                }
 
+                Column(
+                    modifier = Modifier.weight(1f)
+                ) {
                     Text(
                         text = titleText,
                         style = MaterialTheme.typography.titleSmall.copy(
                             fontWeight = FontWeight.Bold,
+                            fontSize = 12.5.sp,
                             color = MaterialTheme.colorScheme.onSurface
                         ),
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
-
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
-                        // Subtitle
                         val subtitleText = if (playerState.activeAyahNumber == 0) {
                             "বিসমিল্লাহির রাহমানির রাহিম"
                         } else {
@@ -2911,99 +2941,51 @@ fun MiniQuranAudioPlayer(
                         Text(
                             text = subtitleText,
                             style = MaterialTheme.typography.bodySmall.copy(
-                                fontSize = 11.sp,
+                                fontSize = 10.5.sp,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             ),
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
                         )
 
-                        // Loop mode badge
-                        Surface(
-                            shape = RoundedCornerShape(4.dp),
-                            color = when (playerState.loopMode) {
-                                QuranAudioLoopMode.REPEAT_AYAH -> IslamicGold.copy(alpha = 0.2f)
-                                QuranAudioLoopMode.REPEAT_SURAH -> IslamicGreen.copy(alpha = 0.2f)
-                                QuranAudioLoopMode.OFF -> MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
-                            }
-                        ) {
+                        // Compact Loop & Speed Indicators
+                        if (playerState.loopMode != QuranAudioLoopMode.OFF) {
                             Text(
-                                text = playerState.loopMode.shortLabel,
+                                text = "• ${playerState.loopMode.shortLabel}",
                                 style = MaterialTheme.typography.labelSmall.copy(
                                     fontSize = 10.sp,
-                                    fontWeight = FontWeight.SemiBold,
-                                    color = when (playerState.loopMode) {
-                                        QuranAudioLoopMode.REPEAT_AYAH -> if (isDark) Color(0xFFFDE68A) else Color(0xFF92400E)
-                                        QuranAudioLoopMode.REPEAT_SURAH -> IslamicGreen
-                                        QuranAudioLoopMode.OFF -> MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
-                                    }
-                                ),
-                                modifier = Modifier.padding(horizontal = 5.dp, vertical = 1.5.dp)
+                                    fontWeight = FontWeight.Bold,
+                                    color = IslamicGold
+                                )
                             )
                         }
-
+                        if (playerState.playbackSpeed != 1.0f) {
+                            Text(
+                                text = "• ${BanglaNumberUtils.toBanglaDigits(playerState.playbackSpeed.toString())}x",
+                                style = MaterialTheme.typography.labelSmall.copy(
+                                    fontSize = 10.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = IslamicGreen
+                                )
+                            )
+                        }
                         if (playerState.isOfflineFile) {
                             Text(
                                 text = "• অফলাইন",
                                 style = MaterialTheme.typography.labelSmall.copy(
                                     fontSize = 10.sp,
-                                    color = IslamicGreen,
-                                    fontWeight = FontWeight.Bold
+                                    fontWeight = FontWeight.Bold,
+                                    color = IslamicGreen
                                 )
                             )
                         }
                     }
                 }
 
-                // Stop / Close player button
-                IconButton(
-                    onClick = onStop,
-                    modifier = Modifier.size(32.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Clear,
-                        contentDescription = "প্লেয়ার বন্ধ করুন",
-                        tint = MaterialTheme.colorScheme.outline,
-                        modifier = Modifier.size(18.dp)
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(4.dp))
-
-            // Section 3: Primary Audio Controls Row (Loop, Prev, Rewind10, Play/Pause, Forward10, Next, Speed)
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 2.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                // 1. Loop Mode Button
-                IconButton(
-                    onClick = onToggleLoopMode,
-                    modifier = Modifier.size(38.dp)
-                ) {
-                    Box(contentAlignment = Alignment.Center) {
-                        Icon(
-                            imageVector = when (playerState.loopMode) {
-                                QuranAudioLoopMode.REPEAT_AYAH -> Icons.Default.RepeatOne
-                                else -> Icons.Default.Repeat
-                            },
-                            contentDescription = "লুপ মোড: ${playerState.loopMode.titleBn}",
-                            tint = when (playerState.loopMode) {
-                                QuranAudioLoopMode.OFF -> MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
-                                else -> IslamicGold
-                            },
-                            modifier = Modifier.size(21.dp)
-                        )
-                    }
-                }
-
-                // 2. Previous Ayah Button
+                // Previous Ayah Button
                 IconButton(
                     onClick = onPreviousAyah,
-                    modifier = Modifier.size(38.dp),
+                    modifier = Modifier.size(32.dp),
                     enabled = (playerState.activeAyahNumber ?: 1) > 0
                 ) {
                     Icon(
@@ -3014,199 +2996,204 @@ fun MiniQuranAudioPlayer(
                         } else {
                             MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
                         },
-                        modifier = Modifier.size(21.dp)
+                        modifier = Modifier.size(18.dp)
                     )
                 }
 
-                // 3. Rewind 10 Seconds
-                IconButton(
-                    onClick = onSeekBackward,
-                    modifier = Modifier.size(38.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Replay10,
-                        contentDescription = "১০ সেকেন্ড পেছনে যান",
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.size(20.dp)
-                    )
-                }
-
-                // 4. Play / Pause Main FAB Button
-                Surface(
-                    shape = CircleShape,
-                    color = IslamicGreen,
-                    shadowElevation = 5.dp,
-                    modifier = Modifier
-                        .size(50.dp)
-                        .clickable(onClick = onPlayPause)
-                ) {
-                    Box(contentAlignment = Alignment.Center) {
-                        if (playerState.isBuffering) {
-                            CircularProgressIndicator(
-                                modifier = Modifier.size(24.dp),
-                                strokeWidth = 2.5.dp,
-                                color = Color.White
-                            )
-                        } else {
-                            Icon(
-                                imageVector = if (playerState.isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
-                                contentDescription = if (playerState.isPlaying) "বিরতি" else "চালান",
-                                tint = Color.White,
-                                modifier = Modifier.size(28.dp)
-                            )
-                        }
-                    }
-                }
-
-                // 5. Forward 10 Seconds
-                IconButton(
-                    onClick = onSeekForward,
-                    modifier = Modifier.size(38.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Forward10,
-                        contentDescription = "১০ সেকেন্ড সামনে যান",
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.size(20.dp)
-                    )
-                }
-
-                // 6. Next Ayah Button
+                // Next Ayah Button
                 IconButton(
                     onClick = onNextAyah,
-                    modifier = Modifier.size(38.dp)
+                    modifier = Modifier.size(32.dp)
                 ) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowForward,
                         contentDescription = "পরবর্তী আয়াত",
                         tint = MaterialTheme.colorScheme.onSurface,
-                        modifier = Modifier.size(21.dp)
+                        modifier = Modifier.size(18.dp)
                     )
                 }
 
-                // 7. Playback Speed Selector Button (0.75x, 1.0x, 1.25x, 1.5x)
-                val nextSpeed = when (playerState.playbackSpeed) {
-                    1.0f -> 1.25f
-                    1.25f -> 1.5f
-                    1.5f -> 0.75f
-                    else -> 1.0f
-                }
-                Surface(
-                    shape = RoundedCornerShape(12.dp),
-                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f),
-                    border = BorderStroke(0.8.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)),
-                    modifier = Modifier.clickable { onSetSpeed(nextSpeed) }
+                // Extra controls toggle (Tune / Settings)
+                IconButton(
+                    onClick = { showMoreControls = !showMoreControls },
+                    modifier = Modifier.size(32.dp)
                 ) {
-                    Text(
-                        text = "${BanglaNumberUtils.toBanglaDigits(playerState.playbackSpeed.toString())}x",
-                        style = MaterialTheme.typography.labelSmall.copy(
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface,
-                            fontSize = 11.sp
-                        ),
-                        modifier = Modifier.padding(horizontal = 7.dp, vertical = 5.dp)
+                    Icon(
+                        imageVector = if (showMoreControls) Icons.Default.ExpandMore else Icons.Default.Tune,
+                        contentDescription = if (showMoreControls) "নিয়ন্ত্রণ গুটিয়ে রাখুন" else "অতিরিক্ত অডিও নিয়ন্ত্রণ",
+                        tint = if (showMoreControls) IslamicGreen else MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(18.dp)
+                    )
+                }
+
+                // Close / Stop Player Button
+                IconButton(
+                    onClick = onStop,
+                    modifier = Modifier.size(28.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Clear,
+                        contentDescription = "প্লেয়ার বন্ধ করুন",
+                        tint = MaterialTheme.colorScheme.outline,
+                        modifier = Modifier.size(16.dp)
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.height(6.dp))
-
-            // Section 4: Sophisticated Value Actions (Start Again from Bismillah, Auto-Scroll Toggle, Qari Picker)
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .horizontalScroll(rememberScrollState()),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                // Start Again ("শুরু থেকে") Button - Restarts Surah from Bismillah
-                Surface(
-                    shape = RoundedCornerShape(16.dp),
-                    color = IslamicGreen.copy(alpha = 0.12f),
-                    border = BorderStroke(1.dp, IslamicGreen.copy(alpha = 0.4f)),
-                    modifier = Modifier.clickable(onClick = onRestartFromBeginning)
+            // 3. Expandable Secondary Controls (only shown when user taps Tune button)
+            AnimatedVisibility(visible = showMoreControls) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 4.dp, bottom = 2.dp)
                 ) {
+                    HorizontalDivider(
+                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f),
+                        thickness = 0.6.dp
+                    )
+                    Spacer(modifier = Modifier.height(5.dp))
                     Row(
-                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .horizontalScroll(rememberScrollState()),
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.Replay,
-                            contentDescription = "শুরু থেকে চালান",
-                            tint = IslamicGreen,
-                            modifier = Modifier.size(14.dp)
-                        )
-                        Text(
-                            text = "শুরু থেকে (বিসমিল্লাহ)",
-                            style = MaterialTheme.typography.labelSmall.copy(
-                                fontWeight = FontWeight.Bold,
-                                color = IslamicGreen,
-                                fontSize = 11.sp
-                            )
-                        )
-                    }
-                }
-
-                // Auto-Scroll Toggle Pill
-                if (onToggleAutoScroll != null) {
-                    Surface(
-                        shape = RoundedCornerShape(16.dp),
-                        color = if (autoScrollEnabled) IslamicGreen.copy(alpha = 0.15f) else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
-                        border = BorderStroke(1.dp, if (autoScrollEnabled) IslamicGreen.copy(alpha = 0.5f) else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)),
-                        modifier = Modifier.clickable(onClick = onToggleAutoScroll)
-                    ) {
-                        Row(
-                            modifier = Modifier.padding(horizontal = 9.dp, vertical = 5.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        // Rewind 10s
+                        Surface(
+                            shape = RoundedCornerShape(12.dp),
+                            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                            modifier = Modifier.clickable(onClick = onSeekBackward)
                         ) {
-                            Icon(
-                                imageVector = Icons.Default.Tune,
-                                contentDescription = "অটো স্ক্রল পরিবর্তন",
-                                tint = if (autoScrollEnabled) IslamicGreen else MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier.size(13.dp)
-                            )
-                            Text(
-                                text = if (autoScrollEnabled) "স্ক্রল সিঙ্ক: চালু" else "স্ক্রল সিঙ্ক: বন্ধ",
-                                style = MaterialTheme.typography.labelSmall.copy(
-                                    fontWeight = FontWeight.SemiBold,
-                                    color = if (autoScrollEnabled) IslamicGreen else MaterialTheme.colorScheme.onSurfaceVariant,
-                                    fontSize = 11.sp
+                            Row(
+                                modifier = Modifier.padding(horizontal = 7.dp, vertical = 4.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(3.dp)
+                            ) {
+                                Icon(Icons.Default.Replay10, contentDescription = "১০ সেকেন্ড পেছনে যান", modifier = Modifier.size(14.dp))
+                                Text("১০ সে.", fontSize = 10.5.sp, fontWeight = FontWeight.Medium)
+                            }
+                        }
+
+                        // Forward 10s
+                        Surface(
+                            shape = RoundedCornerShape(12.dp),
+                            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                            modifier = Modifier.clickable(onClick = onSeekForward)
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = 7.dp, vertical = 4.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(3.dp)
+                            ) {
+                                Icon(Icons.Default.Forward10, contentDescription = "১০ সেকেন্ড সামনে যান", modifier = Modifier.size(14.dp))
+                                Text("১০ সে.", fontSize = 10.5.sp, fontWeight = FontWeight.Medium)
+                            }
+                        }
+
+                        // Loop mode
+                        Surface(
+                            shape = RoundedCornerShape(12.dp),
+                            color = when (playerState.loopMode) {
+                                QuranAudioLoopMode.OFF -> MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+                                else -> IslamicGold.copy(alpha = 0.2f)
+                            },
+                            border = BorderStroke(0.8.dp, if (playerState.loopMode != QuranAudioLoopMode.OFF) IslamicGold.copy(alpha = 0.6f) else Color.Transparent),
+                            modifier = Modifier.clickable(onClick = onToggleLoopMode)
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(3.dp)
+                            ) {
+                                Icon(
+                                    imageVector = when (playerState.loopMode) {
+                                        QuranAudioLoopMode.REPEAT_AYAH -> Icons.Default.RepeatOne
+                                        else -> Icons.Default.Repeat
+                                    },
+                                    contentDescription = "লুপ মোড",
+                                    tint = if (playerState.loopMode != QuranAudioLoopMode.OFF) IslamicGold else MaterialTheme.colorScheme.onSurfaceVariant,
+                                    modifier = Modifier.size(13.dp)
                                 )
+                                Text(
+                                    text = "লুপ: ${playerState.loopMode.shortLabel}",
+                                    fontSize = 10.5.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = if (playerState.loopMode != QuranAudioLoopMode.OFF) IslamicGold else MaterialTheme.colorScheme.onSurface
+                                )
+                            }
+                        }
+
+                        // Playback Speed
+                        val nextSpeed = when (playerState.playbackSpeed) {
+                            1.0f -> 1.25f
+                            1.25f -> 1.5f
+                            1.5f -> 0.75f
+                            else -> 1.0f
+                        }
+                        Surface(
+                            shape = RoundedCornerShape(12.dp),
+                            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                            modifier = Modifier.clickable { onSetSpeed(nextSpeed) }
+                        ) {
+                            Text(
+                                text = "গতি: ${BanglaNumberUtils.toBanglaDigits(playerState.playbackSpeed.toString())}x",
+                                fontSize = 10.5.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
                             )
                         }
-                    }
-                }
 
-                // Qari Switcher Button
-                Surface(
-                    shape = RoundedCornerShape(16.dp),
-                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f),
-                    border = BorderStroke(0.8.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)),
-                    modifier = Modifier.clickable(onClick = onOpenReciterSelector)
-                ) {
-                    Row(
-                        modifier = Modifier.padding(horizontal = 9.dp, vertical = 5.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(4.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.VolumeUp,
-                            contentDescription = "ক্বারী পরিবর্তন",
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.size(13.dp)
-                        )
-                        Text(
-                            text = reciter.nameBn,
-                            style = MaterialTheme.typography.labelSmall.copy(
-                                fontWeight = FontWeight.Medium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                fontSize = 11.sp
-                            ),
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
+                        // Start from Bismillah
+                        Surface(
+                            shape = RoundedCornerShape(12.dp),
+                            color = IslamicGreen.copy(alpha = 0.1f),
+                            border = BorderStroke(0.8.dp, IslamicGreen.copy(alpha = 0.35f)),
+                            modifier = Modifier.clickable(onClick = onRestartFromBeginning)
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(3.dp)
+                            ) {
+                                Icon(Icons.Default.Replay, contentDescription = null, tint = IslamicGreen, modifier = Modifier.size(13.dp))
+                                Text("শুরু থেকে", fontSize = 10.5.sp, fontWeight = FontWeight.Bold, color = IslamicGreen)
+                            }
+                        }
+
+                        // Auto-scroll Sync
+                        if (onToggleAutoScroll != null) {
+                            Surface(
+                                shape = RoundedCornerShape(12.dp),
+                                color = if (autoScrollEnabled) IslamicGreen.copy(alpha = 0.15f) else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                                border = BorderStroke(0.8.dp, if (autoScrollEnabled) IslamicGreen.copy(alpha = 0.5f) else Color.Transparent),
+                                modifier = Modifier.clickable(onClick = onToggleAutoScroll)
+                            ) {
+                                Text(
+                                    text = if (autoScrollEnabled) "স্ক্রল সিঙ্ক: চালু" else "স্ক্রল সিঙ্ক: বন্ধ",
+                                    fontSize = 10.5.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = if (autoScrollEnabled) IslamicGreen else MaterialTheme.colorScheme.onSurfaceVariant,
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                                )
+                            }
+                        }
+
+                        // Reciter Picker
+                        Surface(
+                            shape = RoundedCornerShape(12.dp),
+                            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                            modifier = Modifier.clickable(onClick = onOpenReciterSelector)
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(3.dp)
+                            ) {
+                                Icon(Icons.AutoMirrored.Filled.VolumeUp, contentDescription = null, modifier = Modifier.size(13.dp))
+                                Text(reciter.nameBn, fontSize = 10.5.sp, fontWeight = FontWeight.Medium, maxLines = 1)
+                            }
+                        }
                     }
                 }
             }

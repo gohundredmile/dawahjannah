@@ -33,20 +33,6 @@ class QuranRepository(private val context: Context) {
 
     suspend fun saveLastReadPosition(position: QuranLastReadPosition) = withContext(Dispatchers.IO) {
         appRepo.saveLastReadPosition(position)
-        // Automatically bookmark the exact Surah and Ayah in the Quran bookmarks table
-        val key = "${position.surahNumber}:${position.ayahNumber}"
-        quranDao.insertBookmark(
-            QuranBookmarkEntity(
-                id = key,
-                surahNumber = position.surahNumber,
-                ayahNumber = position.ayahNumber,
-                surahNameBn = position.surahNameBn,
-                arabicText = position.ayahTextAr,
-                pronunciationBn = "${position.surahNameEn} (${position.revelationTypeBn})",
-                translationBn = position.ayahTranslationBn,
-                timestamp = position.timestamp
-            )
-        )
     }
 
     private val httpClient = OkHttpClient.Builder()

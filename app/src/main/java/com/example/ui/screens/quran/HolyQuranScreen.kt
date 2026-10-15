@@ -3,6 +3,7 @@ package com.example.ui.screens.quran
 import android.content.Context
 import android.content.Intent
 import android.widget.Toast
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.fadeIn
@@ -190,6 +191,10 @@ fun HolyQuranScreen(
 
     LaunchedEffect(Unit) {
         quranRepository.initializeDatabaseIfNeeded()
+    }
+
+    BackHandler(enabled = activeSurahNumber != null) {
+        activeSurahNumber = null
     }
 
     if (activeSurahNumber == null) {

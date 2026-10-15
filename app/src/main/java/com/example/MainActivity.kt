@@ -188,7 +188,9 @@ class MainActivity : ComponentActivity() {
                             }
                         },
                         bottomBar = {
-                            if (!(currentTab == AppTab.TOOLS && currentToolsSub == ToolsSubScreen.EXPLAIN_AYAH_CAMERA)) {
+                            val isFullScreen = currentTab == AppTab.TOOLS && 
+                                (currentToolsSub == ToolsSubScreen.HOLY_QURAN || currentToolsSub == ToolsSubScreen.EXPLAIN_AYAH_CAMERA)
+                            if (!isFullScreen) {
                                 DawahBottomNavigationBar(
                                     currentTab = currentTab,
                                     onTabSelected = { tab ->

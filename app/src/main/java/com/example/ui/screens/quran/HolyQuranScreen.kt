@@ -1321,14 +1321,6 @@ fun SurahDetailScreen(
                     isFullSurahPlaying = isFullSurahPlaying,
                     isDownloaded = isDownloaded,
                     currentDownload = currentDownload,
-                    isSurahBookmarked = isSurahBookmarked,
-                    onToggleSurahBookmark = {
-                        scope.launch {
-                            quranRepository.toggleSurahBookmark(surah)
-                            val msg = if (isSurahBookmarked) "সূরা ${surah.nameBn} বুকমার্ক থেকে সরানো হয়েছে" else "সূরা ${surah.nameBn} বুকমার্কে যুক্ত করা হয়েছে"
-                            Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
-                        }
-                    },
                     onPlayFullSurah = {
                         if (isFullSurahPlaying) {
                             audioManager.pause()
@@ -2035,8 +2027,6 @@ fun SurahHeaderCard(
     isFullSurahPlaying: Boolean,
     isDownloaded: Boolean,
     currentDownload: DownloadProgressState?,
-    isSurahBookmarked: Boolean = false,
-    onToggleSurahBookmark: () -> Unit = {},
     onPlayFullSurah: () -> Unit,
     onDownloadSurah: () -> Unit,
     onOfflineInfo: () -> Unit
@@ -2295,40 +2285,6 @@ fun SurahHeaderCard(
                                     )
                                 )
                             }
-                        }
-                    }
-
-                    // Surah Bookmark / Remove Button
-                    Surface(
-                        color = if (isSurahBookmarked) Color(0xFFDC2626).copy(alpha = 0.25f) else Color.White.copy(alpha = 0.18f),
-                        shape = RoundedCornerShape(20.dp),
-                        border = BorderStroke(
-                            1.dp,
-                            if (isSurahBookmarked) Color(0xFFF87171) else Color.White.copy(alpha = 0.35f)
-                        ),
-                        modifier = Modifier
-                            .clickable(onClick = onToggleSurahBookmark)
-                            .testTag("btn_header_surah_bookmark")
-                    ) {
-                        Row(
-                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(5.dp)
-                        ) {
-                            Icon(
-                                imageVector = if (isSurahBookmarked) Icons.Default.BookmarkRemove else Icons.Default.BookmarkBorder,
-                                contentDescription = if (isSurahBookmarked) "সূরা বুকমার্ক থেকে সরান" else "সূরা বুকমার্ক করুন",
-                                tint = if (isSurahBookmarked) Color(0xFFFFD1D1) else Color.White,
-                                modifier = Modifier.size(16.dp)
-                            )
-                            Text(
-                                text = if (isSurahBookmarked) "বুকমার্ক সরান" else "বুকমার্ক",
-                                style = MaterialTheme.typography.labelMedium.copy(
-                                    fontWeight = FontWeight.Bold,
-                                    color = Color.White,
-                                    fontSize = 12.sp
-                                )
-                            )
                         }
                     }
                 }

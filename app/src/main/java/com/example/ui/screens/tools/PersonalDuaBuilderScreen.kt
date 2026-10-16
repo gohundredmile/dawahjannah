@@ -110,6 +110,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDirection
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.datasource.PersonalDuaCatalog
@@ -305,35 +306,43 @@ fun PersonalDuaBuilderScreen(
                     }
 
                     Column(modifier = Modifier.weight(1f)) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text(
-                                text = "Dua Architect",
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.primary
-                            )
-                            Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = "Dua Architect",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary,
+                            maxLines = 1
+                        )
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.padding(top = 2.dp)
+                        ) {
                             Surface(
-                                shape = RoundedCornerShape(6.dp),
+                                shape = RoundedCornerShape(4.dp),
                                 color = IslamicGold.copy(alpha = 0.2f),
                                 border = BorderStroke(0.5.dp, IslamicGold)
                             ) {
                                 Text(
-                                    text = "প্রামাণ্য দো'আ",
-                                    fontSize = 10.sp,
+                                    text = if (isEnglishLanguage) "Authentic Dua" else "প্রামাণ্য দো'আ",
+                                    fontSize = 9.5.sp,
                                     fontWeight = FontWeight.Bold,
                                     color = MaterialTheme.colorScheme.onSurface,
-                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
-                                    fontFamily = banglaFont
+                                    modifier = Modifier.padding(horizontal = 5.dp, vertical = 1.5.dp),
+                                    fontFamily = banglaFont,
+                                    maxLines = 1,
+                                    softWrap = false
                                 )
                             }
+                            Spacer(modifier = Modifier.width(5.dp))
+                            Text(
+                                text = if (isEnglishLanguage) "Personal Dua Builder" else "কুরআন ও সহীহ হাদীস ভিত্তিক",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                fontFamily = banglaFont,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
                         }
-                        Text(
-                            text = if (isEnglishLanguage) "Personal Dua Builder — Quran & Sunnah" else "কুরআন ও সহীহ হাদীসের ভিত্তিতে ব্যক্তিগত দো'আ",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            fontFamily = banglaFont
-                        )
                     }
 
                     // Language Toggle

@@ -386,5 +386,25 @@ object QuranTafsirAndTranslationProvider {
             }
         }
     }
+
+    /**
+     * Concise, focused exegesis summary tailored for on-screen overlays directly within reading layouts
+     */
+    fun getConciseTafsir(
+        ayah: QuranAyah,
+        source: QuranTafsirSource = QuranTafsirSource.DR_ZAKARIA
+    ): String {
+        val full = getTafsirText(ayah, source)
+        val lines = full.lines().map { it.trim() }.filter { it.isNotBlank() }
+        val bodyLines = lines.filterNot {
+            it.startsWith("তাফসীর") || it.startsWith("সংক্ষিপ্ত তাফসীর")
+        }
+        val candidate = if (bodyLines.isNotEmpty()) bodyLines.joinToString(" ") else full
+        return if (candidate.length > 250) {
+            candidate.take(250).substringBeforeLast(" ") + "..."
+        } else {
+            candidate
+        }
+    }
 }
 

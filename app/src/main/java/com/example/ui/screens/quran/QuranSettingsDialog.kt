@@ -307,6 +307,111 @@ fun QuranSettingsDialog(
                                         }
                                     }
                                 }
+
+                                Spacer(modifier = Modifier.height(4.dp))
+                                HorizontalDivider(
+                                    color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f),
+                                    modifier = Modifier.padding(vertical = 4.dp)
+                                )
+
+                                // Concise Tafsir Overlay Toggle Card
+                                Card(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clip(RoundedCornerShape(12.dp))
+                                        .clickable {
+                                            settingsManager.updateShowConciseTafsirOverlay(!settings.showConciseTafsirOverlay)
+                                        }
+                                        .testTag("settings_toggle_concise_tafsir_overlay"),
+                                    shape = RoundedCornerShape(12.dp),
+                                    colors = CardDefaults.cardColors(
+                                        containerColor = if (settings.showConciseTafsirOverlay) {
+                                            IslamicGreen.copy(alpha = 0.09f)
+                                        } else {
+                                            MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f)
+                                        }
+                                    ),
+                                    border = BorderStroke(
+                                        if (settings.showConciseTafsirOverlay) 1.5.dp else 1.dp,
+                                        if (settings.showConciseTafsirOverlay) IslamicGreen.copy(alpha = 0.6f) else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)
+                                    )
+                                ) {
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(horizontal = 14.dp, vertical = 10.dp),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Box(
+                                            modifier = Modifier
+                                                .size(38.dp)
+                                                .clip(RoundedCornerShape(10.dp))
+                                                .background(
+                                                    if (settings.showConciseTafsirOverlay) IslamicGreen.copy(alpha = 0.15f) else MaterialTheme.colorScheme.surface
+                                                ),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            Icon(
+                                                imageVector = Icons.Default.MenuBook,
+                                                contentDescription = null,
+                                                tint = if (settings.showConciseTafsirOverlay) IslamicGreen else MaterialTheme.colorScheme.onSurfaceVariant,
+                                                modifier = Modifier.size(20.dp)
+                                            )
+                                        }
+
+                                        Spacer(modifier = Modifier.width(12.dp))
+
+                                        Column(modifier = Modifier.weight(1f)) {
+                                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                                Text(
+                                                    text = "সংক্ষিপ্ত তাফসীর ওভারলে",
+                                                    style = MaterialTheme.typography.titleSmall.copy(
+                                                        fontWeight = FontWeight.Bold,
+                                                        fontFamily = banglaFont,
+                                                        color = if (settings.showConciseTafsirOverlay) IslamicGreen else MaterialTheme.colorScheme.onSurface
+                                                    )
+                                                )
+                                                Spacer(modifier = Modifier.width(6.dp))
+                                                Surface(
+                                                    color = if (settings.showConciseTafsirOverlay) IslamicGreen.copy(alpha = 0.15f) else MaterialTheme.colorScheme.outline.copy(alpha = 0.15f),
+                                                    shape = RoundedCornerShape(4.dp)
+                                                ) {
+                                                    Text(
+                                                        text = "তাফসীর মোড",
+                                                        modifier = Modifier.padding(horizontal = 5.dp, vertical = 1.dp),
+                                                        style = MaterialTheme.typography.labelSmall.copy(
+                                                            fontSize = 9.5.sp,
+                                                            fontWeight = FontWeight.Bold,
+                                                            color = if (settings.showConciseTafsirOverlay) IslamicGreen else MaterialTheme.colorScheme.onSurfaceVariant,
+                                                            fontFamily = banglaFont
+                                                        )
+                                                    )
+                                                }
+                                            }
+                                            Text(
+                                                text = "নির্বাচিত লেআউটে সরাসরি প্রতিটি আয়াতের সংক্ষিপ্ত ব্যাখ্যা ওভারলে প্রদর্শন",
+                                                style = MaterialTheme.typography.bodySmall.copy(
+                                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                                    fontSize = 11.sp,
+                                                    fontFamily = banglaFont
+                                                )
+                                            )
+                                        }
+
+                                        Spacer(modifier = Modifier.width(8.dp))
+
+                                        Switch(
+                                            checked = settings.showConciseTafsirOverlay,
+                                            onCheckedChange = {
+                                                settingsManager.updateShowConciseTafsirOverlay(it)
+                                            },
+                                            colors = SwitchDefaults.colors(
+                                                checkedThumbColor = Color.White,
+                                                checkedTrackColor = IslamicGreen
+                                            )
+                                        )
+                                    }
+                                }
                             }
                         }
                     }

@@ -44,7 +44,9 @@ import com.example.ui.theme.LocalBanglaFontFamily
 @Composable
 fun QuranLayoutModeSelectorSheet(
     currentMode: QuranLayoutMode,
+    showConciseTafsirOverlay: Boolean = false,
     onSelectMode: (QuranLayoutMode) -> Unit,
+    onToggleConciseTafsirOverlay: (Boolean) -> Unit = {},
     onDismiss: () -> Unit
 ) {
     val banglaFont = LocalBanglaFontFamily.current
@@ -171,6 +173,115 @@ fun QuranLayoutModeSelectorSheet(
                     onDismiss()
                 }
             )
+
+            Spacer(modifier = Modifier.height(14.dp))
+
+            HorizontalDivider(
+                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f),
+                modifier = Modifier.padding(vertical = 4.dp)
+            )
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            // Concise Tafsir Overlay Toggle Card
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(16.dp))
+                    .clickable { onToggleConciseTafsirOverlay(!showConciseTafsirOverlay) }
+                    .testTag("toggle_concise_tafsir_overlay_card"),
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = if (showConciseTafsirOverlay) {
+                        IslamicGreen.copy(alpha = 0.08f)
+                    } else {
+                        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f)
+                    }
+                ),
+                border = BorderStroke(
+                    if (showConciseTafsirOverlay) 1.5.dp else 1.dp,
+                    if (showConciseTafsirOverlay) IslamicGreen.copy(alpha = 0.6f) else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f)
+                )
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(14.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(42.dp)
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(
+                                if (showConciseTafsirOverlay) IslamicGreen.copy(alpha = 0.15f) else MaterialTheme.colorScheme.surface
+                            ),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.MenuBook,
+                            contentDescription = null,
+                            tint = if (showConciseTafsirOverlay) IslamicGreen else MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(22.dp)
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.width(14.dp))
+
+                    Column(modifier = Modifier.weight(1f)) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(
+                                text = "সংক্ষিপ্ত তাফসীর ওভারলে",
+                                style = MaterialTheme.typography.titleSmall.copy(
+                                    fontWeight = FontWeight.Bold,
+                                    fontFamily = banglaFont,
+                                    fontSize = 14.5.sp,
+                                    color = if (showConciseTafsirOverlay) IslamicGreen else MaterialTheme.colorScheme.onSurface
+                                )
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Surface(
+                                color = if (showConciseTafsirOverlay) IslamicGreen.copy(alpha = 0.15f) else MaterialTheme.colorScheme.outline.copy(alpha = 0.15f),
+                                shape = RoundedCornerShape(6.dp)
+                            ) {
+                                Text(
+                                    text = "তাফসীর মোড",
+                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                                    style = MaterialTheme.typography.labelSmall.copy(
+                                        fontSize = 10.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = if (showConciseTafsirOverlay) IslamicGreen else MaterialTheme.colorScheme.onSurfaceVariant,
+                                        fontFamily = banglaFont
+                                    )
+                                )
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(2.dp))
+
+                        Text(
+                            text = "নির্বাচিত লেআউট মোডে সরাসরি প্রতিটি আয়াতের সংক্ষিপ্ত ব্যাখ্যা ও তাফসীর ওভারলে অন/অফ করুন",
+                            style = MaterialTheme.typography.bodySmall.copy(
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                fontSize = 11.5.sp,
+                                fontFamily = banglaFont
+                            )
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.width(10.dp))
+
+                    Switch(
+                        checked = showConciseTafsirOverlay,
+                        onCheckedChange = { onToggleConciseTafsirOverlay(it) },
+                        colors = SwitchDefaults.colors(
+                            checkedThumbColor = Color.White,
+                            checkedTrackColor = IslamicGreen
+                        ),
+                        modifier = Modifier.testTag("switch_concise_tafsir_overlay")
+                    )
+                }
+            }
 
             Spacer(modifier = Modifier.height(20.dp))
         }

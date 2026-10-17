@@ -35,7 +35,8 @@ class QuranSettingsManager(private val context: Context) {
             keepScreenAwake = prefs.getBoolean(KEY_KEEP_SCREEN_AWAKE, true),
             autoScrollWithAudio = prefs.getBoolean(KEY_AUTO_SCROLL, true),
             mushafMode = prefs.getBoolean(KEY_MUSHAF_MODE, false),
-            layoutMode = prefs.getString(KEY_LAYOUT_MODE, QuranLayoutMode.AYAH_CARD.id) ?: QuranLayoutMode.AYAH_CARD.id
+            layoutMode = prefs.getString(KEY_LAYOUT_MODE, QuranLayoutMode.AYAH_CARD.id) ?: QuranLayoutMode.AYAH_CARD.id,
+            showConciseTafsirOverlay = prefs.getBoolean(KEY_SHOW_CONCISE_TAFSIR_OVERLAY, false)
         )
     }
 
@@ -121,6 +122,11 @@ class QuranSettingsManager(private val context: Context) {
         _settings.value = _settings.value.copy(layoutMode = mode.id)
     }
 
+    fun updateShowConciseTafsirOverlay(enabled: Boolean) {
+        prefs.edit().putBoolean(KEY_SHOW_CONCISE_TAFSIR_OVERLAY, enabled).apply()
+        _settings.value = _settings.value.copy(showConciseTafsirOverlay = enabled)
+    }
+
     fun resetToDefaults() {
         prefs.edit().clear().apply()
         _settings.value = loadSettings()
@@ -144,5 +150,6 @@ class QuranSettingsManager(private val context: Context) {
         private const val KEY_AUTO_SCROLL = "key_auto_scroll"
         private const val KEY_MUSHAF_MODE = "key_mushaf_mode"
         private const val KEY_LAYOUT_MODE = "key_layout_mode"
+        private const val KEY_SHOW_CONCISE_TAFSIR_OVERLAY = "key_show_concise_tafsir_overlay"
     }
 }

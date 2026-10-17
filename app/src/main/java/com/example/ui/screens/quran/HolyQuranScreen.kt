@@ -1747,11 +1747,20 @@ fun SurahDetailScreen(
         if (showLayoutSelectorSheet) {
             QuranLayoutModeSelectorSheet(
                 currentMode = settings.activeLayoutMode,
+                showConciseTafsirOverlay = settings.showConciseTafsirOverlay,
                 onSelectMode = { newMode ->
                     settingsManager.updateLayoutMode(newMode)
                     Toast.makeText(
                         context,
                         "লেআউট পরিবর্তন: ${newMode.titleBn}",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                },
+                onToggleConciseTafsirOverlay = { enabled ->
+                    settingsManager.updateShowConciseTafsirOverlay(enabled)
+                    Toast.makeText(
+                        context,
+                        if (enabled) "সংক্ষিপ্ত তাফসীর ওভারলে চালু করা হয়েছে" else "সংক্ষিপ্ত তাফসীর ওভারলে বন্ধ করা হয়েছে",
                         Toast.LENGTH_SHORT
                     ).show()
                 },
@@ -2954,6 +2963,88 @@ fun AyahCardItem(
                                 modifier = Modifier.fillMaxWidth()
                             )
                         }
+                    }
+                }
+            }
+
+            // Concise Tafsir Overlay for individual Ayah (when toggle is enabled in Layout Mode Selector)
+            if (settings.showConciseTafsirOverlay && !isTafsirExpanded) {
+                val tafsirSource = remember(settings.preferredTafsir) {
+                    QuranTafsirSource.fromId(settings.preferredTafsir)
+                }
+                val conciseTafsirContent = remember(ayah, tafsirSource) {
+                    QuranTafsirAndTranslationProvider.getConciseTafsir(ayah, tafsirSource)
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+                Surface(
+                    shape = RoundedCornerShape(10.dp),
+                    color = if (isDark) Color(0xFF261D15) else Color(0xFFFFF9ED),
+                    border = BorderStroke(0.9.dp, IslamicGold.copy(alpha = 0.55f)),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag("concise_tafsir_overlay_${ayah.ayahNumber}")
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 12.dp, vertical = 8.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Surface(
+                                shape = RoundedCornerShape(4.dp),
+                                color = IslamicGold.copy(alpha = 0.16f)
+                            ) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.MenuBook,
+                                        contentDescription = null,
+                                        tint = IslamicGold,
+                                        modifier = Modifier.size(13.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(4.dp))
+                                    Text(
+                                        text = "সংক্ষিপ্ত তাফসীর • ${tafsirSource.shortNameBn}",
+                                        style = MaterialTheme.typography.labelSmall.copy(
+                                            fontWeight = FontWeight.Bold,
+                                            color = IslamicGold,
+                                            fontSize = 10.5.sp
+                                        )
+                                    )
+                                }
+                            }
+
+                            Text(
+                                text = "বিস্তারিত তাফসীর ▾",
+                                style = MaterialTheme.typography.labelSmall.copy(
+                                    fontSize = 10.5.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = IslamicGold
+                                ),
+                                modifier = Modifier
+                                    .clickable { onToggleTafsir() }
+                                    .padding(4.dp)
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.height(5.dp))
+
+                        Text(
+                            text = conciseTafsirContent,
+                            style = MaterialTheme.typography.bodyMedium.copy(
+                                fontSize = (settings.banglaFontSize * 0.92f).coerceIn(12.5f, 22f).sp,
+                                lineHeight = (settings.banglaFontSize * 1.4f).sp,
+                                color = MaterialTheme.colorScheme.onSurface
+                            ),
+                            modifier = Modifier.fillMaxWidth()
+                        )
                     }
                 }
             }

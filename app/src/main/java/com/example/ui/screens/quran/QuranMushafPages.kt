@@ -39,12 +39,15 @@ import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.data.datasource.QuranTafsirAndTranslationProvider
 import com.example.data.model.QuranAyah
 import com.example.data.model.QuranSettings
 import com.example.data.model.QuranSurah
+import com.example.data.model.QuranTafsirSource
 import com.example.data.model.SurahAudioPlayerState
 import com.example.ui.theme.ArabicFontFamily
 import com.example.ui.theme.IslamicGold
@@ -145,6 +148,24 @@ fun PureArabicRecitationView(
     val banglaFont = LocalBanglaFontFamily.current
     var fontSizeMultiplier by remember { mutableFloatStateOf(1f) }
     var selectedAyahForAction by remember { mutableStateOf<QuranAyah?>(null) }
+    var overlayFocusedAyah by remember { mutableStateOf<QuranAyah?>(null) }
+    var isOverlayExpanded by remember { mutableStateOf(false) }
+    var isOverlayDismissed by remember { mutableStateOf(false) }
+
+    val activeAyahForOverlay = remember(
+        playerState.activeAyahNumber,
+        playerState.isPlaying,
+        playerState.surahNumber,
+        surah.number,
+        overlayFocusedAyah,
+        ayahs
+    ) {
+        if (playerState.isPlaying && playerState.surahNumber == surah.number && playerState.activeAyahNumber != null) {
+            ayahs.find { it.ayahNumber == playerState.activeAyahNumber } ?: overlayFocusedAyah ?: ayahs.firstOrNull()
+        } else {
+            overlayFocusedAyah ?: ayahs.firstOrNull()
+        }
+    }
 
     val baseSize = (settings.arabicFontSize * fontSizeMultiplier).coerceIn(20f, 44f)
 
@@ -282,6 +303,8 @@ fun PureArabicRecitationView(
                                 val ayahNum = annotation.item.toIntOrNull()
                                 val clickedAyah = ayahs.find { it.ayahNumber == ayahNum }
                                 if (clickedAyah != null) {
+                                    overlayFocusedAyah = clickedAyah
+                                    isOverlayDismissed = false
                                     selectedAyahForAction = clickedAyah
                                 }
                             }
@@ -290,14 +313,14 @@ fun PureArabicRecitationView(
                 }
             }
 
-            Spacer(modifier = Modifier.height(100.dp))
+            Spacer(modifier = Modifier.height(140.dp))
         }
 
         // Floating Zoom Controls (+ / -) in bottom-end corner
         Surface(
             modifier = Modifier
                 .align(Alignment.BottomEnd)
-                .padding(16.dp),
+                .padding(end = 16.dp, bottom = if (settings.showConciseTafsirOverlay && activeAyahForOverlay != null && !isOverlayDismissed) 120.dp else 16.dp),
             shape = RoundedCornerShape(24.dp),
             color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.95f),
             shadowElevation = 4.dp
@@ -346,11 +369,65 @@ fun PureArabicRecitationView(
             }
         }
 
+        // Concise Tafsir Overlay directly within Pure Arabic Recitation Mode
+        if (settings.showConciseTafsirOverlay && activeAyahForOverlay != null) {
+            if (!isOverlayDismissed) {
+                MushafConciseTafsirOverlayCard(
+                    surah = surah,
+                    ayah = activeAyahForOverlay,
+                    settings = settings,
+                    allAyahs = ayahs,
+                    isExpanded = isOverlayExpanded,
+                    onToggleExpand = { isOverlayExpanded = !isOverlayExpanded },
+                    onSelectAyah = { target -> overlayFocusedAyah = target },
+                    onPlayAyah = { onPlayAyah(activeAyahForOverlay) },
+                    onOpenFullActionSheet = { selectedAyahForAction = activeAyahForOverlay },
+                    onClose = { isOverlayDismissed = true },
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .padding(horizontal = 12.dp, vertical = 8.dp)
+                )
+            } else {
+                Surface(
+                    onClick = { isOverlayDismissed = false },
+                    shape = RoundedCornerShape(12.dp),
+                    color = IslamicGold.copy(alpha = 0.16f),
+                    border = BorderStroke(1.dp, IslamicGold.copy(alpha = 0.5f)),
+                    modifier = Modifier
+                        .align(Alignment.BottomStart)
+                        .padding(16.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.MenuBook,
+                            contentDescription = null,
+                            tint = IslamicGold,
+                            modifier = Modifier.size(14.dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = "সংক্ষিপ্ত তাফসীর",
+                            style = MaterialTheme.typography.labelSmall.copy(
+                                fontWeight = FontWeight.Bold,
+                                color = IslamicGold,
+                                fontFamily = banglaFont,
+                                fontSize = 11.sp
+                            )
+                        )
+                    }
+                }
+            }
+        }
+
         // Quick Ayah Action Sheet when tapping a verse
         selectedAyahForAction?.let { ayah ->
             MushafAyahActionBottomSheet(
                 surah = surah,
                 ayah = ayah,
+                settings = settings,
                 onDismiss = { selectedAyahForAction = null },
                 onPlay = {
                     onPlayAyah(ayah)
@@ -407,6 +484,9 @@ private fun MushafBasePageView(
     )
 
     var selectedAyahForAction by remember { mutableStateOf<QuranAyah?>(null) }
+    var overlayFocusedAyah by remember { mutableStateOf<QuranAyah?>(null) }
+    var isOverlayExpanded by remember { mutableStateOf(false) }
+    var isOverlayDismissed by remember { mutableStateOf(false) }
     var showJumpToPageDialog by remember { mutableStateOf(false) }
 
     // Jump to page containing initialAyahNumber if provided
@@ -583,6 +663,8 @@ private fun MushafBasePageView(
                     settings = settings,
                     playerState = playerState,
                     onAyahClick = { ayah ->
+                        overlayFocusedAyah = ayah
+                        isOverlayDismissed = false
                         selectedAyahForAction = ayah
                     }
                 )
@@ -603,6 +685,73 @@ private fun MushafBasePageView(
                                 )
                             )
                     )
+                }
+            }
+        }
+
+        // Concise Tafsir Overlay directly within 15-line / 16-line Mushaf Page View
+        if (settings.showConciseTafsirOverlay) {
+            val currentPageAyahs = pages.getOrNull(pagerState.currentPage)?.ayahs ?: emptyList()
+            val activeAyah = remember(
+                playerState.activeAyahNumber,
+                playerState.isPlaying,
+                playerState.surahNumber,
+                surah.number,
+                overlayFocusedAyah,
+                currentPageAyahs
+            ) {
+                if (playerState.isPlaying && playerState.surahNumber == surah.number && playerState.activeAyahNumber != null) {
+                    ayahs.find { it.ayahNumber == playerState.activeAyahNumber } ?: overlayFocusedAyah ?: currentPageAyahs.firstOrNull()
+                } else {
+                    overlayFocusedAyah ?: currentPageAyahs.firstOrNull()
+                }
+            }
+
+            if (activeAyah != null && !isOverlayDismissed) {
+                MushafConciseTafsirOverlayCard(
+                    surah = surah,
+                    ayah = activeAyah,
+                    settings = settings,
+                    allAyahs = currentPageAyahs.ifEmpty { ayahs },
+                    isExpanded = isOverlayExpanded,
+                    onToggleExpand = { isOverlayExpanded = !isOverlayExpanded },
+                    onSelectAyah = { target -> overlayFocusedAyah = target },
+                    onPlayAyah = { onPlayAyah(activeAyah) },
+                    onOpenFullActionSheet = { selectedAyahForAction = activeAyah },
+                    onClose = { isOverlayDismissed = true },
+                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
+                )
+            } else if (isOverlayDismissed) {
+                Surface(
+                    onClick = { isOverlayDismissed = false },
+                    shape = RoundedCornerShape(12.dp),
+                    color = IslamicGold.copy(alpha = 0.15f),
+                    border = BorderStroke(1.dp, IslamicGold.copy(alpha = 0.5f)),
+                    modifier = Modifier
+                        .align(Alignment.CenterHorizontally)
+                        .padding(bottom = 6.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.MenuBook,
+                            contentDescription = null,
+                            tint = IslamicGold,
+                            modifier = Modifier.size(14.dp)
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = "সংক্ষিপ্ত তাফসীর দেখান",
+                            style = MaterialTheme.typography.labelSmall.copy(
+                                fontWeight = FontWeight.Bold,
+                                color = IslamicGold,
+                                fontFamily = banglaFont,
+                                fontSize = 11.sp
+                            )
+                        )
+                    }
                 }
             }
         }
@@ -668,6 +817,7 @@ private fun MushafBasePageView(
         MushafAyahActionBottomSheet(
             surah = surah,
             ayah = ayah,
+            settings = settings,
             onDismiss = { selectedAyahForAction = null },
             onPlay = {
                 onPlayAyah(ayah)
@@ -964,6 +1114,7 @@ private fun MushafSinglePageCard(
 fun MushafAyahActionBottomSheet(
     surah: QuranSurah,
     ayah: QuranAyah,
+    settings: QuranSettings = QuranSettings(),
     onDismiss: () -> Unit,
     onPlay: () -> Unit,
     onToggleBookmark: () -> Unit
@@ -1061,6 +1212,62 @@ fun MushafAyahActionBottomSheet(
                 }
             }
 
+            // Concise Tafsir Card
+            val tafsirSource = remember(settings.preferredTafsir) {
+                QuranTafsirSource.fromId(settings.preferredTafsir)
+            }
+            val conciseTafsir = remember(ayah, tafsirSource) {
+                QuranTafsirAndTranslationProvider.getConciseTafsir(ayah, tafsirSource)
+            }
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = IslamicGold.copy(alpha = 0.08f)
+                ),
+                border = BorderStroke(1.dp, IslamicGold.copy(alpha = 0.35f))
+            ) {
+                Column(modifier = Modifier.padding(12.dp)) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = Icons.Default.MenuBook,
+                                contentDescription = null,
+                                tint = IslamicGold,
+                                modifier = Modifier.size(15.dp)
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(
+                                text = "সংক্ষিপ্ত তাফসীর (${tafsirSource.shortNameBn}):",
+                                style = MaterialTheme.typography.labelSmall.copy(
+                                    fontWeight = FontWeight.Bold,
+                                    fontFamily = banglaFont,
+                                    color = IslamicGold,
+                                    fontSize = 11.sp
+                                )
+                            )
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = conciseTafsir,
+                        style = MaterialTheme.typography.bodyMedium.copy(
+                            fontFamily = banglaFont,
+                            lineHeight = 21.sp,
+                            fontSize = 13.sp,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                    )
+                }
+            }
+
             Spacer(modifier = Modifier.height(16.dp))
 
             // Action Buttons Row
@@ -1088,9 +1295,9 @@ fun MushafAyahActionBottomSheet(
                 OutlinedButton(
                     onClick = {
                         val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                        val clip = ClipData.newPlainText("Quran Ayah", "${ayah.arabicText}\n\n${ayah.translationBn}")
+                        val clip = ClipData.newPlainText("Quran Ayah", "${ayah.arabicText}\n\n${ayah.translationBn}\n\nতাফসীর: $conciseTafsir")
                         clipboard.setPrimaryClip(clip)
-                        Toast.makeText(context, "আয়াত কপি করা হয়েছে", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, "আয়াত ও তাফসীর কপি করা হয়েছে", Toast.LENGTH_SHORT).show()
                         onDismiss()
                     },
                     modifier = Modifier.weight(1f),
@@ -1127,6 +1334,223 @@ fun MushafAyahActionBottomSheet(
             }
 
             Spacer(modifier = Modifier.height(18.dp))
+        }
+    }
+}
+
+/**
+ * Elegant overlay showing concise Tafsir (exegesis) for individual Ayahs directly within the selected layout mode
+ */
+@Composable
+fun MushafConciseTafsirOverlayCard(
+    surah: QuranSurah,
+    ayah: QuranAyah,
+    settings: QuranSettings,
+    allAyahs: List<QuranAyah>,
+    isExpanded: Boolean,
+    onToggleExpand: () -> Unit,
+    onSelectAyah: (QuranAyah) -> Unit,
+    onPlayAyah: () -> Unit,
+    onOpenFullActionSheet: () -> Unit,
+    onClose: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val banglaFont = LocalBanglaFontFamily.current
+    val tafsirSource = remember(settings.preferredTafsir) {
+        QuranTafsirSource.fromId(settings.preferredTafsir)
+    }
+    val conciseTafsir = remember(ayah, tafsirSource) {
+        QuranTafsirAndTranslationProvider.getConciseTafsir(ayah, tafsirSource)
+    }
+
+    val currentIdx = allAyahs.indexOfFirst { it.ayahNumber == ayah.ayahNumber }
+    val hasPrev = currentIdx > 0
+    val hasNext = currentIdx >= 0 && currentIdx < allAyahs.size - 1
+
+    Card(
+        modifier = modifier
+            .fillMaxWidth()
+            .shadow(elevation = 8.dp, shape = RoundedCornerShape(16.dp))
+            .testTag("mushaf_concise_tafsir_overlay_card"),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surface
+        ),
+        border = BorderStroke(1.5.dp, IslamicGold.copy(alpha = 0.65f))
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 14.dp, vertical = 10.dp)
+        ) {
+            // Header Bar
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(28.dp)
+                            .clip(CircleShape)
+                            .background(IslamicGold.copy(alpha = 0.16f)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.MenuBook,
+                            contentDescription = null,
+                            tint = IslamicGold,
+                            modifier = Modifier.size(15.dp)
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Column {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(
+                                text = "সংক্ষিপ্ত তাফসীর ওভারলে",
+                                style = MaterialTheme.typography.labelMedium.copy(
+                                    fontWeight = FontWeight.Bold,
+                                    fontFamily = banglaFont,
+                                    color = IslamicGold,
+                                    fontSize = 12.5.sp
+                                )
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Surface(
+                                shape = RoundedCornerShape(4.dp),
+                                color = IslamicGreen.copy(alpha = 0.12f)
+                            ) {
+                                Text(
+                                    text = "আয়াত ${BanglaNumberUtils.toBanglaDigits(ayah.ayahNumber)}",
+                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 1.dp),
+                                    style = MaterialTheme.typography.labelSmall.copy(
+                                        fontSize = 10.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = IslamicGreen,
+                                        fontFamily = banglaFont
+                                    )
+                                )
+                            }
+                        }
+                        Text(
+                            text = tafsirSource.titleBn,
+                            style = MaterialTheme.typography.labelSmall.copy(
+                                fontSize = 10.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.75f),
+                                fontFamily = banglaFont
+                            )
+                        )
+                    }
+                }
+
+                // Controls: Previous Ayah, Next Ayah, Play, Expand, Close
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    if (allAyahs.size > 1) {
+                        IconButton(
+                            onClick = { if (hasPrev) onSelectAyah(allAyahs[currentIdx - 1]) },
+                            enabled = hasPrev,
+                            modifier = Modifier.size(28.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = "পূর্ববর্তী আয়াত",
+                                tint = if (hasPrev) IslamicGreen else MaterialTheme.colorScheme.outline.copy(alpha = 0.3f),
+                                modifier = Modifier.size(16.dp)
+                            )
+                        }
+
+                        IconButton(
+                            onClick = { if (hasNext) onSelectAyah(allAyahs[currentIdx + 1]) },
+                            enabled = hasNext,
+                            modifier = Modifier.size(28.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                                contentDescription = "পরবর্তী আয়াত",
+                                tint = if (hasNext) IslamicGreen else MaterialTheme.colorScheme.outline.copy(alpha = 0.3f),
+                                modifier = Modifier.size(16.dp)
+                            )
+                        }
+                    }
+
+                    IconButton(
+                        onClick = onPlayAyah,
+                        modifier = Modifier.size(28.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.PlayArrow,
+                            contentDescription = "তিলাওয়াত শুনুন",
+                            tint = IslamicGreen,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
+
+                    IconButton(
+                        onClick = onToggleExpand,
+                        modifier = Modifier.size(28.dp)
+                    ) {
+                        Icon(
+                            imageVector = if (isExpanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
+                            contentDescription = if (isExpanded) "সংক্ষিপ্ত করুন" else "বড় করুন",
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
+
+                    IconButton(
+                        onClick = onClose,
+                        modifier = Modifier.size(28.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Close,
+                            contentDescription = "বন্ধ করুন",
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(16.dp)
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(6.dp))
+
+            // Concise Tafsir Body Text
+            Surface(
+                shape = RoundedCornerShape(10.dp),
+                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { onOpenFullActionSheet() }
+            ) {
+                Column(modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)) {
+                    Text(
+                        text = conciseTafsir,
+                        style = MaterialTheme.typography.bodySmall.copy(
+                            fontFamily = banglaFont,
+                            fontSize = 12.5.sp,
+                            lineHeight = 18.sp,
+                            color = MaterialTheme.colorScheme.onSurface
+                        ),
+                        maxLines = if (isExpanded) 8 else 2,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                    if (!isExpanded) {
+                        Text(
+                            text = "বিস্তারিত দেখতে ট্যাপ করুন ▾",
+                            style = MaterialTheme.typography.labelSmall.copy(
+                                fontSize = 9.5.sp,
+                                color = IslamicGold,
+                                fontWeight = FontWeight.Bold,
+                                fontFamily = banglaFont
+                            ),
+                            modifier = Modifier.padding(top = 2.dp)
+                        )
+                    }
+                }
+            }
         }
     }
 }

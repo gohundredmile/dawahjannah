@@ -261,7 +261,8 @@ data class QuranSettings(
     val keepScreenAwake: Boolean = true,
     val autoScrollWithAudio: Boolean = true,
     val mushafMode: Boolean = false,
-    val layoutMode: String = QuranLayoutMode.AYAH_CARD.id
+    val layoutMode: String = QuranLayoutMode.AYAH_CARD.id,
+    val showConciseTafsirOverlay: Boolean = false
 ) {
     val activeLayoutMode: QuranLayoutMode
         get() = QuranLayoutMode.fromId(layoutMode)

@@ -30,6 +30,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import com.example.R
 import androidx.compose.foundation.text.KeyboardOptions
@@ -158,10 +159,11 @@ fun SalatTimingsSection(
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Text(
-                text = "ওয়াক্ত ও নামাজের সময়সূচি",
+                text = "ওয়াক্ত ও নামাজের সময়সূচী",
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.primary
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.testTag("section_salat_timings")
             )
 
             Row(

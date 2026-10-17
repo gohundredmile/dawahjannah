@@ -438,7 +438,9 @@ fun IslamicHeaderCover(
 
                 // Revamped 3-Part Salat Timing Card (Pure Glass Container)
                 PureGlassCard(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { onClickCard() },
                     shape = RoundedCornerShape(16.dp),
                     tint = if (isDark) Color(0xFF1E293B) else Color(0xFFFFFDF5),
                     accentBorderColor = IslamicGold,

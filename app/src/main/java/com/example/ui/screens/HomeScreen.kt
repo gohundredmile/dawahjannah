@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -62,7 +63,9 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import kotlinx.coroutines.launch
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
@@ -170,6 +173,36 @@ fun HomeScreen(
 
     val exploreFeatureOrder by viewModel.exploreFeatureOrder.collectAsState()
     val exploreSortMode by viewModel.exploreSortMode.collectAsState()
+
+    val homeListState = rememberLazyListState()
+    val coroutineScope = rememberCoroutineScope()
+
+    val isFridayActiveBanner = remember(prayerStatus) {
+        FridayTimingHelper.isFridayModeActive(
+            cal = java.util.Calendar.getInstance(),
+            prayerList = prayerStatus.prayerList
+        )
+    }
+
+    val scrollToSalatTimings: () -> Unit = {
+        var targetIndex = 0
+        if (isOfflineMode) targetIndex++
+        for (cardId in homeScreenCardOrder) {
+            if (cardId == HomeScreenCardId.SALAT_TIMINGS) {
+                break
+            }
+            if (cardId == HomeScreenCardId.FRIDAY_BANNER) {
+                if (isFridayActiveBanner) targetIndex++
+            } else {
+                targetIndex++
+            }
+        }
+        coroutineScope.launch {
+            try {
+                homeListState.animateScrollToItem(targetIndex)
+            } catch (_: Exception) {}
+        }
+    }
 
     // Full 28 Features list with default order matching user's default features (12 top features + additional features after 12th position)
     val allAppFeatures = remember(prayerStatus, salatConfig, scorecardCompletedCount, scorecardStreak, showNamazModeDialog) {
@@ -311,7 +344,7 @@ fun HomeScreen(
                 categoryBn = "সালাত ও সময়",
                 icon = Icons.Default.AccessTime,
                 iconColor = Color(0xFF0284C7),
-                onClickAction = { showSalatCalendarDialog = true }
+                onClickAction = { scrollToSalatTimings() }
             ),
             // ১১. নফল সালাত
             HomeFeatureItem(
@@ -592,12 +625,6 @@ fun HomeScreen(
         sortedList.renumberedFeatures()
     }
 
-    val isFridayActiveBanner = remember(prayerStatus) {
-        FridayTimingHelper.isFridayModeActive(
-            cal = java.util.Calendar.getInstance(),
-            prayerList = prayerStatus.prayerList
-        )
-    }
     val fridayPhaseTitle = remember(prayerStatus) {
         FridayTimingHelper.getFridayPhaseTitleBn(
             cal = java.util.Calendar.getInstance(),
@@ -613,6 +640,7 @@ fun HomeScreen(
             .padding(contentPadding)
     ) {
         LazyColumn(
+            state = homeListState,
             modifier = Modifier.fillMaxSize(),
             contentPadding = PaddingValues(bottom = 20.dp)
         ) {
@@ -674,7 +702,8 @@ fun HomeScreen(
                                 onTapTimeDate = { showTripleCalendarDialog = true },
                                 onOpenSettings = {
                                     viewModel.openSettings(AppTab.HOME)
-                                }
+                                },
+                                onClickCard = scrollToSalatTimings
                             )
                         }
                     }

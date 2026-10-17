@@ -281,6 +281,8 @@ fun SalatTimingFlipCard(
         Column(
             modifier = Modifier
                 .weight(0.68f)
+                .clip(RoundedCornerShape(12.dp))
+                .clickable { onClickCard() }
                 .padding(horizontal = 2.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
@@ -318,6 +320,8 @@ fun SalatTimingFlipCard(
         Column(
             modifier = Modifier
                 .weight(1.85f)
+                .clip(RoundedCornerShape(12.dp))
+                .clickable { onClickCard() }
                 .padding(horizontal = 4.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
@@ -353,6 +357,8 @@ fun SalatTimingFlipCard(
         Column(
             modifier = Modifier
                 .weight(1.24f)
+                .clip(RoundedCornerShape(12.dp))
+                .clickable { onClickCard() }
                 .padding(start = 2.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center

@@ -127,11 +127,16 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.material.icons.filled.AutoStories
+import androidx.compose.material.icons.filled.FormatAlignRight
+import androidx.compose.material.icons.filled.MenuBook
+import androidx.compose.material.icons.filled.ViewAgenda
 import com.example.data.datasource.QuranSurahCatalog
 import com.example.data.datasource.QuranTafsirAndTranslationProvider
 import com.example.data.datasource.SurahShaneNuzulCatalog
 import com.example.data.model.DownloadProgressState
 import com.example.data.model.QuranAyah
+import com.example.data.model.QuranLayoutMode
 import com.example.data.model.QuranReciter
 import com.example.data.model.QuranSettings
 import com.example.data.model.QuranSurah
@@ -1041,6 +1046,7 @@ fun SurahDetailScreen(
     val scope = rememberCoroutineScope()
     val settings by settingsManager.settings.collectAsState()
     var showSurahQuickSwitchDialog by remember { mutableStateOf(false) }
+    var showLayoutSelectorSheet by remember { mutableStateOf(false) }
 
     val activity = context as? android.app.Activity
     DisposableEffect(settings.keepScreenAwake) {
@@ -1266,6 +1272,26 @@ fun SurahDetailScreen(
                         )
                     }
 
+                    // Layout Mode Switcher Button in Top Bar (কার্ড / ১৫-লাইন / ১৬-লাইন / শুধু আরবি)
+                    IconButton(
+                        onClick = { showLayoutSelectorSheet = true },
+                        modifier = Modifier
+                            .size(34.dp)
+                            .testTag("btn_top_bar_layout_mode")
+                    ) {
+                        Icon(
+                            imageVector = when (settings.activeLayoutMode) {
+                                QuranLayoutMode.AYAH_CARD -> Icons.Default.ViewAgenda
+                                QuranLayoutMode.MADANI_15_LINE -> Icons.Default.AutoStories
+                                QuranLayoutMode.NOORANI_16_LINE -> Icons.Default.MenuBook
+                                QuranLayoutMode.PURE_ARABIC -> Icons.Default.FormatAlignRight
+                            },
+                            contentDescription = "লেআউট পরিবর্তন করুন (${settings.activeLayoutMode.titleBn})",
+                            tint = IslamicGreen,
+                            modifier = Modifier.size(19.dp)
+                        )
+                    }
+
                     // Quran Settings Button in Top Bar
                     IconButton(
                         onClick = onOpenSettings,
@@ -1305,9 +1331,11 @@ fun SurahDetailScreen(
             }
         }
 
-        // Ayah List with Surah Header Card and Bismillah Card
-        LazyColumn(
-            state = listState,
+        // Ayah Display based on chosen Layout Mode (কার্ড / ১৫-লাইন / ১৬-লাইন / শুধু আরবি)
+        when (settings.activeLayoutMode) {
+            QuranLayoutMode.AYAH_CARD -> {
+                LazyColumn(
+                    state = listState,
             modifier = Modifier
                 .weight(1f)
                 .fillMaxWidth()
@@ -1571,6 +1599,88 @@ fun SurahDetailScreen(
                 }
             }
         }
+    }
+
+            QuranLayoutMode.MADANI_15_LINE -> {
+                Madani15LineMushafView(
+                    surah = surah,
+                    ayahs = ayahsState,
+                    settings = settings,
+                    playerState = playerState,
+                    initialAyahNumber = initialAyahNumber,
+                    onPlayAyah = { ayah ->
+                        audioManager.playAyahAudio(
+                            ayah.surahNumber,
+                            ayah.ayahNumber,
+                            continuous = true,
+                            surahNameBn = surah.nameBn
+                        )
+                    },
+                    onToggleBookmark = { ayah ->
+                        scope.launch {
+                            quranRepository.toggleBookmark(ayah, surah.nameBn)
+                            val isBm = bookmarks.any { it.surahNumber == ayah.surahNumber && it.ayahNumber == ayah.ayahNumber }
+                            val msg = if (isBm) "বুকমার্ক থেকে সরানো হয়েছে" else "বুকমার্কে যুক্ত করা হয়েছে"
+                            Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
+                        }
+                    },
+                    modifier = Modifier.weight(1f)
+                )
+            }
+
+            QuranLayoutMode.NOORANI_16_LINE -> {
+                Noorani16LineMushafView(
+                    surah = surah,
+                    ayahs = ayahsState,
+                    settings = settings,
+                    playerState = playerState,
+                    initialAyahNumber = initialAyahNumber,
+                    onPlayAyah = { ayah ->
+                        audioManager.playAyahAudio(
+                            ayah.surahNumber,
+                            ayah.ayahNumber,
+                            continuous = true,
+                            surahNameBn = surah.nameBn
+                        )
+                    },
+                    onToggleBookmark = { ayah ->
+                        scope.launch {
+                            quranRepository.toggleBookmark(ayah, surah.nameBn)
+                            val isBm = bookmarks.any { it.surahNumber == ayah.surahNumber && it.ayahNumber == ayah.ayahNumber }
+                            val msg = if (isBm) "বুকমার্ক থেকে সরানো হয়েছে" else "বুকমার্কে যুক্ত করা হয়েছে"
+                            Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
+                        }
+                    },
+                    modifier = Modifier.weight(1f)
+                )
+            }
+
+            QuranLayoutMode.PURE_ARABIC -> {
+                PureArabicRecitationView(
+                    surah = surah,
+                    ayahs = ayahsState,
+                    settings = settings,
+                    playerState = playerState,
+                    onPlayAyah = { ayah ->
+                        audioManager.playAyahAudio(
+                            ayah.surahNumber,
+                            ayah.ayahNumber,
+                            continuous = true,
+                            surahNameBn = surah.nameBn
+                        )
+                    },
+                    onToggleBookmark = { ayah ->
+                        scope.launch {
+                            quranRepository.toggleBookmark(ayah, surah.nameBn)
+                            val isBm = bookmarks.any { it.surahNumber == ayah.surahNumber && it.ayahNumber == ayah.ayahNumber }
+                            val msg = if (isBm) "বুকমার্ক থেকে সরানো হয়েছে" else "বুকমার্কে যুক্ত করা হয়েছে"
+                            Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
+                        }
+                    },
+                    modifier = Modifier.weight(1f)
+                )
+            }
+        }
 
         // Persistent Revamped Audio Player if playing or paused with active surah
         if (playerState.isPlaying || playerState.isBuffering || playerState.surahNumber != null) {
@@ -1631,6 +1741,21 @@ fun SurahDetailScreen(
                     }
                 },
                 onDismiss = { showSurahQuickSwitchDialog = false }
+            )
+        }
+
+        if (showLayoutSelectorSheet) {
+            QuranLayoutModeSelectorSheet(
+                currentMode = settings.activeLayoutMode,
+                onSelectMode = { newMode ->
+                    settingsManager.updateLayoutMode(newMode)
+                    Toast.makeText(
+                        context,
+                        "লেআউট পরিবর্তন: ${newMode.titleBn}",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                },
+                onDismiss = { showLayoutSelectorSheet = false }
             )
         }
     }

@@ -2,6 +2,7 @@ package com.example.util
 
 import android.content.Context
 import android.content.SharedPreferences
+import com.example.data.model.QuranLayoutMode
 import com.example.data.model.QuranReciter
 import com.example.data.model.QuranSettings
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -33,7 +34,8 @@ class QuranSettingsManager(private val context: Context) {
             audioQuality = prefs.getString(KEY_AUDIO_QUALITY, "HIGH") ?: "HIGH",
             keepScreenAwake = prefs.getBoolean(KEY_KEEP_SCREEN_AWAKE, true),
             autoScrollWithAudio = prefs.getBoolean(KEY_AUTO_SCROLL, true),
-            mushafMode = prefs.getBoolean(KEY_MUSHAF_MODE, false)
+            mushafMode = prefs.getBoolean(KEY_MUSHAF_MODE, false),
+            layoutMode = prefs.getString(KEY_LAYOUT_MODE, QuranLayoutMode.AYAH_CARD.id) ?: QuranLayoutMode.AYAH_CARD.id
         )
     }
 
@@ -114,6 +116,11 @@ class QuranSettingsManager(private val context: Context) {
         _settings.value = _settings.value.copy(mushafMode = mushaf)
     }
 
+    fun updateLayoutMode(mode: QuranLayoutMode) {
+        prefs.edit().putString(KEY_LAYOUT_MODE, mode.id).apply()
+        _settings.value = _settings.value.copy(layoutMode = mode.id)
+    }
+
     fun resetToDefaults() {
         prefs.edit().clear().apply()
         _settings.value = loadSettings()
@@ -136,5 +143,6 @@ class QuranSettingsManager(private val context: Context) {
         private const val KEY_KEEP_SCREEN_AWAKE = "key_keep_screen_awake"
         private const val KEY_AUTO_SCROLL = "key_auto_scroll"
         private const val KEY_MUSHAF_MODE = "key_mushaf_mode"
+        private const val KEY_LAYOUT_MODE = "key_layout_mode"
     }
 }

@@ -207,6 +207,44 @@ data class BatchDownloadState(
     val statusMessage: String? = null
 )
 
+enum class QuranLayoutMode(
+    val id: String,
+    val titleBn: String,
+    val titleEn: String,
+    val descriptionBn: String
+) {
+    AYAH_CARD(
+        id = "ayah_card",
+        titleBn = "কার্ড ভিউ",
+        titleEn = "Ayah Cards",
+        descriptionBn = "আরবি, উচ্চারণ, অনুবাদ ও তাফসীরসহ বিস্তারিত"
+    ),
+    MADANI_15_LINE(
+        id = "madani_15_line",
+        titleBn = "১৫-লাইন মদীনা পেজ ভিউ",
+        titleEn = "15-Line Madani Mushaf",
+        descriptionBn = "আসল মদীনা ছাপা কুরআন, পৃষ্ঠা প্রতি ১৫ লাইন ও পেজ টার্নিং অ্যানিমেশন"
+    ),
+    NOORANI_16_LINE(
+        id = "noorani_16_line",
+        titleBn = "১৬-লাইন নূরানী হাফেজী ভিউ",
+        titleEn = "16-Line Noorani Hafizi",
+        descriptionBn = "উপমহাদেশীয় ঐতিহ্যবাহী ১৬-লাইনের নূরাণী হাফেজী পৃষ্ঠা"
+    ),
+    PURE_ARABIC(
+        id = "pure_arabic",
+        titleBn = "শুধু আরবি তিলাওয়াত মোড",
+        titleEn = "Pure Arabic Recitation",
+        descriptionBn = "অনুবাদ ছাড়া নিরবচ্ছিন্ন তিলাওয়াতের জন্য পূর্ণ পাতা"
+    );
+
+    companion object {
+        fun fromId(id: String): QuranLayoutMode {
+            return entries.firstOrNull { it.id.equals(id, ignoreCase = true) } ?: AYAH_CARD
+        }
+    }
+}
+
 data class QuranSettings(
     val showArabic: Boolean = true,
     val showPronunciation: Boolean = true,
@@ -222,5 +260,9 @@ data class QuranSettings(
     val audioQuality: String = "HIGH", // "HIGH", "STANDARD"
     val keepScreenAwake: Boolean = true,
     val autoScrollWithAudio: Boolean = true,
-    val mushafMode: Boolean = false
-)
+    val mushafMode: Boolean = false,
+    val layoutMode: String = QuranLayoutMode.AYAH_CARD.id
+) {
+    val activeLayoutMode: QuranLayoutMode
+        get() = QuranLayoutMode.fromId(layoutMode)
+}

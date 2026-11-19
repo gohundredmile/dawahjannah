@@ -19,8 +19,8 @@ android {
     applicationId = "com.dawahtojannah.app"
     minSdk = 24
     targetSdk = 36
-    versionCode = 250
-    versionName = "3.1.2"
+    versionCode = 251
+    versionName = "3.1.3"
 
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
   }

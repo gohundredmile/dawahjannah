@@ -114,8 +114,8 @@ object QuranTopicsPart1 {
                     totalAyahsInSurah = 24,
                     revelationTypeBn = "মাদানী",
                     arabicText = "هُوَ اللَّهُ الَّذِي لَا إِلَٰهَ إِلَّا هُوَ الْمَلِكُ الْقُدُّوسُ السَّلَامُ الْمُؤْمِنُ الْمُهَيْمِنُ الْعَزِيزُ الْجَبَّارُ الْمُتَكَبِّرُ ۚ سُبْحَانَ اللَّهِ عَمَّا يُشْرِكُونَ",
-                    translationBn = "তিনিই আল্লাহ, তিনি ছাড়া কোনো সত্য উপাস্য নেই। তিনি বাদশাহ, পরম পবিত্র, শান্তিদাতা, নিরাপত্তাদাতা, সংরক্ষক, পরাক্রমশালী, মহাপ্রতাপশালী, পরম শ্রেষ্ঠত্বের অধিকারী।",
-                    translationEn = "He is Allah, other than whom there is no deity, the Sovereign, the Pure, the Perfection, the Bestower of Faith, the Overseer, the Exalted in Might, the Compeller, the Superior.",
+                    translationBn = "তিনিই আল্লাহ, তিনি ছাড়া কোনো সত্য উপাস্য নেই। তিনি অধিপতি, পরম পবিত্র, শান্তিদাতা, নিরাপত্তাদাতা, সংরক্ষক, পরাক্রমশালী, মহাপ্রতাপশালী, পরম শ্রেষ্ঠত্বের অধিকারী। তারা যাদের শরীক স্থির করে আল্লাহ তা হতে সম্পূর্ণ পবিত্র ও মহান।",
+                    translationEn = "He is Allah, other than whom there is no deity, the Sovereign, the Pure, the Perfection, the Bestower of Faith, the Overseer, the Exalted in Might, the Compeller, the Superior. Exalted is Allah above whatever they associate with Him.",
                     relevance = TopicRelevance.DIRECT
                 )
             )

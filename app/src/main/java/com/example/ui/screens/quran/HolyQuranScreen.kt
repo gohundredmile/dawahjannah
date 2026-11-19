@@ -167,6 +167,7 @@ fun HolyQuranScreen(
     initialAyahNumber: Int? = null,
     onRecordReadingProgress: ((QuranSurah, QuranAyah) -> Unit)? = null,
     onOpenQuranTopics: (() -> Unit)? = null,
+    onOpenSearchWithinQuran: ((String?) -> Unit)? = null,
     onNavigateBack: () -> Unit,
     contentPadding: PaddingValues = PaddingValues()
 ) {
@@ -217,6 +218,7 @@ fun HolyQuranScreen(
             onOpenSettings = { showSettingsDialog = true },
             onOpenAudioManager = { showAudioManagerDialog = true },
             onOpenQuranTopics = onOpenQuranTopics,
+            onOpenSearchWithinQuran = onOpenSearchWithinQuran,
             onNavigateBack = onNavigateBack,
             contentPadding = contentPadding
         )
@@ -297,6 +299,7 @@ fun HolyQuranIndexScreen(
     onOpenSettings: () -> Unit,
     onOpenAudioManager: () -> Unit,
     onOpenQuranTopics: (() -> Unit)? = null,
+    onOpenSearchWithinQuran: ((String?) -> Unit)? = null,
     onNavigateBack: () -> Unit,
     contentPadding: PaddingValues
 ) {
@@ -530,6 +533,49 @@ fun HolyQuranIndexScreen(
             }
         }
 
+        // Instant Full-Quran Ayah Lookup Banner when user types any Bangla topic/word/phrase
+        if (onOpenSearchWithinQuran != null && searchQuery.trim().length >= 2) {
+            Surface(
+                onClick = { onOpenSearchWithinQuran(searchQuery.trim()) },
+                color = IslamicGreen.copy(alpha = 0.12f),
+                border = BorderStroke(1.dp, IslamicGreen.copy(alpha = 0.45f)),
+                shape = RoundedCornerShape(12.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 4.dp)
+                    .testTag("quran_index_full_search_banner")
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 12.dp, vertical = 9.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Search,
+                        contentDescription = null,
+                        tint = IslamicGreen,
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "“${searchQuery.trim()}” — সমগ্র ১১৪ সূরায় সংশ্লিষ্ট আয়াত খুঁজুন",
+                        style = MaterialTheme.typography.bodySmall.copy(
+                            fontWeight = FontWeight.Bold,
+                            color = IslamicGreen
+                        ),
+                        modifier = Modifier.weight(1f)
+                    )
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                        contentDescription = null,
+                        tint = IslamicGreen,
+                        modifier = Modifier.size(16.dp)
+                    )
+                }
+            }
+        }
+
         // Quick Filter Chips (Scrollable horizontally for 100% responsiveness on all screen sizes)
         Row(
             modifier = Modifier
@@ -538,6 +584,32 @@ fun HolyQuranIndexScreen(
                 .padding(horizontal = 16.dp, vertical = 2.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
+            if (onOpenSearchWithinQuran != null) {
+                FilterChip(
+                    selected = true,
+                    onClick = { onOpenSearchWithinQuran(searchQuery.trim().takeIf { it.isNotEmpty() }) },
+                    leadingIcon = {
+                        Icon(
+                            imageVector = Icons.Default.Search,
+                            contentDescription = null,
+                            modifier = Modifier.size(15.dp)
+                        )
+                    },
+                    label = {
+                        Text(
+                            text = "Search within Quran",
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    },
+                    colors = FilterChipDefaults.filterChipColors(
+                        selectedContainerColor = IslamicGreen.copy(alpha = 0.16f),
+                        selectedLabelColor = IslamicGreen,
+                        selectedLeadingIconColor = IslamicGreen
+                    ),
+                    modifier = Modifier.testTag("quran_index_search_within_chip")
+                )
+            }
             if (onOpenQuranTopics != null) {
                 FilterChip(
                     selected = false,

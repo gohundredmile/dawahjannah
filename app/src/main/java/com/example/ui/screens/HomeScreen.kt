@@ -36,6 +36,7 @@ import androidx.compose.material.icons.filled.FindReplace
 import androidx.compose.material.icons.filled.Healing
 import androidx.compose.material.icons.filled.HistoryToggleOff
 import androidx.compose.material.icons.filled.LocalFireDepartment
+import androidx.compose.material.icons.filled.ManageSearch
 import androidx.compose.material.icons.filled.MenuBook
 import androidx.compose.material.icons.filled.Mosque
 import androidx.compose.material.icons.filled.NightsStay
@@ -213,11 +214,24 @@ fun HomeScreen(
             prayerList = prayerStatus.prayerList
         )
         listOf(
-            // ১. তাসবিহ
+            // ১. Search within Quran
+            HomeFeatureItem(
+                id = "search_within_quran",
+                serialNumberBn = "০১",
+                titleBn = "১. Search within Quran",
+                shortTitleBn = "Search within Quran",
+                subtitleBn = "১১৪ সূরা (৬,২৩৬ আয়াত) থেকে যেকোনো বাংলা বিষয়, শব্দ বা বাক্যাংশে তাৎক্ষণিক আয়াত অনুসন্ধান",
+                categoryBn = "কুরআন ও তাফসীর",
+                icon = Icons.Default.ManageSearch,
+                iconColor = Color(0xFF047857),
+                isTopEight = true,
+                onClickAction = { viewModel.openSearchWithinQuran() }
+            ),
+            // ২. তাসবিহ
             HomeFeatureItem(
                 id = "tasbih",
-                serialNumberBn = "০১",
-                titleBn = "১. তাসবিহ",
+                serialNumberBn = "০২",
+                titleBn = "২. তাসবিহ",
                 shortTitleBn = "তাসবিহ",
                 subtitleBn = "ডিজিটাল তাসবিহ কাউন্টার, তাসবিহ তালিকা ও জিকির",
                 categoryBn = "দো‘আ ও যিকির",
@@ -941,8 +955,21 @@ fun HomeScreen(
                     HomeScreenCardId.TOP_FEATURES -> {
                         // 2.5 টপ ফিচার (Top Features Section - 12 items in 3x4 grid + 'আরও / More')
                         item(key = "card_top_features") {
+                            val baseTopFeatures = orderedAppFeatures.filter { it.id != "articles" }.take(12)
+                            val finalTopFeatures = remember(baseTopFeatures, orderedAppFeatures) {
+                                if (baseTopFeatures.any { it.id == "search_within_quran" }) {
+                                    baseTopFeatures
+                                } else {
+                                    val searchItem = orderedAppFeatures.find { it.id == "search_within_quran" }
+                                    if (searchItem != null) {
+                                        (listOf(searchItem) + baseTopFeatures).take(12)
+                                    } else {
+                                        baseTopFeatures
+                                    }
+                                }
+                            }
                             TopFeaturesSection(
-                                topFeatures = orderedAppFeatures.filter { it.id != "articles" }.take(12),
+                                topFeatures = finalTopFeatures,
                                 onOpenAllFeatures = { showAllFeaturesDialog = true }
                             )
                         }

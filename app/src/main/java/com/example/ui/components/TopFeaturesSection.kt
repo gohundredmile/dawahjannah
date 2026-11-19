@@ -290,12 +290,12 @@ private fun FeatureIconCell(
         // Title Label with High-Contrast Visibility
         Text(
             text = item.shortTitleBn,
-            fontSize = 11.sp,
-            lineHeight = 13.sp,
+            fontSize = 10.5.sp,
+            lineHeight = 12.5.sp,
             fontWeight = FontWeight.SemiBold,
             color = if (isDark) Color(0xFFF8FAFC) else Color(0xFF0F172A),
             textAlign = TextAlign.Center,
-            maxLines = 1,
+            maxLines = 2,
             overflow = TextOverflow.Ellipsis,
             modifier = Modifier.fillMaxWidth()
         )

@@ -39,6 +39,7 @@ import androidx.compose.material.icons.filled.EditNote
 import androidx.compose.material.icons.filled.Explore
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Fingerprint
+import androidx.compose.material.icons.filled.ManageSearch
 import androidx.compose.material.icons.filled.MenuBook
 import androidx.compose.material.icons.filled.Mosque
 import androidx.compose.material.icons.filled.Nightlight
@@ -129,6 +130,7 @@ fun ToolsScreen(
     onOpenSalahGuide: () -> Unit = {},
     onOpenQuranTopics: () -> Unit = {},
     onOpenHadithTopics: () -> Unit = {},
+    onOpenSearchWithinQuran: () -> Unit = {},
     onOpenIslamicLife: () -> Unit = {},
     contentPadding: PaddingValues = PaddingValues(0.dp)
 ) {
@@ -146,6 +148,20 @@ fun ToolsScreen(
     // All features list
     val allFeatures = remember {
         listOf(
+            ToolFeatureItem(
+                id = "tool_search_within_quran",
+                nameBn = "Search within Quran",
+                fullNameBn = "Search within Quran (পূর্ণ কুরআন অনুসন্ধান)",
+                subtitleBn = "১১৪ সূরার ৬,২৩৬ আয়াত থেকে বাংলা বিষয়, শব্দ বা বাক্যাংশে তাৎক্ষণিক অনুসন্ধান",
+                descriptionBn = "বাংলায় যেকোনো বিষয়, শব্দ বা বাক্যাংশ (যেমন: নামাজ, ধৈর্য, পিতামাতা, রিজিক, ক্ষমা, জান্নাত, সুদ, তাওয়াক্কুল বা ২:২৫৫) লিখলেই সমগ্র কুরআনের ১১৪ সূরা (৬,২৩৬ আয়াত) থেকে মুহূর্তেই সংশ্লিষ্ট সকল আয়াত আরবি, উচ্চারণ, হাইলাইটকৃত বাংলা অনুবাদ, তাফসীর ও অডিও তিলাওয়াতসহ খুঁজে পাবেন — সম্পূর্ণ অফলাইনে।",
+                icon = Icons.Default.ManageSearch,
+                emoji = "🔍",
+                badgeBn = "তাৎক্ষণিক ১১৪ সূরা",
+                primaryColor = Color(0xFF047857),
+                softContainerColor = Color(0xFFE8F5E9),
+                highlights = listOf("১১৪ সূরা (৬,২৩৬ আয়াত)", "বাংলা বিষয় ও শব্দ", "স্মার্ট সমার্থক মিল", "শব্দ হাইলাইট", "তাফসীর ও অডিও", "১০০% অফলাইন"),
+                onClick = onOpenSearchWithinQuran
+            ),
             ToolFeatureItem(
                 id = "tool_quran_topics",
                 nameBn = "বিষয় ভিত্তিক কোরআনের আয়াত",

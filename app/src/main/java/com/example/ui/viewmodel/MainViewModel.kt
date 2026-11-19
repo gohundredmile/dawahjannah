@@ -125,7 +125,8 @@ enum class ToolsSubScreen(val titleBn: String) {
     QURAN_AUDIO_GENERATOR("কুরআন অডিও তিলাওয়াত জেনারেটর"),
     SALAH_GUIDE("নামাজের পূর্ণাঙ্গ গাইড"),
     QURAN_TOPICS("বিষয় ভিত্তিক কোরআনের আয়াত (Quran Topics)"),
-    HADITH_TOPICS("বিষয় ভিত্তিক সহীহ হাদিস (Hadith Topics)")
+    HADITH_TOPICS("বিষয় ভিত্তিক সহীহ হাদিস (Hadith Topics)"),
+    SEARCH_WITHIN_QURAN("Search within Quran")
 }
 
 sealed class AppNavDestination {
@@ -424,6 +425,16 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     fun openHadithTopics() {
         pushCurrentState()
         _toolsSubScreen.value = ToolsSubScreen.HADITH_TOPICS
+        _currentTab.value = AppTab.TOOLS
+    }
+
+    private val _targetQuranSearchQuery = MutableStateFlow<String?>(null)
+    val targetQuranSearchQuery: StateFlow<String?> = _targetQuranSearchQuery.asStateFlow()
+
+    fun openSearchWithinQuran(initialQuery: String? = null) {
+        pushCurrentState()
+        _targetQuranSearchQuery.value = initialQuery?.trim()?.takeIf { it.isNotEmpty() }
+        _toolsSubScreen.value = ToolsSubScreen.SEARCH_WITHIN_QURAN
         _currentTab.value = AppTab.TOOLS
     }
 

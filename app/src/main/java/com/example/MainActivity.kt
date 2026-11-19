@@ -45,6 +45,7 @@ import com.example.ui.screens.MoreScreen
 import com.example.ui.screens.RoutineScreen
 import com.example.ui.screens.hadith.HadithMainScreen
 import com.example.ui.screens.quran.HolyQuranScreen
+import com.example.ui.screens.quran.SearchWithinQuranScreen
 import com.example.ui.screens.sub.AsmaulHusnaScreen
 import com.example.ui.screens.sub.AyatDetectorAndSolverScreen
 import com.example.ui.screens.sub.QiblaCompassScreen
@@ -261,6 +262,7 @@ class MainActivity : ComponentActivity() {
                                             onOpenSalahGuide = { viewModel.openSalahGuide() },
                                             onOpenQuranTopics = { viewModel.openQuranTopics() },
                                             onOpenHadithTopics = { viewModel.openHadithTopics() },
+                                            onOpenSearchWithinQuran = { viewModel.openSearchWithinQuran() },
                                             onOpenIslamicLife = { viewModel.selectTab(AppTab.MORE) },
                                             contentPadding = innerPadding
                                         )
@@ -281,6 +283,7 @@ class MainActivity : ComponentActivity() {
                                                     viewModel.saveLastReadAyah(surah, ayah)
                                                 },
                                                 onOpenQuranTopics = { viewModel.openQuranTopics() },
+                                                onOpenSearchWithinQuran = { query -> viewModel.openSearchWithinQuran(query) },
                                                 onNavigateBack = { viewModel.navigateBack() },
                                                 contentPadding = innerPadding
                                             )
@@ -379,6 +382,19 @@ class MainActivity : ComponentActivity() {
                                             onOpenQuranSurah = { surahNumber -> viewModel.openHolyQuran(surahNumber) },
                                             contentPadding = innerPadding
                                         )
+                                        ToolsSubScreen.SEARCH_WITHIN_QURAN -> {
+                                            val initialSearchQuery by viewModel.targetQuranSearchQuery.collectAsState()
+                                            SearchWithinQuranScreen(
+                                                quranRepository = viewModel.quranRepository,
+                                                audioManager = viewModel.quranAudioManager,
+                                                initialQuery = initialSearchQuery,
+                                                onOpenInQuran = { surahNumber, ayahNumber ->
+                                                    viewModel.openHolyQuran(surahNumber = surahNumber, ayahNumber = ayahNumber)
+                                                },
+                                                onNavigateBack = { viewModel.navigateBack() },
+                                                contentPadding = innerPadding
+                                            )
+                                        }
                                     }
                                 }
                                 AppTab.MORE -> MoreScreen(

@@ -240,24 +240,37 @@ fun HomeScreen(
                 isTopEight = true,
                 onClickAction = { viewModel.selectTab(AppTab.TASBIH) }
             ),
-            // ২. দৈনিক আমল
+            // ৩. পবিত্র কুরআন
             HomeFeatureItem(
-                id = "twenty_four_hours",
-                serialNumberBn = "০২",
-                titleBn = "২. দৈনিক আমল",
-                shortTitleBn = "দৈনিক আমল",
-                subtitleBn = "সকাল থেকে রাত পর্যন্ত সুন্নাত আমল ও ২৪ ঘণ্টার রুটিন গাইড",
-                categoryBn = "দৈনন্দিন আমল",
-                icon = Icons.Default.HistoryToggleOff,
-                iconColor = Color(0xFFD97706),
+                id = "holy_quran",
+                serialNumberBn = "০৩",
+                titleBn = "৩. পবিত্র কুরআন",
+                shortTitleBn = "আল-কুরআন",
+                subtitleBn = "১১৪ সূরার অনুবাদ, বাংলা উচ্চারণ, বিশদ তাফসীর ও ক্বারী তিলাওয়াত",
+                categoryBn = "কুরআন ও তাফসীর",
+                icon = Icons.Default.MenuBook,
+                iconColor = IslamicGreen,
                 isTopEight = true,
-                onClickAction = { viewModel.selectTab(AppTab.ROUTINE) }
+                onClickAction = { viewModel.openHolyQuran() }
             ),
-            // ৩. ক্যালেন্ডার
+            // ৪. সহীহ হাদীস সম্ভার
+            HomeFeatureItem(
+                id = "hadith_collection",
+                serialNumberBn = "০৪",
+                titleBn = "৪. সহীহ হাদীস সম্ভার",
+                shortTitleBn = "সহীহ হাদীস",
+                subtitleBn = "সিহাহ্ সিত্তাহ (বুখারী, মুসলিম, তিরমিজি...) ও অফলাইন হাদীস ডেটাবেজ",
+                categoryBn = "হাদীস ও সুন্নাহ",
+                icon = Icons.Default.CollectionsBookmark,
+                iconColor = IslamicGold,
+                isTopEight = true,
+                onClickAction = { viewModel.openHadithCollection() }
+            ),
+            // ৫. ক্যালেন্ডার
             HomeFeatureItem(
                 id = "calendar",
-                serialNumberBn = "০৩",
-                titleBn = "৩. ক্যালেন্ডার",
+                serialNumberBn = "০৫",
+                titleBn = "৫. ক্যালেন্ডার",
                 shortTitleBn = "ক্যালেন্ডার",
                 subtitleBn = "হিজরি, বাংলা ও ইংরেজি সর্বজনীন ট্রিপল ক্যালেন্ডার",
                 categoryBn = "ক্যালেন্ডার",
@@ -266,11 +279,11 @@ fun HomeScreen(
                 isTopEight = true,
                 onClickAction = { showTripleCalendarDialog = true }
             ),
-            // ৪. রমাদান
+            // ৬. রমাদান
             HomeFeatureItem(
                 id = "ramadan_schedule",
-                serialNumberBn = "০৪",
-                titleBn = "৪. রমাদান",
+                serialNumberBn = "০৬",
+                titleBn = "৬. রমাদান",
                 shortTitleBn = "রমাদান",
                 subtitleBn = "রমাদান সময়সূচী, সেহেরি-ইফতার ও রমাদান ইন্টেলিজেন্স",
                 categoryBn = "সিয়াম ও রমাদান",
@@ -279,24 +292,11 @@ fun HomeScreen(
                 isTopEight = true,
                 onClickAction = { showRamadanOptionsDialog = true }
             ),
-            // ৫. নামাজের পূর্ণাঙ্গ গাইড
-            HomeFeatureItem(
-                id = "namaz_guide",
-                serialNumberBn = "০৫",
-                titleBn = "৫. নামাজের পূর্ণাঙ্গ গাইড",
-                shortTitleBn = "নামাজ গাইড",
-                subtitleBn = "সহীহ সালাত শিক্ষা, ধাপে ধাপে পদ্ধতি, সঠিক রাকাত, তিলাওয়াত ও মাসআলা",
-                categoryBn = "সালাত ও সময়",
-                icon = Icons.Default.Mosque,
-                iconColor = Color(0xFF0284C7),
-                isTopEight = true,
-                onClickAction = { showNamazGuideDialog = true }
-            ),
-            // ৬. নামাজ মোড
+            // ৭. নামাজ মোড
             HomeFeatureItem(
                 id = "namaz_mode",
-                serialNumberBn = "০৬",
-                titleBn = "৬. নামাজ মোড",
+                serialNumberBn = "০৭",
+                titleBn = "৭. নামাজ মোড",
                 shortTitleBn = "নামাজ মোড",
                 subtitleBn = if (isNamazModeActiveNow) {
                     "নামাজ মোড সক্রিয় (ফোন সাইলেন্ট • বাকি ${CalendarHelper.toBanglaNumber(namazMinutesLeft)} মি.)"
@@ -309,11 +309,24 @@ fun HomeScreen(
                 isTopEight = true,
                 onClickAction = { showNamazModeDialog = true }
             ),
-            // ৭. আমল ট্র্যাকার
+            // ৮. আল্লাহর ৯৯ নাম
+            HomeFeatureItem(
+                id = "names_of_allah",
+                serialNumberBn = "০৮",
+                titleBn = "৮. আল্লাহর ৯৯ নাম",
+                shortTitleBn = "আল্লাহর ৯৯ নাম",
+                subtitleBn = "আসমাউল হুসনা, বাংলা অর্থ, গুরুত্ব ও প্রয়োজনভিত্তিক খাস আমল",
+                categoryBn = "আল্লাহর নাম",
+                icon = Icons.Default.Star,
+                iconColor = IslamicGold,
+                isTopEight = true,
+                onClickAction = { showAllahNamesOptionsDialog = true }
+            ),
+            // ৯. আমল ট্র্যাকার
             HomeFeatureItem(
                 id = "tracker",
-                serialNumberBn = "০৭",
-                titleBn = "৭. আমল ট্র্যাকার",
+                serialNumberBn = "০৯",
+                titleBn = "৯. আমল ট্র্যাকার",
                 shortTitleBn = "আমল ট্র্যাকার",
                 subtitleBn = "আজকের স্কোরকার্ড: ${CalendarHelper.toBanglaNumber(scorecardCompletedCount)}/${CalendarHelper.toBanglaNumber(scorecardTotal)} সম্পন্ন • ${CalendarHelper.toBanglaNumber(scorecardStreak)} দিন স্ট্রিক",
                 categoryBn = "আমল ট্র্যাকার",
@@ -322,96 +335,90 @@ fun HomeScreen(
                 isTopEight = true,
                 onClickAction = { viewModel.openScorecard() }
             ),
-            // ৮. সেহেরি ও ইফতারের সময়
+            // ১০. সালাত হাব
             HomeFeatureItem(
-                id = "sehri_iftar",
-                serialNumberBn = "০৮",
-                titleBn = "৮. সেহেরি ও ইফতারের সময়",
-                shortTitleBn = "সেহেরি-ইফতার",
-                subtitleBn = "প্রতিদিনের সেহরি, সূর্যোদয় ও ইফতারের পূর্ণাঙ্গ সময়সূচী",
-                categoryBn = "সিয়াম ও রমাদান",
-                icon = Icons.Default.NightsStay,
-                iconColor = Color(0xFF8B5CF6),
+                id = "salat_hub",
+                serialNumberBn = "১০",
+                titleBn = "১০. সালাত হাব",
+                shortTitleBn = "সালাত হাব",
+                subtitleBn = "সালাতের সময়সূচী, নামাজ গাইড, নফল ও ফরজ সালাতের দো‘আ ও আমল",
+                categoryBn = "সালাত ও সময়",
+                icon = Icons.Default.Mosque,
+                iconColor = Color(0xFF0284C7),
                 isTopEight = true,
-                onClickAction = { showDetailedSehriIftar = true }
+                onClickAction = { showSalatHubDialog = true }
             ),
-            // ৯. ইসলামী জীবন
+            // ১১. সকাল - সন্ধ্যার দোয়া
             HomeFeatureItem(
-                id = "islamic_life",
-                serialNumberBn = "০৯",
-                titleBn = "৯. ইসলামী জীবন",
-                shortTitleBn = "ইসলামী জীবন",
-                subtitleBn = "সুন্নাহসম্মত ইবাদত, বিধিবিধান, প্রবন্ধ ও বিশেষ আমলসমূহ",
-                categoryBn = "জীবন ও বিধান",
-                icon = Icons.Default.MenuBook,
+                id = "morning_evening_dua",
+                serialNumberBn = "১১",
+                titleBn = "১১. সকাল - সন্ধ্যার দোয়া",
+                shortTitleBn = "সকাল-সন্ধ্যা",
+                subtitleBn = "ফজর ও মাগরিব পরবর্তী শ্রেষ্ঠ সহীহ মাসনূন যিকর ও সুরক্ষার আমল",
+                categoryBn = "দো‘আ ও যিকির",
+                icon = Icons.Default.WbSunny,
                 iconColor = Color(0xFFEA580C),
                 isTopEight = true,
-                onClickAction = { viewModel.selectTab(AppTab.MORE) }
+                onClickAction = {
+                    viewModel.selectTab(AppTab.MORE)
+                    (viewModel.getIslamicLifeSection("morning_evening_special")
+                        ?: IslamicLifeData.sections.find { it.id == "morning_evening_special" })?.let {
+                        viewModel.openIslamicLifeSection(it)
+                    }
+                }
             ),
-            // ১০. সালাতের সময়সূচী
+            // ১২. ক্বিবলা কম্পাস
             HomeFeatureItem(
-                id = "salat_timings",
-                serialNumberBn = "১০",
-                titleBn = "১০. সালাতের সময়সূচী",
-                shortTitleBn = "সালাতের সময়",
-                subtitleBn = "৫ ওয়াক্ত নামাজের সঠিক ওয়াক্ত, মাকরূহ ও নিষিদ্ধ সময়",
-                categoryBn = "সালাত ও সময়",
-                icon = Icons.Default.AccessTime,
-                iconColor = Color(0xFF0284C7),
-                onClickAction = { scrollToSalatTimings() }
-            ),
-            // ১১. নফল সালাত
-            HomeFeatureItem(
-                id = "nafl_salat",
-                serialNumberBn = "১১",
-                titleBn = "১১. নফল সালাত",
-                shortTitleBn = "নফল সালাত",
-                subtitleBn = "তাহাজ্জুদ, ইশরাক, চাশত, আওয়াবীনসহ ৮টি নফল সালাতের পূর্ণাঙ্গ সময়সূচী",
-                categoryBn = "সালাত ও সময়",
-                icon = Icons.Default.SelfImprovement,
-                iconColor = Color(0xFFE11D48),
-                onClickAction = { showNofolScheduleDialog = true }
-            ),
-            // ১২. হিসনুল মুসলিম
-            HomeFeatureItem(
-                id = "masnun_dua",
+                id = "qibla_compass",
                 serialNumberBn = "১২",
-                titleBn = "১২. হিসনুল মুসলিম",
-                shortTitleBn = "হিসনুল মুসলিম",
-                subtitleBn = "কুরআন ও সিহাহ সিত্তাহর ১০০০+ নির্ভরযোগ্য সহীহ দো‘আ ও যিকির (হিসনুল মুসলিম)",
-                categoryBn = "দো‘আ ও যিকির",
-                icon = Icons.Default.MenuBook,
+                titleBn = "১২. ক্বিবলা কম্পাস",
+                shortTitleBn = "ক্বিবলা কম্পাস",
+                subtitleBn = "ম্যাগনেটিক ও এক্সিলারোমিটার সেন্সরে কাবা শরিফের নির্ভুল দিক ও দূরত্ব",
+                categoryBn = "ইসলামিক টুলস",
+                icon = Icons.Default.Explore,
                 iconColor = Color(0xFF059669),
                 isTopEight = true,
-                onClickAction = { viewModel.selectTab(AppTab.DUA) }
+                onClickAction = {
+                    viewModel.openQibla()
+                }
             ),
-            // ১৩. পবিত্র কুরআন (নতুন ফিচার - ১২তম পজিশনের পর)
+            // ১৩. তওবা ও ইস্তিগফার
             HomeFeatureItem(
-                id = "holy_quran",
+                id = "tawbah_istighfar",
                 serialNumberBn = "১৩",
-                titleBn = "১৩. পবিত্র কুরআন",
-                shortTitleBn = "আল-কুরআন",
-                subtitleBn = "১১৪ সূরার অনুবাদ, বাংলা উচ্চারণ, বিশদ তাফসীর ও ক্বারী তিলাওয়াত",
-                categoryBn = "কুরআন ও তাফসীর",
-                icon = Icons.Default.MenuBook,
-                iconColor = IslamicGreen,
-                isTopEight = false,
-                onClickAction = { viewModel.openHolyQuran() }
+                titleBn = "১৩. তওবা ও ইস্তিগফার",
+                shortTitleBn = "তওবা-ইস্তিগফার",
+                subtitleBn = "সাইয়্যেদুল ইস্তিগফার, গুনাহ মাফের ৪টি শর্ত ও সংকট মুক্তির আমল",
+                categoryBn = "ক্ষমা ও আমল",
+                icon = Icons.Default.Refresh,
+                iconColor = Color(0xFF6366F1),
+                isTopEight = true,
+                onClickAction = {
+                    viewModel.selectTab(AppTab.MORE)
+                    (viewModel.getIslamicLifeSection("tawbah_istighfar")
+                        ?: viewModel.getIslamicLifeSection("sayyidul_istighfar_special")
+                        ?: IslamicLifeData.sections.find { it.id == "tawbah_istighfar" || it.id == "sayyidul_istighfar_special" })?.let {
+                        viewModel.openIslamicLifeSection(it)
+                    }
+                }
             ),
-            // ১৪. সহীহ হাদীস সম্ভার (নতুন ফিচার - ১২তম পজিশনের পর)
+            // ১৪. দুরুদ শরিফের আমল
             HomeFeatureItem(
-                id = "hadith_collection",
+                id = "durood_amol",
                 serialNumberBn = "১৪",
-                titleBn = "১৪. সহীহ হাদীস সম্ভার",
-                shortTitleBn = "সহীহ হাদীস",
-                subtitleBn = "সিহাহ্ সিত্তাহ (বুখারী, মুসলিম, তিরমিজি...) ও অফলাইন হাদীস ডেটাবেজ",
-                categoryBn = "হাদীস ও সুন্নাহ",
-                icon = Icons.Default.CollectionsBookmark,
-                iconColor = IslamicGold,
-                isTopEight = false,
-                onClickAction = { viewModel.openHadithCollection() }
+                titleBn = "১৪. দুরুদ শরিফের আমল",
+                shortTitleBn = "দুরুদ শরিফ",
+                subtitleBn = "দরূদে ইব্রাহীম, তাজ, নারিয়া ও বরকতময় দরূদের সুবিশাল সংকলন",
+                categoryBn = "দরূদ ও মহব্বত",
+                icon = Icons.Default.AutoAwesome,
+                iconColor = Color(0xFFD97706),
+                isTopEight = true,
+                onClickAction = {
+                    viewModel.selectTab(AppTab.MORE)
+                    viewModel.navigateToMoreSubScreen(MoreSubScreen.DUROOD_AMOL)
+                }
             ),
-            // ১৫. বিষয় ভিত্তিক কোরআনের আয়াত (নতুন ফিচার - ১২তম পজিশনের পর)
+            // ১৫. বিষয় ভিত্তিক কোরআনের আয়াত
             HomeFeatureItem(
                 id = "quran_topics",
                 serialNumberBn = "১৫",
@@ -421,10 +428,10 @@ fun HomeScreen(
                 categoryBn = "কুরআন ও তাফসীর",
                 icon = Icons.Default.MenuBook,
                 iconColor = Color(0xFF047857),
-                isTopEight = false,
+                isTopEight = true,
                 onClickAction = { viewModel.openQuranTopics() }
             ),
-            // ১৬. বিষয় ভিত্তিক সহীহ হাদিস (নতুন ফিচার - ১২তম পজিশনের পর)
+            // ১৬. বিষয় ভিত্তিক সহীহ হাদিস
             HomeFeatureItem(
                 id = "hadith_topics",
                 serialNumberBn = "১৬",
@@ -434,31 +441,20 @@ fun HomeScreen(
                 categoryBn = "হাদীস ও সুন্নাহ",
                 icon = Icons.Default.CollectionsBookmark,
                 iconColor = Color(0xFF4338CA),
-                isTopEight = false,
+                isTopEight = true,
                 onClickAction = { viewModel.openHadithTopics() }
             ),
-            // ১৩. আল্লাহর ৯৯ নাম
-            HomeFeatureItem(
-                id = "names_of_allah",
-                serialNumberBn = "১৩",
-                titleBn = "১৩. আল্লাহর ৯৯ নাম",
-                shortTitleBn = "আল্লাহর ৯৯ নাম",
-                subtitleBn = "আসমাউল হুসনা, বাংলা অর্থ, গুরুত্ব ও প্রয়োজনভিত্তিক খাস আমল",
-                categoryBn = "আল্লাহর নাম",
-                icon = Icons.Default.Star,
-                iconColor = IslamicGold,
-                onClickAction = { showAllahNamesOptionsDialog = true }
-            ),
-            // ১৪. রুকিয়াহ
+            // ১৭. রুকিয়াহ
             HomeFeatureItem(
                 id = "ruqyah",
-                serialNumberBn = "১৪",
-                titleBn = "১৪. রুকিয়াহ",
+                serialNumberBn = "১৭",
+                titleBn = "১৭. রুকিয়াহ",
                 shortTitleBn = "রুকিয়াহ",
                 subtitleBn = "বদনজর, যাদু-টোনা, রোগব্যাধি ও শয়তানের অনিষ্ট থেকে সহীহ শিফা",
                 categoryBn = "সুরক্ষা ও শিফা",
                 icon = Icons.Default.Healing,
                 iconColor = Color(0xFF059669),
+                isTopEight = false,
                 onClickAction = {
                     viewModel.selectTab(AppTab.MORE)
                     (viewModel.getIslamicLifeSection("ruqyah_shariah_special")
@@ -467,16 +463,108 @@ fun HomeScreen(
                     }
                 }
             ),
-            // ১৫. সালাত ও দোয়া
+            // ১৮. সালাতের সময়সূচী
+            HomeFeatureItem(
+                id = "salat_timings",
+                serialNumberBn = "১৮",
+                titleBn = "১৮. সালাতের সময়সূচী",
+                shortTitleBn = "সালাতের সময়",
+                subtitleBn = "৫ ওয়াক্ত নামাজের সঠিক ওয়াক্ত, মাকরূহ ও নিষিদ্ধ সময়",
+                categoryBn = "সালাত ও সময়",
+                icon = Icons.Default.AccessTime,
+                iconColor = Color(0xFF0284C7),
+                isTopEight = false,
+                onClickAction = { scrollToSalatTimings() }
+            ),
+            // ১৯. নামাজের পূর্ণাঙ্গ গাইড
+            HomeFeatureItem(
+                id = "namaz_guide",
+                serialNumberBn = "১৯",
+                titleBn = "১৯. নামাজের পূর্ণাঙ্গ গাইড",
+                shortTitleBn = "নামাজ গাইড",
+                subtitleBn = "সহীহ সালাত শিক্ষা, ধাপে ধাপে পদ্ধতি, সঠিক রাকাত, তিলাওয়াত ও মাসআলা",
+                categoryBn = "সালাত ও সময়",
+                icon = Icons.Default.Mosque,
+                iconColor = Color(0xFF0284C7),
+                isTopEight = false,
+                onClickAction = { showNamazGuideDialog = true }
+            ),
+            // ২০. সেহেরি ও ইফতারের সময়
+            HomeFeatureItem(
+                id = "sehri_iftar",
+                serialNumberBn = "২০",
+                titleBn = "২০. সেহেরি ও ইফতারের সময়",
+                shortTitleBn = "সেহেরি-ইফতার",
+                subtitleBn = "প্রতিদিনের সেহরি, সূর্যোদয় ও ইফতারের পূর্ণাঙ্গ সময়সূচী",
+                categoryBn = "সিয়াম ও রমাদান",
+                icon = Icons.Default.NightsStay,
+                iconColor = Color(0xFF8B5CF6),
+                isTopEight = false,
+                onClickAction = { showDetailedSehriIftar = true }
+            ),
+            // ২১. হিসনুল মুসলিম
+            HomeFeatureItem(
+                id = "masnun_dua",
+                serialNumberBn = "২১",
+                titleBn = "২১. হিসনুল মুসলিম",
+                shortTitleBn = "হিসনুল মুসলিম",
+                subtitleBn = "কুরআন ও সিহাহ সিত্তাহর ১০০০+ নির্ভরযোগ্য সহীহ দো‘আ ও যিকির (হিসনুল মুসলিম)",
+                categoryBn = "দো‘আ ও যিকির",
+                icon = Icons.Default.MenuBook,
+                iconColor = Color(0xFF059669),
+                isTopEight = false,
+                onClickAction = { viewModel.selectTab(AppTab.DUA) }
+            ),
+            // ২২. ইসলামী জীবন
+            HomeFeatureItem(
+                id = "islamic_life",
+                serialNumberBn = "২২",
+                titleBn = "২২. ইসলামী জীবন",
+                shortTitleBn = "ইসলামী জীবন",
+                subtitleBn = "সুন্নাহসম্মত ইবাদত, বিধিবিধান, প্রবন্ধ ও বিশেষ আমলসমূহ",
+                categoryBn = "জীবন ও বিধান",
+                icon = Icons.Default.MenuBook,
+                iconColor = Color(0xFFEA580C),
+                isTopEight = false,
+                onClickAction = { viewModel.selectTab(AppTab.MORE) }
+            ),
+            // ২৩. দৈনিক আমল
+            HomeFeatureItem(
+                id = "twenty_four_hours",
+                serialNumberBn = "২৩",
+                titleBn = "২৩. দৈনিক আমল",
+                shortTitleBn = "দৈনিক আমল",
+                subtitleBn = "সকাল থেকে রাত পর্যন্ত সুন্নাত আমল ও ২৪ ঘণ্টার রুটিন গাইড",
+                categoryBn = "দৈনন্দিন আমল",
+                icon = Icons.Default.HistoryToggleOff,
+                iconColor = Color(0xFFD97706),
+                isTopEight = false,
+                onClickAction = { viewModel.selectTab(AppTab.ROUTINE) }
+            ),
+            // ২৪. নফল সালাত
+            HomeFeatureItem(
+                id = "nafl_salat",
+                serialNumberBn = "২৪",
+                titleBn = "২৪. নফল সালাত",
+                shortTitleBn = "নফল সালাত",
+                subtitleBn = "তাহাজ্জুদ, ইশরাক, চাশত, আওয়াবীনসহ ৮টি নফল সালাতের পূর্ণাঙ্গ সময়সূচী",
+                categoryBn = "সালাত ও সময়",
+                icon = Icons.Default.SelfImprovement,
+                iconColor = Color(0xFFE11D48),
+                isTopEight = false,
+                onClickAction = { showNofolScheduleDialog = true }
+            ),
+            // ২৫. সালাত ও দোয়া
             HomeFeatureItem(
                 id = "salat_and_dua",
-                serialNumberBn = "১৫",
-                titleBn = "১৫. সালাত ও দোয়া",
+                serialNumberBn = "২৫",
+                titleBn = "২৫. সালাত ও দোয়া",
                 shortTitleBn = "সালাত ও দোয়া",
                 subtitleBn = "সিজদা, কুনুত, সালামের পূর্বে ও ৫ ওয়াক্ত সালাতের সহীহ দো‘আ",
                 categoryBn = "সালাত ও দো‘আ",
                 icon = Icons.Default.Mosque,
                 iconColor = Color(0xFF0D9488),
+                isTopEight = false,
                 onClickAction = {
                     viewModel.selectTab(AppTab.MORE)
                     (viewModel.getIslamicLifeSection("salat_and_dua_special")
@@ -485,29 +573,11 @@ fun HomeScreen(
                     }
                 }
             ),
-            // ১৬. সকাল - সন্ধ্যার দোয়া
-            HomeFeatureItem(
-                id = "morning_evening_dua",
-                serialNumberBn = "১৬",
-                titleBn = "১৬. সকাল - সন্ধ্যার দোয়া",
-                shortTitleBn = "সকাল-সন্ধ্যা",
-                subtitleBn = "ফজর ও মাগরিব পরবর্তী শ্রেষ্ঠ সহীহ মাসনূন যিকর ও সুরক্ষার আমল",
-                categoryBn = "দো‘আ ও যিকির",
-                icon = Icons.Default.WbSunny,
-                iconColor = Color(0xFFEA580C),
-                onClickAction = {
-                    viewModel.selectTab(AppTab.MORE)
-                    (viewModel.getIslamicLifeSection("morning_evening_special")
-                        ?: IslamicLifeData.sections.find { it.id == "morning_evening_special" })?.let {
-                        viewModel.openIslamicLifeSection(it)
-                    }
-                }
-            ),
-            // ১৭. Friday Mode (জুমার মোড)
+            // ২৬. Friday Mode (জুমার মোড)
             HomeFeatureItem(
                 id = "friday_mode",
-                serialNumberBn = "১৭",
-                titleBn = if (isFridayActive) "১৭. Friday Mode (সক্রিয়)" else "১৭. Friday Mode (জুমার মোড)",
+                serialNumberBn = "২৬",
+                titleBn = if (isFridayActive) "২৬. Friday Mode (সক্রিয়)" else "২৬. Friday Mode (জুমার মোড)",
                 shortTitleBn = if (isFridayActive) "Friday Mode (সক্রিয়)" else "Friday Mode",
                 subtitleBn = "বৃহস্পতিবার মাগরিব থেকে শুক্রবার মাগরিব • সূরা কাহাফ, ১০ সুন্নাত ও আমল",
                 categoryBn = "বিশেষ আমল",
@@ -518,65 +588,33 @@ fun HomeScreen(
                     viewModel.openFridayMode()
                 }
             ),
-            // ১৮. তওবা ও ইস্তিগফার
-            HomeFeatureItem(
-                id = "tawbah_istighfar",
-                serialNumberBn = "১৮",
-                titleBn = "১৮. তওবা ও ইস্তিগফার",
-                shortTitleBn = "তওবা-ইস্তিগফার",
-                subtitleBn = "সাইয়্যেদুল ইস্তিগফার, গুনাহ মাফের ৪টি শর্ত ও সংকট মুক্তির আমল",
-                categoryBn = "ক্ষমা ও আমল",
-                icon = Icons.Default.Refresh,
-                iconColor = Color(0xFF6366F1),
-                onClickAction = {
-                    viewModel.selectTab(AppTab.MORE)
-                    (viewModel.getIslamicLifeSection("tawbah_istighfar")
-                        ?: viewModel.getIslamicLifeSection("sayyidul_istighfar_special")
-                        ?: IslamicLifeData.sections.find { it.id == "tawbah_istighfar" || it.id == "sayyidul_istighfar_special" })?.let {
-                        viewModel.openIslamicLifeSection(it)
-                    }
-                }
-            ),
-            // ১৯. দুরুদ শরিফের আমল
-            HomeFeatureItem(
-                id = "durood_amol",
-                serialNumberBn = "১৯",
-                titleBn = "১৯. দুরুদ শরিফের আমল",
-                shortTitleBn = "দুরুদ শরিফ",
-                subtitleBn = "দরূদে ইব্রাহীম, তাজ, নারিয়া ও বরকতময় দরূদের সুবিশাল সংকলন",
-                categoryBn = "দরূদ ও মহব্বত",
-                icon = Icons.Default.AutoAwesome,
-                iconColor = Color(0xFFD97706),
-                onClickAction = {
-                    viewModel.selectTab(AppTab.MORE)
-                    viewModel.navigateToMoreSubScreen(MoreSubScreen.DUROOD_AMOL)
-                }
-            ),
-            // ২০. আরবী ফন্ট সমাধান টুল
+            // ২৭. আরবী ফন্ট সমাধান টুল
             HomeFeatureItem(
                 id = "arabic_font_tool",
-                serialNumberBn = "২০",
-                titleBn = "২০. আরবী ফন্ট সমাধান টুল",
+                serialNumberBn = "২৭",
+                titleBn = "২৭. আরবী ফন্ট সমাধান টুল",
                 shortTitleBn = "আরবী ফন্ট টুল",
                 subtitleBn = "ভাঙ্গা শব্দ ও ভুল হরকত সনাক্তকরণ ও বিশুদ্ধ আরবী ফন্ট কনভার্টার",
                 categoryBn = "ইসলামিক টুলস",
                 icon = Icons.Default.FindReplace,
                 iconColor = Color(0xFF0284C7),
+                isTopEight = false,
                 onClickAction = {
                     viewModel.selectTab(AppTab.MORE)
                     viewModel.navigateToMoreSubScreen(MoreSubScreen.AYAT_DETECTOR_SOLVER)
                 }
             ),
-            // ২১. ইসমে আজম
+            // ২৮. ইসমে আজম
             HomeFeatureItem(
                 id = "isme_azam",
-                serialNumberBn = "২১",
-                titleBn = "২১. ইসমে আজম",
+                serialNumberBn = "২৮",
+                titleBn = "২৮. ইসমে আজম",
                 shortTitleBn = "ইসমে আজম",
                 subtitleBn = "দো‘আ কবুলের শ্রেষ্ঠ ইসমে আজম, সহীহ হাদিসের আমল ও নিয়মাবলী",
                 categoryBn = "দো‘আ কবুল",
                 icon = Icons.Default.WorkspacePremium,
                 iconColor = IslamicGold,
+                isTopEight = false,
                 onClickAction = {
                     viewModel.selectTab(AppTab.MORE)
                     (viewModel.getIslamicLifeSection("isme_azam")
@@ -585,43 +623,17 @@ fun HomeScreen(
                     }
                 }
             ),
-            // ক্বিবলা কম্পাস
-            HomeFeatureItem(
-                id = "qibla_compass",
-                serialNumberBn = "২২",
-                titleBn = "২২. ক্বিবলা কম্পাস",
-                shortTitleBn = "ক্বিবলা কম্পাস",
-                subtitleBn = "ম্যাগনেটিক ও এক্সিলারোমিটার সেন্সরে কাবা শরিফের নির্ভুল দিক ও দূরত্ব",
-                categoryBn = "ইসলামিক টুলস",
-                icon = Icons.Default.Explore,
-                iconColor = Color(0xFF059669),
-                onClickAction = {
-                    viewModel.openQibla()
-                }
-            ),
-            // সালাত (নতুন সমন্বিত ফিচার হাব - ১২তম পজিশনের পর)
-            HomeFeatureItem(
-                id = "salat_hub",
-                serialNumberBn = "২৩",
-                titleBn = "২৩. সালাত হাব",
-                shortTitleBn = "সালাত হাব",
-                subtitleBn = "সালাতের সময়সূচী, নামাজ গাইড, নফল ও ফরজ সালাতের দো‘আ ও আমল",
-                categoryBn = "সালাত ও সময়",
-                icon = Icons.Default.Mosque,
-                iconColor = Color(0xFF0284C7),
-                isTopEight = false,
-                onClickAction = { showSalatHubDialog = true }
-            ),
-            // ইসলামিক টুলস ও ল্যাব
+            // ২৯. ইসলামিক টুলস ও ল্যাব
             HomeFeatureItem(
                 id = "tools",
-                serialNumberBn = "২৪",
-                titleBn = "২৪. ইসলামিক টুলস ও ল্যাব",
+                serialNumberBn = "২৯",
+                titleBn = "২৯. ইসলামিক টুলস ও ল্যাব",
                 shortTitleBn = "টুলস ও ল্যাব",
                 subtitleBn = "Explain This Ayah ক্যামেরা, শুদ্ধিকরণ ল্যাব ও ক্বিবলা কম্পাস",
                 categoryBn = "স্মার্ট টুলস",
                 icon = Icons.Default.Build,
                 iconColor = Color(0xFF0D9488),
+                isTopEight = false,
                 onClickAction = {
                     viewModel.selectTab(AppTab.TOOLS)
                 }
@@ -953,16 +965,16 @@ fun HomeScreen(
                         }
                     }
                     HomeScreenCardId.TOP_FEATURES -> {
-                        // 2.5 টপ ফিচার (Top Features Section - 12 items in 3x4 grid + 'আরও / More')
+                        // 2.5 টপ ফিচার (Top Features Section - 16 items in 4x4 grid + 'আরও / More')
                         item(key = "card_top_features") {
-                            val baseTopFeatures = orderedAppFeatures.filter { it.id != "articles" }.take(12)
+                            val baseTopFeatures = orderedAppFeatures.filter { it.id != "articles" }.take(16)
                             val finalTopFeatures = remember(baseTopFeatures, orderedAppFeatures) {
                                 if (baseTopFeatures.any { it.id == "search_within_quran" }) {
                                     baseTopFeatures
                                 } else {
                                     val searchItem = orderedAppFeatures.find { it.id == "search_within_quran" }
                                     if (searchItem != null) {
-                                        (listOf(searchItem) + baseTopFeatures).take(12)
+                                        (listOf(searchItem) + baseTopFeatures).take(16)
                                     } else {
                                         baseTopFeatures
                                     }

@@ -87,7 +87,7 @@ fun List<HomeFeatureItem>.renumberedFeatures(): List<HomeFeatureItem> {
 
 /**
  * 'টপ ফিচার' (Top Features) section on the Home Screen.
- * Displays 12 primary features in three clean rows (4 icons per row)
+ * Displays 16 primary features in four clean rows (4 icons per row)
  * with a stylish 'আরও / More' text affordance in the header
  * that opens the full features window.
  */
@@ -204,7 +204,7 @@ fun TopFeaturesSection(
 
             Spacer(modifier = Modifier.height(7.dp))
 
-            // Grid of Feature Icons (Clean 4-column layout for up to 12 items: 3 rows of 4 items)
+            // Grid of Feature Icons (Clean 4-column layout for up to 16 items: 4 rows of 4 items)
             // Minimized space between lines for a compact, cohesive, and beautiful appearance
             val chunkSize = 4
             val rows = topFeatures.chunked(chunkSize)

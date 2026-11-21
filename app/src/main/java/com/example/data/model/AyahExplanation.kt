@@ -47,6 +47,17 @@ data class RelatedHadith(
     val gradeBn: String = "সহীহ"
 )
 
+data class AyahMatchSummary(
+    val surahNumber: Int,
+    val ayahNumber: Int,
+    val surahNameBn: String,
+    val surahNameAr: String,
+    val arabicSnippet: String,
+    val banglaSnippet: String,
+    val confidencePercent: Int,
+    val matchReasonBn: String
+)
+
 data class AyahExplanation(
     val id: String,
     val surahNumber: Int,
@@ -76,5 +87,10 @@ data class AyahExplanation(
     val sourceReferenceNumber: String = "",
     val scholarOrNarrator: String = "",
     val authenticityOrGrading: String = "",
-    val scholarlyContext: String = ""
+    val scholarlyContext: String = "",
+    val matchConfidencePercent: Int = 100,
+    val matchSourceLabelBn: String = "লোকাল কুরআন ডাটাবেস (১১৪ সূরা • ৬,২৩৬ আয়াত)",
+    val alternateMatches: List<AyahMatchSummary> = emptyList(),
+    val isVerifiedFromLocalQuranDb: Boolean = true,
+    val rawLocalTafsirBn: String = ""
 )

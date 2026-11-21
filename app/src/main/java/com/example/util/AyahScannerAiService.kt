@@ -4,9 +4,7 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.util.Base64
 import com.example.BuildConfig
-import com.example.data.datasource.QuranAyahCatalog
-import com.example.data.datasource.QuranSurahCatalog
-import com.example.data.model.*
+import com.example.data.model.AyahExplanation
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okhttp3.MediaType.Companion.toMediaType
@@ -18,11 +16,22 @@ import org.json.JSONObject
 import java.io.ByteArrayOutputStream
 import java.util.concurrent.TimeUnit
 
+/**
+ * Revamped 'Explain This Ayah' Vision OCR -> Local Quran Database Lookup Pipeline.
+ *
+ * Core Design Principle:
+ * - Camera/AI NEVER fabricates Quranic Arabic, translations, or Tafsir.
+ * - Vision AI is used strictly as a high-precision Arabic/Bangla/English OCR reader on the captured
+ *   image (temperature = 0.0) to transcribe the visible Quranic lines verbatim.
+ * - Every extracted text snippet is then deterministically matched against ALL 114 Surahs
+ *   (6,236 Ayahs) inside the app's bundled local Quran database (`assets/quran/surah_1..114.json`),
+ *   returning the exact verified Ayah details and authentic local Tafsir.
+ */
 class AyahScannerAiService(private val context: Context) {
 
     private val httpClient = OkHttpClient.Builder()
-        .connectTimeout(12, TimeUnit.SECONDS)
-        .readTimeout(20, TimeUnit.SECONDS)
+        .connectTimeout(15, TimeUnit.SECONDS)
+        .readTimeout(25, TimeUnit.SECONDS)
         .writeTimeout(20, TimeUnit.SECONDS)
         .build()
 
@@ -61,11 +70,13 @@ class AyahScannerAiService(private val context: Context) {
     fun isAiOnline(): Boolean = hasValidApiKey()
 
     /**
-     * Analyzes a Quran page or Ayah snapshot captured from Camera or picked from Gallery.
-     *
-     * 1. Uses ultra-fast on-device ML Kit OCR & authentic Quran database (0ms network delay, 100% offline).
-     * 2. If valid Gemini API key is configured by user, optionally refines with cloud Gemini AI.
-     * 3. Guarantees zero blocking API errors, zero leaked key issues, and 100% reliable scanning.
+     * Analyzes a captured camera frame or gallery image:
+     * 1. Validates bitmap lighting & contrast.
+     * 2. Pre-warms the local 6,236-ayah Quran index.
+     * 3. If online Vision AI is available, transcribes Arabic/Bangla/English lines verbatim from the
+     *    image, then runs deterministic local DB lookup (`LocalQuranAyahMatcher`) so the displayed
+     *    Ayah & Tafsir ALWAYS come 100% verified from the local in-app Quran database.
+     * 4. Falls back cleanly to on-device ML Kit OCR -> Local Quran DB lookup when offline.
      */
     suspend fun analyzeQuranImage(
         bitmap: Bitmap,
@@ -74,72 +85,87 @@ class AyahScannerAiService(private val context: Context) {
     ): Result<AyahExplanation> = withContext(Dispatchers.IO) {
         val startTime = System.currentTimeMillis()
 
-        // 1. If explicit Surah & Ayah preference was passed by user
-        if (preferredSurah != null && preferredSurah > 0) {
-            val ayahNum = preferredAyah ?: 1
-            val result = LocalQuranAyahScannerEngine.getOrSynthesize(context, preferredSurah, ayahNum)
-            return@withContext Result.success(result.copy(scanDurationMs = (System.currentTimeMillis() - startTime).coerceAtLeast(15L)))
+        // 1. Explicit Surah & Ayah selection bypasses OCR and loads straight from local Quran DB
+        if (preferredSurah != null && preferredSurah in 1..114) {
+            val ayahNum = (preferredAyah ?: 1).coerceAtLeast(1)
+            val exact = LocalQuranAyahMatcher.loadAyahExplanationFromLocalDb(
+                context = context,
+                surahNumber = preferredSurah,
+                ayahNumber = ayahNum,
+                scanDurationMs = (System.currentTimeMillis() - startTime).coerceAtLeast(15L)
+            )
+            return@withContext Result.success(exact)
         }
 
-        // 2. Validate input bitmap
-        if (bitmap.width <= 0 || bitmap.height <= 0) {
-            return@withContext Result.failure(Exception("ক্যামেরা কোনো ছবি ধারণ করতে পারেনি। পুনরায় ছবি তুলুন।"))
+        // 2. Validate image quality (pitch black / blank)
+        val qualityErr = LocalQuranAyahScannerEngine.validateBitmapQuality(bitmap)
+        if (qualityErr != null) {
+            return@withContext Result.failure(Exception(qualityErr))
         }
 
-        // 3. FIRST-CLASS LOCAL ENGINE: Ultra-Fast On-Device ML Kit OCR
-        val localScanResult = LocalQuranAyahScannerEngine.scanImage(bitmap, context)
-        if (localScanResult.isSuccess) {
-            return@withContext localScanResult
-        }
+        // Ensure local 6,236-ayah index is ready in RAM
+        LocalQuranAyahMatcher.ensureReady(context)
 
-        // 4. If local OCR did not immediately find a match, check if user provided a valid Gemini API key
+        // 3. Vision OCR -> Local Quran Database Lookup (Primary Path when Vision AI is online)
         val apiKey = getEffectiveApiKey()
-        if (apiKey.isBlank() || apiKey == "your_api_key_here") {
-            // Return local result's helpful Bengali prompt without any API error
-            return@withContext localScanResult
+        val isOfflineMode = try {
+            com.example.data.repository.AppRepository(context).isOfflineMode()
+        } catch (_: Exception) {
+            false
         }
 
-        // 5. Cloud Gemini Vision Fallback (only when user has active valid key)
-        try {
-            // Check for pitch blackness or completely blank images
-            val sampleStepX = maxOf(1, bitmap.width / 16)
-            val sampleStepY = maxOf(1, bitmap.height / 16)
-            var totalBrightness = 0L
-            var minBrightness = 255
-            var maxBrightness = 0
-            var sampleCount = 0
+        var visionFailureReason: String? = null
 
-            for (y in 0 until bitmap.height step sampleStepY) {
-                for (x in 0 until bitmap.width step sampleStepX) {
-                    val pixel = bitmap.getPixel(x, y)
-                    val r = (pixel shr 16) and 0xFF
-                    val g = (pixel shr 8) and 0xFF
-                    val b = pixel and 0xFF
-                    val luma = (r * 299 + g * 587 + b * 114) / 1000
-                    totalBrightness += luma
-                    if (luma < minBrightness) minBrightness = luma
-                    if (luma > maxBrightness) maxBrightness = luma
-                    sampleCount++
+        if (!isOfflineMode && apiKey.isNotBlank() && apiKey != "your_api_key_here") {
+            val ocrExtraction = extractQuranCluesWithVisionOcr(bitmap, apiKey)
+            if (ocrExtraction.isSuccess) {
+                val clues = ocrExtraction.getOrThrow()
+                val localLookup = LocalQuranAyahMatcher.matchCluesInLocalDatabase(
+                    context = context,
+                    clues = clues,
+                    startTimeMs = startTime
+                )
+                if (localLookup.isSuccess) {
+                    return@withContext localLookup
+                } else {
+                    visionFailureReason = localLookup.exceptionOrNull()?.localizedMessage
                 }
+            } else {
+                visionFailureReason = ocrExtraction.exceptionOrNull()?.localizedMessage
             }
+        }
 
-            val avgLuma = if (sampleCount > 0) totalBrightness / sampleCount else 128
-            val contrast = maxBrightness - minBrightness
+        // 4. On-Device ML Kit OCR -> Local Quran Database Lookup (Offline / Fallback Path)
+        val offlineLookup = LocalQuranAyahScannerEngine.scanImage(bitmap, context)
+        if (offlineLookup.isSuccess) {
+            return@withContext offlineLookup
+        }
 
-            if (avgLuma < 12 && contrast < 15) {
-                return@withContext Result.failure(
-                    Exception("ক্যামেরা কোনো আলো পাচ্ছে না বা লেন্স ঢাকা রয়েছে। অনুগ্রহ করে পর্যাপ্ত আলোতে পবিত্র কুরআন বা কিতাবের পৃষ্ঠার দিকে ক্যামেরা সোজা রাখুন।")
-                )
-            }
+        // 5. Clear, honest guidance when neither Vision OCR nor offline OCR matched a local Quran ayah
+        val finalErrorMessage = when {
+            !visionFailureReason.isNullOrBlank() -> visionFailureReason
+            isOfflineMode -> "অফলাইন মোড চালু আছে। আরবি মুসহাফ ক্যামেরা দিয়ে স্ক্যান করতে অফলাইন মোড বন্ধ করুন, অথবা নিচের 'খুঁজুন' বা 'সূরা নির্বাচন' ব্যবহার করে লোকাল কুরআন ডাটাবেস থেকে তাৎক্ষণিক তাফসীর দেখুন।"
+            apiKey.isBlank() || apiKey == "your_api_key_here" ->
+                "ছবিতে স্পষ্ট ইংরেজি সূরা:আয়াত নম্বর পাওয়া যায়নি। আরবি কুরআন পৃষ্ঠা ক্যামেরা দিয়ে পড়ার জন্য উপরের কী (🔑) আইকনে Gemini API Key যুক্ত করুন, অথবা নিচের 'খুঁজুন' / 'সূরা নির্বাচন' ব্যবহার করে সরাসরি ১১৪ সূরা (৬,২৩৬ আয়াত) থেকে তাফসীর দেখুন।"
+            else -> offlineLookup.exceptionOrNull()?.localizedMessage
+                ?: "ছবি থেকে কুরআনের আয়াত স্পষ্টভাবে পড়া যায়নি। অনুগ্রহ করে উজ্জ্বল আলোতে আয়াতটি ফ্রেমের মাঝখানে রেখে পুনরায় স্ক্যান করুন।"
+        }
 
-            if (contrast < 8 && (avgLuma > 240 || avgLuma < 30)) {
-                return@withContext Result.failure(
-                    Exception("পৃষ্ঠায় কোনো লেখা স্পষ্ট নয়। অনুগ্রহ করে পবিত্র কুরআনের স্পষ্ট আয়াতের উপর ক্যামেরা সোজা রাখুন।")
-                )
-            }
+        Result.failure(Exception(finalErrorMessage))
+    }
 
-            // Compress and encode bitmap for Gemini Vision
-            val maxDim = 1024
+    /**
+     * Calls Gemini Vision STRICTLY as a verbatim Arabic/Bangla/English OCR transcriber for Quran pages.
+     * It does NOT ask the model to invent translations or tafsir; all Ayah details and Tafsir are
+     * subsequently fetched from the local in-app Quran database (`assets/quran/surah_1..114.json`).
+     */
+    private fun extractQuranCluesWithVisionOcr(
+        bitmap: Bitmap,
+        apiKey: String
+    ): Result<ExtractedQuranOcrClues> {
+        try {
+            // Preserve crisp Arabic dots (nuqat) and letter shapes with 1600px max dimension & 92 JPEG quality
+            val maxDim = 1600
             val scaledBitmap = if (bitmap.width > maxDim || bitmap.height > maxDim) {
                 val scale = maxDim.toFloat() / maxOf(bitmap.width, bitmap.height)
                 val newW = (bitmap.width * scale).toInt().coerceAtLeast(1)
@@ -150,235 +176,155 @@ class AyahScannerAiService(private val context: Context) {
             }
 
             val outputStream = ByteArrayOutputStream()
-            scaledBitmap.compress(Bitmap.CompressFormat.JPEG, 85, outputStream)
+            scaledBitmap.compress(Bitmap.CompressFormat.JPEG, 92, outputStream)
             val base64Image = Base64.encodeToString(outputStream.toByteArray(), Base64.NO_WRAP)
 
-        // 4. Detailed multimodal prompt for Islamic OCR and classification
-        val prompt = """
-            You are an expert Islamic Scholar, Mufti, and OCR Vision System.
-            Analyze this image captured of Islamic materials:
-            - Islamic book (কিতাব/বই)
-            - Arabic text (আরবি ক্যালিগ্রাফি/ইবারত)
-            - Urdu text (উর্দু কিতাব/বয়ান)
-            - Bangla Islamic book (বাংলা ইসলামিক বই/তাফসীর)
-            - Mosque poster (মসজিদের নোটিশ/দেয়ালিকা/পোস্টার)
-            - Hadith poster (হাদিস পোস্টার/সোশ্যাল ব্যানার)
+            val prompt = """
+                You are a high-precision Quran Optical Character Recognition (OCR) transcriber.
+                Your ONLY task is to accurately read and transcribe the Quranic text visible in this photo (especially inside the center/focused area) so our app can look it up in our local Quran database.
 
-            Extract the text and strictly identify which of the 4 Islamic genres it is:
-            1. "QURAN" (পবিত্র কুরআনের আয়াত)
-            2. "HADITH" (সহীহ বা প্রামাণ্য হাদীস)
-            3. "QUOTE" (সাহাবী বা সালাফদের ইসলামিক বাণী ও হিকমাহ)
-            4. "SCHOLAR_STATEMENT" (উলামায়ে কেরামের বক্তব্য / ফতোয়া / ফিকহী অভিমত)
+                CRITICAL RULES:
+                1. Read the ACTUAL Arabic words printed in the image carefully letter-by-letter. Support Madinah/Uthmani, IndoPak/Hafezi/Calcutta, and modern Naskh fonts.
+                2. Do NOT guess or fabricate words that are not in the image.
+                3. Do NOT write translations or tafsir — only transcribe what is visually printed in the image.
+                4. If multiple ayahs are visible, list the main/center focused ayah's Arabic lines FIRST in `arabicLines`.
+                5. If a Surah header (e.g. سورة الحشر, সূরা আল-হাশর, Surah Al-Hashr), ayah end numbers (e.g. ٢٢, 22, 255), or printed Bangla/English translation lines are visible, include them in the fields below.
+                6. Only set `suspectedSurahNumber` and `suspectedAyahNumber` if you are genuinely confident; leave them as 0 if unsure.
 
-            Determine "targetSourceType": One of "ISLAMIC_BOOK", "ARABIC_TEXT", "URDU_TEXT", "BANGLA_BOOK", "MOSQUE_POSTER", "HADITH_POSTER", "GENERAL"
-            Determine "detectedLanguage": e.g. "আরবী", "উর্দু", "বাংলা", "আরবী ও বাংলা"
-            Extract "extractedRawOcrText": Complete raw text visible in original script
+                Return ONLY raw JSON (no markdown backticks):
+                {
+                  "hasQuranText": true,
+                  "arabicLines": ["first visible Arabic line verbatim", "second visible Arabic line verbatim"],
+                  "surahHeaderText": "",
+                  "visibleAyahNumbers": [22],
+                  "otherVisibleText": "any visible Bangla or English text or reference",
+                  "suspectedSurahNumber": 0,
+                  "suspectedAyahNumber": 0
+                }
 
-            If non-Islamic or unreadable:
-            {
-              "isRecognized": false,
-              "errorMessage": "ছবিতে কোনো স্পষ্ট ইসলামিক কিতাব, আরবী/উর্দু টেক্সট, পোস্টার বা হাদীস চিহ্নিত করা যায়নি।"
-            }
+                If the photo contains NO readable text at all, return:
+                {"hasQuranText": false, "arabicLines": [], "surahHeaderText": "", "visibleAyahNumbers": [], "otherVisibleText": "", "suspectedSurahNumber": 0, "suspectedAyahNumber": 0}
+            """.trimIndent()
 
-            If recognized, return JSON with:
-            {
-              "isRecognized": true,
-              "contentType": "QURAN" | "HADITH" | "QUOTE" | "SCHOLAR_STATEMENT",
-              "targetSourceType": "ISLAMIC_BOOK" | "ARABIC_TEXT" | "URDU_TEXT" | "BANGLA_BOOK" | "MOSQUE_POSTER" | "HADITH_POSTER",
-              "detectedLanguage": "আরবী ও বাংলা",
-              "extractedRawOcrText": "...",
-              "titleBn": "শিরোনাম বা বিষয়",
-              "arabicText": "মূল আরবী বা মূল উদ্ধৃতি হরকত সহ",
-              "banglaTranslation": "সহজ ও প্রাঞ্জল বাংলা অনুবাদ",
-              "sourceBookName": "কিতাব বা গ্রন্থের নাম (যেমন: সহীহ বুখারী, মাজমুউল ফাতাওয়া, তাফসীরে ইবনে কাসীর)",
-              "sourceReferenceNumber": "হাদিস নং বা আয়াত নং বা পৃষ্ঠা নং (যেমন: হাদিস নং ১, সূরা বাকারা: ২৫৫)",
-              "scholarOrNarrator": "রাবী সাহাবী বা আলেমের নাম (যেমন: হযরত আবু হুরায়রা (রা.), ইমাম আবু হানিফা (রহ.))",
-              "authenticityOrGrading": "সহীহ / মুতাওয়াতির / হাসান / প্রামাণ্য ফতোয়া",
-              "scholarlyContext": "প্রেক্ষাপট, শিক্ষার সারসংক্ষেপ ও ফিকহী দৃষ্টিভঙ্গি",
-              "tafsirSummaryBn": "বিশদ ব্যাখ্যা ও মানবজীবনের শিক্ষা",
-              "surahNumber": 1 to 114 (if Quran, else 0),
-              "ayahNumber": Ayah number (if Quran, else 1),
-              "revelationTypeBn": "মাক্কী" | "মাদানী" (if Quran),
-              "transliterationBn": "বাংলা উচ্চারণ (if available)"
-            }
-
-            Return ONLY raw JSON. No markdown backticks.
-        """.trimIndent()
-
-        val jsonBody = JSONObject().apply {
-            val contents = JSONArray().apply {
-                val contentObj = JSONObject().apply {
-                    val parts = JSONArray().apply {
-                        put(JSONObject().apply { put("text", prompt) })
-                        put(JSONObject().apply {
-                            put("inlineData", JSONObject().apply {
-                                put("mimeType", "image/jpeg")
-                                put("data", base64Image)
+            val jsonBody = JSONObject().apply {
+                put("contents", JSONArray().apply {
+                    put(JSONObject().apply {
+                        put("parts", JSONArray().apply {
+                            put(JSONObject().apply { put("text", prompt) })
+                            put(JSONObject().apply {
+                                put("inlineData", JSONObject().apply {
+                                    put("mimeType", "image/jpeg")
+                                    put("data", base64Image)
+                                })
                             })
                         })
-                    }
-                    put("parts", parts)
-                }
-                put(contentObj)
+                    })
+                })
+                put("generationConfig", JSONObject().apply {
+                    put("temperature", 0.0)
+                    put("responseMimeType", "application/json")
+                })
             }
-            put("contents", contents)
-            put("generationConfig", JSONObject().apply {
-                put("temperature", 0.1)
-                put("responseMimeType", "application/json")
-            })
-        }
 
-        // List of candidate models for fast execution and high availability
-        val models = listOf("gemini-3.5-flash-lite", "gemini-3.8-flash", "gemini-3.5-flash")
-        var lastException: Exception? = null
+            val models = listOf("gemini-2.5-flash", "gemini-3.8-flash", "gemini-2.5-flash-lite")
+            var lastErrorMsg = "ভিশন OCR সংযোগে সমস্যা হয়েছে।"
 
-        for (modelName in models) {
-            try {
-                val request = Request.Builder()
-                    .url("https://generativelanguage.googleapis.com/v1beta/models/$modelName:generateContent?key=$apiKey")
-                    .post(jsonBody.toString().toRequestBody("application/json".toMediaType()))
-                    .build()
+            for (modelName in models) {
+                try {
+                    val request = Request.Builder()
+                        .url("https://generativelanguage.googleapis.com/v1beta/models/$modelName:generateContent?key=$apiKey")
+                        .post(jsonBody.toString().toRequestBody("application/json".toMediaType()))
+                        .build()
 
-                val resp = httpClient.newCall(request).execute()
-                val respBody = resp.body?.string() ?: ""
+                    val resp = httpClient.newCall(request).execute()
+                    val respBody = resp.body?.string() ?: ""
 
-                if (!resp.isSuccessful) {
-                    val errDetail = try {
-                        JSONObject(respBody).optJSONObject("error")?.optString("message") ?: "HTTP ${resp.code}"
-                    } catch (_: Exception) {
-                        "HTTP ${resp.code}"
+                    if (!resp.isSuccessful) {
+                        val errDetail = try {
+                            JSONObject(respBody).optJSONObject("error")?.optString("message") ?: "HTTP ${resp.code}"
+                        } catch (_: Exception) {
+                            "HTTP ${resp.code}"
+                        }
+                        lastErrorMsg = "ভিশন OCR ত্রুটি ($errDetail)"
+                        continue
                     }
-                    lastException = Exception("এআই স্ক্যানিং ব্যর্থ ($errDetail)")
-                    continue
-                }
 
-                val rootObj = JSONObject(respBody)
-                val candidates = rootObj.optJSONArray("candidates")
-                if (candidates == null || candidates.length() == 0) {
-                    continue
-                }
+                    val rootObj = JSONObject(respBody)
+                    val candidates = rootObj.optJSONArray("candidates") ?: continue
+                    if (candidates.length() == 0) continue
 
-                val candidate = candidates.getJSONObject(0)
-                val content = candidate.optJSONObject("content")
-                val parts = content?.optJSONArray("parts")
-                if (parts == null || parts.length() == 0) {
-                    continue
-                }
+                    val parts = candidates.getJSONObject(0)
+                        .optJSONObject("content")
+                        ?.optJSONArray("parts") ?: continue
+                    if (parts.length() == 0) continue
 
-                var textResponse = parts.getJSONObject(0).optString("text", "")
-                textResponse = textResponse.trim()
-                if (textResponse.startsWith("```json")) {
-                    textResponse = textResponse.removePrefix("```json").removeSuffix("```").trim()
-                } else if (textResponse.startsWith("```")) {
-                    textResponse = textResponse.removePrefix("```").removeSuffix("```").trim()
-                }
+                    var textResp = parts.getJSONObject(0).optString("text", "").trim()
+                    if (textResp.startsWith("```json")) {
+                        textResp = textResp.removePrefix("```json").removeSuffix("```").trim()
+                    } else if (textResp.startsWith("```")) {
+                        textResp = textResp.removePrefix("```").removeSuffix("```").trim()
+                    }
 
-                val parsedJson = JSONObject(textResponse)
-                val isRecognized = parsedJson.optBoolean("isRecognized", parsedJson.optBoolean("isQuran", false))
+                    val parsed = JSONObject(textResp)
+                    val hasText = parsed.optBoolean("hasQuranText", true)
 
-                if (!isRecognized && !parsedJson.has("arabicText") && !parsedJson.has("banglaTranslation")) {
-                    val errorMsg = parsedJson.optString(
-                        "errorMessage",
-                        "ছবিতে কোনো স্পষ্ট ইসলামিক কিতাব, আরবী/উর্দু টেক্সট, পোস্টার বা হাদীস চিহ্নিত করা যায়নি।"
-                    )
-                    return@withContext Result.failure(Exception(errorMsg))
-                }
+                    val arabicLines = ArrayList<String>()
+                    val linesArr = parsed.optJSONArray("arabicLines")
+                    if (linesArr != null) {
+                        for (i in 0 until linesArr.length()) {
+                            val line = linesArr.optString(i, "").trim()
+                            if (line.isNotBlank()) arabicLines.add(line)
+                        }
+                    }
 
-                val duration = (System.currentTimeMillis() - startTime).coerceAtLeast(35L)
-                val contentTypeStr = parsedJson.optString("contentType", "QURAN").uppercase()
-                val contentType = when (contentTypeStr) {
-                    "HADITH" -> IslamicContentType.HADITH
-                    "QUOTE" -> IslamicContentType.QUOTE
-                    "SCHOLAR_STATEMENT" -> IslamicContentType.SCHOLAR_STATEMENT
-                    else -> IslamicContentType.QURAN
-                }
+                    val visibleNums = ArrayList<Int>()
+                    val numsArr = parsed.optJSONArray("visibleAyahNumbers")
+                    if (numsArr != null) {
+                        for (i in 0 until numsArr.length()) {
+                            val n = numsArr.optInt(i, 0)
+                            if (n in 1..286) visibleNums.add(n)
+                        }
+                    }
 
-                val targetSourceTypeStr = parsedJson.optString("targetSourceType", "GENERAL").uppercase()
-                val targetSourceType = try {
-                    TargetSourceType.valueOf(targetSourceTypeStr)
-                } catch (_: Exception) {
-                    TargetSourceType.GENERAL
-                }
+                    val surahHeader = parsed.optString("surahHeaderText", "").trim()
+                    val otherVisible = parsed.optString("otherVisibleText", "").trim()
+                    val suspectedSurah = parsed.optInt("suspectedSurahNumber", 0).takeIf { it in 1..114 }
+                    val suspectedAyah = parsed.optInt("suspectedAyahNumber", 0).takeIf { it in 1..286 }
 
-                val arabicText = parsedJson.optString("arabicText", "").trim()
-                val banglaTranslation = parsedJson.optString("banglaTranslation", "").trim()
-                val sourceBookName = parsedJson.optString("sourceBookName", "")
-                val sourceReferenceNumber = parsedJson.optString("sourceReferenceNumber", "")
-                val scholarOrNarrator = parsedJson.optString("scholarOrNarrator", "")
-                val authenticityOrGrading = parsedJson.optString("authenticityOrGrading", "")
-                val scholarlyContext = parsedJson.optString("scholarlyContext", "")
-                val titleBn = parsedJson.optString("titleBn", contentType.titleBn)
-                val rawOcrText = parsedJson.optString("extractedRawOcrText", arabicText)
-                val detectedLanguage = parsedJson.optString("detectedLanguage", "আরবী ও বাংলা")
-                val surahNumber = parsedJson.optInt("surahNumber", 0)
-                val ayahNumber = parsedJson.optInt("ayahNumber", 1)
+                    if (!hasText && arabicLines.isEmpty() && otherVisible.isBlank() && suspectedSurah == null) {
+                        return Result.failure(
+                            Exception("ছবিতে কুরআনের কোনো স্পষ্ট লেখা শনাক্ত করা যায়নি। অনুগ্রহ করে আয়াতের লেখাটি ফ্রেমের মাঝখানে পরিষ্কারভাবে ধরে পুনরায় স্ক্যান করুন।")
+                        )
+                    }
 
-                // 5. If Quran with valid Surah number
-                if (contentType == IslamicContentType.QURAN && surahNumber in 1..114) {
-                    val baseSynthesis = LocalQuranAyahScannerEngine.getOrSynthesize(context, surahNumber, ayahNumber)
-                    return@withContext Result.success(
-                        baseSynthesis.copy(
-                            arabicText = if (arabicText.isNotBlank()) arabicText else baseSynthesis.arabicText,
-                            transliterationBn = parsedJson.optString("transliterationBn").takeIf { it.isNotBlank() } ?: baseSynthesis.transliterationBn,
-                            banglaTranslation = if (banglaTranslation.isNotBlank()) banglaTranslation else baseSynthesis.banglaTranslation,
-                            tafsirBn = parsedJson.optString("tafsirSummaryBn").takeIf { it.isNotBlank() } ?: baseSynthesis.tafsirBn,
-                            contextBn = if (scholarlyContext.isNotBlank()) scholarlyContext else baseSynthesis.contextBn,
-                            scanDurationMs = duration,
-                            contentType = IslamicContentType.QURAN,
-                            targetSourceType = targetSourceType,
-                            extractedRawOcrText = rawOcrText,
-                            detectedLanguage = detectedLanguage,
-                            sourceBookName = if (sourceBookName.isNotBlank()) sourceBookName else "পবিত্র আল-কুরআনুল কারীম",
-                            sourceReferenceNumber = if (sourceReferenceNumber.isNotBlank()) sourceReferenceNumber else "সূরা ${baseSynthesis.surahNameBangla}, আয়াত: ${baseSynthesis.ayahNumber}",
-                            scholarOrNarrator = if (scholarOrNarrator.isNotBlank()) scholarOrNarrator else "আল্লাহ তা'আলার প্রত্যক্ষ কালাম",
-                            authenticityOrGrading = if (authenticityOrGrading.isNotBlank()) authenticityOrGrading else "মুতাওয়াতির ও সন্দেহাতীত বিশুদ্ধতম",
-                            scholarlyContext = scholarlyContext
+                    val combinedRaw = buildString {
+                        if (arabicLines.isNotEmpty()) append(arabicLines.joinToString("\n"))
+                        if (otherVisible.isNotBlank()) {
+                            if (isNotEmpty()) append("\n")
+                            append(otherVisible)
+                        }
+                    }.trim()
+
+                    return Result.success(
+                        ExtractedQuranOcrClues(
+                            arabicLines = arabicLines,
+                            otherText = otherVisible,
+                            surahHeaderHint = surahHeader,
+                            visibleAyahNumbers = visibleNums,
+                            suspectedSurahNumber = suspectedSurah,
+                            suspectedAyahNumber = suspectedAyah,
+                            rawCombinedText = combinedRaw,
+                            extractionEngineLabelBn = "ক্যামেরা ভিশন OCR → লোকাল কুরআন ডাটাবেস"
                         )
                     )
+                } catch (e: Exception) {
+                    lastErrorMsg = e.localizedMessage ?: lastErrorMsg
                 }
-
-                // 6. Generic synthesis for Hadith, Quote, Scholar Statement, or other Islamic material
-                val genericResult = AyahExplanation(
-                    id = "gemini_ocr_${System.currentTimeMillis()}",
-                    surahNumber = if (contentType == IslamicContentType.QURAN) surahNumber.coerceAtLeast(1) else 0,
-                    ayahNumber = ayahNumber.coerceAtLeast(1),
-                    surahNameArabic = titleBn,
-                    surahNameBangla = titleBn,
-                    surahNameEnglish = contentType.titleEn,
-                    revelationTypeBn = contentType.titleBn,
-                    totalAyahsInSurah = 1,
-                    arabicText = arabicText,
-                    transliterationBn = parsedJson.optString("transliterationBn", ""),
-                    banglaTranslation = banglaTranslation,
-                    englishTranslation = "",
-                    wordByWord = emptyList(),
-                    tafsirBn = parsedJson.optString("tafsirSummaryBn", scholarlyContext),
-                    contextBn = scholarlyContext,
-                    relatedVerses = emptyList(),
-                    relatedHadiths = emptyList(),
-                    audioUrl = "",
-                    scanDurationMs = duration,
-                    contentType = contentType,
-                    targetSourceType = targetSourceType,
-                    extractedRawOcrText = rawOcrText,
-                    detectedLanguage = detectedLanguage,
-                    sourceBookName = sourceBookName,
-                    sourceReferenceNumber = sourceReferenceNumber,
-                    scholarOrNarrator = scholarOrNarrator,
-                    authenticityOrGrading = authenticityOrGrading,
-                    scholarlyContext = scholarlyContext
-                )
-                return@withContext Result.success(genericResult)
-
-            } catch (e: Exception) {
-                lastException = e
             }
-        }
 
-        // If Gemini cloud models failed or network error occurred, gracefully return local result
-        return@withContext localScanResult
-        } catch (_: Exception) {
-            return@withContext localScanResult
+            return Result.failure(Exception(lastErrorMsg))
+        } catch (e: Exception) {
+            return Result.failure(e)
         }
     }
 }

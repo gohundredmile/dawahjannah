@@ -1,19 +1,19 @@
 package com.example.ui.screens.tools
 
 import android.Manifest
-import android.content.ClipData
-import android.content.ClipboardManager
 import android.content.Context
-import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.graphics.Matrix
 import android.net.Uri
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.camera.core.Camera
 import androidx.camera.core.CameraSelector
+import androidx.camera.core.FocusMeteringAction
 import androidx.camera.core.ImageCapture
 import androidx.camera.core.ImageCaptureException
 import androidx.camera.core.ImageProxy
@@ -27,13 +27,11 @@ import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -45,54 +43,36 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.CameraAlt
-import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.ContentCopy
-import androidx.compose.material.icons.filled.FlashAuto
 import androidx.compose.material.icons.filled.FlashOff
 import androidx.compose.material.icons.filled.FlashOn
 import androidx.compose.material.icons.filled.FlipCameraAndroid
-import androidx.compose.material.icons.filled.FormatSize
-import androidx.compose.material.icons.filled.Lightbulb
 import androidx.compose.material.icons.filled.MenuBook
-import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PhotoLibrary
-import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.filled.Repeat
 import androidx.compose.material.icons.filled.Replay
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.filled.Share
-import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.Stop
-import androidx.compose.material.icons.filled.Visibility
-import androidx.compose.material.icons.filled.VisibilityOff
-import androidx.compose.material.icons.filled.VolumeUp
 import androidx.compose.material.icons.filled.VpnKey
+import androidx.compose.material.icons.filled.ZoomIn
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -100,11 +80,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
-import androidx.compose.material3.PrimaryTabRow
-import androidx.compose.material3.Slider
-import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -115,43 +91,39 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.blur
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
-import com.example.data.datasource.QuranAyahCatalog
 import com.example.data.datasource.QuranSurahCatalog
-import com.example.data.model.*
+import com.example.data.model.AyahExplanation
 import com.example.ui.theme.IslamicGold
-import com.example.ui.theme.LocalArabicFontFamily
 import com.example.ui.theme.LocalBanglaFontFamily
 import com.example.util.AyahAudioPlayerHelper
 import com.example.util.AyahScannerAiService
-import com.example.util.IslamicOcrClassifier
+import com.example.util.LocalQuranAyahMatcher
 import com.example.util.LocalQuranAyahScannerEngine
-import com.example.util.LoopMode
+import com.example.util.QuranFullTextSearchEngine
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.InputStream
-import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
 
 @Composable
 fun ExplainAyahCameraScreen(
@@ -163,10 +135,15 @@ fun ExplainAyahCameraScreen(
     val lifecycleOwner = LocalLifecycleOwner.current
     val coroutineScope = rememberCoroutineScope()
     val banglaFont = LocalBanglaFontFamily.current
-    val arabicFont = LocalArabicFontFamily.current
 
     val aiService = remember { AyahScannerAiService(context) }
     val audioPlayer = remember { AyahAudioPlayerHelper(context) }
+    val indexState by QuranFullTextSearchEngine.indexState.collectAsState()
+
+    // Pre-warm the 114-Surah (6,236-Ayah) local Quran matcher index immediately on screen open
+    LaunchedEffect(Unit) {
+        LocalQuranAyahMatcher.ensureReady(context)
+    }
 
     DisposableEffect(Unit) {
         onDispose {
@@ -174,7 +151,7 @@ fun ExplainAyahCameraScreen(
         }
     }
 
-    // Permission state
+    // Camera permission state
     var hasCameraPermission by remember {
         mutableStateOf(
             ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED
@@ -187,39 +164,72 @@ fun ExplainAyahCameraScreen(
         hasCameraPermission = isGranted
     }
 
-    // Screen state: Camera Viewfinder vs Result Dashboard
+    // Screen state
     var recognizedAyah by remember { mutableStateOf<AyahExplanation?>(null) }
     var isAnalyzing by remember { mutableStateOf(false) }
+    var scanStatusText by remember { mutableStateOf("কুরআনের আয়াত ফ্রেমের মাঝখানে রেখে স্ক্যান করুন") }
     var scanErrorMessage by remember { mutableStateOf<String?>(null) }
     var searchQuery by remember { mutableStateOf("") }
     var isSearchExpanded by remember { mutableStateOf(false) }
-    var isAutoScanEnabled by remember { mutableStateOf(false) }
     var showApiKeyDialog by remember { mutableStateOf(false) }
     var showSurahAyahPicker by remember { mutableStateOf(false) }
     var apiKeyInput by remember { mutableStateOf(aiService.getEffectiveApiKey()) }
+    var hasActiveVisionKey by remember { mutableStateOf(aiService.hasValidApiKey()) }
 
     // Camera control states
     var camera by remember { mutableStateOf<Camera?>(null) }
+    var previewViewRef by remember { mutableStateOf<PreviewView?>(null) }
     var imageCapture by remember { mutableStateOf<ImageCapture?>(null) }
     var isFlashOn by remember { mutableStateOf(false) }
     var isFrontCamera by remember { mutableStateOf(false) }
-    var currentScanJob by remember { mutableStateOf<kotlinx.coroutines.Job?>(null) }
+    var zoomRatio by remember { mutableFloatStateOf(1f) }
+    var currentScanJob by remember { mutableStateOf<Job?>(null) }
 
-    // Instant stop scanning function that cancels any in-flight coroutine, resets UI state and disables auto-scan
     val stopScanning: () -> Unit = {
         currentScanJob?.cancel()
         currentScanJob = null
         isAnalyzing = false
-        isAutoScanEnabled = false
         scanErrorMessage = null
         Toast.makeText(context, "স্ক্যান বন্ধ করা হয়েছে", Toast.LENGTH_SHORT).show()
     }
 
-    // Unified safe capture and AI analysis trigger
+    val openLocalSurahAyah: (Int, Int) -> Unit = { surah, ayah ->
+        currentScanJob?.cancel()
+        currentScanJob = coroutineScope.launch {
+            isAnalyzing = true
+            scanErrorMessage = null
+            scanStatusText = "লোকাল কুরআন ডাটাবেস থেকে আয়াত ও তাফসীর লোড হচ্ছে..."
+            val result = LocalQuranAyahMatcher.loadAyahExplanationFromLocalDb(
+                context = context,
+                surahNumber = surah,
+                ayahNumber = ayah
+            )
+            isAnalyzing = false
+            recognizedAyah = result
+        }
+    }
+
+    val relookupTextInLocalDb: (String) -> Unit = { queryText ->
+        currentScanJob?.cancel()
+        currentScanJob = coroutineScope.launch {
+            isAnalyzing = true
+            scanErrorMessage = null
+            val found = LocalQuranAyahScannerEngine.searchInstant(queryText, context)
+            isAnalyzing = false
+            if (found != null) {
+                recognizedAyah = found
+            } else {
+                Toast.makeText(context, "\"$queryText\" দিয়ে লোকাল কুরআনে কোনো আয়াত পাওয়া যায়নি।", Toast.LENGTH_LONG).show()
+            }
+        }
+    }
+
+    // Unified camera capture -> crop center focus area -> OCR -> Local 6,236-Ayah Quran DB lookup
     val triggerCapture: () -> Unit = {
         if (!isAnalyzing) {
             isAnalyzing = true
             scanErrorMessage = null
+            scanStatusText = "ছবি ধারণ ও লোকাল কুরআন ডাটাবেসে খোঁজা হচ্ছে..."
             val capture = imageCapture
             if (hasCameraPermission && capture != null) {
                 val executor = ContextCompat.getMainExecutor(context)
@@ -231,11 +241,13 @@ fun ExplainAyahCameraScreen(
                                 currentScanJob?.cancel()
                                 currentScanJob = coroutineScope.launch(Dispatchers.Default) {
                                     try {
-                                        val bitmap = imageProxyToBitmap(image)
+                                        val fullBitmap = imageProxyToBitmap(image)
                                         image.close()
-                                        if (bitmap != null) {
-                                            processImage(
-                                                bitmap = bitmap,
+                                        if (fullBitmap != null) {
+                                            // Focus-crop to generous viewfinder window so margins don't confuse OCR
+                                            val focusedBitmap = cropToViewfinderRegion(fullBitmap)
+                                            processImageLookup(
+                                                bitmap = focusedBitmap,
                                                 aiService = aiService,
                                                 onSuccess = { result ->
                                                     isAnalyzing = false
@@ -278,37 +290,26 @@ fun ExplainAyahCameraScreen(
                     }
                 }
             } else {
-                coroutineScope.launch(Dispatchers.Main) {
-                    delay(400)
-                    isAnalyzing = false
-                }
+                isAnalyzing = false
+                permissionLauncher.launch(Manifest.permission.CAMERA)
             }
         }
     }
 
-    // Auto-Scan interval trigger when viewfinder is steady
-    LaunchedEffect(isAutoScanEnabled, hasCameraPermission, imageCapture, recognizedAyah, isAnalyzing) {
-        if (isAutoScanEnabled && hasCameraPermission && imageCapture != null && recognizedAyah == null && !isAnalyzing) {
-            delay(4000)
-            if (recognizedAyah == null && !isAnalyzing && isAutoScanEnabled) {
-                triggerCapture()
-            }
-        }
-    }
-
-    // Gallery Picker
-    val galleryLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.GetContent()
+    // Zero-permission Android Photo Picker (Google Play Policy compliant)
+    val photoPickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.PickVisualMedia()
     ) { uri: Uri? ->
         uri?.let {
             currentScanJob?.cancel()
             currentScanJob = coroutineScope.launch {
                 isAnalyzing = true
                 scanErrorMessage = null
+                scanStatusText = "ছবি বিশ্লেষণ করে লোকাল কুরআন ডাটাবেসে খোঁজা হচ্ছে..."
                 try {
                     val bitmap = loadBitmapFromUri(context, it)
                     if (bitmap != null) {
-                        processImage(
+                        processImageLookup(
                             bitmap = bitmap,
                             aiService = aiService,
                             onSuccess = { result ->
@@ -334,7 +335,6 @@ fun ExplainAyahCameraScreen(
     }
 
     if (recognizedAyah != null) {
-        // Result Dashboard View
         AyahExplanationDetailView(
             ayah = recognizedAyah!!,
             audioPlayer = audioPlayer,
@@ -347,21 +347,21 @@ fun ExplainAyahCameraScreen(
                 recognizedAyah = null
                 onNavigateBack()
             },
+            onSelectSurahAyah = openLocalSurahAyah,
+            onRelookupText = relookupTextInLocalDb,
             onOpenHolyQuran = onOpenHolyQuran
         )
     } else {
-        // Live Camera / Scanner Viewfinder
         Box(
             modifier = modifier
                 .fillMaxSize()
                 .background(Color.Black)
         ) {
             if (hasCameraPermission) {
-                // CameraX Preview View
                 key(isFrontCamera, hasCameraPermission) {
                     AndroidView(
                         factory = { ctx ->
-                            val previewView = PreviewView(ctx)
+                            val previewView = PreviewView(ctx).also { previewViewRef = it }
                             val cameraProviderFuture = ProcessCameraProvider.getInstance(ctx)
                             cameraProviderFuture.addListener({
                                 try {
@@ -369,8 +369,9 @@ fun ExplainAyahCameraScreen(
                                     val preview = Preview.Builder().build().also {
                                         it.setSurfaceProvider(previewView.surfaceProvider)
                                     }
+                                    // Maximize quality for crisp Arabic dots (nuqat) and harakat
                                     val capture = ImageCapture.Builder()
-                                        .setCaptureMode(ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY)
+                                        .setCaptureMode(ImageCapture.CAPTURE_MODE_MAXIMIZE_QUALITY)
                                         .build()
                                     imageCapture = capture
 
@@ -381,19 +382,36 @@ fun ExplainAyahCameraScreen(
                                     }
 
                                     cameraProvider.unbindAll()
-                                    camera = cameraProvider.bindToLifecycle(
+                                    val boundCamera = cameraProvider.bindToLifecycle(
                                         lifecycleOwner,
                                         cameraSelector,
                                         preview,
                                         capture
                                     )
+                                    camera = boundCamera
+                                    boundCamera.cameraControl.setZoomRatio(zoomRatio)
                                 } catch (e: Exception) {
                                     e.printStackTrace()
                                 }
                             }, ContextCompat.getMainExecutor(ctx))
                             previewView
                         },
-                        modifier = Modifier.fillMaxSize()
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .pointerInput(camera, previewViewRef) {
+                                detectTapGestures { offset ->
+                                    val pv = previewViewRef ?: return@detectTapGestures
+                                    val cam = camera ?: return@detectTapGestures
+                                    try {
+                                        val point = pv.meteringPointFactory.createPoint(offset.x, offset.y)
+                                        val action = FocusMeteringAction.Builder(point, FocusMeteringAction.FLAG_AF or FocusMeteringAction.FLAG_AE)
+                                            .setAutoCancelDuration(3, TimeUnit.SECONDS)
+                                            .build()
+                                        cam.cameraControl.startFocusAndMetering(action)
+                                    } catch (_: Exception) {
+                                    }
+                                }
+                            }
                     )
                 }
             } else {
@@ -407,7 +425,7 @@ fun ExplainAyahCameraScreen(
                 ) {
                     Surface(
                         shape = CircleShape,
-                        color = IslamicGold.copy(alpha = 0.15f),
+                        color = IslamicGold.copy(alpha = 0.16f),
                         modifier = Modifier.size(80.dp)
                     ) {
                         Box(contentAlignment = Alignment.Center) {
@@ -421,7 +439,7 @@ fun ExplainAyahCameraScreen(
                     }
                     Spacer(modifier = Modifier.height(16.dp))
                     Text(
-                        text = "কুরআন আয়াত স্ক্যানার ক্যামেরা",
+                        text = "Explain This Ayah ক্যামেরা",
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold,
                         color = Color.White,
@@ -430,16 +448,17 @@ fun ExplainAyahCameraScreen(
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        text = "পবিত্র কুরআনের যে কোনো আরবি পৃষ্ঠার দিকে ফোন ধরলে ক্যামেরা স্বয়ংক্রিয়ভাবে আয়াত সনাক্ত করবে। এ জন্য ক্যামেরার অনুমতি প্রয়োজন।",
+                        text = "পবিত্র কুরআনের যেকোনো আয়াতের ছবি তুললে অ্যাপের লোকাল কুরআন ডাটাবেস (১১৪ সূরা • ৬,২৩৬ আয়াত) থেকে হুবহু আয়াত, উচ্চারণ, অনুবাদ ও পূর্ণাঙ্গ তাফসীর দেখানো হবে।",
                         style = MaterialTheme.typography.bodyMedium,
-                        color = Color.White.copy(alpha = 0.8f),
+                        color = Color.White.copy(alpha = 0.85f),
                         fontFamily = banglaFont,
                         textAlign = TextAlign.Center
                     )
                     Spacer(modifier = Modifier.height(24.dp))
                     Button(
                         onClick = { permissionLauncher.launch(Manifest.permission.CAMERA) },
-                        colors = ButtonDefaults.buttonColors(containerColor = IslamicGold)
+                        colors = ButtonDefaults.buttonColors(containerColor = IslamicGold),
+                        modifier = Modifier.testTag("explain_grant_camera_btn")
                     ) {
                         Icon(Icons.Default.CameraAlt, contentDescription = null, tint = Color.Black)
                         Spacer(modifier = Modifier.width(8.dp))
@@ -448,29 +467,33 @@ fun ExplainAyahCameraScreen(
                 }
             }
 
-            // Scanning Overlay with Animated Laser Reticle and Instant Stop Button
+            // Viewfinder Reticle Overlay
             ScannerViewfinderOverlay(
                 isAnalyzing = isAnalyzing,
+                statusText = if (isAnalyzing) scanStatusText else "কুরআনের আয়াত ফ্রেমের মাঝখানে রাখুন • ট্যাপ করে ফোকাস করুন",
                 onStopScanning = stopScanning,
                 modifier = Modifier.fillMaxSize()
             )
 
-            // Top Action Bar
+            // Top Action Bar (Edge-to-edge safe)
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 20.dp)
+                    .statusBarsPadding()
+                    .padding(horizontal = 12.dp, vertical = 12.dp)
                     .align(Alignment.TopCenter),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Back Button
                 Surface(
                     shape = CircleShape,
-                    color = Color.Black.copy(alpha = 0.55f),
-                    modifier = Modifier.size(44.dp)
+                    color = Color.Black.copy(alpha = 0.6f),
+                    modifier = Modifier.size(48.dp)
                 ) {
-                    IconButton(onClick = onNavigateBack) {
+                    IconButton(
+                        onClick = onNavigateBack,
+                        modifier = Modifier.testTag("explain_camera_back_btn")
+                    ) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "ফিরে যান",
@@ -479,25 +502,25 @@ fun ExplainAyahCameraScreen(
                     }
                 }
 
-                // Title Pill
+                // Title & Local DB Status Pill
                 Surface(
                     shape = RoundedCornerShape(20.dp),
-                    color = Color.Black.copy(alpha = 0.65f),
-                    border = BorderStroke(1.dp, IslamicGold.copy(alpha = 0.5f))
+                    color = Color.Black.copy(alpha = 0.72f),
+                    border = BorderStroke(1.dp, IslamicGold.copy(alpha = 0.55f))
                 ) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp)
+                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
                     ) {
                         Icon(
                             imageVector = Icons.Default.AutoAwesome,
                             contentDescription = null,
                             tint = IslamicGold,
-                            modifier = Modifier.size(16.dp)
+                            modifier = Modifier.size(15.dp)
                         )
                         Spacer(modifier = Modifier.width(6.dp))
                         Text(
-                            text = "Explain This Ayah ক্যামেরা",
+                            text = "Explain This Ayah",
                             style = MaterialTheme.typography.labelMedium,
                             fontWeight = FontWeight.Bold,
                             color = Color.White
@@ -505,14 +528,17 @@ fun ExplainAyahCameraScreen(
                     }
                 }
 
-                // Torch, Flip, Surah Picker, and Settings controls
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                // Right Controls: Surah Picker, Torch, Flip, Vision Key
+                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                     Surface(
                         shape = CircleShape,
-                        color = Color.Black.copy(alpha = 0.55f),
+                        color = Color.Black.copy(alpha = 0.6f),
                         modifier = Modifier.size(44.dp)
                     ) {
-                        IconButton(onClick = { showSurahAyahPicker = true }) {
+                        IconButton(
+                            onClick = { showSurahAyahPicker = true },
+                            modifier = Modifier.testTag("explain_top_surah_picker_btn")
+                        ) {
                             Icon(
                                 imageVector = Icons.Default.MenuBook,
                                 contentDescription = "সূরা ও আয়াত নির্বাচন",
@@ -520,31 +546,36 @@ fun ExplainAyahCameraScreen(
                             )
                         }
                     }
+
                     if (hasCameraPermission) {
                         Surface(
                             shape = CircleShape,
-                            color = Color.Black.copy(alpha = 0.55f),
+                            color = Color.Black.copy(alpha = 0.6f),
                             modifier = Modifier.size(44.dp)
                         ) {
-                            IconButton(onClick = {
-                                isFlashOn = !isFlashOn
-                                camera?.cameraControl?.enableTorch(isFlashOn)
-                            }) {
+                            IconButton(
+                                onClick = {
+                                    isFlashOn = !isFlashOn
+                                    camera?.cameraControl?.enableTorch(isFlashOn)
+                                },
+                                modifier = Modifier.testTag("explain_torch_btn")
+                            ) {
                                 Icon(
                                     imageVector = if (isFlashOn) Icons.Default.FlashOn else Icons.Default.FlashOff,
-                                    contentDescription = "টর্চ",
+                                    contentDescription = "টর্চ লাইট",
                                     tint = if (isFlashOn) IslamicGold else Color.White
                                 )
                             }
                         }
                         Surface(
                             shape = CircleShape,
-                            color = Color.Black.copy(alpha = 0.55f),
+                            color = Color.Black.copy(alpha = 0.6f),
                             modifier = Modifier.size(44.dp)
                         ) {
-                            IconButton(onClick = {
-                                isFrontCamera = !isFrontCamera
-                            }) {
+                            IconButton(
+                                onClick = { isFrontCamera = !isFrontCamera },
+                                modifier = Modifier.testTag("explain_flip_camera_btn")
+                            ) {
                                 Icon(
                                     imageVector = Icons.Default.FlipCameraAndroid,
                                     contentDescription = "ক্যামেরা পরিবর্তন",
@@ -553,59 +584,49 @@ fun ExplainAyahCameraScreen(
                             }
                         }
                     }
+
                     Surface(
                         shape = CircleShape,
-                        color = Color.Black.copy(alpha = 0.55f),
+                        color = Color.Black.copy(alpha = 0.6f),
                         modifier = Modifier.size(44.dp)
                     ) {
-                        IconButton(onClick = {
-                            apiKeyInput = aiService.getEffectiveApiKey()
-                            showApiKeyDialog = true
-                        }) {
+                        IconButton(
+                            onClick = {
+                                apiKeyInput = aiService.getEffectiveApiKey()
+                                showApiKeyDialog = true
+                            },
+                            modifier = Modifier.testTag("explain_api_key_btn")
+                        ) {
                             Icon(
                                 imageVector = Icons.Default.VpnKey,
-                                contentDescription = "এপিআই সেটিংস",
-                                tint = if (aiService.hasValidApiKey()) IslamicGold else Color.White.copy(alpha = 0.8f)
+                                contentDescription = "ভিশন OCR সেটিংস",
+                                tint = if (hasActiveVisionKey) IslamicGold else Color.White.copy(alpha = 0.8f)
                             )
                         }
                     }
                 }
             }
 
-            // Error / Guidance Floating Banner
+            // Actionable Error / Recovery Banner
             if (scanErrorMessage != null) {
                 Surface(
-                    shape = RoundedCornerShape(14.dp),
-                    color = Color(0xFF1E1E1E).copy(alpha = 0.92f),
-                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.error.copy(alpha = 0.7f)),
+                    shape = RoundedCornerShape(16.dp),
+                    color = Color(0xFF1A1C1E).copy(alpha = 0.95f),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.error.copy(alpha = 0.75f)),
                     modifier = Modifier
                         .align(Alignment.TopCenter)
-                        .padding(top = 84.dp, start = 16.dp, end = 16.dp)
+                        .statusBarsPadding()
+                        .padding(top = 72.dp, start = 16.dp, end = 16.dp)
                         .fillMaxWidth()
                 ) {
-                    Column(modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp)) {
+                    Column(modifier = Modifier.padding(14.dp)) {
                         Row(
                             modifier = Modifier.fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically
+                            verticalAlignment = Alignment.Top
                         ) {
-                            Surface(
-                                shape = CircleShape,
-                                color = MaterialTheme.colorScheme.error.copy(alpha = 0.2f),
-                                modifier = Modifier.size(28.dp)
-                            ) {
-                                Box(contentAlignment = Alignment.Center) {
-                                    Icon(
-                                        imageVector = Icons.Default.Close,
-                                        contentDescription = null,
-                                        tint = MaterialTheme.colorScheme.error,
-                                        modifier = Modifier.size(16.dp)
-                                    )
-                                }
-                            }
-                            Spacer(modifier = Modifier.width(10.dp))
                             Text(
                                 text = scanErrorMessage!!,
-                                style = MaterialTheme.typography.bodySmall,
+                                style = MaterialTheme.typography.bodySmall.copy(lineHeight = 19.sp),
                                 color = Color.White,
                                 fontFamily = banglaFont,
                                 modifier = Modifier.weight(1f)
@@ -617,229 +638,246 @@ fun ExplainAyahCameraScreen(
                                 Icon(
                                     imageVector = Icons.Default.Close,
                                     contentDescription = "বন্ধ করুন",
-                                    tint = Color.White.copy(alpha = 0.6f),
+                                    tint = Color.White.copy(alpha = 0.7f),
                                     modifier = Modifier.size(16.dp)
                                 )
                             }
                         }
-                        Spacer(modifier = Modifier.height(8.dp))
+
+                        Spacer(modifier = Modifier.height(10.dp))
+
                         Row(
                             modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.End
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
                             OutlinedButton(
                                 onClick = {
                                     scanErrorMessage = null
                                     triggerCapture()
                                 },
-                                shape = RoundedCornerShape(8.dp),
-                                colors = ButtonDefaults.outlinedButtonColors(
-                                    contentColor = IslamicGold
-                                ),
-                                border = BorderStroke(1.dp, IslamicGold.copy(alpha = 0.6f)),
-                                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
-                                modifier = Modifier.height(32.dp)
+                                shape = RoundedCornerShape(10.dp),
+                                colors = ButtonDefaults.outlinedButtonColors(contentColor = IslamicGold),
+                                border = BorderStroke(1.dp, IslamicGold.copy(alpha = 0.7f)),
+                                contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp),
+                                modifier = Modifier.height(34.dp)
                             ) {
-                                Icon(
-                                    imageVector = Icons.Default.Replay,
-                                    contentDescription = null,
-                                    tint = IslamicGold,
-                                    modifier = Modifier.size(14.dp)
-                                )
+                                Icon(Icons.Default.Replay, contentDescription = null, modifier = Modifier.size(14.dp))
                                 Spacer(modifier = Modifier.width(4.dp))
-                                Text(
-                                    text = "পুনরায় স্ক্যান করুন",
-                                    style = MaterialTheme.typography.labelSmall,
-                                    fontFamily = banglaFont,
-                                    fontWeight = FontWeight.Bold
-                                )
+                                Text("পুনরায় স্ক্যান", style = MaterialTheme.typography.labelSmall, fontFamily = banglaFont, fontWeight = FontWeight.Bold)
+                            }
+
+                            OutlinedButton(
+                                onClick = {
+                                    scanErrorMessage = null
+                                    isSearchExpanded = true
+                                },
+                                shape = RoundedCornerShape(10.dp),
+                                colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.White),
+                                border = BorderStroke(1.dp, Color.White.copy(alpha = 0.5f)),
+                                contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp),
+                                modifier = Modifier.height(34.dp)
+                            ) {
+                                Icon(Icons.Default.Search, contentDescription = null, modifier = Modifier.size(14.dp))
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text("লিখে খুঁজুন", style = MaterialTheme.typography.labelSmall, fontFamily = banglaFont)
+                            }
+
+                            OutlinedButton(
+                                onClick = {
+                                    scanErrorMessage = null
+                                    showSurahAyahPicker = true
+                                },
+                                shape = RoundedCornerShape(10.dp),
+                                colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.White),
+                                border = BorderStroke(1.dp, Color.White.copy(alpha = 0.5f)),
+                                contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp),
+                                modifier = Modifier.height(34.dp)
+                            ) {
+                                Text("সূরা ১-১১৪", style = MaterialTheme.typography.labelSmall, fontFamily = banglaFont)
                             }
                         }
                     }
                 }
             }
 
-            // Bottom Controls Area
+            // Bottom Control Panel (Edge-to-edge safe)
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
                     .align(Alignment.BottomCenter)
                     .background(
                         Brush.verticalGradient(
-                            colors = listOf(Color.Transparent, Color.Black.copy(alpha = 0.85f), Color.Black)
+                            colors = listOf(Color.Transparent, Color.Black.copy(alpha = 0.86f), Color.Black)
                         )
                     )
-                    .padding(horizontal = 16.dp, vertical = 20.dp),
+                    .navigationBarsPadding()
+                    .padding(horizontal = 16.dp, vertical = 16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                // Auto-Scan Toggle Chip
-                Surface(
-                    shape = RoundedCornerShape(16.dp),
-                    color = if (isAutoScanEnabled) IslamicGold.copy(alpha = 0.22f) else Color.White.copy(alpha = 0.12f),
-                    border = BorderStroke(1.dp, if (isAutoScanEnabled) IslamicGold else Color.White.copy(alpha = 0.3f)),
-                    modifier = Modifier
-                        .clickable { isAutoScanEnabled = !isAutoScanEnabled }
-                        .padding(bottom = 10.dp)
-                ) {
-                    Row(
-                        modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(
-                            imageVector = if (isAutoScanEnabled) Icons.Default.FlashAuto else Icons.Default.CameraAlt,
-                            contentDescription = null,
-                            tint = if (isAutoScanEnabled) IslamicGold else Color.White,
-                            modifier = Modifier.size(16.dp)
-                        )
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Text(
-                            text = if (isAutoScanEnabled) "অটো স্ক্যান: চালু ⚡" else "ম্যানুয়াল মোড (বোতাম চাপুন)",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = if (isAutoScanEnabled) IslamicGold else Color.White,
-                            fontFamily = banglaFont,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
-                }
-
-                // Live Real-Time Scanning Instructions
-                Surface(
-                    shape = RoundedCornerShape(20.dp),
-                    color = Color.Black.copy(alpha = 0.65f),
-                    border = BorderStroke(0.8.dp, IslamicGold.copy(alpha = 0.4f)),
-                    modifier = Modifier.padding(bottom = 6.dp)
-                ) {
-                    Row(
-                        modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.AutoAwesome,
-                            contentDescription = null,
-                            tint = IslamicGold,
-                            modifier = Modifier.size(14.dp)
-                        )
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Text(
-                            text = if (isAnalyzing) "ইসলামিক টেক্সট বিশ্লেষণ ও সূত্র অনুসন্ধান চলছে..." else "Islamic OCR: কিতাব, আরবী/উর্দু টেক্সট বা পোস্টারের দিকে ক্যামেরা ধরুন",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = Color.White.copy(alpha = 0.95f),
-                            fontFamily = banglaFont
-                        )
-                    }
-                }
-
-
-                // Quick Ayah & Surah Shortcuts Carousel (এক ট্যাপে পড়ার সুবিধা)
-                Column(
+                // Status + Zoom Controls Row
+                Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(vertical = 4.dp)
+                        .padding(bottom = 8.dp),
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 4.dp, vertical = 2.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
+                    Surface(
+                        shape = RoundedCornerShape(16.dp),
+                        color = Color(0xFF047857).copy(alpha = 0.28f),
+                        border = BorderStroke(0.9.dp, Color(0xFF34D399).copy(alpha = 0.6f))
                     ) {
-                        Text(
-                            text = "এক ট্যাপে পড়ুন (কুরআন ও দো'আ ক্যাটালগ):",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = IslamicGold,
-                            fontWeight = FontWeight.Bold,
-                            fontFamily = banglaFont
-                        )
-                        Text(
-                            text = "ক্যাটালগ 📖",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = Color.White.copy(alpha = 0.7f),
-                            fontFamily = banglaFont
-                        )
+                        Row(
+                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.CheckCircle,
+                                contentDescription = null,
+                                tint = Color(0xFF34D399),
+                                modifier = Modifier.size(13.dp)
+                            )
+                            Spacer(modifier = Modifier.width(5.dp))
+                            Text(
+                                text = if (indexState.isReady) {
+                                    "লোকাল কুরআন ডাটাবেস: ১১৪ সূরা প্রস্তুত"
+                                } else {
+                                    "লোকাল ডাটাবেস লোড হচ্ছে (${indexState.indexedSurahs}/১১৪)..."
+                                },
+                                style = MaterialTheme.typography.labelSmall,
+                                color = Color.White,
+                                fontFamily = banglaFont
+                            )
+                        }
                     }
-                    LazyRow(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        contentPadding = PaddingValues(horizontal = 2.dp, vertical = 4.dp)
-                    ) {
-                        item {
-                            Surface(
-                                shape = RoundedCornerShape(14.dp),
-                                color = IslamicGold.copy(alpha = 0.25f),
-                                border = BorderStroke(1.2.dp, IslamicGold),
-                                modifier = Modifier.clickable { showSurahAyahPicker = true }
-                            ) {
-                                Row(
-                                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Default.MenuBook,
-                                        contentDescription = null,
-                                        tint = IslamicGold,
-                                        modifier = Modifier.size(15.dp)
-                                    )
-                                    Spacer(modifier = Modifier.width(6.dp))
-                                    Text(
-                                        text = "সূরা নির্বাচন (১-১১৪)",
-                                        style = MaterialTheme.typography.labelSmall,
-                                        color = IslamicGold,
-                                        fontWeight = FontWeight.Bold,
-                                        fontFamily = banglaFont
-                                    )
+
+                    if (hasCameraPermission) {
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Surface(
+                            shape = RoundedCornerShape(16.dp),
+                            color = Color.White.copy(alpha = 0.14f),
+                            border = BorderStroke(0.8.dp, IslamicGold.copy(alpha = 0.6f)),
+                            modifier = Modifier
+                                .clickable {
+                                    zoomRatio = when {
+                                        zoomRatio < 1.4f -> 1.5f
+                                        zoomRatio < 1.9f -> 2.0f
+                                        else -> 1.0f
+                                    }
+                                    camera?.cameraControl?.setZoomRatio(zoomRatio)
                                 }
+                                .testTag("explain_zoom_btn")
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(Icons.Default.ZoomIn, contentDescription = "জুম", tint = IslamicGold, modifier = Modifier.size(14.dp))
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text(
+                                    text = "${zoomRatio}x",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = IslamicGold,
+                                    fontWeight = FontWeight.Bold
+                                )
                             }
                         }
-                        items(LocalQuranAyahScannerEngine.quickPresets) { preset ->
-                            Surface(
-                                shape = RoundedCornerShape(14.dp),
-                                color = Color.Black.copy(alpha = 0.75f),
-                                border = BorderStroke(1.dp, IslamicGold.copy(alpha = 0.6f)),
-                                modifier = Modifier.clickable {
-                                    recognizedAyah = preset.copy(scanDurationMs = (22L..36L).random())
-                                    scanErrorMessage = null
-                                }
+                    }
+                }
+
+                // Quick Surah Picker + Popular Ayah Shortcuts Carousel (all backed by local DB!)
+                LazyRow(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    contentPadding = PaddingValues(vertical = 4.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    item {
+                        Surface(
+                            shape = RoundedCornerShape(14.dp),
+                            color = IslamicGold.copy(alpha = 0.24f),
+                            border = BorderStroke(1.2.dp, IslamicGold),
+                            modifier = Modifier
+                                .clickable { showSurahAyahPicker = true }
+                                .testTag("explain_quick_surah_picker_chip")
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 7.dp),
+                                verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Row(
-                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Text(
-                                        text = if (preset.surahNumber > 0) "📖 ${preset.surahNameBangla}" else "🤲 ${preset.surahNameBangla}",
-                                        style = MaterialTheme.typography.labelSmall,
-                                        color = Color.White,
-                                        fontWeight = FontWeight.Bold,
-                                        fontFamily = banglaFont
-                                    )
-                                }
+                                Icon(
+                                    imageVector = Icons.Default.MenuBook,
+                                    contentDescription = null,
+                                    tint = IslamicGold,
+                                    modifier = Modifier.size(15.dp)
+                                )
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text(
+                                    text = "সূরা ও আয়াত (১-১১৪)",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = IslamicGold,
+                                    fontWeight = FontWeight.Bold,
+                                    fontFamily = banglaFont
+                                )
                             }
+                        }
+                    }
+
+                    val quickLocalShortcuts = listOf(
+                        Triple(2, 255, "আয়াতুল কুরসী (২:২৫৫)"),
+                        Triple(59, 22, "হাশর শেষ ৩ (৫৯:২২)"),
+                        Triple(1, 1, "আল-ফাতিহা (১:১)"),
+                        Triple(2, 285, "বাকারা শেষ ২ (২:২৮৫)"),
+                        Triple(112, 1, "আল-ইখলাস (১১২:১)"),
+                        Triple(36, 1, "ইয়াসীন (৩৬:১)"),
+                        Triple(67, 1, "আল-মুলক (৬৭:১)"),
+                        Triple(94, 5, "আল-ইনশিরাহ (৯৪:৫)")
+                    )
+                    items(quickLocalShortcuts) { (s, a, label) ->
+                        Surface(
+                            shape = RoundedCornerShape(14.dp),
+                            color = Color.Black.copy(alpha = 0.72f),
+                            border = BorderStroke(1.dp, IslamicGold.copy(alpha = 0.5f)),
+                            modifier = Modifier.clickable { openLocalSurahAyah(s, a) }
+                        ) {
+                            Text(
+                                text = label,
+                                style = MaterialTheme.typography.labelSmall,
+                                color = Color.White,
+                                fontWeight = FontWeight.SemiBold,
+                                fontFamily = banglaFont,
+                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 7.dp)
+                            )
                         }
                     }
                 }
 
                 Spacer(modifier = Modifier.height(10.dp))
 
-                // Action Buttons Row: Gallery / Shutter / Direct Search
+                // Primary Action Row: Gallery (Photo Picker) | Shutter / Stop | Local Search
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceEvenly,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // Gallery Upload
+                    // Photo Picker Gallery Button
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Surface(
                             shape = CircleShape,
-                            color = Color.White.copy(alpha = 0.15f),
-                            border = BorderStroke(1.dp, Color.White.copy(alpha = 0.3f)),
+                            color = Color.White.copy(alpha = 0.16f),
+                            border = BorderStroke(1.dp, Color.White.copy(alpha = 0.35f)),
                             modifier = Modifier
-                                .size(50.dp)
+                                .size(52.dp)
                                 .clickable {
-                                    galleryLauncher.launch("image/*")
+                                    photoPickerLauncher.launch(
+                                        PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                                    )
                                 }
+                                .testTag("explain_gallery_btn")
                         ) {
                             Box(contentAlignment = Alignment.Center) {
                                 Icon(
                                     imageVector = Icons.Default.PhotoLibrary,
-                                    contentDescription = "গ্যালারি",
+                                    contentDescription = "গ্যালারি থেকে ছবি বাছুন",
                                     tint = Color.White,
                                     modifier = Modifier.size(24.dp)
                                 )
@@ -849,43 +887,31 @@ fun ExplainAyahCameraScreen(
                         Text("গ্যালারি", style = MaterialTheme.typography.labelSmall, color = Color.White, fontFamily = banglaFont)
                     }
 
-                    // Primary Shutter Scan / Instant Stop Button
+                    // Primary Shutter / Stop Button
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Surface(
                             shape = CircleShape,
                             color = if (isAnalyzing) Color(0xFFDC2626) else IslamicGold,
-                            border = BorderStroke(4.dp, Color.White.copy(alpha = 0.85f)),
+                            border = BorderStroke(4.dp, Color.White.copy(alpha = 0.88f)),
                             modifier = Modifier
                                 .size(76.dp)
                                 .clickable {
-                                    if (isAnalyzing) {
-                                        stopScanning()
-                                    } else {
-                                        triggerCapture()
-                                    }
+                                    if (isAnalyzing) stopScanning() else triggerCapture()
                                 }
+                                .testTag("explain_shutter_btn")
                         ) {
                             Box(contentAlignment = Alignment.Center) {
-                                if (isAnalyzing) {
-                                    Icon(
-                                        imageVector = Icons.Default.Stop,
-                                        contentDescription = "স্ক্যান থামান (Stop)",
-                                        tint = Color.White,
-                                        modifier = Modifier.size(38.dp)
-                                    )
-                                } else {
-                                    Icon(
-                                        imageVector = Icons.Default.CameraAlt,
-                                        contentDescription = "স্ক্যান করুন",
-                                        tint = Color.Black,
-                                        modifier = Modifier.size(36.dp)
-                                    )
-                                }
+                                Icon(
+                                    imageVector = if (isAnalyzing) Icons.Default.Stop else Icons.Default.CameraAlt,
+                                    contentDescription = if (isAnalyzing) "স্ক্যান থামান" else "আয়াত স্ক্যান করুন",
+                                    tint = if (isAnalyzing) Color.White else Color.Black,
+                                    modifier = Modifier.size(36.dp)
+                                )
                             }
                         }
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
-                            text = if (isAnalyzing) "থামান (Stop)" else "স্ক্যান",
+                            text = if (isAnalyzing) "থামান" else "স্ক্যান করুন",
                             style = MaterialTheme.typography.labelSmall,
                             color = if (isAnalyzing) Color(0xFFEF4444) else Color.White,
                             fontFamily = banglaFont,
@@ -893,23 +919,22 @@ fun ExplainAyahCameraScreen(
                         )
                     }
 
-                    // Direct Search by Ayah Ref (e.g. 2:255)
+                    // Direct Local Quran Search Button
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Surface(
                             shape = CircleShape,
-                            color = Color.White.copy(alpha = 0.15f),
-                            border = BorderStroke(1.dp, Color.White.copy(alpha = 0.3f)),
+                            color = if (isSearchExpanded) IslamicGold.copy(alpha = 0.3f) else Color.White.copy(alpha = 0.16f),
+                            border = BorderStroke(1.dp, if (isSearchExpanded) IslamicGold else Color.White.copy(alpha = 0.35f)),
                             modifier = Modifier
-                                .size(50.dp)
-                                .clickable {
-                                    isSearchExpanded = !isSearchExpanded
-                                }
+                                .size(52.dp)
+                                .clickable { isSearchExpanded = !isSearchExpanded }
+                                .testTag("explain_search_toggle_btn")
                         ) {
                             Box(contentAlignment = Alignment.Center) {
                                 Icon(
                                     imageVector = Icons.Default.Search,
-                                    contentDescription = "খুঁজুন",
-                                    tint = Color.White,
+                                    contentDescription = "লোকাল কুরআনে খুঁজুন",
+                                    tint = if (isSearchExpanded) IslamicGold else Color.White,
                                     modifier = Modifier.size(24.dp)
                                 )
                             }
@@ -919,7 +944,7 @@ fun ExplainAyahCameraScreen(
                     }
                 }
 
-                // Direct Search Drawer
+                // Local 6,236-Ayah Instant Search Drawer
                 AnimatedVisibility(visible = isSearchExpanded) {
                     Column(
                         modifier = Modifier
@@ -929,23 +954,35 @@ fun ExplainAyahCameraScreen(
                         OutlinedTextField(
                             value = searchQuery,
                             onValueChange = { searchQuery = it },
-                            placeholder = { Text("যেমন: 2:255 অথবা সূরা ইখলাস...", color = Color.White.copy(alpha = 0.6f)) },
+                            placeholder = {
+                                Text(
+                                    "যেমন: 59:22, ৫৯:২২, আরবি শব্দ বা বাংলা অর্থ...",
+                                    color = Color.White.copy(alpha = 0.65f),
+                                    fontFamily = banglaFont,
+                                    fontSize = 13.sp
+                                )
+                            },
                             trailingIcon = {
-                                IconButton(onClick = {
-                                    if (searchQuery.isNotBlank()) {
-                                        coroutineScope.launch {
-                                            val found = LocalQuranAyahScannerEngine.searchInstant(searchQuery, context)
-                                            if (found != null) {
-                                                recognizedAyah = found.copy(scanDurationMs = (18L..32L).random())
-                                                scanErrorMessage = null
-                                                isSearchExpanded = false
-                                            } else {
-                                                scanErrorMessage = "\"$searchQuery\" দিয়ে কোনো আয়াত বা দো'আ পাওয়া যায়নি। সরাসরি ক্যামেরা দিয়ে পৃষ্ঠায় স্ক্যান করুন।"
+                                IconButton(
+                                    onClick = {
+                                        if (searchQuery.isNotBlank()) {
+                                            coroutineScope.launch {
+                                                isAnalyzing = true
+                                                val found = LocalQuranAyahScannerEngine.searchInstant(searchQuery, context)
+                                                isAnalyzing = false
+                                                if (found != null) {
+                                                    recognizedAyah = found
+                                                    scanErrorMessage = null
+                                                    isSearchExpanded = false
+                                                } else {
+                                                    scanErrorMessage = "\"$searchQuery\" দিয়ে লোকাল কুরআন ডাটাবেসে কোনো আয়াত পাওয়া যায়নি।"
+                                                }
                                             }
                                         }
-                                    }
-                                }) {
-                                    Icon(Icons.Default.Search, contentDescription = null, tint = IslamicGold)
+                                    },
+                                    modifier = Modifier.testTag("explain_search_submit_btn")
+                                ) {
+                                    Icon(Icons.Default.Search, contentDescription = "অনুসন্ধান করুন", tint = IslamicGold)
                                 }
                             },
                             singleLine = true,
@@ -953,17 +990,19 @@ fun ExplainAyahCameraScreen(
                                 focusedTextColor = Color.White,
                                 unfocusedTextColor = Color.White,
                                 focusedBorderColor = IslamicGold,
-                                unfocusedBorderColor = Color.White.copy(alpha = 0.4f),
-                                focusedContainerColor = Color.Black.copy(alpha = 0.8f),
-                                unfocusedContainerColor = Color.Black.copy(alpha = 0.6f)
+                                unfocusedBorderColor = Color.White.copy(alpha = 0.45f),
+                                focusedContainerColor = Color.Black.copy(alpha = 0.85f),
+                                unfocusedContainerColor = Color.Black.copy(alpha = 0.65f)
                             ),
-                            modifier = Modifier.fillMaxWidth()
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .testTag("explain_search_input")
                         )
                     }
                 }
             }
 
-            // API Key & Settings Dialog
+            // Vision OCR & Local DB Settings Dialog
             if (showApiKeyDialog) {
                 AlertDialog(
                     onDismissRequest = { showApiKeyDialog = false },
@@ -971,44 +1010,43 @@ fun ExplainAyahCameraScreen(
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Icon(Icons.Default.AutoAwesome, contentDescription = null, tint = IslamicGold)
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text("স্ক্যানার ইঞ্জিন ও সেটিংস", fontFamily = banglaFont, fontWeight = FontWeight.Bold)
+                            Text("আয়াত স্ক্যানার ও ভিশন OCR সেটিংস", fontFamily = banglaFont, fontWeight = FontWeight.Bold)
                         }
                     },
                     text = {
-                        Column {
+                        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                             Surface(
                                 shape = RoundedCornerShape(10.dp),
-                                color = IslamicGold.copy(alpha = 0.15f),
-                                border = BorderStroke(1.dp, IslamicGold.copy(alpha = 0.4f)),
+                                color = Color(0xFF047857).copy(alpha = 0.14f),
+                                border = BorderStroke(1.dp, Color(0xFF047857).copy(alpha = 0.4f)),
                                 modifier = Modifier.fillMaxWidth()
                             ) {
                                 Row(
                                     modifier = Modifier.padding(10.dp),
-                                    verticalAlignment = Alignment.CenterVertically
+                                    verticalAlignment = Alignment.Top
                                 ) {
-                                    Icon(Icons.Default.CheckCircle, contentDescription = null, tint = IslamicGold, modifier = Modifier.size(20.dp))
+                                    Icon(Icons.Default.CheckCircle, contentDescription = null, tint = Color(0xFF047857), modifier = Modifier.size(18.dp))
                                     Spacer(modifier = Modifier.width(8.dp))
                                     Text(
-                                        text = "⚡ অন-ডিভাইস ML Kit ইঞ্জিন সক্রিয়: ক্যামেরা দিয়ে কুরআন পৃষ্ঠা স্ক্যান করলে কোনো API Key বা ইন্টারনেট ছাড়াই নির্ভুল অফলাইন স্ক্যান সম্পন্ন হবে।",
+                                        text = "কাজের পদ্ধতি: ক্যামেরা ছবি থেকে আরবি আয়াত পড়ে সরাসরি অ্যাপের লোকাল কুরআন ডাটাবেসে (১১৪ সূরা • ৬,২৩৬ আয়াত) মিলিয়ে ১০০% নির্ভুল আয়াত, উচ্চারণ, অনুবাদ ও পূর্ণাঙ্গ তাফসীর দেখানো হয়।",
                                         style = MaterialTheme.typography.bodySmall,
                                         fontFamily = banglaFont
                                     )
                                 }
                             }
-                            Spacer(modifier = Modifier.height(14.dp))
+
                             Text(
-                                text = "ঐচ্ছিক জেমিনি এআই কি (Cloud AI Gemini 3.5):",
+                                text = "আরবি মুসহাফ ক্যামেরা OCR-এর জন্য Gemini Vision API Key:",
                                 style = MaterialTheme.typography.labelSmall,
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.primary,
                                 fontFamily = banglaFont
                             )
-                            Spacer(modifier = Modifier.height(4.dp))
                             OutlinedTextField(
                                 value = apiKeyInput,
                                 onValueChange = { apiKeyInput = it },
-                                label = { Text("Gemini API Key (ঐচ্ছিক)", fontFamily = banglaFont) },
-                                placeholder = { Text("AI Studio থেকে নিজস্ব কী দিতে পারেন") },
+                                label = { Text("Gemini API Key", fontFamily = banglaFont) },
+                                placeholder = { Text("Google AI Studio কী এখানে দিন") },
                                 singleLine = true,
                                 modifier = Modifier.fillMaxWidth()
                             )
@@ -1020,17 +1058,19 @@ fun ExplainAyahCameraScreen(
                                 TextButton(onClick = {
                                     aiService.saveUserApiKey("")
                                     apiKeyInput = ""
+                                    hasActiveVisionKey = aiService.hasValidApiKey()
                                     showApiKeyDialog = false
-                                    Toast.makeText(context, "API Key মুছে ফেলা হয়েছে (অফলাইন ইঞ্জিন সক্রিয়)", Toast.LENGTH_SHORT).show()
+                                    Toast.makeText(context, "কাস্টম API Key মুছে ফেলা হয়েছে", Toast.LENGTH_SHORT).show()
                                 }) {
-                                    Text("কী মুছুন", color = MaterialTheme.colorScheme.error, fontFamily = banglaFont)
+                                    Text("মুছুন", color = MaterialTheme.colorScheme.error, fontFamily = banglaFont)
                                 }
                             }
                             Button(
                                 onClick = {
                                     aiService.saveUserApiKey(apiKeyInput.trim())
+                                    hasActiveVisionKey = aiService.hasValidApiKey()
                                     showApiKeyDialog = false
-                                    Toast.makeText(context, "সেটিংস সংরক্ষিত হয়েছে", Toast.LENGTH_SHORT).show()
+                                    Toast.makeText(context, "ভিশন OCR সেটিংস সংরক্ষিত হয়েছে", Toast.LENGTH_SHORT).show()
                                 },
                                 colors = ButtonDefaults.buttonColors(containerColor = IslamicGold)
                             ) {
@@ -1046,19 +1086,13 @@ fun ExplainAyahCameraScreen(
                 )
             }
 
-            // Surah & Ayah Selector Dialog (1-114)
+            // Full 114-Surah Local DB Picker Dialog
             if (showSurahAyahPicker) {
                 SurahAyahPickerDialog(
                     onDismiss = { showSurahAyahPicker = false },
                     onSelect = { surah, ayah ->
                         showSurahAyahPicker = false
-                        coroutineScope.launch {
-                            isAnalyzing = true
-                            scanErrorMessage = null
-                            val result = LocalQuranAyahScannerEngine.getOrSynthesize(context, surah, ayah)
-                            isAnalyzing = false
-                            recognizedAyah = result.copy(scanDurationMs = (20L..35L).random())
-                        }
+                        openLocalSurahAyah(surah, ayah)
                     }
                 )
             }
@@ -1073,12 +1107,12 @@ private fun SurahAyahPickerDialog(
 ) {
     val banglaFont = LocalBanglaFontFamily.current
     var selectedSurahNumber by remember { mutableIntStateOf(2) }
-    var ayahInput by remember { mutableStateOf("2") }
+    var ayahInput by remember { mutableStateOf("255") }
     var filterText by remember { mutableStateOf("") }
 
     val selectedSurah = remember(selectedSurahNumber) {
         QuranSurahCatalog.all114Surahs.find { it.number == selectedSurahNumber }
-            ?: QuranSurahCatalog.all114Surahs[1]
+            ?: QuranSurahCatalog.all114Surahs.first()
     }
 
     val filteredSurahs = remember(filterText) {
@@ -1088,9 +1122,9 @@ private fun SurahAyahPickerDialog(
             val q = filterText.trim().lowercase()
             QuranSurahCatalog.all114Surahs.filter {
                 it.number.toString().contains(q) ||
-                it.nameBn.lowercase().contains(q) ||
-                it.nameEn.lowercase().contains(q) ||
-                it.nameAr.contains(q)
+                    it.nameBn.lowercase().contains(q) ||
+                    it.nameEn.lowercase().contains(q) ||
+                    it.nameAr.contains(q)
             }
         }
     }
@@ -1101,14 +1135,13 @@ private fun SurahAyahPickerDialog(
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(Icons.Default.MenuBook, contentDescription = null, tint = IslamicGold)
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("সূরা ও আয়াত নির্বাচন করুন", fontFamily = banglaFont, fontWeight = FontWeight.Bold)
+                Text("লোকাল কুরআন: সূরা ও আয়াত (১-১১৪)", fontFamily = banglaFont, fontWeight = FontWeight.Bold)
             }
         },
         text = {
             Column(modifier = Modifier.fillMaxWidth().height(420.dp)) {
-                // Quick Popular Verses Row
                 Text(
-                    text = "দ্রুত পড়ার শর্টকাট:",
+                    text = "জনপ্রিয় আয়াত শর্টকাট:",
                     style = MaterialTheme.typography.labelSmall,
                     color = IslamicGold,
                     fontWeight = FontWeight.Bold,
@@ -1117,31 +1150,27 @@ private fun SurahAyahPickerDialog(
                 Spacer(modifier = Modifier.height(4.dp))
                 LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                     val quickPicks = listOf(
-                        Triple(2, 2, "২:২ হিদায়াত"),
                         Triple(2, 255, "আয়াতুল কুরসী (২:২৫৫)"),
-                        Triple(2, 285, "বাকারা শেষ ২ (২:২৮৫)"),
+                        Triple(59, 22, "হাশর (৫৯:২২)"),
+                        Triple(2, 285, "বাকারা (২:২৮৫)"),
                         Triple(1, 1, "ফাতিহা (১:১)"),
                         Triple(112, 1, "ইখলাস (১১২:১)"),
-                        Triple(113, 1, "ফালাক (১১৩:১)"),
-                        Triple(114, 1, "নাস (১১৪:১)"),
-                        Triple(67, 1, "মুলক (৬৭:১)"),
-                        Triple(94, 5, "ইনশিরাহ (৯৪:৫)")
+                        Triple(36, 1, "ইয়াসীন (৩৬:১)"),
+                        Triple(67, 1, "মুলক (৬৭:১)")
                     )
                     items(quickPicks) { pick ->
                         Surface(
                             shape = RoundedCornerShape(8.dp),
-                            color = IslamicGold.copy(alpha = 0.15f),
+                            color = IslamicGold.copy(alpha = 0.16f),
                             border = BorderStroke(1.dp, IslamicGold.copy(alpha = 0.5f)),
-                            modifier = Modifier.clickable {
-                                onSelect(pick.first, pick.second)
-                            }
+                            modifier = Modifier.clickable { onSelect(pick.first, pick.second) }
                         ) {
                             Text(
                                 text = pick.third,
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.onSurface,
                                 fontFamily = banglaFont,
-                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 5.dp)
                             )
                         }
                     }
@@ -1151,23 +1180,21 @@ private fun SurahAyahPickerDialog(
                 HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
                 Spacer(modifier = Modifier.height(8.dp))
 
-                // Surah filter
                 OutlinedTextField(
                     value = filterText,
                     onValueChange = { filterText = it },
-                    placeholder = { Text("সূরা খুঁজুন (যেমন: বাকারা, 2, ফাতিহা...)", fontFamily = banglaFont, fontSize = 12.sp) },
+                    placeholder = { Text("সূরা খুঁজুন (যেমন: হাশর, 59, বাকারা...)", fontFamily = banglaFont, fontSize = 12.sp) },
                     singleLine = true,
-                    modifier = Modifier.fillMaxWidth().height(52.dp)
+                    modifier = Modifier.fillMaxWidth()
                 )
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                // Surah selection list
                 LazyColumn(
                     modifier = Modifier.weight(1f).fillMaxWidth(),
                     verticalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
-                    items(filteredSurahs) { surah ->
+                    items(filteredSurahs, key = { it.number }) { surah ->
                         val isSelected = surah.number == selectedSurahNumber
                         Surface(
                             shape = RoundedCornerShape(8.dp),
@@ -1181,7 +1208,7 @@ private fun SurahAyahPickerDialog(
                                 }
                         ) {
                             Row(
-                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 8.dp),
                                 horizontalArrangement = Arrangement.SpaceBetween,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
@@ -1203,7 +1230,6 @@ private fun SurahAyahPickerDialog(
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                // Ayah Number Input
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically,
@@ -1217,12 +1243,9 @@ private fun SurahAyahPickerDialog(
                     )
                     OutlinedTextField(
                         value = ayahInput,
-                        onValueChange = { input ->
-                            val clean = input.filter { it.isDigit() }
-                            ayahInput = clean
-                        },
+                        onValueChange = { input -> ayahInput = input.filter { it.isDigit() } },
                         singleLine = true,
-                        modifier = Modifier.width(90.dp).height(50.dp)
+                        modifier = Modifier.width(96.dp)
                     )
                 }
             }
@@ -1235,7 +1258,7 @@ private fun SurahAyahPickerDialog(
                 },
                 colors = ButtonDefaults.buttonColors(containerColor = IslamicGold)
             ) {
-                Text("ব্যাখ্যা দেখুন", color = Color.Black, fontWeight = FontWeight.Bold, fontFamily = banglaFont)
+                Text("আয়াত ও তাফসীর দেখুন", color = Color.Black, fontWeight = FontWeight.Bold, fontFamily = banglaFont)
             }
         },
         dismissButton = {
@@ -1246,13 +1269,11 @@ private fun SurahAyahPickerDialog(
     )
 }
 
-/**
- * Animated Viewfinder Overlay with Golden Corner Brackets and Scanning Laser
- */
 @Composable
 private fun ScannerViewfinderOverlay(
     isAnalyzing: Boolean,
-    onStopScanning: () -> Unit = {},
+    statusText: String,
+    onStopScanning: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val infiniteTransition = rememberInfiniteTransition(label = "scanner")
@@ -1260,7 +1281,7 @@ private fun ScannerViewfinderOverlay(
         initialValue = 0f,
         targetValue = 1f,
         animationSpec = infiniteRepeatable(
-            animation = tween(2200, easing = FastOutSlowInEasing),
+            animation = tween(2100, easing = FastOutSlowInEasing),
             repeatMode = RepeatMode.Reverse
         ),
         label = "laser"
@@ -1270,60 +1291,40 @@ private fun ScannerViewfinderOverlay(
         modifier = modifier,
         contentAlignment = Alignment.Center
     ) {
-        val boxWidth = maxWidth * 0.82f
-        val boxHeight = maxHeight * 0.42f
+        val boxWidth = maxWidth * 0.86f
+        val boxHeight = maxHeight * 0.36f
 
-        // Center Viewfinder Target
         Box(
             modifier = Modifier
+                .offset(y = (-28).dp)
                 .size(width = boxWidth, height = boxHeight)
-                .border(1.dp, IslamicGold.copy(alpha = 0.35f), RoundedCornerShape(16.dp))
+                .border(1.dp, IslamicGold.copy(alpha = 0.4f), RoundedCornerShape(16.dp))
         ) {
-            // Corner Golden L-Brackets
-            val cornerSize = 24.dp
+            val cornerSize = 26.dp
             val strokeWidth = 3.dp
 
-            // Top-Left
-            Box(
-                modifier = Modifier
-                    .align(Alignment.TopStart)
-                    .size(cornerSize)
-            ) {
+            // Top-Left Bracket
+            Box(modifier = Modifier.align(Alignment.TopStart).size(cornerSize)) {
                 Box(modifier = Modifier.fillMaxWidth().height(strokeWidth).background(IslamicGold))
                 Box(modifier = Modifier.fillMaxHeight().width(strokeWidth).background(IslamicGold))
             }
-
-            // Top-Right
-            Box(
-                modifier = Modifier
-                    .align(Alignment.TopEnd)
-                    .size(cornerSize)
-            ) {
+            // Top-Right Bracket
+            Box(modifier = Modifier.align(Alignment.TopEnd).size(cornerSize)) {
                 Box(modifier = Modifier.fillMaxWidth().height(strokeWidth).background(IslamicGold))
                 Box(modifier = Modifier.align(Alignment.TopEnd).fillMaxHeight().width(strokeWidth).background(IslamicGold))
             }
-
-            // Bottom-Left
-            Box(
-                modifier = Modifier
-                    .align(Alignment.BottomStart)
-                    .size(cornerSize)
-            ) {
+            // Bottom-Left Bracket
+            Box(modifier = Modifier.align(Alignment.BottomStart).size(cornerSize)) {
                 Box(modifier = Modifier.align(Alignment.BottomStart).fillMaxWidth().height(strokeWidth).background(IslamicGold))
                 Box(modifier = Modifier.fillMaxHeight().width(strokeWidth).background(IslamicGold))
             }
-
-            // Bottom-Right
-            Box(
-                modifier = Modifier
-                    .align(Alignment.BottomEnd)
-                    .size(cornerSize)
-            ) {
+            // Bottom-Right Bracket
+            Box(modifier = Modifier.align(Alignment.BottomEnd).size(cornerSize)) {
                 Box(modifier = Modifier.align(Alignment.BottomEnd).fillMaxWidth().height(strokeWidth).background(IslamicGold))
                 Box(modifier = Modifier.align(Alignment.BottomEnd).fillMaxHeight().width(strokeWidth).background(IslamicGold))
             }
 
-            // Laser Beam Animation
+            // Laser Scan Line
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -1333,20 +1334,19 @@ private fun ScannerViewfinderOverlay(
                         Brush.horizontalGradient(
                             colors = listOf(
                                 Color.Transparent,
-                                IslamicGold.copy(alpha = 0.8f),
+                                IslamicGold.copy(alpha = 0.85f),
                                 Color.White,
-                                IslamicGold.copy(alpha = 0.8f),
+                                IslamicGold.copy(alpha = 0.85f),
                                 Color.Transparent
                             )
                         )
                     )
             )
 
-            // Prominent Instant Stop Button centered inside the viewfinder when analyzing
             if (isAnalyzing) {
                 Surface(
                     shape = RoundedCornerShape(24.dp),
-                    color = Color(0xFFDC2626), // High-visibility red
+                    color = Color(0xFFDC2626),
                     border = BorderStroke(1.5.dp, Color.White),
                     shadowElevation = 8.dp,
                     modifier = Modifier
@@ -1357,12 +1357,7 @@ private fun ScannerViewfinderOverlay(
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier.padding(horizontal = 18.dp, vertical = 10.dp)
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.Stop,
-                            contentDescription = "Stop",
-                            tint = Color.White,
-                            modifier = Modifier.size(20.dp)
-                        )
+                        Icon(Icons.Default.Stop, contentDescription = "থামান", tint = Color.White, modifier = Modifier.size(20.dp))
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
                             text = "স্ক্যান থামান (Stop)",
@@ -1374,18 +1369,18 @@ private fun ScannerViewfinderOverlay(
                 }
             }
 
-            // Prompt Badge
             Surface(
                 shape = RoundedCornerShape(12.dp),
-                color = Color.Black.copy(alpha = 0.65f),
+                color = Color.Black.copy(alpha = 0.72f),
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
-                    .padding(bottom = 12.dp)
+                    .padding(bottom = 10.dp, start = 8.dp, end = 8.dp)
             ) {
                 Text(
-                    text = if (isAnalyzing) "⚡ লোকাল কুরআন ও হাদিস ডাটাবেস স্ক্যান (৩০-৪০ms)..." else "⚡ লোকাল ইঞ্জিন সক্রিয় (৩০-৪০ms) • কুরআন পৃষ্ঠার আয়াতের উপর ক্যামেরা স্থির রাখুন",
+                    text = statusText,
                     style = MaterialTheme.typography.labelSmall,
                     color = Color.White,
+                    textAlign = TextAlign.Center,
                     modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
                 )
             }
@@ -1393,1418 +1388,7 @@ private fun ScannerViewfinderOverlay(
     }
 }
 
-/**
- * Result Detail View: The comprehensive Islamic Learning & Memorization Dashboard
- */
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun AyahExplanationDetailView(
-    ayah: AyahExplanation,
-    audioPlayer: AyahAudioPlayerHelper,
-    onRescan: () -> Unit,
-    onNavigateBack: () -> Unit,
-    onOpenHolyQuran: ((Int?) -> Unit)? = null
-) {
-    val context = LocalContext.current
-    val banglaFont = LocalBanglaFontFamily.current
-    val arabicFont = LocalArabicFontFamily.current
-
-    val isPlaying by audioPlayer.isPlaying.collectAsState()
-    val currentPositionMs by audioPlayer.currentPositionMs.collectAsState()
-    val durationMs by audioPlayer.durationMs.collectAsState()
-    val loopMode by audioPlayer.loopMode.collectAsState()
-
-    var selectedTabIndex by remember { mutableIntStateOf(0) }
-    val tabTitles = listOf("মূল ও অনুবাদ", "শব্দে শব্দে অর্থ", "তাফসীর ও প্রেক্ষাপট", "সম্পর্কিত সূত্র", "হিফয ও অডিও")
-
-    // Memorization Mode states
-    var isMemorizeModeActive by remember { mutableStateOf(false) }
-    var isAyahMemorized by remember { mutableStateOf(false) }
-    var fontSizeSp by remember { mutableFloatStateOf(24f) }
-
-    // Masked words state (word index to revealed boolean)
-    val revealedWords = remember { mutableStateMapOf<Int, Boolean>() }
-
-    LazyColumn(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background),
-        contentPadding = PaddingValues(bottom = 32.dp)
-    ) {
-        // Sticky Header / App Bar
-        item {
-            Surface(
-                modifier = Modifier.fillMaxWidth(),
-                color = MaterialTheme.colorScheme.surface,
-                tonalElevation = 3.dp,
-                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 12.dp, vertical = 10.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        IconButton(onClick = onNavigateBack) {
-                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "ফিরে যান")
-                        }
-                        Column {
-                            Text(
-                                text = ayah.surahNameBangla,
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold,
-                                fontFamily = banglaFont
-                            )
-                            Text(
-                                text = "${ayah.surahNameArabic} • ${ayah.revelationTypeBn} • আয়াত: ${ayah.ayahNumber}",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.primary,
-                                fontFamily = banglaFont
-                            )
-                        }
-                    }
-
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        // Rescan Button
-                        OutlinedButton(
-                            onClick = onRescan,
-                            contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp),
-                            shape = RoundedCornerShape(12.dp)
-                        ) {
-                            Icon(Icons.Default.CameraAlt, contentDescription = null, modifier = Modifier.size(16.dp))
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text("পুনরায় স্ক্যান", style = MaterialTheme.typography.labelSmall, fontFamily = banglaFont)
-                        }
-
-                        // Share
-                        IconButton(onClick = {
-                            val shareText = """
-                                ${ayah.surahNameBangla} (আয়াত ${ayah.ayahNumber})
-                                
-                                ${ayah.arabicText}
-                                
-                                উচ্চারণ: ${ayah.transliterationBn}
-                                
-                                বাংলা অর্থ: ${ayah.banglaTranslation}
-                                
-                                তাফসীর সংক্ষেপ: ${ayah.tafsirBn}
-                                
-                                — দা'ওয়াহ টু জান্নাহ্ অ্যাপ
-                            """.trimIndent()
-                            val sendIntent = Intent().apply {
-                                action = Intent.ACTION_SEND
-                                putExtra(Intent.EXTRA_TEXT, shareText)
-                                type = "text/plain"
-                            }
-                            context.startActivity(Intent.createChooser(sendIntent, "আয়াত শেয়ার করুন"))
-                        }) {
-                            Icon(Icons.Default.Share, contentDescription = "শেয়ার")
-                        }
-                    }
-                }
-            }
-        }
-
-        // Verification & Authenticity Banner with 30-40ms Local Scan Speed Metric
-        item {
-            Surface(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 6.dp),
-                shape = RoundedCornerShape(12.dp),
-                color = IslamicGold.copy(alpha = 0.12f),
-                border = BorderStroke(1.dp, IslamicGold.copy(alpha = 0.45f))
-            ) {
-                Row(
-                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.CheckCircle,
-                            contentDescription = null,
-                            tint = IslamicGold,
-                            modifier = Modifier.size(18.dp)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Column {
-                            Text(
-                                text = "⚡ লোকাল কুরআন ও হাদিস ডাটাবেস স্ক্যান সম্পন্ন",
-                                style = MaterialTheme.typography.labelMedium,
-                                fontWeight = FontWeight.Bold,
-                                color = IslamicGold,
-                                fontFamily = banglaFont
-                            )
-                            Text(
-                                text = "স্ক্যানিং সময়: ${ayah.scanDurationMs} মিলিসেকেন্ড • ১০০% অফলাইন ডাটাবেস ম্যাচিং • শূন্য AI টাইমআউট",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f),
-                                fontFamily = banglaFont
-                            )
-                        }
-                    }
-
-                    Surface(
-                        shape = RoundedCornerShape(8.dp),
-                        color = IslamicGold.copy(alpha = 0.2f),
-                        border = BorderStroke(0.5.dp, IslamicGold)
-                    ) {
-                        Text(
-                            text = "${ayah.scanDurationMs}ms ⚡",
-                            style = MaterialTheme.typography.labelSmall,
-                            fontWeight = FontWeight.Bold,
-                            color = IslamicGold,
-                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-                        )
-                    }
-                }
-            }
-        }
-
-        // Islamic OCR Identification & Verified Source Card
-        item {
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 6.dp),
-                shape = RoundedCornerShape(18.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = Color(ayah.contentType.colorHex).copy(alpha = 0.12f)
-                ),
-                border = BorderStroke(1.2.dp, Color(ayah.contentType.colorHex).copy(alpha = 0.7f))
-            ) {
-                Column(modifier = Modifier.padding(14.dp)) {
-                    // Header: Genre Badge & Target Material Badge
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Surface(
-                            shape = RoundedCornerShape(10.dp),
-                            color = Color(ayah.contentType.colorHex)
-                        ) {
-                            Row(
-                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Text(ayah.contentType.icon, fontSize = 14.sp)
-                                Spacer(modifier = Modifier.width(6.dp))
-                                Text(
-                                    text = ayah.contentType.titleBn,
-                                    style = MaterialTheme.typography.labelMedium,
-                                    fontWeight = FontWeight.Bold,
-                                    color = Color.White,
-                                    fontFamily = banglaFont
-                                )
-                            }
-                        }
-
-                        Surface(
-                            shape = RoundedCornerShape(8.dp),
-                            color = MaterialTheme.colorScheme.surfaceVariant,
-                            border = BorderStroke(0.5.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.3f))
-                        ) {
-                            Row(
-                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Text(ayah.targetSourceType.icon, fontSize = 12.sp)
-                                Spacer(modifier = Modifier.width(4.dp))
-                                Text(
-                                    text = ayah.targetSourceType.titleBn,
-                                    style = MaterialTheme.typography.labelSmall,
-                                    fontFamily = banglaFont
-                                )
-                            }
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.height(10.dp))
-
-                    // Source Details Grid
-                    Surface(
-                        shape = RoundedCornerShape(12.dp),
-                        color = MaterialTheme.colorScheme.surface,
-                        border = BorderStroke(0.8.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.15f)),
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                            if (ayah.sourceBookName.isNotBlank()) {
-                                Row(verticalAlignment = Alignment.Top) {
-                                    Text(
-                                        text = "📖 কিতাব / গ্রন্থ: ",
-                                        style = MaterialTheme.typography.labelSmall,
-                                        fontWeight = FontWeight.Bold,
-                                        color = MaterialTheme.colorScheme.primary,
-                                        fontFamily = banglaFont
-                                    )
-                                    Text(
-                                        text = ayah.sourceBookName,
-                                        style = MaterialTheme.typography.bodySmall,
-                                        fontWeight = FontWeight.SemiBold,
-                                        fontFamily = banglaFont
-                                    )
-                                }
-                            }
-                            if (ayah.sourceReferenceNumber.isNotBlank()) {
-                                Row(verticalAlignment = Alignment.Top) {
-                                    Text(
-                                        text = "📌 রেফারেন্স নং: ",
-                                        style = MaterialTheme.typography.labelSmall,
-                                        fontWeight = FontWeight.Bold,
-                                        color = MaterialTheme.colorScheme.primary,
-                                        fontFamily = banglaFont
-                                    )
-                                    Text(
-                                        text = ayah.sourceReferenceNumber,
-                                        style = MaterialTheme.typography.bodySmall,
-                                        fontFamily = banglaFont
-                                    )
-                                }
-                            }
-                            if (ayah.scholarOrNarrator.isNotBlank()) {
-                                Row(verticalAlignment = Alignment.Top) {
-                                    Text(
-                                        text = "👤 বর্ণনাকারী / আলেম: ",
-                                        style = MaterialTheme.typography.labelSmall,
-                                        fontWeight = FontWeight.Bold,
-                                        color = MaterialTheme.colorScheme.primary,
-                                        fontFamily = banglaFont
-                                    )
-                                    Text(
-                                        text = ayah.scholarOrNarrator,
-                                        style = MaterialTheme.typography.bodySmall,
-                                        fontFamily = banglaFont
-                                    )
-                                }
-                            }
-                            if (ayah.authenticityOrGrading.isNotBlank()) {
-                                Row(verticalAlignment = Alignment.Top) {
-                                    Text(
-                                        text = "✅ মানদণ্ড / সনদ: ",
-                                        style = MaterialTheme.typography.labelSmall,
-                                        fontWeight = FontWeight.Bold,
-                                        color = Color(0xFF047857),
-                                        fontFamily = banglaFont
-                                    )
-                                    Text(
-                                        text = ayah.authenticityOrGrading,
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = Color(0xFF047857),
-                                        fontWeight = FontWeight.Bold,
-                                        fontFamily = banglaFont
-                                    )
-                                }
-                            }
-                            if (ayah.detectedLanguage.isNotBlank()) {
-                                Row(verticalAlignment = Alignment.Top) {
-                                    Text(
-                                        text = "🌐 ভাষা সনাক্তকরণ: ",
-                                        style = MaterialTheme.typography.labelSmall,
-                                        fontWeight = FontWeight.Bold,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                        fontFamily = banglaFont
-                                    )
-                                    Text(
-                                        text = ayah.detectedLanguage,
-                                        style = MaterialTheme.typography.bodySmall,
-                                        fontFamily = banglaFont
-                                    )
-                                }
-                            }
-                        }
-                    }
-
-                    // Extracted Raw OCR Text Box
-                    if (ayah.extractedRawOcrText.isNotBlank()) {
-                        Spacer(modifier = Modifier.height(8.dp))
-                        var isRawTextExpanded by remember { mutableStateOf(false) }
-                        Surface(
-                            shape = RoundedCornerShape(10.dp),
-                            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Column(modifier = Modifier.padding(10.dp)) {
-                                Row(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .clickable { isRawTextExpanded = !isRawTextExpanded },
-                                    horizontalArrangement = Arrangement.SpaceBetween,
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Row(verticalAlignment = Alignment.CenterVertically) {
-                                        Icon(
-                                            imageVector = Icons.Default.MenuBook,
-                                            contentDescription = null,
-                                            tint = MaterialTheme.colorScheme.primary,
-                                            modifier = Modifier.size(15.dp)
-                                        )
-                                        Spacer(modifier = Modifier.width(6.dp))
-                                        Text(
-                                            text = "ক্যামেরা থেকে স্ক্যানকৃত মূল টেক্সট (OCR)",
-                                            style = MaterialTheme.typography.labelSmall,
-                                            fontWeight = FontWeight.Bold,
-                                            fontFamily = banglaFont
-                                        )
-                                    }
-                                    IconButton(
-                                        onClick = {
-                                            val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                                            val clip = ClipData.newPlainText("OCR Text", ayah.extractedRawOcrText)
-                                            clipboard.setPrimaryClip(clip)
-                                            Toast.makeText(context, "টেক্সট কপি করা হয়েছে", Toast.LENGTH_SHORT).show()
-                                        },
-                                        modifier = Modifier.size(24.dp)
-                                    ) {
-                                        Icon(Icons.Default.ContentCopy, contentDescription = "Copy", modifier = Modifier.size(14.dp))
-                                    }
-                                }
-                                if (isRawTextExpanded) {
-                                    Spacer(modifier = Modifier.height(6.dp))
-                                    Text(
-                                        text = ayah.extractedRawOcrText,
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                        fontFamily = banglaFont
-                                    )
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        // Quick Audio Player Strip (Always accessible when audio URL exists)
-        item {
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 4.dp),
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f)
-                ),
-                border = BorderStroke(1.dp, IslamicGold.copy(alpha = 0.35f))
-            ) {
-                Column(modifier = Modifier.padding(12.dp)) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Surface(
-                                shape = CircleShape,
-                                color = IslamicGold,
-                                modifier = Modifier
-                                    .size(38.dp)
-                                    .clickable {
-                                        if (isPlaying) {
-                                            audioPlayer.pause()
-                                        } else {
-                                            audioPlayer.play(ayah.audioUrl)
-                                        }
-                                    }
-                            ) {
-                                Box(contentAlignment = Alignment.Center) {
-                                    Icon(
-                                        imageVector = if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
-                                        contentDescription = if (isPlaying) "পজ" else "প্লে",
-                                        tint = Color.Black,
-                                        modifier = Modifier.size(22.dp)
-                                    )
-                                }
-                            }
-                            Spacer(modifier = Modifier.width(10.dp))
-                            Column {
-                                Text(
-                                    text = "তিলাওয়াত: ${ayah.reciterNameBn}",
-                                    style = MaterialTheme.typography.labelMedium,
-                                    fontWeight = FontWeight.Bold,
-                                    fontFamily = banglaFont
-                                )
-                                Text(
-                                    text = if (isPlaying) "লাইভ প্লে হচ্ছে..." else "শুনতে প্লে বাটনে চাপুন",
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = MaterialTheme.colorScheme.primary,
-                                    fontFamily = banglaFont
-                                )
-                            }
-                        }
-
-                        // Loop selector button
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Surface(
-                                shape = RoundedCornerShape(10.dp),
-                                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
-                                modifier = Modifier.clickable {
-                                    val nextMode = when (loopMode) {
-                                        LoopMode.ONCE -> LoopMode.THREE_TIMES
-                                        LoopMode.THREE_TIMES -> LoopMode.FIVE_TIMES
-                                        LoopMode.FIVE_TIMES -> LoopMode.INFINITE
-                                        LoopMode.INFINITE -> LoopMode.ONCE
-                                    }
-                                    audioPlayer.setLoopMode(nextMode)
-                                }
-                            ) {
-                                Row(
-                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Default.Repeat,
-                                        contentDescription = null,
-                                        tint = MaterialTheme.colorScheme.primary,
-                                        modifier = Modifier.size(14.dp)
-                                    )
-                                    Spacer(modifier = Modifier.width(4.dp))
-                                    Text(
-                                        text = loopMode.titleBn,
-                                        style = MaterialTheme.typography.labelSmall,
-                                        fontWeight = FontWeight.Bold,
-                                        color = MaterialTheme.colorScheme.primary,
-                                        fontFamily = banglaFont
-                                    )
-                                }
-                            }
-                        }
-                    }
-
-                    if (durationMs > 0) {
-                        Slider(
-                            value = currentPositionMs.toFloat().coerceIn(0f, durationMs.toFloat()),
-                            onValueChange = { audioPlayer.seekTo(it.toInt()) },
-                            valueRange = 0f..durationMs.toFloat(),
-                            colors = SliderDefaults.colors(
-                                thumbColor = IslamicGold,
-                                activeTrackColor = IslamicGold
-                            ),
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(28.dp)
-                        )
-                    }
-                }
-            }
-        }
-
-        // Primary Tab Bar
-        item {
-            PrimaryTabRow(
-                selectedTabIndex = selectedTabIndex,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 6.dp)
-                    .clip(RoundedCornerShape(12.dp))
-            ) {
-                tabTitles.forEachIndexed { index, title ->
-                    Tab(
-                        selected = selectedTabIndex == index,
-                        onClick = { selectedTabIndex = index },
-                        text = {
-                            Text(
-                                text = title,
-                                style = MaterialTheme.typography.labelSmall,
-                                fontWeight = if (selectedTabIndex == index) FontWeight.Bold else FontWeight.Normal,
-                                fontFamily = banglaFont
-                            )
-                        }
-                    )
-                }
-            }
-        }
-
-        // Tab Content Switching
-        when (selectedTabIndex) {
-            0 -> {
-                // TAB 1: মূল ও অনুবাদ (Arabic, Pronunciation, Bangla, English)
-                item {
-                    TabCoreTextView(
-                        ayah = ayah,
-                        fontSizeSp = fontSizeSp,
-                        onFontSizeChange = { fontSizeSp = it },
-                        banglaFont = banglaFont,
-                        arabicFont = arabicFont,
-                        onOpenHolyQuran = onOpenHolyQuran
-                    )
-                }
-            }
-            1 -> {
-                // TAB 2: শব্দে শব্দে অর্থ (Word-by-Word Meaning Cards)
-                item {
-                    TabWordByWordView(
-                        words = ayah.wordByWord,
-                        banglaFont = banglaFont,
-                        arabicFont = arabicFont
-                    )
-                }
-            }
-            2 -> {
-                // TAB 3: তাফসীর ও প্রেক্ষাপট (Tafsir & Shan-e-Nuzul)
-                item {
-                    TabTafsirAndContextView(
-                        ayah = ayah,
-                        banglaFont = banglaFont
-                    )
-                }
-            }
-            3 -> {
-                // TAB 4: সম্পর্কিত সূত্র (Related Verses & Hadiths)
-                item {
-                    TabCrossReferencesView(
-                        ayah = ayah,
-                        banglaFont = banglaFont,
-                        arabicFont = arabicFont
-                    )
-                }
-            }
-            4 -> {
-                // TAB 5: হিফয ও মুখস্থ করার অনুশীলন (Memorization Mode)
-                item {
-                    TabMemorizationView(
-                        ayah = ayah,
-                        isMemorizeModeActive = isMemorizeModeActive,
-                        onToggleMemorizeMode = { isMemorizeModeActive = !isMemorizeModeActive },
-                        isAyahMemorized = isAyahMemorized,
-                        onToggleMemorized = { isAyahMemorized = !isAyahMemorized },
-                        revealedWords = revealedWords,
-                        audioPlayer = audioPlayer,
-                        isPlaying = isPlaying,
-                        loopMode = loopMode,
-                        banglaFont = banglaFont,
-                        arabicFont = arabicFont
-                    )
-                }
-            }
-        }
-    }
-}
-
-/**
- * Tab 1: মূল ও অনুবাদ
- */
-@Composable
-private fun TabCoreTextView(
-    ayah: AyahExplanation,
-    fontSizeSp: Float,
-    onFontSizeChange: (Float) -> Unit,
-    banglaFont: androidx.compose.ui.text.font.FontFamily?,
-    arabicFont: androidx.compose.ui.text.font.FontFamily?,
-    onOpenHolyQuran: ((Int?) -> Unit)? = null
-) {
-    val context = LocalContext.current
-
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp),
-        verticalArrangement = Arrangement.spacedBy(14.dp)
-    ) {
-        // Arabic Master Container
-        Card(
-            shape = RoundedCornerShape(20.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f)
-            ),
-            border = BorderStroke(1.2.dp, IslamicGold.copy(alpha = 0.45f)),
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Column(modifier = Modifier.padding(16.dp)) {
-                // Top control bar inside card
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Surface(
-                        shape = RoundedCornerShape(8.dp),
-                        color = IslamicGold.copy(alpha = 0.15f)
-                    ) {
-                        Text(
-                            text = "পবিত্র কুরআনুল কারীম",
-                            style = MaterialTheme.typography.labelSmall,
-                            fontWeight = FontWeight.Bold,
-                            color = IslamicGold,
-                            fontFamily = banglaFont,
-                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
-                        )
-                    }
-
-                    // Copy Arabic
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(6.dp)
-                    ) {
-                        if (onOpenHolyQuran != null) {
-                            Surface(
-                                shape = RoundedCornerShape(12.dp),
-                                color = IslamicGold.copy(alpha = 0.15f),
-                                border = BorderStroke(1.dp, IslamicGold.copy(alpha = 0.4f)),
-                                modifier = Modifier.clickable {
-                                    onOpenHolyQuran(ayah.surahNumber)
-                                }
-                            ) {
-                                Row(
-                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(4.dp)
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Default.MenuBook,
-                                        contentDescription = "কুরআনে পড়ুন",
-                                        tint = IslamicGold,
-                                        modifier = Modifier.size(14.dp)
-                                    )
-                                    Text(
-                                        text = "কুরআনে পড়ুন",
-                                        style = MaterialTheme.typography.labelSmall.copy(
-                                            color = IslamicGold,
-                                            fontWeight = FontWeight.Bold
-                                        )
-                                    )
-                                }
-                            }
-                        }
-
-                        IconButton(
-                            onClick = {
-                                val cm = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                                cm.setPrimaryClip(ClipData.newPlainText("Arabic Ayah", ayah.arabicText))
-                                Toast.makeText(context, "আরবি টেক্সট কপি করা হয়েছে", Toast.LENGTH_SHORT).show()
-                            },
-                            modifier = Modifier.size(32.dp)
-                        ) {
-                            Icon(Icons.Default.ContentCopy, contentDescription = "কপি", modifier = Modifier.size(18.dp))
-                        }
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(12.dp))
-
-                // Arabic Calligraphic Text
-                Text(
-                    text = ayah.arabicText,
-                    style = MaterialTheme.typography.headlineMedium.copy(
-                        fontFamily = arabicFont,
-                        fontSize = fontSizeSp.sp,
-                        lineHeight = (fontSizeSp * 1.85f).sp,
-                        textDirection = TextDirection.ContentOrRtl
-                    ),
-                    color = MaterialTheme.colorScheme.onSurface,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 8.dp, vertical = 12.dp)
-                )
-
-                // Font Size Slider
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 8.dp)
-                ) {
-                    Icon(Icons.Default.FormatSize, contentDescription = null, modifier = Modifier.size(16.dp))
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Slider(
-                        value = fontSizeSp,
-                        onValueChange = onFontSizeChange,
-                        valueRange = 18f..36f,
-                        modifier = Modifier.weight(1f),
-                        colors = SliderDefaults.colors(
-                            thumbColor = IslamicGold,
-                            activeTrackColor = IslamicGold
-                        )
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = "${fontSizeSp.toInt()} sp",
-                        style = MaterialTheme.typography.labelSmall,
-                        fontFamily = banglaFont
-                    )
-                }
-            }
-        }
-
-        // Bengali Pronunciation Card
-        Card(
-            shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-            border = BorderStroke(0.8.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.25f)),
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Column(modifier = Modifier.padding(16.dp)) {
-                Text(
-                    text = "সহজ বাংলা উচ্চারণ:",
-                    style = MaterialTheme.typography.labelMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.primary,
-                    fontFamily = banglaFont
-                )
-                Spacer(modifier = Modifier.height(6.dp))
-                Text(
-                    text = ayah.transliterationBn,
-                    style = MaterialTheme.typography.bodyMedium.copy(lineHeight = 24.sp),
-                    color = MaterialTheme.colorScheme.onSurface,
-                    fontFamily = banglaFont
-                )
-            }
-        }
-
-        // Bengali Translation Card
-        Card(
-            shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.25f)
-            ),
-            border = BorderStroke(0.8.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.35f)),
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Column(modifier = Modifier.padding(16.dp)) {
-                Text(
-                    text = "বাংলা অনুবাদ (মুহিউদ্দীন খান ও ইসলামিক ফাউন্ডেশন):",
-                    style = MaterialTheme.typography.labelMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.primary,
-                    fontFamily = banglaFont
-                )
-                Spacer(modifier = Modifier.height(6.dp))
-                Text(
-                    text = ayah.banglaTranslation,
-                    style = MaterialTheme.typography.bodyLarge.copy(lineHeight = 26.sp),
-                    fontWeight = FontWeight.Medium,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    fontFamily = banglaFont
-                )
-            }
-        }
-
-        // English Translation Card
-        Card(
-            shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-            border = BorderStroke(0.8.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.25f)),
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Column(modifier = Modifier.padding(16.dp)) {
-                Text(
-                    text = "English Translation (Sahih International):",
-                    style = MaterialTheme.typography.labelMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.secondary
-                )
-                Spacer(modifier = Modifier.height(6.dp))
-                Text(
-                    text = ayah.englishTranslation,
-                    style = MaterialTheme.typography.bodyMedium.copy(lineHeight = 22.sp),
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-            }
-        }
-    }
-}
-
-/**
- * Tab 2: শব্দে শব্দে অর্থ (Word-by-Word Meaning)
- */
-@Composable
-private fun TabWordByWordView(
-    words: List<WordMeaning>,
-    banglaFont: androidx.compose.ui.text.font.FontFamily?,
-    arabicFont: androidx.compose.ui.text.font.FontFamily?
-) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp),
-        verticalArrangement = Arrangement.spacedBy(10.dp)
-    ) {
-        Text(
-            text = "আয়াতের প্রতিটি শব্দের অর্থ ও ব্যাকরণিক বিশ্লেষণ (${words.size}টি শব্দ):",
-            style = MaterialTheme.typography.labelMedium,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.primary,
-            fontFamily = banglaFont
-        )
-
-        words.forEachIndexed { index, word ->
-            Card(
-                shape = RoundedCornerShape(14.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surface
-                ),
-                border = BorderStroke(0.8.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.2f)),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 14.dp, vertical = 10.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    // Left: Word Index & Bengali + English Meaning
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        Surface(
-                            shape = CircleShape,
-                            color = IslamicGold.copy(alpha = 0.15f),
-                            modifier = Modifier.size(28.dp)
-                        ) {
-                            Box(contentAlignment = Alignment.Center) {
-                                Text(
-                                    text = "${index + 1}",
-                                    style = MaterialTheme.typography.labelSmall,
-                                    fontWeight = FontWeight.Bold,
-                                    color = IslamicGold,
-                                    fontFamily = banglaFont
-                                )
-                            }
-                        }
-                        Spacer(modifier = Modifier.width(10.dp))
-                        Column {
-                            Text(
-                                text = word.bengaliMeaning,
-                                style = MaterialTheme.typography.bodyMedium,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onSurface,
-                                fontFamily = banglaFont
-                            )
-                            if (word.englishMeaning.isNotBlank()) {
-                                Text(
-                                    text = word.englishMeaning,
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            }
-                            if (word.grammarNote.isNotBlank()) {
-                                Surface(
-                                    shape = RoundedCornerShape(6.dp),
-                                    color = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.4f),
-                                    modifier = Modifier.padding(top = 3.dp)
-                                ) {
-                                    Text(
-                                        text = word.grammarNote,
-                                        style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
-                                        color = MaterialTheme.colorScheme.onSecondaryContainer,
-                                        fontFamily = banglaFont,
-                                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 1.dp)
-                                    )
-                                }
-                            }
-                        }
-                    }
-
-                    // Right: Arabic Calligraphic Word
-                    Text(
-                        text = word.arabicWord,
-                        style = MaterialTheme.typography.titleLarge.copy(
-                            fontFamily = arabicFont,
-                            fontSize = 24.sp,
-                            textDirection = TextDirection.ContentOrRtl
-                        ),
-                        color = MaterialTheme.colorScheme.primary,
-                        textAlign = TextAlign.End,
-                        modifier = Modifier.padding(start = 12.dp)
-                    )
-                }
-            }
-        }
-    }
-}
-
-/**
- * Tab 3: তাফসীর ও প্রেক্ষাপট (Tafsir & Shan-e-Nuzul)
- */
-@Composable
-private fun TabTafsirAndContextView(
-    ayah: AyahExplanation,
-    banglaFont: androidx.compose.ui.text.font.FontFamily?
-) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp),
-        verticalArrangement = Arrangement.spacedBy(14.dp)
-    ) {
-        // Context / Shan-e-Nuzul Card
-        Card(
-            shape = RoundedCornerShape(18.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.25f)
-            ),
-            border = BorderStroke(1.dp, MaterialTheme.colorScheme.secondary.copy(alpha = 0.35f)),
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Column(modifier = Modifier.padding(16.dp)) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Lightbulb,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.secondary,
-                        modifier = Modifier.size(20.dp)
-                    )
-                    Text(
-                        text = "নাযিলের প্রেক্ষাপট ও শানে নুযূল:",
-                        style = MaterialTheme.typography.titleSmall,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.secondary,
-                        fontFamily = banglaFont
-                    )
-                }
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    text = ayah.contextBn,
-                    style = MaterialTheme.typography.bodyMedium.copy(lineHeight = 24.sp),
-                    color = MaterialTheme.colorScheme.onSurface,
-                    fontFamily = banglaFont
-                )
-            }
-        }
-
-        // Deep Scholarly Tafsir Card
-        Card(
-            shape = RoundedCornerShape(18.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surface
-            ),
-            border = BorderStroke(1.dp, IslamicGold.copy(alpha = 0.4f)),
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Column(modifier = Modifier.padding(16.dp)) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.MenuBook,
-                        contentDescription = null,
-                        tint = IslamicGold,
-                        modifier = Modifier.size(20.dp)
-                    )
-                    Text(
-                        text = "প্রামাণ্য তাফসীর (ইবনে কাসীর ও মা'আরিফুল কুরআন সংক্ষেপ):",
-                        style = MaterialTheme.typography.titleSmall,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary,
-                        fontFamily = banglaFont
-                    )
-                }
-                Spacer(modifier = Modifier.height(10.dp))
-                Text(
-                    text = ayah.tafsirBn,
-                    style = MaterialTheme.typography.bodyMedium.copy(lineHeight = 25.sp),
-                    color = MaterialTheme.colorScheme.onSurface,
-                    fontFamily = banglaFont
-                )
-            }
-        }
-    }
-}
-
-/**
- * Tab 4: সম্পর্কিত সূত্র (Related Verses & Hadiths)
- */
-@Composable
-private fun TabCrossReferencesView(
-    ayah: AyahExplanation,
-    banglaFont: androidx.compose.ui.text.font.FontFamily?,
-    arabicFont: androidx.compose.ui.text.font.FontFamily?
-) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp),
-        verticalArrangement = Arrangement.spacedBy(14.dp)
-    ) {
-        // Related Verses Section
-        Text(
-            text = "কুরআনের সম্পর্কিত অন্যান্য আয়াত:",
-            style = MaterialTheme.typography.titleSmall,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.primary,
-            fontFamily = banglaFont
-        )
-
-        ayah.relatedVerses.forEach { relVerse ->
-            Card(
-                shape = RoundedCornerShape(14.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                border = BorderStroke(0.8.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.2f)),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Column(modifier = Modifier.padding(14.dp)) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Surface(
-                            shape = RoundedCornerShape(8.dp),
-                            color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f)
-                        ) {
-                            Text(
-                                text = "${relVerse.surahNameBn} (${relVerse.ayahRef})",
-                                style = MaterialTheme.typography.labelSmall,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.primary,
-                                fontFamily = banglaFont,
-                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
-                            )
-                        }
-                    }
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = relVerse.arabicText,
-                        style = MaterialTheme.typography.bodyLarge.copy(
-                            fontFamily = arabicFont,
-                            fontSize = 20.sp,
-                            lineHeight = 32.sp,
-                            textDirection = TextDirection.ContentOrRtl
-                        ),
-                        color = MaterialTheme.colorScheme.onSurface,
-                        textAlign = TextAlign.End,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                    Spacer(modifier = Modifier.height(6.dp))
-                    Text(
-                        text = relVerse.translationBn,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        fontFamily = banglaFont
-                    )
-                }
-            }
-        }
-
-        Spacer(modifier = Modifier.height(6.dp))
-
-        // Related Hadiths Section
-        Text(
-            text = "সম্পর্কিত সহীহ হাদীস ও ফযিলত:",
-            style = MaterialTheme.typography.titleSmall,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.primary,
-            fontFamily = banglaFont
-        )
-
-        ayah.relatedHadiths.forEach { hadith ->
-            Card(
-                shape = RoundedCornerShape(14.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.18f)
-                ),
-                border = BorderStroke(0.8.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.3f)),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Column(modifier = Modifier.padding(14.dp)) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = "${hadith.sourceBn} • বর্ণনাকারী: ${hadith.narratorBn}",
-                            style = MaterialTheme.typography.labelSmall,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.primary,
-                            fontFamily = banglaFont
-                        )
-                        Surface(
-                            shape = RoundedCornerShape(6.dp),
-                            color = MaterialTheme.colorScheme.primary
-                        ) {
-                            Text(
-                                text = hadith.gradeBn,
-                                style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
-                                color = Color.White,
-                                fontWeight = FontWeight.Bold,
-                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-                            )
-                        }
-                    }
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = hadith.textBn,
-                        style = MaterialTheme.typography.bodyMedium.copy(lineHeight = 24.sp),
-                        color = MaterialTheme.colorScheme.onSurface,
-                        fontFamily = banglaFont
-                    )
-                }
-            }
-        }
-    }
-}
-
-/**
- * Tab 5: হিফয ও অডিও (Memorization Trainer & Audio Player)
- */
-@Composable
-private fun TabMemorizationView(
-    ayah: AyahExplanation,
-    isMemorizeModeActive: Boolean,
-    onToggleMemorizeMode: () -> Unit,
-    isAyahMemorized: Boolean,
-    onToggleMemorized: () -> Unit,
-    revealedWords: MutableMap<Int, Boolean>,
-    audioPlayer: AyahAudioPlayerHelper,
-    isPlaying: Boolean,
-    loopMode: LoopMode,
-    banglaFont: androidx.compose.ui.text.font.FontFamily?,
-    arabicFont: androidx.compose.ui.text.font.FontFamily?
-) {
-    val context = LocalContext.current
-    val words = remember(ayah.arabicText) {
-        ayah.arabicText.split(" ").filter { it.isNotBlank() }
-    }
-
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp),
-        verticalArrangement = Arrangement.spacedBy(14.dp)
-    ) {
-        // Mode Switcher Card
-        Card(
-            shape = RoundedCornerShape(18.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = if (isMemorizeModeActive) IslamicGold.copy(alpha = 0.15f) else MaterialTheme.colorScheme.surface
-            ),
-            border = BorderStroke(1.2.dp, if (isMemorizeModeActive) IslamicGold else MaterialTheme.colorScheme.outline.copy(alpha = 0.2f)),
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Column(modifier = Modifier.padding(16.dp)) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Column {
-                        Text(
-                            text = "হিফয ও মুখস্থ অনুশীলন মোড",
-                            style = MaterialTheme.typography.titleSmall,
-                            fontWeight = FontWeight.Bold,
-                            color = if (isMemorizeModeActive) IslamicGold else MaterialTheme.colorScheme.onSurface,
-                            fontFamily = banglaFont
-                        )
-                        Text(
-                            text = "শব্দ ঢেকে পরীক্ষা করুন এবং বারবার শুনে সহজে মুখস্থ করুন",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            fontFamily = banglaFont
-                        )
-                    }
-
-                    Button(
-                        onClick = onToggleMemorizeMode,
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = if (isMemorizeModeActive) IslamicGold else MaterialTheme.colorScheme.primary
-                        ),
-                        shape = RoundedCornerShape(12.dp)
-                    ) {
-                        Icon(
-                            imageVector = if (isMemorizeModeActive) Icons.Default.VisibilityOff else Icons.Default.Visibility,
-                            contentDescription = null,
-                            tint = if (isMemorizeModeActive) Color.Black else Color.White,
-                            modifier = Modifier.size(16.dp)
-                        )
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text(
-                            text = if (isMemorizeModeActive) "ব্লার অন" else "চালু করুন",
-                            color = if (isMemorizeModeActive) Color.Black else Color.White,
-                            fontWeight = FontWeight.Bold,
-                            fontFamily = banglaFont
-                        )
-                    }
-                }
-            }
-        }
-
-        // Interactive Word-Masking Canvas
-        Card(
-            shape = RoundedCornerShape(20.dp),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-            border = BorderStroke(1.dp, IslamicGold.copy(alpha = 0.4f)),
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Column(modifier = Modifier.padding(18.dp)) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = if (isMemorizeModeActive) "শব্দের উপর চাপ দিলে স্পষ্ট হবে:" else "আরবি মূল পাঠ:",
-                        style = MaterialTheme.typography.labelSmall,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary,
-                        fontFamily = banglaFont
-                    )
-
-                    if (isMemorizeModeActive) {
-                        Text(
-                            text = "সব উন্মোচন করুন",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = IslamicGold,
-                            fontWeight = FontWeight.Bold,
-                            fontFamily = banglaFont,
-                            modifier = Modifier.clickable {
-                                words.indices.forEach { idx ->
-                                    revealedWords[idx] = true
-                                }
-                            }
-                        )
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(14.dp))
-
-                // Words Flow (RTL Layout)
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .horizontalScroll(rememberScrollState(), reverseScrolling = true),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    words.forEachIndexed { index, word ->
-                        val isRevealed = revealedWords[index] == true || !isMemorizeModeActive
-
-                        Surface(
-                            shape = RoundedCornerShape(10.dp),
-                            color = if (isRevealed) MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f) else MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.6f),
-                            border = BorderStroke(
-                                0.8.dp,
-                                if (isRevealed) MaterialTheme.colorScheme.outline.copy(alpha = 0.3f) else IslamicGold
-                            ),
-                            modifier = Modifier.clickable {
-                                if (isMemorizeModeActive) {
-                                    revealedWords[index] = !(revealedWords[index] ?: false)
-                                }
-                            }
-                        ) {
-                            Text(
-                                text = word,
-                                style = MaterialTheme.typography.titleLarge.copy(
-                                    fontFamily = arabicFont,
-                                    fontSize = 24.sp,
-                                    textDirection = TextDirection.ContentOrRtl
-                                ),
-                                color = if (isRevealed) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f),
-                                modifier = Modifier
-                                    .padding(horizontal = 10.dp, vertical = 6.dp)
-                                    .then(
-                                        if (!isRevealed) Modifier.blur(6.dp) else Modifier
-                                    )
-                            )
-                        }
-                    }
-                }
-            }
-        }
-
-        // Memorization Repetition & Loop Audio Guide
-        Card(
-            shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.2f)
-            ),
-            border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.3f)),
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Column(modifier = Modifier.padding(16.dp)) {
-                Text(
-                    text = "হিফযের অডিও লুপ নির্দেশিকা:",
-                    style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.primary,
-                    fontFamily = banglaFont
-                )
-                Spacer(modifier = Modifier.height(6.dp))
-                Text(
-                    text = "১. প্রথমে ৩ থেকে ৫ বার মনোযোগ দিয়ে অডিও শুনুন এবং সাথে মনে মনে মিলিয়ে নিন।\n২. এরপর 'হিফয মোড' অন করে শব্দগুলো ঢেকে নিন এবং এক এক শব্দ নিজে উচ্চারণ করে মেলাতে থাকুন।\n৩. অবিরাম লুপ দিয়ে সালাতের পূর্বে কয়েকবার চর্চা করুন।",
-                    style = MaterialTheme.typography.bodySmall.copy(lineHeight = 20.sp),
-                    color = MaterialTheme.colorScheme.onSurface,
-                    fontFamily = banglaFont
-                )
-
-                Spacer(modifier = Modifier.height(14.dp))
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    LoopMode.values().forEach { mode ->
-                        FilterChip(
-                            selected = loopMode == mode,
-                            onClick = { audioPlayer.setLoopMode(mode) },
-                            label = { Text(mode.titleBn, fontFamily = banglaFont) },
-                            leadingIcon = if (loopMode == mode) {
-                                { Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(14.dp)) }
-                            } else null,
-                            colors = FilterChipDefaults.filterChipColors(
-                                selectedContainerColor = IslamicGold,
-                                selectedLabelColor = Color.Black
-                            )
-                        )
-                    }
-                }
-            }
-        }
-
-        // Memorized Status Completion Button
-        Surface(
-            shape = RoundedCornerShape(16.dp),
-            color = if (isAyahMemorized) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surface,
-            border = BorderStroke(1.2.dp, if (isAyahMemorized) MaterialTheme.colorScheme.primary else IslamicGold),
-            modifier = Modifier
-                .fillMaxWidth()
-                .clickable {
-                    onToggleMemorized()
-                    if (!isAyahMemorized) {
-                        Toast.makeText(context, "মাশাআল্লাহ! আয়াতটি আপনার মুখস্থ তালিকায় সংরক্ষিত হয়েছে।", Toast.LENGTH_LONG).show()
-                    }
-                }
-        ) {
-            Row(
-                modifier = Modifier.padding(16.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Center
-            ) {
-                Icon(
-                    imageVector = if (isAyahMemorized) Icons.Default.CheckCircle else Icons.Default.Star,
-                    contentDescription = null,
-                    tint = if (isAyahMemorized) Color.White else IslamicGold,
-                    modifier = Modifier.size(24.dp)
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    text = if (isAyahMemorized) "আলহামদুলিল্লাহ! আয়াতটি মুখস্থ সম্পন্ন হয়েছে" else "মুখস্থ সম্পন্ন হিসেবে চিহ্নিত করুন",
-                    style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = if (isAyahMemorized) Color.White else MaterialTheme.colorScheme.onSurface,
-                    fontFamily = banglaFont
-                )
-            }
-        }
-    }
-}
-
-// Helpers
-private suspend fun processImage(
+private suspend fun processImageLookup(
     bitmap: Bitmap,
     aiService: AyahScannerAiService,
     onSuccess: (AyahExplanation) -> Unit,
@@ -2814,8 +1398,26 @@ private suspend fun processImage(
     withContext(Dispatchers.Main) {
         result.fold(
             onSuccess = { ayah -> onSuccess(ayah) },
-            onFailure = { error -> onError(error.localizedMessage ?: "কোনো স্পষ্ট আয়াত শনাক্ত করা যায়নি।") }
+            onFailure = { error -> onError(error.localizedMessage ?: "কোনো স্পষ্ট কুরআনের আয়াত শনাক্ত করা যায়নি।") }
         )
+    }
+}
+
+/**
+ * Crops the captured camera bitmap to a generous window around the golden viewfinder reticle
+ * (92% width x 58% height centered slightly above vertical middle) so OCR focuses cleanly on
+ * the intended Ayah without cutting off adjacent line edges.
+ */
+private fun cropToViewfinderRegion(source: Bitmap): Bitmap {
+    return try {
+        if (source.width < 320 || source.height < 320) return source
+        val cropW = (source.width * 0.92f).toInt().coerceIn(200, source.width)
+        val cropH = (source.height * 0.58f).toInt().coerceIn(200, source.height)
+        val left = ((source.width - cropW) / 2).coerceAtLeast(0)
+        val top = ((source.height - cropH) * 0.44f).toInt().coerceIn(0, source.height - cropH)
+        Bitmap.createBitmap(source, left, top, cropW, cropH)
+    } catch (_: Throwable) {
+        source
     }
 }
 
@@ -2825,7 +1427,7 @@ private fun imageProxyToBitmap(image: ImageProxy): Bitmap? {
         val converted = image.toBitmap()
         val rotation = image.imageInfo.rotationDegrees
         if (rotation != 0 && converted != null) {
-            val matrix = android.graphics.Matrix().apply { postRotate(rotation.toFloat()) }
+            val matrix = Matrix().apply { postRotate(rotation.toFloat()) }
             Bitmap.createBitmap(converted, 0, 0, converted.width, converted.height, matrix, true)
         } else {
             converted
@@ -2839,7 +1441,7 @@ private fun imageProxyToBitmap(image: ImageProxy): Bitmap? {
             val decoded = BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
             val rotation = image.imageInfo.rotationDegrees
             if (rotation != 0 && decoded != null) {
-                val matrix = android.graphics.Matrix().apply { postRotate(rotation.toFloat()) }
+                val matrix = Matrix().apply { postRotate(rotation.toFloat()) }
                 Bitmap.createBitmap(decoded, 0, 0, decoded.width, decoded.height, matrix, true)
             } else {
                 decoded
@@ -2853,7 +1455,7 @@ private fun imageProxyToBitmap(image: ImageProxy): Bitmap? {
 private suspend fun loadBitmapFromUri(context: Context, uri: Uri): Bitmap? = withContext(Dispatchers.IO) {
     try {
         val inputStream: InputStream? = context.contentResolver.openInputStream(uri)
-        BitmapFactory.decodeStream(inputStream)
+        inputStream?.use { BitmapFactory.decodeStream(it) }
     } catch (_: Exception) {
         null
     }

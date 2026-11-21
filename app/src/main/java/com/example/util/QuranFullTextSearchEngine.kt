@@ -429,6 +429,14 @@ object QuranFullTextSearchEngine {
     }
 
     /**
+     * Returns the complete in-memory index of all 114 Surahs (6,236 Ayahs) from local assets.
+     */
+    suspend fun getIndexedAyahs(context: Context): List<IndexedQuranAyah> {
+        ensureIndexed(context)
+        return cachedIndex
+    }
+
+    /**
      * Immediately searches all 114 Surahs (6,236 Ayahs) for any Bangla topic, word, phrase,
      * pronunciation, Arabic text, or Surah:Ayah reference.
      */

@@ -42,10 +42,18 @@ private data class QuranFingerprintEntry(
     val ayahNumber: Int,
     val rawArabic: String,
     val normalizedArabic: String,
+    val compactNormArabic: String,
     val skeletonArabic: String,
+    val compactSkeletonArabic: String,
+    val rasmArabic: String,
+    val compactRasmArabic: String,
     val arabicWords: List<String>,
     val skeletonWords: List<String>,
+    val rasmWords: List<String>,
+    val skeletonWordSet: Set<String>,
+    val rasmWordSet: Set<String>,
     val skeletonTrigrams: Set<String>,
+    val rasmTrigrams: Set<String>,
     val pronunciationBn: String,
     val displayTranslationBn: String,
     val canonicalBn: String,
@@ -155,6 +163,31 @@ object LocalQuranAyahMatcher {
         return out.joinToString(" ")
     }
 
+    /**
+     * Dotless Arabic Rasm (رسم) shape representation (like the original Uthmanic Mushaf without nuqat).
+     * Makes local Quran lookup resilient to camera/LCD moiré dot confusions in Tesseract OCR:
+     * e.g., ب/ت/ث/ن/ي -> ب, ج/ح/خ -> ح, د/ذ -> د, ر/ز -> ر, س/ش -> س, ص/ض -> ص, ط/ظ -> ط, ع/غ -> ع, ف/ق -> ف.
+     */
+    fun toQuranArabicRasm(skeletonArabic: String): String {
+        if (skeletonArabic.isBlank()) return ""
+        val sb = StringBuilder(skeletonArabic.length)
+        for (ch in skeletonArabic) {
+            when (ch) {
+                'ب', 'ت', 'ث', 'ن', 'ي' -> sb.append('ب')
+                'ج', 'ح', 'خ' -> sb.append('ح')
+                'د', 'ذ' -> sb.append('د')
+                'ر', 'ز' -> sb.append('ر')
+                'س', 'ش' -> sb.append('س')
+                'ص', 'ض' -> sb.append('ص')
+                'ط', 'ظ' -> sb.append('ط')
+                'ع', 'غ' -> sb.append('ع')
+                'ف', 'ق' -> sb.append('ف')
+                else -> sb.append(ch)
+            }
+        }
+        return sb.toString()
+    }
+
     fun normalizeDigitsToAscii(input: String): String {
         val bengali = "০১২৩৪৫৬৭৮৯"
         val arabicIndic = "٠١٢٣٤٥٦٧٨٩"
@@ -204,18 +237,28 @@ object LocalQuranAyahMatcher {
                 for (item in indexed) {
                     val normAr = normalizeQuranArabic(item.arabicText)
                     val skelAr = toQuranArabicSkeleton(normAr)
+                    val rasmAr = toQuranArabicRasm(skelAr)
                     val arWords = normAr.split(' ').filter { it.length >= 2 }
                     val skelWords = skelAr.split(' ').filter { it.length >= 2 }
+                    val rasmWords = rasmAr.split(' ').filter { it.length >= 2 }
                     built.add(
                         QuranFingerprintEntry(
                             surahNumber = item.surahNumber,
                             ayahNumber = item.ayahNumber,
                             rawArabic = item.arabicText,
                             normalizedArabic = normAr,
+                            compactNormArabic = normAr.replace(" ", ""),
                             skeletonArabic = skelAr,
+                            compactSkeletonArabic = skelAr.replace(" ", ""),
+                            rasmArabic = rasmAr,
+                            compactRasmArabic = rasmAr.replace(" ", ""),
                             arabicWords = arWords,
                             skeletonWords = skelWords,
+                            rasmWords = rasmWords,
+                            skeletonWordSet = skelWords.toHashSet(),
+                            rasmWordSet = rasmWords.toHashSet(),
                             skeletonTrigrams = buildTrigrams(skelAr),
+                            rasmTrigrams = buildTrigrams(rasmAr),
                             pronunciationBn = item.pronunciationBn,
                             displayTranslationBn = item.displayTranslationBn,
                             canonicalBn = item.canonicalBn,
@@ -265,9 +308,6 @@ object LocalQuranAyahMatcher {
 
         val normArabicQuery = normalizeQuranArabic(combinedArabicRaw)
         val skelArabicQuery = toQuranArabicSkeleton(normArabicQuery)
-        val queryArabicWords = normArabicQuery.split(' ').filter { it.length >= 2 }
-        val querySkeletonWords = skelArabicQuery.split(' ').filter { it.length >= 2 }
-        val queryTrigrams = buildTrigrams(skelArabicQuery)
 
         // Check if query has substantial Arabic (beyond standalone Bismillah)
         val bismillahSkeleton = toQuranArabicSkeleton(normalizeQuranArabic("بسم الله الرحمن الرحيم"))
@@ -278,17 +318,34 @@ object LocalQuranAyahMatcher {
         // Strip leading Bismillah from a multi-line scan if substantial ayah text follows it
         val strippedNormArabic = stripLeadingBismillahIfFollowedByAyah(normArabicQuery)
         val strippedSkelArabic = toQuranArabicSkeleton(strippedNormArabic)
-        val effectiveNormArabic = if (strippedNormArabic.length >= 6) strippedNormArabic else normArabicQuery
-        val effectiveSkelArabic = if (strippedSkelArabic.length >= 5) strippedSkelArabic else skelArabicQuery
-        val effectiveSkelWords = effectiveSkelArabic.split(' ').filter { it.length >= 2 }
-        val effectiveTrigrams = buildTrigrams(effectiveSkelArabic)
-        val hasStrongArabic = effectiveSkelArabic.replace(" ", "").length >= 6
+        val effectiveNormArabic = if (strippedNormArabic.length >= 4) strippedNormArabic else normArabicQuery
+        val effectiveSkelArabic = if (strippedSkelArabic.length >= 3) strippedSkelArabic else skelArabicQuery
+        val effectiveRasmArabic = toQuranArabicRasm(effectiveSkelArabic)
 
-        // Per-line Arabic variants (crucial when a photo shows 2-3 consecutive ayahs on a Mushaf page!)
-        val cleanedArabicLines = clues.arabicLines
+        val queryCompactNorm = effectiveNormArabic.replace(" ", "")
+        val queryCompactSkel = effectiveSkelArabic.replace(" ", "")
+        val queryCompactRasm = effectiveRasmArabic.replace(" ", "")
+
+        val effectiveSkelWords = effectiveSkelArabic.split(' ').filter { it.length >= 2 }
+        val effectiveRasmWords = effectiveRasmArabic.split(' ').filter { it.length >= 2 }
+        val effectiveTrigrams = buildTrigrams(effectiveSkelArabic)
+        val effectiveRasmTrigrams = buildTrigrams(effectiveRasmArabic)
+
+        // Allow even a single Arabic word / short phrase (2+ chars) to match the local Quran database!
+        val hasAnyArabic = queryCompactSkel.length >= 2
+        val hasStrongArabic = queryCompactSkel.length >= 5
+
+        // Per-line Arabic variants (crucial when a laptop screen photo shows 2-4 consecutive ayahs!)
+        val rawArabicLines = if (clues.arabicLines.isNotEmpty()) {
+            clues.arabicLines
+        } else {
+            combinedArabicRaw.lines()
+        }
+        val cleanedArabicLines = rawArabicLines
             .map { normalizeQuranArabic(it) }
-            .filter { it.replace(" ", "").length >= 6 }
+            .filter { it.replace(" ", "").length >= 4 }
         val cleanedSkeletonLines = cleanedArabicLines.map { toQuranArabicSkeleton(it) }
+        val cleanedRasmLines = cleanedSkeletonLines.map { toQuranArabicRasm(it) }
 
         // Bengali / English / Reference signals
         val otherTextClean = clues.otherText.ifBlank { clues.rawCombinedText }.trim()
@@ -320,24 +377,24 @@ object LocalQuranAyahMatcher {
             var reason = ""
 
             // --- SIGNAL 1: Arabic Quranic Matching (Primary & Authoritative) ---
-            if (hasStrongArabic) {
-                val entryCompactNorm = entry.normalizedArabic.replace(" ", "")
-                val entryCompactSkel = entry.skeletonArabic.replace(" ", "")
-                val queryCompactNorm = effectiveNormArabic.replace(" ", "")
-                val queryCompactSkel = effectiveSkelArabic.replace(" ", "")
+            if (hasAnyArabic) {
+                val entryCompactNorm = entry.compactNormArabic
+                val entryCompactSkel = entry.compactSkeletonArabic
+                val entryCompactRasm = entry.compactRasmArabic
 
-                // 1A. Exact normalized Arabic match or containment
+                // 1A. Exact normalized Arabic match or containment (works for single word, phrase, or full ayah!)
                 if (entry.normalizedArabic == effectiveNormArabic) {
                     score += 1500.0
                     reason = "হুবহু আরবি আয়াত মিলেছে"
-                } else if (entryCompactNorm.length >= 6 && queryCompactNorm.length >= 6) {
+                } else if (entryCompactNorm.length >= 2 && queryCompactNorm.length >= 2) {
                     when {
                         entryCompactNorm.contains(queryCompactNorm) -> {
                             val coverage = queryCompactNorm.length.toDouble() / entryCompactNorm.length.coerceAtLeast(1)
-                            score += 980.0 + (coverage * 360.0)
+                            val base = if (queryCompactNorm.length >= 5) 980.0 else 720.0
+                            score += base + (coverage * 360.0)
                             reason = "আরবি আয়াতের অংশ হুবহু মিলেছে"
                         }
-                        queryCompactNorm.contains(entryCompactNorm) && entryCompactNorm.length >= 10 -> {
+                        queryCompactNorm.contains(entryCompactNorm) && entryCompactNorm.length >= 7 -> {
                             val coverage = entryCompactNorm.length.toDouble() / queryCompactNorm.length.coerceAtLeast(1)
                             score += 940.0 + (coverage * 340.0)
                             reason = "সম্পূর্ণ আরবি আয়াত ফ্রেমে মিলেছে"
@@ -346,7 +403,7 @@ object LocalQuranAyahMatcher {
                 }
 
                 // 1B. Uthmani-skeleton exact / containment match
-                if (score < 900.0 && entryCompactSkel.length >= 5 && queryCompactSkel.length >= 5) {
+                if (score < 900.0 && entryCompactSkel.length >= 2 && queryCompactSkel.length >= 2) {
                     when {
                         entry.skeletonArabic == effectiveSkelArabic -> {
                             score = maxOf(score, 1420.0)
@@ -354,13 +411,14 @@ object LocalQuranAyahMatcher {
                         }
                         entryCompactSkel.contains(queryCompactSkel) -> {
                             val coverage = queryCompactSkel.length.toDouble() / entryCompactSkel.length.coerceAtLeast(1)
-                            val s = 920.0 + (coverage * 320.0)
+                            val base = if (queryCompactSkel.length >= 5) 920.0 else 680.0
+                            val s = base + (coverage * 320.0)
                             if (s > score) {
                                 score = s
                                 reason = "উসমানী/হাফেজী আরবি টেক্সট মিলেছে"
                             }
                         }
-                        queryCompactSkel.contains(entryCompactSkel) && entryCompactSkel.length >= 9 -> {
+                        queryCompactSkel.contains(entryCompactSkel) && entryCompactSkel.length >= 7 -> {
                             val coverage = entryCompactSkel.length.toDouble() / queryCompactSkel.length.coerceAtLeast(1)
                             val s = 880.0 + (coverage * 300.0)
                             if (s > score) {
@@ -371,17 +429,53 @@ object LocalQuranAyahMatcher {
                     }
                 }
 
-                // 1C. Individual Arabic line containment (handles multi-ayah photo frames!)
-                if (score < 850.0 && cleanedSkeletonLines.size >= 2) {
+                // 1C. Dotless Rasm (رسم) exact / containment match (handles OCR dot confusions!)
+                if (score < 840.0 && queryCompactRasm.length >= 5 && entryCompactRasm.length >= 5) {
+                    when {
+                        entry.rasmArabic == effectiveRasmArabic -> {
+                            score = maxOf(score, 1180.0)
+                            reason = "আরবি হরফের কাঠামো (রসম) হুবহু মিলেছে"
+                        }
+                        entryCompactRasm.contains(queryCompactRasm) -> {
+                            val cov = queryCompactRasm.length.toDouble() / entryCompactRasm.length.coerceAtLeast(1)
+                            val s = 760.0 + (cov * 280.0)
+                            if (s > score) {
+                                score = s
+                                reason = "আরবি রসম বিশ্লেষণে আয়াতের অংশ মিলেছে"
+                            }
+                        }
+                        queryCompactRasm.contains(entryCompactRasm) && entryCompactRasm.length >= 8 -> {
+                            val cov = entryCompactRasm.length.toDouble() / queryCompactRasm.length.coerceAtLeast(1)
+                            val s = 740.0 + (cov * 260.0)
+                            if (s > score) {
+                                score = s
+                                reason = "পৃষ্ঠার আরবি রসম বিশ্লেষণে আয়াত মিলেছে"
+                            }
+                        }
+                    }
+                }
+
+                // 1D. Individual Arabic line containment (handles multi-ayah laptop screens & Mushaf pages!)
+                if (score < 850.0 && cleanedSkeletonLines.isNotEmpty()) {
                     var bestLineScore = 0.0
-                    for (lineSkel in cleanedSkeletonLines) {
-                        val compactLine = lineSkel.replace(" ", "")
-                        if (compactLine.length < 7) continue
-                        if (entryCompactSkel.contains(compactLine)) {
-                            val cov = compactLine.length.toDouble() / entryCompactSkel.length.coerceAtLeast(1)
+                    for (idx in cleanedSkeletonLines.indices) {
+                        val compactLineSkel = cleanedSkeletonLines[idx].replace(" ", "")
+                        if (compactLineSkel.length < 5) continue
+                        if (entryCompactSkel.contains(compactLineSkel)) {
+                            val cov = compactLineSkel.length.toDouble() / entryCompactSkel.length.coerceAtLeast(1)
                             bestLineScore = maxOf(bestLineScore, 780.0 + cov * 260.0)
-                        } else if (compactLine.contains(entryCompactSkel) && entryCompactSkel.length >= 9) {
+                        } else if (compactLineSkel.contains(entryCompactSkel) && entryCompactSkel.length >= 7) {
                             bestLineScore = maxOf(bestLineScore, 800.0)
+                        } else {
+                            val compactLineRasm = cleanedRasmLines[idx].replace(" ", "")
+                            if (compactLineRasm.length >= 6) {
+                                if (entryCompactRasm.contains(compactLineRasm)) {
+                                    val cov = compactLineRasm.length.toDouble() / entryCompactRasm.length.coerceAtLeast(1)
+                                    bestLineScore = maxOf(bestLineScore, 640.0 + cov * 220.0)
+                                } else if (compactLineRasm.contains(entryCompactRasm) && entryCompactRasm.length >= 8) {
+                                    bestLineScore = maxOf(bestLineScore, 660.0)
+                                }
+                            }
                         }
                     }
                     if (bestLineScore > score) {
@@ -390,19 +484,19 @@ object LocalQuranAyahMatcher {
                     }
                 }
 
-                // 1D. Word overlap + ordered bigram overlap on skeleton words (tolerant to OCR noise)
+                // 1E. Skeleton word + ordered bigram overlap (tolerant to OCR noise & extra words)
                 if (effectiveSkelWords.isNotEmpty() && entry.skeletonWords.isNotEmpty()) {
-                    val entryWordSet = entry.skeletonWords.toHashSet()
                     var matchedWords = 0
                     for (qw in effectiveSkelWords) {
-                        if (qw in entryWordSet) matchedWords++
+                        if (qw in entry.skeletonWordSet) matchedWords++
                     }
-                    if (matchedWords >= 2 || (effectiveSkelWords.size == 1 && matchedWords == 1)) {
+                    if (matchedWords >= 2 || (effectiveSkelWords.size <= 2 && matchedWords == 1)) {
                         val precision = matchedWords.toDouble() / effectiveSkelWords.size
                         val recall = matchedWords.toDouble() / entry.skeletonWords.size
                         val f1 = if (precision + recall > 0) (2.0 * precision * recall) / (precision + recall) else 0.0
+                        val bestRatio = maxOf(f1, recall * 0.90, precision * 0.85)
                         val bigramBonus = computeOrderedBigramBonus(effectiveSkelWords, entry.skeletonWords)
-                        val wordScore = (f1 * 720.0) + (matchedWords.coerceAtMost(8) * 32.0) + bigramBonus
+                        val wordScore = (bestRatio * 680.0) + (matchedWords.coerceAtMost(8) * 36.0) + bigramBonus
                         if (wordScore > score) {
                             score = wordScore
                             reason = "আরবি শব্দের ধারাবাহিক মিল পাওয়া গেছে"
@@ -412,21 +506,63 @@ object LocalQuranAyahMatcher {
                     }
                 }
 
-                // 1E. Character 3-gram Dice similarity (tolerant to merged/split Arabic OCR words)
-                if (score < 480.0 && effectiveTrigrams.size >= 4 && entry.skeletonTrigrams.size >= 4) {
-                    var common = 0
-                    for (tg in effectiveTrigrams) {
-                        if (tg in entry.skeletonTrigrams) common++
+                // 1F. Dotless Rasm word + ordered bigram overlap (rescues heavy dot-confusion OCR!)
+                if (score < 620.0 && effectiveRasmWords.size >= 2 && entry.rasmWords.isNotEmpty()) {
+                    var rasmMatches = 0
+                    for (rw in effectiveRasmWords) {
+                        if (rw.length >= 2 && rw in entry.rasmWordSet) rasmMatches++
                     }
-                    if (common >= 4) {
-                        val dice = (2.0 * common) / (effectiveTrigrams.size + entry.skeletonTrigrams.size)
-                        val queryContainRatio = common.toDouble() / effectiveTrigrams.size
-                        val combinedSim = maxOf(dice, queryContainRatio * 0.85)
-                        if (combinedSim >= 0.42) {
-                            val trigramScore = combinedSim * 660.0
+                    if (rasmMatches >= 2) {
+                        val precision = rasmMatches.toDouble() / effectiveRasmWords.size
+                        val recall = rasmMatches.toDouble() / entry.rasmWords.size
+                        val f1 = if (precision + recall > 0) (2.0 * precision * recall) / (precision + recall) else 0.0
+                        val bestRatio = maxOf(f1, recall * 0.88, precision * 0.82)
+                        val rasmBigramBonus = computeOrderedBigramBonus(effectiveRasmWords, entry.rasmWords) * 0.85
+                        val rasmWordScore = (bestRatio * 560.0) + (rasmMatches.coerceAtMost(8) * 32.0) + rasmBigramBonus
+                        if (rasmWordScore > score) {
+                            score = rasmWordScore
+                            reason = "আরবি রসম শব্দের মিল পাওয়া গেছে"
+                        }
+                    }
+                }
+
+                // 1G. Character 3-gram similarity on BOTH skeleton AND dotless Rasm
+                // Uses BOTH query containment (partial ayah) AND entry containment (multi-ayah laptop screen!)
+                if (score < 520.0 && effectiveTrigrams.size >= 3 && entry.skeletonTrigrams.size >= 3) {
+                    var commonSkel = 0
+                    for (tg in effectiveTrigrams) {
+                        if (tg in entry.skeletonTrigrams) commonSkel++
+                    }
+                    if (commonSkel >= 3) {
+                        val dice = (2.0 * commonSkel) / (effectiveTrigrams.size + entry.skeletonTrigrams.size)
+                        val qContain = commonSkel.toDouble() / effectiveTrigrams.size
+                        val eContain = commonSkel.toDouble() / entry.skeletonTrigrams.size
+                        val combinedSim = maxOf(dice, qContain * 0.88, if (entry.skeletonTrigrams.size >= 6) eContain * 0.86 else 0.0)
+                        if (combinedSim >= 0.34) {
+                            val trigramScore = combinedSim * 650.0
                             if (trigramScore > score) {
                                 score = trigramScore
                                 reason = "আরবি অক্ষর বিশ্লেষণে কাছাকাছি মিল"
+                            }
+                        }
+                    }
+                }
+
+                if (score < 460.0 && effectiveRasmTrigrams.size >= 4 && entry.rasmTrigrams.size >= 4) {
+                    var commonRasm = 0
+                    for (tg in effectiveRasmTrigrams) {
+                        if (tg in entry.rasmTrigrams) commonRasm++
+                    }
+                    if (commonRasm >= 4) {
+                        val dice = (2.0 * commonRasm) / (effectiveRasmTrigrams.size + entry.rasmTrigrams.size)
+                        val qContain = commonRasm.toDouble() / effectiveRasmTrigrams.size
+                        val eContain = commonRasm.toDouble() / entry.rasmTrigrams.size
+                        val combinedSim = maxOf(dice, qContain * 0.84, if (entry.rasmTrigrams.size >= 7) eContain * 0.82 else 0.0)
+                        if (combinedSim >= 0.38) {
+                            val rasmTriScore = combinedSim * 560.0
+                            if (rasmTriScore > score) {
+                                score = rasmTriScore
+                                reason = "আরবি রসম অক্ষর বিশ্লেষণে মিল"
                             }
                         }
                     }
@@ -458,8 +594,8 @@ object LocalQuranAyahMatcher {
                 }
             }
 
-            // --- SIGNAL 3: English Translation Matching (for English Quran pages / offline ML Kit) ---
-            if (!hasStrongArabic && !hasBanglaText && otherTextClean.length >= 12) {
+            // --- SIGNAL 3: English Translation Matching (for English Quran pages / laptop online Quran!) ---
+            if (score < 620.0 && !hasBanglaText && otherTextClean.length >= 12) {
                 val engTrans = QuranTafsirAndTranslationProvider.getEnglishTranslation(
                     entry.surahNumber,
                     entry.ayahNumber,
@@ -470,12 +606,14 @@ object LocalQuranAyahMatcher {
                     if (engScore > score) {
                         score = engScore
                         reason = "ইংরেজি অনুবাদ লোকাল কুরআনে মিলেছে"
+                    } else if (score > 160.0 && engScore >= 240.0) {
+                        score += 140.0
                     }
                 }
             }
 
             // --- SIGNAL 4: Verified Context Hint Boosts (Never blindly overrides a strong Arabic match!) ---
-            val hasTextScore = score >= 190.0
+            val hasTextScore = score >= 150.0
             if (hasTextScore) {
                 if (detectedSurahHint != null && entry.surahNumber == detectedSurahHint) {
                     score += 180.0
@@ -484,18 +622,19 @@ object LocalQuranAyahMatcher {
                     score += 140.0
                 }
                 if (explicitRef != null && entry.surahNumber == explicitRef.first && entry.ayahNumber == explicitRef.second) {
-                    score += 240.0
+                    score += 260.0
                 }
             } else if (!hasStrongArabic && explicitRef != null &&
                 entry.surahNumber == explicitRef.first &&
                 entry.ayahNumber == explicitRef.second
             ) {
-                // Only use bare Surah:Ayah reference when no conflicting Arabic text exists
+                // Only use bare Surah:Ayah reference when no conflicting strong Arabic text exists
                 score = 860.0
                 reason = "সূরা ও আয়াত নম্বর (${explicitRef.first}:${explicitRef.second}) মিলেছে"
             }
 
-            if (score >= 240.0) {
+            val minThreshold = if (hasAnyArabic) 165.0 else 230.0
+            if (score >= minThreshold) {
                 val confidence = computeConfidencePercent(score)
                 scored.add(
                     ScoredLocalMatch(

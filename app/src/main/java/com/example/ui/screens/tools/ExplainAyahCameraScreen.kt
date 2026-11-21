@@ -113,6 +113,8 @@ import com.example.data.datasource.QuranSurahCatalog
 import com.example.data.model.AyahExplanation
 import com.example.ui.theme.IslamicGold
 import com.example.ui.theme.LocalBanglaFontFamily
+import com.example.util.ArabicOcrStatus
+import com.example.util.ArabicTesseractOcrEngine
 import com.example.util.AyahAudioPlayerHelper
 import com.example.util.AyahScannerAiService
 import com.example.util.LocalQuranAyahMatcher
@@ -139,9 +141,11 @@ fun ExplainAyahCameraScreen(
     val aiService = remember { AyahScannerAiService(context) }
     val audioPlayer = remember { AyahAudioPlayerHelper(context) }
     val indexState by QuranFullTextSearchEngine.indexState.collectAsState()
+    val ocrEngineState by ArabicTesseractOcrEngine.state.collectAsState()
 
-    // Pre-warm the 114-Surah (6,236-Ayah) local Quran matcher index immediately on screen open
+    // Pre-warm BOTH the 114-Surah (6,236-Ayah) local Quran index AND the on-device Arabic OCR model
     LaunchedEffect(Unit) {
+        launch(Dispatchers.IO) { ArabicTesseractOcrEngine.ensureModelReady(context) }
         LocalQuranAyahMatcher.ensureReady(context)
     }
 
@@ -244,10 +248,11 @@ fun ExplainAyahCameraScreen(
                                         val fullBitmap = imageProxyToBitmap(image)
                                         image.close()
                                         if (fullBitmap != null) {
-                                            // Focus-crop to generous viewfinder window so margins don't confuse OCR
+                                            // Focus-crop to generous viewfinder window AND keep full frame for Pass 3 fallback
                                             val focusedBitmap = cropToViewfinderRegion(fullBitmap)
                                             processImageLookup(
                                                 bitmap = focusedBitmap,
+                                                fullFrameBitmap = fullBitmap,
                                                 aiService = aiService,
                                                 onSuccess = { result ->
                                                     isAnalyzing = false
@@ -739,10 +744,15 @@ fun ExplainAyahCameraScreen(
                             )
                             Spacer(modifier = Modifier.width(5.dp))
                             Text(
-                                text = if (indexState.isReady) {
-                                    "লোকাল কুরআন ডাটাবেস: ১১৪ সূরা প্রস্তুত"
-                                } else {
-                                    "লোকাল ডাটাবেস লোড হচ্ছে (${indexState.indexedSurahs}/১১৪)..."
+                                text = when {
+                                    !indexState.isReady ->
+                                        "লোকাল ডাটাবেস লোড হচ্ছে (${indexState.indexedSurahs}/১১৪)..."
+                                    ocrEngineState.status == ArabicOcrStatus.PREPARING ->
+                                        ocrEngineState.statusLabelBn
+                                    ocrEngineState.status == ArabicOcrStatus.READY ->
+                                        "আরবি OCR + ১১৪ সূরা প্রস্তুত"
+                                    else ->
+                                        "লোকাল ১১৪ সূরা প্রস্তুত (৬,২৩৬ আয়াত)"
                                 },
                                 style = MaterialTheme.typography.labelSmall,
                                 color = Color.White,
@@ -1392,9 +1402,13 @@ private suspend fun processImageLookup(
     bitmap: Bitmap,
     aiService: AyahScannerAiService,
     onSuccess: (AyahExplanation) -> Unit,
-    onError: (String) -> Unit
+    onError: (String) -> Unit,
+    fullFrameBitmap: Bitmap? = null
 ) = withContext(Dispatchers.Default) {
-    val result = aiService.analyzeQuranImage(bitmap)
+    val result = aiService.analyzeQuranImage(
+        bitmap = bitmap,
+        fullFrameBitmap = fullFrameBitmap
+    )
     withContext(Dispatchers.Main) {
         result.fold(
             onSuccess = { ayah -> onSuccess(ayah) },
@@ -1405,16 +1419,16 @@ private suspend fun processImageLookup(
 
 /**
  * Crops the captured camera bitmap to a generous window around the golden viewfinder reticle
- * (92% width x 58% height centered slightly above vertical middle) so OCR focuses cleanly on
- * the intended Ayah without cutting off adjacent line edges.
+ * (94% width x 62% height centered slightly above vertical middle) so wide Arabic lines on a
+ * laptop screen or printed Mushaf are never clipped horizontally.
  */
 private fun cropToViewfinderRegion(source: Bitmap): Bitmap {
     return try {
         if (source.width < 320 || source.height < 320) return source
-        val cropW = (source.width * 0.92f).toInt().coerceIn(200, source.width)
-        val cropH = (source.height * 0.58f).toInt().coerceIn(200, source.height)
+        val cropW = (source.width * 0.94f).toInt().coerceIn(200, source.width)
+        val cropH = (source.height * 0.62f).toInt().coerceIn(200, source.height)
         val left = ((source.width - cropW) / 2).coerceAtLeast(0)
-        val top = ((source.height - cropH) * 0.44f).toInt().coerceIn(0, source.height - cropH)
+        val top = ((source.height - cropH) * 0.45f).toInt().coerceIn(0, source.height - cropH)
         Bitmap.createBitmap(source, left, top, cropW, cropH)
     } catch (_: Throwable) {
         source

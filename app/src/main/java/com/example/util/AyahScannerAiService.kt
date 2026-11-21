@@ -73,15 +73,16 @@ class AyahScannerAiService(private val context: Context) {
      * Analyzes a captured camera frame or gallery image:
      * 1. Validates bitmap lighting & contrast.
      * 2. Pre-warms the local 6,236-ayah Quran index.
-     * 3. If online Vision AI is available, transcribes Arabic/Bangla/English lines verbatim from the
-     *    image, then runs deterministic local DB lookup (`LocalQuranAyahMatcher`) so the displayed
-     *    Ayah & Tafsir ALWAYS come 100% verified from the local in-app Quran database.
-     * 4. Falls back cleanly to on-device ML Kit OCR -> Local Quran DB lookup when offline.
+     * 3. If online Vision AI key is configured, runs Gemini Vision OCR -> Local Quran DB lookup.
+     * 4. Otherwise (default — ZERO API key needed!) or on Vision AI failure, runs real On-Device
+     *    Arabic Tesseract OCR (with Dark-Mode screen auto-inversion + Otsu binarization) + ML Kit
+     *    Latin OCR -> Local 6,236-Ayah Quran Database Lookup!
      */
     suspend fun analyzeQuranImage(
         bitmap: Bitmap,
         preferredSurah: Int? = null,
-        preferredAyah: Int? = null
+        preferredAyah: Int? = null,
+        fullFrameBitmap: Bitmap? = null
     ): Result<AyahExplanation> = withContext(Dispatchers.IO) {
         val startTime = System.currentTimeMillis()
 
@@ -106,15 +107,13 @@ class AyahScannerAiService(private val context: Context) {
         // Ensure local 6,236-ayah index is ready in RAM
         LocalQuranAyahMatcher.ensureReady(context)
 
-        // 3. Vision OCR -> Local Quran Database Lookup (Primary Path when Vision AI is online)
+        // 3. Optional Vision AI OCR boost (only when user/build has a valid Gemini API key & is online)
         val apiKey = getEffectiveApiKey()
         val isOfflineMode = try {
             com.example.data.repository.AppRepository(context).isOfflineMode()
         } catch (_: Exception) {
             false
         }
-
-        var visionFailureReason: String? = null
 
         if (!isOfflineMode && apiKey.isNotBlank() && apiKey != "your_api_key_here") {
             val ocrExtraction = extractQuranCluesWithVisionOcr(bitmap, apiKey)
@@ -127,29 +126,23 @@ class AyahScannerAiService(private val context: Context) {
                 )
                 if (localLookup.isSuccess) {
                     return@withContext localLookup
-                } else {
-                    visionFailureReason = localLookup.exceptionOrNull()?.localizedMessage
                 }
-            } else {
-                visionFailureReason = ocrExtraction.exceptionOrNull()?.localizedMessage
             }
         }
 
-        // 4. On-Device ML Kit OCR -> Local Quran Database Lookup (Offline / Fallback Path)
-        val offlineLookup = LocalQuranAyahScannerEngine.scanImage(bitmap, context)
-        if (offlineLookup.isSuccess) {
-            return@withContext offlineLookup
+        // 4. Real On-Device Arabic Tesseract OCR + ML Kit Latin OCR -> Local 6,236-Ayah Quran DB Lookup
+        // Works completely out-of-the-box WITHOUT any API key on laptop screens & printed Mushafs!
+        val onDeviceLookup = LocalQuranAyahScannerEngine.scanImage(
+            bitmap = bitmap,
+            context = context,
+            fullFrameBitmap = fullFrameBitmap
+        )
+        if (onDeviceLookup.isSuccess) {
+            return@withContext onDeviceLookup
         }
 
-        // 5. Clear, honest guidance when neither Vision OCR nor offline OCR matched a local Quran ayah
-        val finalErrorMessage = when {
-            !visionFailureReason.isNullOrBlank() -> visionFailureReason
-            isOfflineMode -> "অফলাইন মোড চালু আছে। আরবি মুসহাফ ক্যামেরা দিয়ে স্ক্যান করতে অফলাইন মোড বন্ধ করুন, অথবা নিচের 'খুঁজুন' বা 'সূরা নির্বাচন' ব্যবহার করে লোকাল কুরআন ডাটাবেস থেকে তাৎক্ষণিক তাফসীর দেখুন।"
-            apiKey.isBlank() || apiKey == "your_api_key_here" ->
-                "ছবিতে স্পষ্ট ইংরেজি সূরা:আয়াত নম্বর পাওয়া যায়নি। আরবি কুরআন পৃষ্ঠা ক্যামেরা দিয়ে পড়ার জন্য উপরের কী (🔑) আইকনে Gemini API Key যুক্ত করুন, অথবা নিচের 'খুঁজুন' / 'সূরা নির্বাচন' ব্যবহার করে সরাসরি ১১৪ সূরা (৬,২৩৬ আয়াত) থেকে তাফসীর দেখুন।"
-            else -> offlineLookup.exceptionOrNull()?.localizedMessage
-                ?: "ছবি থেকে কুরআনের আয়াত স্পষ্টভাবে পড়া যায়নি। অনুগ্রহ করে উজ্জ্বল আলোতে আয়াতটি ফ্রেমের মাঝখানে রেখে পুনরায় স্ক্যান করুন।"
-        }
+        val finalErrorMessage = onDeviceLookup.exceptionOrNull()?.localizedMessage
+            ?: "ছবি থেকে কুরআনের আয়াত স্পষ্টভাবে পড়া যায়নি। অনুগ্রহ করে আয়াতের লেখাটি বড় করে ফ্রেমের মাঝখানে রেখে স্ক্রিনে ট্যাপ করে ফোকাস করুন এবং আবার স্ক্যান করুন।"
 
         Result.failure(Exception(finalErrorMessage))
     }
@@ -226,7 +219,7 @@ class AyahScannerAiService(private val context: Context) {
                 })
             }
 
-            val models = listOf("gemini-2.5-flash", "gemini-3.8-flash", "gemini-2.5-flash-lite")
+            val models = listOf("gemini-2.5-flash", "gemini-2.5-flash-lite", "gemini-2.0-flash")
             var lastErrorMsg = "ভিশন OCR সংযোগে সমস্যা হয়েছে।"
 
             for (modelName in models) {
